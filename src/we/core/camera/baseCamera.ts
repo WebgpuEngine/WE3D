@@ -17,6 +17,8 @@ import { ArcballCameraControl } from '../control/arcballCameraControl';
 import { WASDCameraControl } from '../control/wasdCameraControl';
 import { I_viewport } from '../command/DrawCommand';
 import { Clock } from '../scene/clock';
+import { boundingBox, generateBox3 } from '../math/Box';
+import { boundingSphere, generateSphereFromBox3 } from '../math/sphere';
 
 
 
@@ -62,6 +64,11 @@ export interface projectionOptions extends I_Update {
 export abstract class BaseCamera extends RootOfGPU {
   /** 初始化参数  */
   declare inpuValues: projectionOptions;
+  ///////////////////////////////////////////////////////////////////
+  //空间属性
+  boundingBox!: boundingBox;//initDCC中赋值
+  boundingSphere!: boundingSphere;
+  aspect!: number;
   // /**
   //  * 默认的上方向
   //  */
@@ -108,8 +115,7 @@ export abstract class BaseCamera extends RootOfGPU {
   _control!: CamreaControl;
   viewport!: I_viewport;
 
-  width: number;
-  height: number;
+
   /** 背景颜色 
    * 无，则使用场景的背景色
   */
@@ -204,10 +210,10 @@ export abstract class BaseCamera extends RootOfGPU {
 
   }
   async readyForGPU(): Promise<any> {
+    this.aspect = this.scene.aspect;
     this.updateProjectionMatrix();
     this.updateByPositionDirection(this.Position, this.lookAt, false);//这里需要是world position
-    this.width = this.scene.surface.size.width;
-    this.height = this.scene.surface.size.height;
+
     if (this.inpuValues.backGroundColor) {
       this.backGroundColor = this.inpuValues.backGroundColor;
     }
@@ -377,40 +383,6 @@ export abstract class BaseCamera extends RootOfGPU {
   set position(vec: Vec3) {
     vec3.copy(vec, this.position_);
   }
-  // set Position(pos: Vec3) {
-  //   this._position = pos;
-  //   this.position = pos;
-  // }
-  // get Position() {
-  //   return this._position;
-  // }
-
-  ////update移动到 RootOfOrganization 中
-  // update(clock: Clock): boolean {
-  //   if (super.update(clock,false) === false) return false;
-  //   ////移动到 RootOfGPU 中
-  //   // if (this._readyForGPU === false) return;
-  //   ////移动到 RootOfOrganization 中
-
-  //   // if (this.inpuValues.update) {
-  //   //   this.inpuValues.update(this);
-  //   // }
-
-  //   ////移动到 RootOfOrganization 中
-  //   // this.updateMatrixWorld();//更新 world matrix
-  //   // this.updateWorldPosition(); //更新 world position
-
-  //   if (this._control) {//更新MVP矩阵
-  //     this._control.update(this.scene.clock.deltaTime);
-  //   }
-  //   else {
-  //     // this.updateProjectionMatrix();//构造投影矩阵
-  //     this.updateByPositionDirection(this.worldPosition, this.lookAt, false);//这里需要是world position
-
-  //   }
-  //   this.updateBufferOfSystemMVP();//更新GPUBuffer of Uniform
-  //   return true;
-  // }
   ////更新自身,可以定义为空函数
   //  updateSelf(clock: Clock){}
   updateSelf(clock: Clock): void {
@@ -495,5 +467,26 @@ export abstract class BaseCamera extends RootOfGPU {
   getBufferOfSystemMVP() {
     return this.systemUniformBuffersOfGPU;
   }
+
+  // generateBox(position: number[]): boundingBox {
+  //   let box = generateBox3(position);
+  //   const min = vec3.transformMat4(box.min, this.matrixWorld);
+  //   const max = vec3.transformMat4(box.max, this.matrixWorld);
+  //   box.max[0] = max[0];
+  //   box.max[1] = max[1];
+  //   box.max[2] = max[2];
+  //   box.min[0] = min[0];
+  //   box.min[1] = min[1];
+  //   box.min[2] = min[2];
+  //   return box;
+  // }
+  // /**世界坐标的sphere */
+  // generateSphere(box: boundingBox): boundingSphere {
+  //   if (this.boundingBox == undefined) {
+  //     console.error("boundingBox 没有计算");
+  //   }
+  //   return generateSphereFromBox3(box);
+  // }
+
 
 }

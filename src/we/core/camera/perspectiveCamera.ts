@@ -1,7 +1,10 @@
-import { mat4 } from 'wgpu-matrix';
+import { mat4, vec4, Vec4 } from 'wgpu-matrix';
 
 
 import { BaseCamera, projectionOptions } from "./baseCamera"
+import { Clock } from '../scene/clock';
+import { computeAABB } from '../math/Box';
+import { computeBoundingSphere, generateSphereFromBox3 } from '../math/sphere';
 
 /** 透视相机 */
 export interface optionPerspProjection extends projectionOptions {
@@ -78,8 +81,38 @@ export class PerspectiveCamera extends BaseCamera {
 
         this.projectionMatrix = mat4.perspective(this.inpuValues.fov, aspect, this.inpuValues.near, this.inpuValues.far);
         // console.log(this.projectionMatrix)
+        this.updateBoundingBox();
     }
 
     set aspect(aspect: number) { (this.inpuValues as optionPerspProjection).aspect = aspect }
     get aspect() { return (this.inpuValues as optionPerspProjection).aspect }
+    updateBoundingBox(): void {
+        let nearHeight = 2 * this.inpuValues.near * Math.tan(this.inpuValues.fov / 2);
+        let nearWidth = nearHeight * this.inpuValues.aspect;
+        let farHeight = 2 * this.inpuValues.far * Math.tan(this.inpuValues.fov / 2);
+        let farWidth = farHeight * this.inpuValues.aspect;
+        let positions: Vec4[] = [
+            vec4.fromValues(-nearWidth / 2, -nearHeight / 2, this.inpuValues.near, 1),
+            vec4.fromValues(nearWidth / 2, -nearHeight / 2, this.inpuValues.near, 1),
+            vec4.fromValues(nearWidth / 2, nearHeight / 2, this.inpuValues.near, 1),
+            vec4.fromValues(-nearWidth / 2, nearHeight / 2, this.inpuValues.near, 1),
+
+            vec4.fromValues(-farWidth / 2, -farHeight / 2, this.inpuValues.far, 1),
+            vec4.fromValues(farWidth / 2, -farHeight / 2, this.inpuValues.far, 1),
+            vec4.fromValues(-farWidth / 2, farHeight / 2, this.inpuValues.far, 1),
+            vec4.fromValues(farWidth / 2, farHeight / 2, this.inpuValues.far, 1),
+        ];
+
+        for (let i of positions) {
+            i = vec4.transformMat4(i,  this.modelMatrix);
+            i = vec4.transformMat4(i,  this.viewMatrix);
+        }
+        let positionsForAABB: [number, number, number][] = []
+        for (let i of positions) {
+            positionsForAABB.push([i[0], i[1], i[2]]);
+        }
+        this.boundingBox = computeAABB(positionsForAABB);
+        // this.boundingSphere = computeBoundingSphere(positionsForAABB);
+        this.boundingSphere = generateSphereFromBox3(this.boundingBox );
+    }
 }

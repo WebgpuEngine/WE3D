@@ -1,4 +1,5 @@
 import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { testSphereBonding } from "../../../src/we/core/math/sphere";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -90,3 +91,4 @@ let valueDC: V_DC = {
 
 let dc = DCManager.generateDrawCommand(valueDC);
 dc.submit()
+

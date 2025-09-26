@@ -158,8 +158,8 @@ let Y = 0;
 let camera = new PerspectiveCamera({
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
-  near: 0.01,
-  far: 100,
+  near: 0.1,
+  far: 10,
   position: [0, 0, 1],
   lookAt: [0, 0, 0],
   update: (scope: any) => {

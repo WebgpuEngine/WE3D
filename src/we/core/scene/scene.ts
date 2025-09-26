@@ -1024,6 +1024,5 @@ export class Scene {
             },
         }
         return outputFormat;
-
     }
 }

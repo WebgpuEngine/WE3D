@@ -5,7 +5,7 @@ import { BaseEntity } from "../entity/baseEntity";
 import { E_lifeState } from "../base/coreDefine";
 import { I_optionShadowEntity } from "../entity/base";
 import { IV_BaseMaterial, I_TransparentOfMaterial, I_materialBundleOutput } from "./base";
-import { T_uniformGroup } from "../command/base";
+import { commmandType, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate, I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { Scene } from "../scene/scene";
 import { BaseCamera } from "../camera/baseCamera";
@@ -54,6 +54,7 @@ export abstract class BaseMaterial extends RootOfGPU {
         level: 3
     };
 
+    commands: commmandType[] = [];
 
     constructor(input?: IV_BaseMaterial) {
         super();
@@ -97,7 +98,7 @@ export abstract class BaseMaterial extends RootOfGPU {
      * @param startBinding 
      * @returns I_materialBundleOutput
      */
-    abstract getOneGroupUniformAndShaderTemplateFinal(startBinding: number):I_materialBundleOutput
+    abstract getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput
     /**
      * 是否为透明材质
      * @returns boolean  true：是透明材质，false：不是透明材质

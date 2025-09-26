@@ -1,3 +1,4 @@
+
 export interface Box2 {
     min: [number, number],//{ x: number, y: number },
     max: [number, number],//{ x: number, y: number },
@@ -39,6 +40,11 @@ export function generateBox2(position: number[]): Box2 {
     return box
 }
 
+/**
+ * attribute position 计算点集的AABB
+ * @param position 点集，每个点占3个元素，[x,y,z,x,y,z,...]
+ * @returns 
+ */
 export function generateBox3(position: number[]): Box3 {
     let box: Box3 = {
         min: [0, 0, 0],
@@ -74,6 +80,11 @@ export function generateBox3(position: number[]): Box3 {
     return box;
 }
 
+/**
+ * 合并3D多个AABB盒
+ * @param Box3s 多个AABB盒
+ * @returns 合并后的AABB盒
+ */
 export function generateBox3ByArrayBox3s(Box3s: Box3[]): Box3 {
     let box: Box3 = {
         min: [0, 0, 0],
@@ -83,30 +94,54 @@ export function generateBox3ByArrayBox3s(Box3s: Box3[]): Box3 {
         if (i == 0) {
             box = Box3s[i];
         }
-        if (Box3s[i].max[0] > box.max[0]) box.max[0]=Box3s[i].max[0];
-        if (Box3s[i].max[1] > box.max[1]) box.max[1]=Box3s[i].max[1];
-        if (Box3s[i].max[2] > box.max[2]) box.max[2]=Box3s[i].max[2];
+        if (Box3s[i].max[0] > box.max[0]) box.max[0] = Box3s[i].max[0];
+        if (Box3s[i].max[1] > box.max[1]) box.max[1] = Box3s[i].max[1];
+        if (Box3s[i].max[2] > box.max[2]) box.max[2] = Box3s[i].max[2];
 
-        if (Box3s[i].min[0] < box.min[0]) box.min[0]=Box3s[i].min[0];
-        if (Box3s[i].min[1] < box.min[1]) box.min[1]=Box3s[i].min[1];
-        if (Box3s[i].min[2] < box.min[2]) box.min[2]=Box3s[i].min[2];
+        if (Box3s[i].min[0] < box.min[0]) box.min[0] = Box3s[i].min[0];
+        if (Box3s[i].min[1] < box.min[1]) box.min[1] = Box3s[i].min[1];
+        if (Box3s[i].min[2] < box.min[2]) box.min[2] = Box3s[i].min[2];
     }
     return box;
 }
+/**
+ * 合并2D多个AABB框
+ * @param Box2s 多个AABB框
+ * @returns 合并后的AABB框
+ */
 export function generateBox2ByArrayBox2s(Box2s: Box2[]): Box2 {
     let box: Box2 = {
-        min: [0,  0],
-        max: [0,  0],
+        min: [0, 0],
+        max: [0, 0],
     };
     for (let i = 0; i < Box2s.length; i++) {
         if (i == 0) {
             box = Box2s[i];
         }
-        if (Box2s[i].max[0] > box.max[0]) box.max[0]=Box2s[i].max[0];
-        if (Box2s[i].max[1] > box.max[1]) box.max[1]=Box2s[i].max[1];
+        if (Box2s[i].max[0] > box.max[0]) box.max[0] = Box2s[i].max[0];
+        if (Box2s[i].max[1] > box.max[1]) box.max[1] = Box2s[i].max[1];
 
-        if (Box2s[i].min[0] < box.min[0]) box.min[0]=Box2s[i].min[0];
-        if (Box2s[i].min[1] < box.min[1]) box.min[1]=Box2s[i].min[1];
+        if (Box2s[i].min[0] < box.min[0]) box.min[0] = Box2s[i].min[0];
+        if (Box2s[i].min[1] < box.min[1]) box.min[1] = Box2s[i].min[1];
     }
     return box;
+}
+/**
+ * 计算点集的AABB盒
+ * @param points 点集，每个点占3个元素，[[x,y,z],[x,y,z],...]
+ * @returns 
+ */
+export function computeAABB(points: [number, number, number][]): Box3 {
+    const min: [number, number, number] = [0, 0, 0];
+    const max: [number, number, number] = [0, 0, 0];
+
+    for (const p of points) {
+        min[0] = Math.min(min[0], p[0]);
+        min[1] = Math.min(min[1], p[1]);
+        min[2] = Math.min(min[2], p[2]);
+        max[0] = Math.max(max[0], p[0]);
+        max[1] = Math.max(max[1], p[1]);
+        max[2] = Math.max(max[2], p[2]);
+    }
+    return { min, max };
 }
