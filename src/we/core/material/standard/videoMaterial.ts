@@ -186,12 +186,14 @@ export class VideoMaterial extends BaseMaterial {
                 else if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
                     if (perOne.name == "materialColor") {
                         if (this.textures[E_TextureType.video].model == "copy") {
-                            code = code.replace(perOne.replace, `materialColor = textureSample(u_videoTexture, u_Sampler, fsInput.uv );  `);
+                            //texture 默认是 'rgba8unorm-srgb'，已经完成解gamma
+                            code = code.replace(perOne.replace, `materialColor = textureSample(u_videoTexture, u_Sampler, fsInput.uv ); `);
                         }
                         else {
+                            //外部texture 是 'rgba8unorm'，需要解gamma到线性空间
                             code = code.replace(perOne.replace, `
                                 materialColor = textureSampleBaseClampToEdge(u_videoTexture, u_Sampler, vec2f(fsInput.uv.x,1.0-fsInput.uv.y) ); 
-                                materialColor =vec4f( pow(materialColor.rgb,vec3f(1.0/2.2)),materialColor.a);
+                                materialColor =vec4f( pow(materialColor.rgb,vec3f(2.2)),materialColor.a);
                                  `);
                         }
                     }

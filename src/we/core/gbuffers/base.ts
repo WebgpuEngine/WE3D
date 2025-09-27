@@ -5,6 +5,8 @@ import { Scene } from "../scene/scene"
 
 /**GBuffer的 GPUTexture集合 
  * 每个camera最终的GBuffer存储位置
+ * 其中的名称是 buffer的名称
+ *  如： E_GBufferNames中的名称或者transparent 中的名称
 */
 export interface I_GBuffer {
     [name: string]: GPUTexture
@@ -26,6 +28,9 @@ export enum E_GBufferNames {
     id = "id",
     normal = "normal",
     worldPosition = "worldPosition",
+    X = "X",
+    Y = "Y",
+    Z = "Z",
     ru_ma_AO = "ru_ma_AO",
 }
 /**GBuffer的组成描述的集合（最终的集合） */
@@ -34,37 +39,100 @@ export interface I_GBufferName {
 }
 
 /**
- * 预定义的GBuffer变量
+ * 预定义的forward GBuffer变量
+ * 注意：这个顺序需要与shader中的“st_gbuffer.fs.wgsl”的约定顺序一致。（depth 除外）
  */
-export var V_GBufferNames: I_GBufferName = {
-    "depth": {
+export var V_ForwardGBufferNames: I_GBufferName = {
+    [E_GBufferNames.depth]: {
         "format": "depth32float",
         "label": "GBuffer depth attachment:",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    "color": {
+    [E_GBufferNames.color]: {
         "format": V_weLinearFormat,
         "label": "GBuffer color :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    "id": {
+    [E_GBufferNames.id]: {
         "format": "r32uint",
         "label": "GBuffer id :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    "normal": {
+    [E_GBufferNames.normal]: {
         "format": "rgba8unorm",
         "label": "GBuffer normal :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    "worldPosition": {
-        "format": "rgba32float",
+    // [E_GBufferNames.worldPosition]: {
+    //     "format": "rgba32float",
+    //     "label": "GBuffer worldPosition :",
+    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // },
+    [E_GBufferNames.ru_ma_AO]: {
+        "format": "rgba8unorm",
+        "label": "GBuffer ru_ma_AO :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    [E_GBufferNames.X]: {
+        "format": "r32float",
         "label": "GBuffer worldPosition :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    "ru_ma_AO": {
-        "format": "rgba8unorm",
-        "label": "GBuffer ru_ma_AO :",
+    [E_GBufferNames.Y]: {
+        "format": "r32float",
+        "label": "GBuffer worldPosition :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    [E_GBufferNames.Z]: {
+        "format": "r32float",
+        "label": "GBuffer worldPosition :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+
+}
+/**
+ * 预定义的transparent GBuffer变量
+ */
+export var V_TransparentGBufferNames: I_GBufferName = {
+
+    "color1": {
+        "format": V_weLinearFormat,
+        "label": "GBuffer color :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "color2": {
+        "format": V_weLinearFormat,
+        "label": "GBuffer color :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "color3": {
+        "format": V_weLinearFormat,
+        "label": "GBuffer color :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "color4": {
+        "format": V_weLinearFormat,
+        "label": "GBuffer color :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "depth1": {
+        "format": "depth32float",
+        "label": "GBuffer depth attachment:",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "depth2": {
+        "format": "depth32float",
+        "label": "GBuffer depth attachment:",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "depth3": {
+        "format": "depth32float",
+        "label": "GBuffer depth attachment:",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    "depth4": {
+        "format": "depth32float",
+        "label": "GBuffer depth attachment:",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
 }
@@ -74,19 +142,41 @@ export var V_GBufferNames: I_GBufferName = {
 export interface I_GBufferGroup {
     /**      name = camera 的 id     */
     [name: string]: {
-        /** 每个camera最终的GBuffer的渲染描述 */
-        RPD: GPURenderPassDescriptor,
-        /**
-         * 每个camera最终的GBuffer的颜色附件描述
-         */
-        colorAttachmentTargets: GPUColorTargetState[],
-        /** 每个camera最终的GBuffer存储位置 */
-        GBuffer: I_GBuffer,
-        /** 每个camera最终的GBuffer的深度附件描述 */
-        deferRPD?: GPURenderPassDescriptor,
-        /** 每个camera延迟渲染的buffer */
-        deferGBuffer?: GPUTexture,
+        forward: {
+            /** 每个camera最终的GBuffer的渲染描述 */
+            RPD: GPURenderPassDescriptor,
+            /**
+             * 每个camera最终的GBuffer的颜色附件描述
+             */
+            colorAttachmentTargets: GPUColorTargetState[],
+            /** 每个camera的forward GBuffer存储位置 */
+            GBuffer: I_GBuffer,
+        },
+        deferDepth?: {
+            /** 每个camera最终的GBuffer的深度附件描述 */
+            RPD: GPURenderPassDescriptor,
+            /** 每个camera的延迟渲染的buffer ：1个*/
+            GBuffer: GPUTexture,
+        },
+        transparent?: {
+            RPD: GPURenderPassDescriptor,
+            colorAttachmentTargets: GPUColorTargetState[],
+            /**每个camera的透明渲染的GBuffer 
+             * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
+             * depthAttachment:1个深度附件
+             * */
+            transparentGBuffer: I_GBuffer,
+        },
     }
+}
+export interface I_TransparentGBufferGroup {
+    RPD: GPURenderPassDescriptor,
+    colorAttachmentTargets: GPUColorTargetState[],
+    /**每个camera的透明渲染的GBuffer 
+     * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
+     * depthAttachment:1个深度附件
+     * */
+    transparentGBuffer: I_GBuffer,
 }
 
 /**
@@ -114,14 +204,14 @@ export function getBundleOfGBufferOfUniformOfDefer(binding: number, scene: Scene
         groupAndBindingString: "",
         uniformGroup: [],
     }
-    Object.entries(V_GBufferNames).forEach(([name, struct]) => {
+    Object.entries(V_ForwardGBufferNames).forEach(([name, struct]) => {
         let texture = scene.cameraManager.getGBufferTextureByUUID(camera.UUID, name);
         let uniform: GPUBindGroupEntry = {
             binding: binding,
             resource: texture.createView(),
         }
         //uniform texture layout
-        let sampleType:GPUTextureSampleType;
+        let sampleType: GPUTextureSampleType;
         switch (name) {
             case "depth":
                 sampleType = "depth";
@@ -142,7 +232,7 @@ export function getBundleOfGBufferOfUniformOfDefer(binding: number, scene: Scene
                 sampleType = "float";
                 break;
             default:
-                throw new Error("GBuffer name not found");      
+                throw new Error("GBuffer name not found");
                 break;
         }
         let uniformTextureLayout: GPUBindGroupLayoutEntry = {

@@ -118,16 +118,17 @@ export class VideoTexture extends BaseTexture {
         if (source instanceof HTMLVideoElement) {
             width = source.videoWidth;
             height = source.videoHeight;
-            // this.video = source;
+            this.video = source;
         }
         else if (source instanceof VideoFrame) {
             width = source.displayWidth;
             height = source.displayHeight;
+            this.video = source;
         }
         else if (source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas) {
             width = source.width;
             height = source.height;
-            // this.video = source;
+            this.video = source;
         }
 
         if (width == 0 || height == 0) {
@@ -202,24 +203,5 @@ export class VideoTexture extends BaseTexture {
                 this.generateMips(this.texture as GPUTexture);
             }
         }
-        //如果External模式，只在dynamicExternal为true时才需要更新
-        //copy 有问题，暂时取消
-        // else {
-
-        //     if(this.dynamicExternal ===true){
-        //         this.commands=[];
-        //         let copy=new CopyCommandT2T(
-        //             {
-        //                 A:this.texture as GPUTexture,
-        //                 B:this.device.importExternalTexture({ source }),
-        //                 size:{width:this.width,height:this.height},
-        //                 device:this.device,
-        //             }
-        //         )
-        //         this.texture = this.device.importExternalTexture({ source });
-        //     }
-        //     // if (source instanceof HTMLVideoElement || source instanceof VideoFrame)
-        //     //     this.texture = this.device.importExternalTexture({ source })
-        // }
     }
 }

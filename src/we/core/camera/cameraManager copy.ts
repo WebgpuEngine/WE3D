@@ -29,6 +29,7 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
 
 
 
+    commonTransparentGBuffer: I_TransparentGBufferGroup;
 
     constructor(input: IV_CameraManager) {
         super(input.scene);
@@ -261,15 +262,6 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
 
             }
         }
-    }
-    mergeTransparent(UUID: string) {
-        let camera = this.getCameraByUUID(UUID);
-        /**
-         * 合并透明物体
-         * 1、按照顺序blend合并 commonTransparentGBuffer，4层
-         * 2、blend 到Camera 的color attachment
-         */
-        throw new Error("合并透明物体未实现");
     }
 
 }

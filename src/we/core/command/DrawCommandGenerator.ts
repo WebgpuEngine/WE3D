@@ -83,6 +83,15 @@ export interface V_DC {
      * 如果true，则需要动态绑定资源
      */
     dynamic?: boolean,
+    //没有意义，取消，因为transparent pass 透明渲染是在forward之后，这时候loadOP已经是load模式
+    // /**
+    //  * 是否透明渲染
+    //  * 默认：false;forward pass 透明渲染需要开启
+    //  * 如果是true，有2种情况：
+    //  * 1、透明的不透明渲染，走的也是forward pass，这时，loadOP需要=load。
+    //  * 2、透明的透明渲染，走的是transparent pass
+    //  */
+    // transparent?: boolean,
     label: string,
     data: {
         vertices: Map<string, T_vsAttribute>,

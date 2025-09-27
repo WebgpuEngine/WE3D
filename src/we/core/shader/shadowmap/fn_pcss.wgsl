@@ -1,3 +1,8 @@
+const  NUM_SAMPLES: i32=100;
+const  NUM_RINGS: i32 = 10;
+const FILTER_RADIUS =10.0;
+
+
 fn poissonDiskSamples(randomSeed: vec2f) -> array<vec2f,NUM_SAMPLES> {
     let ANGLE_STEP = PI * 2.0 * f32(NUM_RINGS) / f32(NUM_SAMPLES);
     let  INV_NUM_SAMPLES = 1.0 / f32(NUM_SAMPLES);
@@ -76,6 +81,7 @@ fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: ve
     let  pcfBiasC = .08;    // 有PCF时的Shadow Bias
     let oneOverShadowDepthTextureSize = FILTER_RADIUS / shadowDepthTextureSize;
     let bias = getShadowBias(biasC, oneOverShadowDepthTextureSize, normal, onelight.direction);
+    // let disk = uniformDiskSamples(vec2f(shadowPos.x, shadowPos.y));//todo，改成从findBlocker中获取的结构体
     let disk = poissonDiskSamples(vec2f(shadowPos.x, shadowPos.y));//todo，改成从findBlocker中获取的结构体
     var visibility = 0.0;
     if avgBlockerDepth < -EPS {
@@ -84,7 +90,10 @@ fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: ve
         penumbra = (zReceiver - avgBlockerDepth) * LIGHT_SIZE_UV / avgBlockerDepth;
     }
     for (var i = 0 ; i <= NUM_SAMPLES; i++) {
-        let offset = disk[i] * penumbra;
+         var offset = disk[i] * oneOverShadowDepthTextureSize;
+        if(any((shadowPos.xy + offset )< vec2(0.0)) || any ((shadowPos.xy + offset )> vec2(1.0))){
+             offset = vec2(0.0);
+        }
        //  let offset = disk[i] * oneOverShadowDepthTextureSize;
         visibility += textureSampleCompare(
             U_shadowMap_depth_texture,                  //t: texture_depth_2d_array
@@ -104,7 +113,7 @@ fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: ve
     }
 }
 fn shadowMapVisibilityPCF(onelight: ST_Light,shadow_map_index:i32, position: vec3f, normal: vec3f, biasC: f32) -> f32 {
-    let bias = 0.009;// max(0.005 * (1.0 - dot(normal, onelight.direction)), 0.005);
+    let bias = max(0.005 * (1.0 - dot(normal, onelight.direction)), 0.005);
     var posFromLight =matrix_z* U_shadowMapMatrix[shadow_map_index].MVP * vec4(position, 1.0);    //光源视界的位置
     if(posFromLight.w < 0.000001   && posFromLight.w > -0.000001){       //posFromLight =posFromLight/posFromLight.w;
     }
@@ -117,7 +126,7 @@ fn shadowMapVisibilityPCF(onelight: ST_Light,shadow_map_index:i32, position: vec
     let disk = poissonDiskSamples(vec2f(shadowPos.x, shadowPos.y));
     var visibility = 0.0;
     for (var i = 0 ; i <= NUM_SAMPLES; i++) {
-        let offset = disk[i] * oneOverShadowDepthTextureSize;
+        var offset = disk[i] * oneOverShadowDepthTextureSize;
         visibility += textureSampleCompare(
             U_shadowMap_depth_texture,                  //t: texture_depth_2d_array
             shadowSampler,                              //s: sampler_comparison,
@@ -125,12 +134,13 @@ fn shadowMapVisibilityPCF(onelight: ST_Light,shadow_map_index:i32, position: vec
             shadow_map_index,            //array_index: A,
             shadowPos.z - bias                      //depth_ref: f32,
         );
+
     }
     visibility /= f32(NUM_SAMPLES);
     return visibility;
 }
 fn shadowMapVisibilityPCF_3x3(onelight: ST_Light,shadow_map_index:i32, position: vec3f, normal: vec3f) -> f32 {
-    let bias = max(0.05 * (1.0 - dot(normal, onelight.direction)), 0.005);
+    let bias =0.007;// max(0.05 * (1.0 - dot(normal, onelight.direction)), 0.005);
     var posFromLight =matrix_z* U_shadowMapMatrix[shadow_map_index].MVP * vec4(position, 1.0);    //光源视界的位置
      if(posFromLight.w < 0.000001   && posFromLight.w > -0.000001){
        //posFromLight =posFromLight/posFromLight.w;
@@ -245,10 +255,10 @@ fn getVisibilityOflight(onelight: ST_Light,worldPosition: vec3f, normal: vec3f) 
 
             //统一工作流问题 start
             if (onelight.kind ==1){
-                // visibility = shadowMapVisibilityPCSS(onelight, shadow_map_index, worldPosition, normal, 0.08); //点光源的pcss在计算block是需要适配，目前多出来了边界的黑框，目前考虑是block的uv在边界的地方越界了，需要进行特殊处理
+                visibility = shadowMapVisibilityPCSS(onelight, shadow_map_index, worldPosition, normal, 0.08); //点光源的pcss在计算block是需要适配，目前多出来了边界的黑框，目前考虑是block的uv在边界的地方越界了，需要进行特殊处理
                 //下面三个在V01版本中没有问题，应该时wordPosition相关的问题
                 //是因为：near的问题，near的默认值是1，没问题，0.1就出现问题，todo
-                visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);//出现了在点光源半径3.5时，远端的实体的阴影消失问题
+                // visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);//出现了在点光源半径3.5时，远端的实体的阴影消失问题
                 // visibility = shadowMapVisibilityPCF_3x3(onelight,shadow_map_index,  worldPosition, normal);//点光源在cube中的阴影，右下前三方向消失，其他方向存在远端消失问题
                 //   visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
             }
@@ -258,11 +268,11 @@ fn getVisibilityOflight(onelight: ST_Light,worldPosition: vec3f, normal: vec3f) 
                 // visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);
                 //  visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
            }
-           if (onelight.shadow ==0 ) 
+           if (onelight.shadow ==0 ) //没有阴影
            {
                 visibility = 1.0;
            }
-            if(computeShadow ==false){
+           else if(computeShadow ==false){//不计算阴影，visibility为0
                 visibility = 0.0;
             }
             //统一工作流问题 end

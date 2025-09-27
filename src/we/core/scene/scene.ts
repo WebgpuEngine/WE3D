@@ -601,7 +601,7 @@ export class Scene {
     renderToSurface() {
         let defaultCamera = this.cameraManager.defaultCamera;
         if (defaultCamera) {
-            let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].GBuffer["color"];
+            let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].forward.GBuffer["color"];
             this.copyTextureToTexture(finalColorOfGBuffer, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
         }
         else {

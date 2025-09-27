@@ -6,10 +6,9 @@ var colorFS = colorFSWGSL.toString();
 import colorTransparentFSWGSL from "../../shader/material/color/colorTransparent.fs.wgsl?raw";
 var colorTransparentFS = colorTransparentFSWGSL.toString();
 
-
-
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, WGSL_replace_gbuffer_output, WGSL_st_Guffer } from "../base"
 
+/** 颜色材质, 不透明, 合并到VS中 */
 export var SHT_materialColorFS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "ColorMaterial",
@@ -38,7 +37,7 @@ export var SHT_materialColorFS_mergeToVS: I_ShaderTemplate = {
         ],
     }
 }
-
+/** 颜色材质, 透明, 合并到VS中 */
 export var SHT_materialColorTransparentFS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "ColorMaterial",
@@ -68,6 +67,8 @@ export var SHT_materialColorTransparentFS_mergeToVS: I_ShaderTemplate = {
     }
 }
 
+
+/** 位置颜色材质, 合并到VS中 */
 export var SHT_materialOneCubeFS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "PositionColorMaterial",

@@ -28,7 +28,6 @@ export class GBuffers {
      * 每个camera的forward GBuffer及参数集合
      */
     GBuffer: I_GBufferGroup = {};
-    commonTransparentGBuffer: I_TransparentGBufferGroup;
 
 
     constructor(parent: any, device: GPUDevice) {
