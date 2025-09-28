@@ -61,7 +61,7 @@ export class ResourceManagerOfGPU {
     //////////////////////////////////////////////////////////////////////////////////////////
     //texture 
     /**string 可以是URL或texture的名称等 */
-    textureOfString: Map<string, GPUTexture> = new Map();
+    textureOfString: Map<any, GPUTexture> = new Map();
     textureToBindGroupLayoutEntry: Map<GPUTexture, GPUTextureBindingLayout> = new Map();
 
     //////////////////////////////////////////////////////////////////////////////////////////

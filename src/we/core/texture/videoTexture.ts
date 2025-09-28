@@ -1,6 +1,7 @@
 import { E_lifeState } from "../base/coreDefine";
 import { I_VideoOption, weGetVidoeByUrl } from "../base/coreFunction";
 import { CopyCommandT2T } from "../command/copyCommandT2T";
+import { E_resourceKind } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
 import { I_BaseTexture, T_textureSourceType } from "./base";
 import { BaseTexture } from "./baseTexture";
@@ -74,27 +75,41 @@ export class VideoTexture extends BaseTexture {
     async readyForGPU(): Promise<any> {
         let source = this.inputValues.source;
         this._state = E_lifeState.initializing;
-        //url
-        if (typeof source == "string") {
-            this._state = await this.generateTextureByString(source);
-        }
-        //GPUTexture
-        // else if (typeof source == "object" && "usage" in source) {
-        else if (source instanceof GPUTexture) {
+
+        if (source instanceof GPUTexture) {
             this.texture = source;
             this._state = E_lifeState.finished;
+        }
+        else {
+            if (this.model == "External") {
+                await this.getVidoeTexture(source);
+            }
+            else {
+                if (this.scene.resourcesGPU.has(source, E_resourceKind.texture)) {
+                    this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.texture);
+                }
+                else {
+                    await this.getVidoeTexture(source);
+                    this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+                }
+            }
+        }
+        return this._state;
+    }
+    async getVidoeTexture(source: T_VIdeoSourceType) {
+        //url
+        if (typeof source == "string") {
+            let urlName = source.split("/");
+            this.Name = urlName[urlName.length - 1];
+            this._state = await this.generateTextureByString(source);
         }
         //GPUCopyExternalImageSource
         else if (source instanceof HTMLVideoElement || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas || source instanceof VideoFrame) {
             this._state = await this.generateTextureBySource(source);
         }
-        // else if (source instanceof VideoFrame) {
-        // }
         else {
             console.warn("texture init error");
         }
-
-        return this._state;
     }
 
 
@@ -119,18 +134,20 @@ export class VideoTexture extends BaseTexture {
             width = source.videoWidth;
             height = source.videoHeight;
             this.video = source;
+            if (this.video.id != "")
+                this.Name = this.video.id;
         }
         else if (source instanceof VideoFrame) {
             width = source.displayWidth;
             height = source.displayHeight;
             this.video = source;
+            this.Name = "VideoFrame";
         }
         else if (source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas) {
             width = source.width;
             height = source.height;
             this.video = source;
         }
-
         if (width == 0 || height == 0) {
             console.warn("texture init error");
             return E_lifeState.unstart;
@@ -147,6 +164,7 @@ export class VideoTexture extends BaseTexture {
         this.premultipliedAlpha = premultipliedAlpha;
         if (this.model == "copy" || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas) {
             this.texture = this.device.createTexture({
+                label: this.Name,
                 size: [width, height, 1],
                 format: this.inputValues.format!,
                 // format: 'rgba8unorm',//bgra8unorm
@@ -155,8 +173,6 @@ export class VideoTexture extends BaseTexture {
                 // dimension: '2d',
                 usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
             });
-
-
         }
         else {
             if (source instanceof HTMLVideoElement || source instanceof VideoFrame)

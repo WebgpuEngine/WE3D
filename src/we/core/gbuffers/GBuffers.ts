@@ -5,7 +5,7 @@
  * @requires 
  */
 
-import { I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames } from "./base";
+import { I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "./base";
 
 
 export interface IV_GBuffer {
@@ -34,6 +34,7 @@ export class GBuffers {
     constructor(parent: any, device: GPUDevice) {
         this.device = device;
         this.parent = parent;
+        // this.initCommonTransparentGBuffer();
     }
     getBackgroudColor(premultipliedAlpha: boolean, backGroudColor: [number, number, number, number]): number[] {
         if (premultipliedAlpha) {
@@ -159,6 +160,57 @@ export class GBuffers {
         this.removeGBuffer(id);
         this.initGBuffer(id, input);
     }
+    /**
+     * 重新初始化GBufferByID
+     * @param id ：GBuffer的id
+     * @param input ：GBuffer的初始化参数
+     */
+    reInitCommonTransparentGBuffer() {
+        this.removCommonTransparentGBuffer();
+        this.initCommonTransparentGBuffer();
+    }
+    removCommonTransparentGBuffer() {
+        for (let key in this.commonTransparentGBuffer.GBuffer) {
+            this.commonTransparentGBuffer.GBuffer[key].destroy();
+        }
+    }
+    initCommonTransparentGBuffer() {
+        let device = this.device;
+        let width = this.parent.scene.surface.size.width;
+        let height = this.parent.scene.surface.size.height;
+        let premultipliedAlpha = this.parent.scene.premultipliedAlpha;
+        let backgroudColor = this.parent.scene.backGroundColor;
+
+        let colorAttachments: GPURenderPassColorAttachment[] = [];
+        let colorAttachmentTargets: GPUColorTargetState[] = [];
+        let gbuffers: I_GBuffer = {};
+
+        for (let key in V_TransparentGBufferNames) {
+            let perOneBuffer = V_TransparentGBufferNames[key];
+            let texture = device.createTexture({
+                size: [width, height],
+                format: perOneBuffer.format,
+                usage: perOneBuffer.usage,
+            });
+            colorAttachments.push({
+                view: texture.createView(),
+                clearValue: [0.0, 0.0, 0.0, 0.0],
+                loadOp: 'clear',
+                storeOp: 'store',
+            });
+            colorAttachmentTargets.push({ format: perOneBuffer.format });
+            gbuffers[key] = texture;
+        }
+        const rpd: GPURenderPassDescriptor = {
+            colorAttachments: colorAttachments,
+        };
+        this.commonTransparentGBuffer = {
+            RPD: rpd,
+            colorAttachmentTargets: colorAttachmentTargets,
+            GBuffer: gbuffers,
+        };
+    }
+
     getRPDByID(id: string): GPURenderPassDescriptor {
         return this.GBuffer[id].forward.RPD;
     }

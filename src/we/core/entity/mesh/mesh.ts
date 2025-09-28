@@ -416,7 +416,7 @@ export class Mesh extends BaseEntity {
         if (boundingBoxMaxSize === 0) boundingBoxMaxSize = 1;
 
         let valueDC: V_DC = {
-            label: "DrawCommand mesh :" + this.Name + " for  " + type + ": " + UUID,
+            label: "mesh:" + this.Name + " for " + type + ":" + UUID,
             data: {
                 vertices: this.attributes.vertices,
                 vertexStepMode: this.attributes.vertexStepMode,

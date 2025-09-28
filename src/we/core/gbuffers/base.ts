@@ -158,15 +158,15 @@ export interface I_GBufferGroup {
             /** 每个camera的延迟渲染的buffer ：1个*/
             GBuffer: GPUTexture,
         },
-        transparent?: {
-            RPD: GPURenderPassDescriptor,
-            colorAttachmentTargets: GPUColorTargetState[],
-            /**每个camera的透明渲染的GBuffer 
-             * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
-             * depthAttachment:1个深度附件
-             * */
-            transparentGBuffer: I_GBuffer,
-        },
+        // transparent?: {
+        //     RPD: GPURenderPassDescriptor,
+        //     colorAttachmentTargets: GPUColorTargetState[],
+        //     /**每个camera的透明渲染的GBuffer 
+        //      * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
+        //      * depthAttachment:1个深度附件
+        //      * */
+        //     transparentGBuffer: I_GBuffer,
+        // },
     }
 }
 export interface I_TransparentGBufferGroup {
@@ -176,7 +176,7 @@ export interface I_TransparentGBufferGroup {
      * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
      * depthAttachment:1个深度附件
      * */
-    transparentGBuffer: I_GBuffer,
+   GBuffer: I_GBuffer,
 }
 
 /**

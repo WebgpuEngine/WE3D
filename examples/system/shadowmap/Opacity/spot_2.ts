@@ -59,6 +59,7 @@ let lightRadius = 3.5;
 let lightZ = 3.;
 let light1Entity1 = new Mesh(
   {
+    name:"ballLightMesh",
     attributes: {
       geometry: ballGeometry,
     },

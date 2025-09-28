@@ -19,6 +19,7 @@ export type SimpleFunction = () => void;
 export interface I_Update {
     /**自定义更新functon() */
     update?: (scope: any) => void,
+    name?: string,
 }
 
 /** 渲染类型，用于shadow map 或者camera */

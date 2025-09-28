@@ -66,3 +66,4 @@ export interface I_mipmap {
     /**指定mipmap层数，默认自动计算 */
     level?: number,
 }
+

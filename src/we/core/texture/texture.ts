@@ -1,5 +1,6 @@
 import { E_lifeState } from "../base/coreDefine";
 import { weGetImageByUrl } from "../base/coreFunction";
+import { E_resourceKind } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
 import { I_BaseTexture } from "./base";
 import { BaseTexture } from "./baseTexture";
@@ -22,26 +23,33 @@ export class Texture extends BaseTexture {
 
     declare inputValues: I_BaseTexture;
     declare texture: GPUTexture;
-    constructor(input: I_BaseTexture, device: GPUDevice,scene?:Scene) {
-        super(input, device,scene);
+    constructor(input: I_BaseTexture, device: GPUDevice, scene?: Scene) {
+        super(input, device, scene);
         this.inputValues = input;
-
     }
-    async  readyForGPU(): Promise<any>{
+    async readyForGPU(): Promise<any> {
         let source = this.inputValues.source;
-        //url
-        if (typeof source == "string") {
-            await this.generateTextureByString(source);
-        }
         //GPUTexture
-        // else if (typeof source == "object" && "usage" in source) {
-        else if (source instanceof GPUTexture) {
+        if (source instanceof GPUTexture) {
             this.texture = source;
             this._state = E_lifeState.finished;
         }
         //GPUCopyExternalImageSource
-        else if (source instanceof ImageBitmap || source instanceof ImageData || source instanceof HTMLImageElement || source instanceof HTMLVideoElement || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas || source instanceof VideoFrame) {
-            await this.generateTextureByImageSource(source);
+        else {
+            if (this.scene.resourcesGPU.has(source, E_resourceKind.texture)) {
+                this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.texture);
+            }
+            else {
+                if (typeof source == "string") {
+                    let urlName = source.split("/");
+                    this.Name = urlName[urlName.length - 1];
+                    await this.generateTextureByString(source);
+                }
+                else if (source instanceof ImageBitmap || source instanceof ImageData || source instanceof HTMLImageElement || source instanceof HTMLVideoElement || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas || source instanceof VideoFrame) {
+                    await this.generateTextureByImageSource(source);
+                }
+                this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+            }
         }
         return this._state;
     }
@@ -88,9 +96,8 @@ export class Texture extends BaseTexture {
         else {
             premultipliedAlpha = true;
         }
-
-
         this.texture = this.device.createTexture({
+            label: this.Name,
             size: [width, height, 1],
             format: this.inputValues.format!,
             mipLevelCount: this.inputValues.mipmap ? this.numMipLevels([width, height]) : 1,

@@ -51,7 +51,7 @@ await scene.add(camera);
 
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
-  direction: [0.250, .50, 1.0],
+  direction: [0.250, .950, .0],
   intensity: 0.5,
   shadow: true,
 });
@@ -62,7 +62,7 @@ await scene.add(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.1
+    intensity: 0.01
   }
 )
 await scene.add(ambientLight);
@@ -104,7 +104,7 @@ let planeGeometry = new PlaneGeometry({
   height: 10
 });
 let groundMaterial = new PhongMaterial({
-  color: [1,1,1, 1],
+  color: [1, 1, 1, 1],
   roughness: 1,
   metalness: 0.1,
   shininess: 32

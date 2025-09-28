@@ -9,7 +9,7 @@ import { commmandType, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate, I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { Scene } from "../scene/scene";
 import { BaseCamera } from "../camera/baseCamera";
-import { E_resourceKind } from "../resources/resourcesGPU";
+import { E_resourceKind, ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { I_mipmap } from "../texture/base";
 import { Clock } from "../scene/clock";
 
@@ -55,6 +55,8 @@ export abstract class BaseMaterial extends RootOfGPU {
     };
 
     commands: commmandType[] = [];
+    resourcesGPU!: ResourceManagerOfGPU;
+
 
     constructor(input?: IV_BaseMaterial) {
         super();
@@ -82,6 +84,7 @@ export abstract class BaseMaterial extends RootOfGPU {
         this.renderID = renderID
         await super.init(scene, parent, renderID);
 
+        this.resourcesGPU=this.scene.resourcesGPU;
         this.scene.materialManager.add(this);
         // this._state == E_lifeState.finished;
         return renderID;

@@ -2,6 +2,7 @@ import { E_lifeState, weColor4, weVec3 } from "../../base/coreDefine";
 import { isWeColor3, isWeVec3 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
 import { T_uniformGroup } from "../../command/base";
+import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialPBRFS_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
@@ -79,8 +80,11 @@ export class PBRMaterial extends BaseMaterial {
                 // else if (key == E_TextureType.ao && texture.format == undefined) {
                 //     texture.format = "r8unorm";
                 // }
+
+        
                 let textureInstace = new Texture(texture, this.device, this.scene);
                 await textureInstace.init(this.scene);
+       
                 this.textures[key] = textureInstace;
             }
         }

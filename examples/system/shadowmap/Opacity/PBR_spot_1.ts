@@ -60,6 +60,7 @@ let lightRadius = 4.5;
 let lightZ = 3.5;
 let light1Entity1 = new Mesh(
   {
+    name:"ballLightMesh",
     attributes: {
       geometry: ballGeometry,
     },
@@ -78,6 +79,7 @@ let light1Entity1 = new Mesh(
 await scene.add(light1Entity1);
 
 let onelight = new SpotLight({
+  name:"spotLight",
   // direction: [-1, -1, -1],
   // direction: [-1.0, 1.0, -1.0],
   direction: [0, 0, 0],
@@ -112,6 +114,7 @@ let sphere = new SphereGeometry({
 
 
 let ballPBROption: IV_PBRMaterial = {
+  name:"PBRMaterial",
   textures: {
     albedo: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-albedo.png" },
     normal: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-normal.png" },
@@ -121,6 +124,7 @@ let ballPBROption: IV_PBRMaterial = {
 }
 let ballpbrMaterial = new PBRMaterial(ballPBROption);
 let inputMeshsphere: IV_MeshEntity = {
+  name:"sphereMesh",
   attributes: {
     geometry: sphere,
   },
@@ -136,6 +140,7 @@ await scene.add(meshSphere);
 
 let box = new BoxGeometry();
 let inputMeshbox: IV_MeshEntity = {
+  name:"boxMesh",
   attributes: {
     geometry: box,
   },
@@ -161,6 +166,7 @@ let groundMaterial = new PhongMaterial(
   });
 
 let bottomPlane = new Mesh({
+  name:"bottomPlaneMesh",
   attributes: {
     geometry: planeGeometry
   },

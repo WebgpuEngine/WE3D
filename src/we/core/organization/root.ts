@@ -112,7 +112,8 @@ export abstract class RootOfOrganization implements I_UUID {
         this.UUID = WeGenerateUUID();
         this.ID = WeGenerateID();
         if (input) this.inputValues = input;
-        this._name = this.ID.toString();
+        if(input?.name) this._name = input!.name!;
+        else this._name = this.ID.toString();
 
         this.matrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
         this.matrixWorld = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);

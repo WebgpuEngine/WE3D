@@ -406,21 +406,21 @@ export class Scene {
             if (this.finalTarget.color) {
                 this.finalTarget.color.destroy();
             }
-            this.finalTarget.color = this.device.createTexture({
-                size: [width, height],
-                format: this.colorFormatOfCanvas,
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-                sampleCount: this.MSAA ? 4 : 1,
-            });
-            if (this.finalTarget.depth) {
-                this.finalTarget.depth.destroy();
-            }
-            this.finalTarget.depth = this.device.createTexture({
-                size: [width, height],
-                format: this.depthMode.depthDefaultFormat,
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-                sampleCount: this.MSAA ? 4 : 1,
-            });
+            // this.finalTarget.color = this.device.createTexture({
+            //     size: [width, height],
+            //     format: this.colorFormatOfCanvas,
+            //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+            //     sampleCount: this.MSAA ? 4 : 1,
+            // });
+            // if (this.finalTarget.depth) {
+            //     this.finalTarget.depth.destroy();
+            // }
+            // this.finalTarget.depth = this.device.createTexture({
+            //     size: [width, height],
+            //     format: this.depthMode.depthDefaultFormat,
+            //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+            //     sampleCount: this.MSAA ? 4 : 1,
+            // });
         }
     }
     /**
