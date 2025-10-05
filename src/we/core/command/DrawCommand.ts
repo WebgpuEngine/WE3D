@@ -1,6 +1,6 @@
-import { isDynamicTextureEntry, isUniformBufferPart } from "../resources/resourcesGPU";
+import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import type { I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferPart, IV_BaseCommand, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferPart, IV_BaseCommand, T_uniformGroup } from "./base";
 import { createUniformBuffer } from "./baseFunction";
 /**
  * https://www.w3.org/TR/webgpu/#ref-for-dom-gpurenderpassencoder-setviewport%E2%91%A1
@@ -36,14 +36,17 @@ export interface IV_DrawCommand extends IV_BaseCommand {
     // label: string,
     // device: GPUDevice,
     pipeline: GPURenderPipeline,
-    vertexBuffers: GPUBuffer[],
+    vertexBuffers?: GPUBuffer[],
     indexBuffer?: GPUBuffer,
     uniform?: GPUBindGroup[],
     viewport?: I_viewport,
     renderPassDescriptor: () => GPURenderPassDescriptor,
     drawMode: I_drawMode | I_drawModeIndexed,
     dynamicUniform?: I_DynamicUniformOfDrawCommand,
-
+    /**
+     * ID组
+     */
+    IDS?: I_DrawCommandIDs,
 }
 
 export class DrawCommand {
@@ -61,7 +64,7 @@ export class DrawCommand {
     pipelineLayout: GPUPipelineLayout | "auto" = "auto";
     renderPassDescriptor: () => GPURenderPassDescriptor;// GPURenderPassDescriptor;
 
-    vertexBuffers!: GPUBuffer[];
+    vertexBuffers: GPUBuffer[] = [];
     indexBuffer!: GPUBuffer;
 
     bindGroups: GPUBindGroup[] = [];
@@ -75,7 +78,26 @@ export class DrawCommand {
 
     inputValues: IV_DrawCommand;
 
+    /**
+     * 缓存的pipeline结构，用于标识DC在renderManaager中优化渲染使用
+     */
     cacheFlagPipeline!: I_PipelineStructure;
+    /**
+     * ID组
+     */
+    IDS: I_DrawCommandIDs = {
+        UUID: "",
+        ID: 0,
+        renderID: 0,
+    }
+
+    // mapList: {
+    //     key: any,//key of map
+    //     type: string, //类型
+    //     map?: string,//明确的Map<>
+    // }[] = [];
+
+    // resourcesGPU!: ResourceManagerOfGPU;
 
     constructor(input: IV_DrawCommand) {
         this.inputValues = input;
@@ -83,14 +105,63 @@ export class DrawCommand {
         this.device = input.device;
         this.scene = input.scene;
         this.pipeline = input.pipeline;
-        this.vertexBuffers = input.vertexBuffers;
+        this.vertexBuffers = input.vertexBuffers || [];
         if (input.indexBuffer) this.indexBuffer = input.indexBuffer;
         if (input.uniform) this.bindGroups = input.uniform;
         this.drawMode = input.drawMode;
         this.renderPassDescriptor = input.renderPassDescriptor;
         if (input.dynamicUniform) this.dynamic = true;
+        if (input.IDS) this.IDS = input.IDS;
+        // this.resourcesGPU = input.scene.resourcesGPU;
     }
-    destroy() { }
+    /**
+     * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
+     * 例如：[texture, bindGroupEntry]
+     * destroy时需要删除映射关系
+     */
+    resourcesOfMapList: any[] = [];
+    /**
+     * uniform 的GPUBuffer列表，
+     * destroy时需要删除GPUBuffer
+     */
+    uniformBufferList: any[] = [];
+    destroy() {
+        // if (this.resourcesGPU) {
+        //     for (let i of this.mapList) {
+        //         if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
+        //             (this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>).delete(i.map);
+        //         }
+        //         else
+        //             this.resourcesGPU.delete(i.key, i.type);
+        //     }
+        // }
+        //只有在DC中使用了uniformBuffer，才需要删除
+        for (let i in this.resourcesOfMapList) {
+            let item = this.resourcesOfMapList[i];
+            this.scene.resourcesGPU.uniformBuffer.delete(item.key);//未测试，应该没问题
+        }
+        for (let i in this.uniformBufferList) {
+            let item = this.uniformBufferList[i];
+            item.destroy();
+        }
+        this.resourcesOfMapList = [];
+        this.uniformBufferList = [];
+        this.pipeline = {} as GPURenderPipeline;
+        // this.scene = null;
+        this.inputValues = {} as IV_DrawCommand;
+        this.pipelineLayout = {} as GPUPipelineLayout;
+        this.renderPassDescriptor = {} as () => GPURenderPassDescriptor;
+        this.vertexBuffers = [];
+        this.indexBuffer = {} as GPUBuffer;
+        this.bindGroups = [];
+        this.drawMode = {} as I_drawMode | I_drawModeIndexed;
+        this.cacheFlagPipeline = {} as I_PipelineStructure;
+        this.IDS = {
+            UUID: "",
+            ID: 0,
+            renderID: 0,
+        }
+    }
     /**
      * 完整的绘制命令编码
      * @returns GPUCommandBuffer
@@ -229,6 +300,9 @@ export class DrawCommand {
         let layoutNumber = values.dynamicUniform!.layoutNumber;
 
         // resources: ResourceManagerOfGPU;
+        if (!uniformGroup) {
+            return;
+        }
         for (let perGroup of uniformGroup!) {
             //BindGroup，重点1
             let bindGroup: GPUBindGroup;
@@ -257,7 +331,9 @@ export class DrawCommand {
                     else {//没有，创建
                         const label = (perEntry as I_uniformBufferPart).label;
                         let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferPart).size, label, (perEntry as I_uniformBufferPart).data);
+                        this.uniformBufferList.push(buffer);
                         this.scene.resourcesGPU.set(perEntry, buffer, "uniformBuffer");
+                        this.resourcesOfMapList.push({ key: perEntry, value: buffer, type: "uniformBuffer" });
                         bindGroupEntry.push({
                             binding: perEntry.binding,
                             resource: {
@@ -266,10 +342,16 @@ export class DrawCommand {
                         });
                     }
                 }
-                else if (isDynamicTextureEntry(perEntry)) {
+                else if (isDynamicTextureEntryForExternal(perEntry)) {
                     bindGroupEntry.push({
                         binding: perEntry.binding,
                         resource: perEntry.getResource(perEntry.scopy),
+                    });
+                }
+                else if (isDynamicTextureEntryForView(perEntry)) {
+                    bindGroupEntry.push({
+                        binding: perEntry.binding,
+                        resource: perEntry.getResource(),
                     });
                 }
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
@@ -292,4 +374,6 @@ export class DrawCommand {
             layoutNumber++;
         }
     }
+
+
 }

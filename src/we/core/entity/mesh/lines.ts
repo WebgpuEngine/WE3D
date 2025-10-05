@@ -112,7 +112,7 @@ export class Lines extends BaseEntity {
             this._cullMode = "none";
         }
     }
-    destroy() {
+    _destroy(): void  {
         throw new Error("Method not implemented.");
     }
     checkStatus(): boolean {
@@ -196,7 +196,7 @@ export class Lines extends BaseEntity {
                 };
             }
         }
-        // let uniformsMaterial = this._material.getOneGroupUniformAndShaderTemplateFinal(bindingNumber);
+        // let uniformsMaterial = this._material.getBundleOfForward(bindingNumber);
 
         // if (uniformsMaterial) {
         //     uniform1.push(...uniformsMaterial.uniformGroup);
@@ -324,7 +324,7 @@ export class Lines extends BaseEntity {
 
         //mesh 前向渲染
         let bundle = this.getUniformAndShaderTemplateFinal(SHT_LineVS);
-        let uniformsMaterial = this._material.getOneGroupUniformAndShaderTemplateFinal(bundle.bindingNumber);
+        let uniformsMaterial = this._material.getBundleOfForward(bundle.bindingNumber);
         if (uniformsMaterial) {
             bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
             bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;

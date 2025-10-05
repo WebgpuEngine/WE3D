@@ -1,6 +1,7 @@
 import {  E_lifeState, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import {T_uniformGroup } from "../../command/base";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType,  I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_WireFrameFS_mergeToVS } from "../../shadermanagemnet/material/wireFrameMaterial";
@@ -11,6 +12,22 @@ import { I_ColorMaterial } from "./colorMaterial";
 
 
 export class WireFrameMaterial extends BaseMaterial {
+    getTTFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    formatTPFS(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+        throw new Error("Method not implemented.");
+    }
+    setTO(): void {
+        this.hasOpaqueOfTransparent=false;
+    }
+
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    _destroy(): void {
+        throw new Error("Method not implemented.");
+    }
     declare inputValues: I_ColorMaterial;
     color: weColor4;
     red: number = 0;
@@ -32,7 +49,7 @@ export class WireFrameMaterial extends BaseMaterial {
         // console.log(this._state);
     }
 
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
             return this.getOpaqueCodeFS(startBinding);
     }
     /**

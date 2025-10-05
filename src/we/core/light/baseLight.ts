@@ -5,6 +5,7 @@ import { Scene } from "../scene/scene";
 import { weColor3, I_Update, weVec3 } from "../base/coreDefine";
 import { Clock } from "../scene/clock";
 import { isWeColor3 } from "../base/coreFunction";
+import { LightsManager } from "./lightsManager";
 
 /**
  * 光源的类型
@@ -199,6 +200,8 @@ export abstract class BaseLight extends RootOfGPU {
          */
         shadow_map_enable: 0,
     }
+
+    manager!: LightsManager;
 
     constructor(input: I_optionBaseLight, kind: E_lightType) {
         super();

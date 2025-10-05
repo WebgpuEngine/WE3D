@@ -204,7 +204,7 @@ export class Sprite extends BaseEntity {
                 };
             }
         }
-        let uniformsMaterial = this._material.getOneGroupUniformAndShaderTemplateFinal(bindingNumber);
+        let uniformsMaterial = this._material.getBundleOfForward(bindingNumber);
 
         if (uniformsMaterial) {
             uniform1.push(...uniformsMaterial.uniformGroup);

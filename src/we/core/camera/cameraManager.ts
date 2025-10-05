@@ -1,4 +1,6 @@
-import { I_GBufferGroup, I_TransparentGBufferGroup } from "../gbuffers/base";
+import { DrawCommand } from "../command/DrawCommand";
+import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
+import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_TransparentGBufferNames } from "../gbuffers/base";
 import { GBuffers, IV_GBuffer } from "../gbuffers/GBuffers";
 import { ECSManager } from "../organization/manager";
 import { Clock } from "../scene/clock";
@@ -12,9 +14,9 @@ export interface IV_CameraManager {
 }
 
 
-export class CameraManager  extends ECSManager<BaseCamera>  {
+export class CameraManager extends ECSManager<BaseCamera> {
 
-    
+
     defaultCamera!: BaseCamera;
     /**
      * GBuffer 管理器
@@ -28,11 +30,18 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
     zindexList: string[] = [];
 
 
+    /**
+     * DrawCommandGenerator
+     */
+    DCG: DrawCommandGenerator;
 
-
+    onePointToTT_DC!: DrawCommand;
     constructor(input: IV_CameraManager) {
         super(input.scene);
         this.GBufferManager = new GBuffers(this, this.scene.device);
+        this.DCG = new DrawCommandGenerator({ scene: this.scene });
+
+
     }
     /**
      * 增加摄像机
@@ -43,6 +52,7 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
      * @param camera 相机
      */
     add(camera: BaseCamera) {
+        camera.manager = this;
         let width = this.scene.surface.size.width;
         let height = this.scene.surface.size.height;
         this.list.push(camera);
@@ -56,10 +66,15 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
             backGroudColor: camera.backGroundColor,
             depthClearValue: this.scene.reversedZ.cleanValue
         };
+        if (camera.name) {
+            gbuffersOption.name = camera.name;
+        }
         this.GBufferManager.initGBuffer(camera.UUID, gbuffersOption);
         if (this.defaultCamera == undefined) {
             this.defaultCamera = camera;
         }
+        this.GBufferManager.reInitCommonTransparentGBuffer();
+        this.cleanValueOfTT();
         this.zindexList.push(camera.UUID);
     }
     /**
@@ -149,63 +164,48 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
      * @param uuid uuid
      * @returns 相机
      */
-    getCameraByUUID(uuid: string) {
-        return this.list.find(camera => camera.UUID == uuid);
-    }
-    getCamearRenderAttributeByUUID(UUID: string): { CATs: GPUColorTargetState[], RPD: GPURenderPassDescriptor } | false {
-        let camera = this.getCameraByUUID(UUID);
+    getCameraByUUID(uuid: string): BaseCamera {
+        let camera = this.list.find(camera => camera.UUID == uuid);
         if (camera) {
-            return {
-                CATs: this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets,
-                RPD: this.GBufferManager.GBuffer[UUID].forward.RPD
-            };
+            return camera;
         }
         else {
-            console.error("相机不存在");
+            throw new Error("相机不存在：" + uuid);
         }
-        return false;
     }
-    getColorAttachmentTargetsByUUID(UUID: string): GPUColorTargetState[] | false {
-        let camera = this.getCameraByUUID(UUID);
-        if (camera) {
-            return this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets;
-        }
-        else {
-            console.error("相机不存在");
-        }
-        return false;
+    getCamearRenderAttributeByUUID(UUID: string): { CATs: GPUColorTargetState[], RPD: GPURenderPassDescriptor } {
+        // let camera = this.getCameraByUUID(UUID);
+        return {
+            CATs: this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets,
+            RPD: this.GBufferManager.GBuffer[UUID].forward.RPD
+        };
+
     }
-    getRPDByUUID(UUID: string): GPURenderPassDescriptor | false {
-        let camera = this.getCameraByUUID(UUID);
-        if (camera) {
-            return this.GBufferManager.GBuffer[UUID].forward.RPD;
-        }
-        else {
-            console.error("相机不存在");
-        }
-        return false;
+    getCamearDepthOfGBufferByUUID(UUID: string): GPUTexture {
+        // let camera = this.getCameraByUUID(UUID);
+        return this.GBufferManager.GBuffer[UUID].forward.GBuffer[E_GBufferNames.depth];
+    }
+    getColorAttachmentTargetsByUUID(UUID: string): GPUColorTargetState[] {
+        // let camera = this.getCameraByUUID(UUID);
+        return this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets;
+
+    }
+    getRPDByUUID(UUID: string): GPURenderPassDescriptor {
+        // let camera = this.getCameraByUUID(UUID);
+        return this.GBufferManager.GBuffer[UUID].forward.RPD;
+
     }
     getRPDOfDefferDepthByUUID(UUID: string): GPURenderPassDescriptor | false {
         if (this.scene.deferRender.enable === false) {
             return false;
         }
-        let camera = this.getCameraByUUID(UUID);
-        if (camera) {
-            return this.GBufferManager.GBuffer[UUID].deferDepth?.RPD!;
-        }
-        else {
-            console.error("相机不存在");
-        }
-        return false;
+        // let camera = this.getCameraByUUID(UUID);
+        return this.GBufferManager.GBuffer[UUID].deferDepth?.RPD!;
     }
-    getGBufferTextureByUUID(UUID: string, GBufferName: string): GPUTexture  {
-        let camera = this.getCameraByUUID(UUID);
-        if (camera) {
-            return this.GBufferManager.getTextureByNameAndUUID(UUID, GBufferName);
-        }
-        else {
-              throw new Error("相机不存在："+UUID);
-        }
+    getGBufferTextureByUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
+        // let camera = this.getCameraByUUID(UUID);
+        // console.log(this.GBufferManager.getTextureByNameAndUUID(UUID, GBufferName));
+        return this.GBufferManager.getTextureByNameAndUUID(UUID, GBufferName);
     }
     /**
      * 获取相机
@@ -222,6 +222,7 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
     set DefaultCamera(camera: BaseCamera) {
         this.defaultCamera = camera;
     }
+
     /**
      * 更新相机数据
      */
@@ -230,13 +231,334 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
         //     camera.update(clock);
         // }
     }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // TT
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    TT_Uniform!: I_TransparentGBufferGroup;
+    TT_Render!: I_TransparentGBufferGroup;
+
+    /**
+     * 获取透明GBuffer的RenderPassDescriptor
+     * @returns 透明GBuffer的RenderPassDescriptor
+     */
+    getTT_RenderRPD(): GPURenderPassDescriptor {
+        if (this.TT_Render) {
+            return this.TT_Render.RPD;
+        }
+        else {
+            throw new Error("getTTRPD 透明GBuffer不存在");
+        }
+    }
+    getTT_UniformRPD(): GPURenderPassDescriptor {
+        if (this.TT_Uniform) {
+            return this.TT_Uniform.RPD;
+        }
+        else {
+            throw new Error("getTT_UniformRPD 透明GBuffer不存在");
+        }
+    }
+    getTTColorAttachmentTargets(): GPUColorTargetState[] {
+        if (this.TT_Render) {
+            return this.TT_Render.colorAttachmentTargets;
+        }
+        else {
+            throw new Error("getTTColorAttachmentTargets 透明GBuffer不存在");
+        }
+    }
+    /**
+     * 获取透明GBuffer的uniform texture
+     * @param name 透明GBuffer的名称
+     * @returns 透明GBuffer的uniform texture
+     */
+    getTTUniformTexture(name: string): GPUTexture {
+        if (this.TT_Uniform && this.TT_Uniform.GBuffer[name]) {
+            return this.TT_Uniform.GBuffer[name];
+        }
+        else {
+            throw new Error("getTTUniform 透明GBuffer不存在:" + name);
+        }
+    }
+    /**
+     * 获取透明GBuffer的render texture
+     * @param name 透明GBuffer的名称
+     * @returns 透明GBuffer的render texture
+     */
+    getTTRenderTexture(name: string): GPUTexture {
+        if (this.TT_Uniform && this.TT_Uniform.GBuffer[name]) {
+            return this.TT_Uniform.GBuffer[name];
+        }
+        else {
+            throw new Error("getTTUniform 透明GBuffer不存在:" + name);
+        }
+    }
+    /**
+     * 作废，两个texture组的切换，在时间线上还是有冲突，改为copy模式 
+     * 切换透明GBuffer 
+     * */
+    switchTT() {
+        // console.log("uniform="+this.TT_Uniform.name,"render="+this.TT_Render.name);
+
+        if (this.TT_Uniform.name === "B") {
+            this.TT_Uniform = this.GBufferManager.commonTransparentGBufferA;
+            this.TT_Render = this.GBufferManager.commonTransparentGBufferB;
+        }
+        else {
+            this.TT_Uniform = this.GBufferManager.commonTransparentGBufferB;
+            this.TT_Render = this.GBufferManager.commonTransparentGBufferA;
+        }
+    }
+    /**
+     * 1、重置A:Render,B:Uniform
+     * 2、清除Blend参数
+     * 3、清除透明GBuffer的值
+     * 
+     */
+    cleanValueOfTT() {
+        this.TT_Render = this.GBufferManager.commonTransparentGBufferA;
+        this.TT_Uniform = this.GBufferManager.commonTransparentGBufferB;
+        for (let perOne of this.GBufferManager.commonTransparentGBufferA.colorAttachmentTargets) {
+            perOne.blend = undefined;
+            perOne.writeMask = undefined
+        }
+        for (let perOne of this.GBufferManager.commonTransparentGBufferB.colorAttachmentTargets) {
+            perOne.blend = undefined;
+            perOne.writeMask = undefined
+        }
+        //20250930 ,使用clear模式，交换两组缓存，应该可以自动清除
+        // this.renderOnePointToTT();//清除uniform的transparentGBuffer
+        // this.switchTT();
+        // this.renderOnePointToTT();
+    }
+    /**
+     * 使用渲染一个点清空Textures
+     */
+    renderOnePointToTT() {
+        if (!this.onePointToTT_DC) {
+            this.onePointToTT_DC = this.initOnePointToTT();
+        }
+        this.onePointToTT_DC.submit();
+    }
+
+    /**
+     * 初始化一个点渲染到透明GBuffer中,改为uniform的，render的是clear
+     * @returns 
+     */
+    initOnePointToTT() {
+        let shader = `   
+        struct ST_GBuffer{
+        @location(0) color1 : vec4f,
+        @location(1) color2 : vec4f,
+        @location(2) color3 : vec4f,
+        @location(3) color4 : vec4f,
+        @location(4) depth : vec4f,
+        @location(5) id : vec4u,
+        }
+            @vertex fn vs() -> @builtin(position)  vec4f {
+                    return vec4f(0.0, 0.0, 0.0,  0.0);
+            }
+            @fragment fn fs(@builtin(position) pos: vec4f ) -> ST_GBuffer{
+                var gbuffer: ST_GBuffer;
+                gbuffer.color1 = vec4f(0.0, 0.0, 0.0, 0.0);
+                gbuffer.color2 = vec4f(0.0, 0.0, 0.0, 0.0);
+                gbuffer.color3 = vec4f(0.0, 0.0, 0.0, 0.0);
+                gbuffer.color4 = vec4f(0.0, 0.0, 0.0, 0.0);
+                gbuffer.depth = vec4f(0.0, 0.0, 0.0, 0.0);
+                gbuffer.id = vec4u(0, 0, 0, 0);
+                return gbuffer;
+            }`;
+        let valueDC: V_DC = {
+            label: "cameraManager renderOnePointToTT",
+            data: {
+                // vertices: new Map([
+                //     ["position", [0, 0, 0]],
+                // ]),
+            },
+            render: {
+                vertex: {
+                    code: shader,
+                    entryPoint: "vs",
+                },
+                fragment: {
+                    entryPoint: "fs",
+                    targets: this.getTTColorAttachmentTargets(),
+                },
+                drawMode: {
+                    vertexCount: 1
+                },
+                primitive: {
+                    topology: "point-list",
+                },
+                depthStencil: false,
+            },
+            renderPassDescriptor: () => this.getTT_UniformRPD(),
+            dynamic: true,
+        };
+        let dc0 = this.DCG.generateDrawCommand(valueDC);
+        // dc0.submit()
+        return dc0;
+    }
+
+    copyTextureAToTextureB() {
+        let width = this.scene.surface.size.width;
+        let height = this.scene.surface.size.height;
+        let list = [];
+        for (let key in V_TransparentGBufferNames) {
+            let A = this.TT_Render.GBuffer[key];
+            let B = this.TT_Uniform.GBuffer[key];
+            // console.log(A, B);
+            const commandEncoder = this.device.createCommandEncoder();
+            commandEncoder.copyTextureToTexture(
+                {
+                    texture: A
+                },
+                {
+                    texture: B,
+                },
+                [width, height]
+            );
+            const commandBuffer = commandEncoder.finish();
+            list.push(commandBuffer);
+        }
+        this.device.queue.submit(list);
+    }
+    /**
+     * 映射透明GBuffer的深度纹理到GPUBuffer，公用
+     */
+    resultGPUBuffer!: GPUBuffer;
+    /**
+     * 20251001 map操作影响性能
+     * 复制纹理数据到GPUBuffer,然后map到UintArray
+     * @param idTexture 要复制的纹理
+     * @returns 复制的纹理数据
+     */
+    async copyTextureToBuffer(idTexture: GPUTexture): Promise<
+        {
+            result: ArrayBuffer,
+            bytesPerRow: number,
+            width: number,
+            height: number,
+        }> {
+        let width = this.scene.surface.size.width;
+        let height = this.scene.surface.size.height;
+
+        // 计算基础每行字节数（未对齐）
+        let bytesPerRow = width * 4 * 4;
+        // 获取设备的内存对齐要求
+        const alignment = this.device.limits.minStorageBufferOffsetAlignment;
+        // 向上 bytesPerRow 向上取整到对齐值的倍数
+        bytesPerRow = Math.ceil(bytesPerRow / alignment) * alignment;
+
+        if (!this.resultGPUBuffer) {
+            this.resultGPUBuffer = this.device.createBuffer({
+                size: bytesPerRow * height,
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+            });
+        }
+
+        const commandEncoder = this.device.createCommandEncoder();
+        // Encode a command to copy the results to a mappable buffer.
+        let source: GPUTexelCopyTextureInfo = {//这里应该是GPUTexelCopyTextureInfo,@webgpu/types没有这个，GPUImageCopyTexture是GPUTexelCopyTextureInfo集成;
+            texture: idTexture,
+        }
+        let destination: GPUTexelCopyBufferInfo = {//GPUTexelCopyBufferInfo,@webgpu/types没有这个,用GPUImageCopyBuffer代替
+            buffer: this.resultGPUBuffer,
+            bytesPerRow: bytesPerRow,
+        };
+        let size: GPUExtent3DStrict = {
+            width: width,
+            height: height
+        }
+        commandEncoder.copyTextureToBuffer(source, destination, size);
+        const commandBuffer = commandEncoder.finish();
+        this.device.queue.submit([commandBuffer]);
+        await this.device.queue.onSubmittedWorkDone();
+        // Read the results
+        await this.resultGPUBuffer.mapAsync(GPUMapMode.READ);
+        // const result = this.resultGPUBuffer.getMappedRange(0, bytesPerRow * height);
+        const result = this.resultGPUBuffer.getMappedRange().slice(0, bytesPerRow * height);
+        // const result = new Uint32Array(this.resultGPUBuffer.getMappedRange().slice(0, bytesPerRow * height));
+        this.resultGPUBuffer.unmap();
+        return { result, bytesPerRow, width, height };
+    }
+    async getLayerIDArray(): Promise<number[][]> {
+        // let idTexture: GPUTexture = this.TT_Render.GBuffer["color1"];
+        let idTexture: GPUTexture = this.TT_Uniform.GBuffer["id"];
+        // console.log(this.TT_Uniform.name);
+        let encodeEntity = (ID: number) => {
+            let entityIDMask = (1 << 30) - 1;
+            let entity = ID & entityIDMask;
+            entity = entity >> 14;
+            return entity;
+        };
+        let { result, bytesPerRow, width, height } = await this.copyTextureToBuffer(idTexture);
+        // let resultU32Array = result;
+        let resultU32Array = new Uint32Array(result);
+        // console.log(encodeEntity(resultU32Array[0]));
+        let layerIDArray: number[][] = [
+            [], [], [], []
+        ];
+        for (let hi = 0; hi < height; hi++) {
+            for (let wi = 0; wi < width; wi += 4) {
+                let R = encodeEntity(resultU32Array[hi * bytesPerRow / 4 + wi * 4]);
+                let G = encodeEntity(resultU32Array[hi * bytesPerRow / 4 + wi * 4 + 1]);
+                let B = encodeEntity(resultU32Array[hi * bytesPerRow / 4 + wi * 4 + 2]);
+                let A = encodeEntity(resultU32Array[hi * bytesPerRow / 4 + wi * 4 + 3]);
+                if (R != 0) {
+                    layerIDArray[0].push(R);
+                }
+                if (G != 0) {
+                    layerIDArray[1].push(G);
+                }
+                if (B != 0) {
+                    layerIDArray[2].push(B);
+                }
+                if (A != 0) {
+                    layerIDArray[3].push(A);
+                }
+            }
+        }
+        let RArray = [... new Set(layerIDArray[0])];
+        let GArray = [... new Set(layerIDArray[1])];
+        let BArray = [... new Set(layerIDArray[2])];
+        let AArray = [... new Set(layerIDArray[3])];
+
+        // console.log(RArray, GArray, BArray, AArray);
+        return [RArray, GArray, BArray, AArray];
+    }
+
+
+    //end TT
+
     onResize() {
+        let width = this.scene.surface.size.width;
+        let height = this.scene.surface.size.height;
+        // 计算基础每行字节数（未对齐）
+        let bytesPerRow = width * 4 * 4;
+        // 获取设备的内存对齐要求
+        const alignment = this.device.limits.minStorageBufferOffsetAlignment;
+        // 向上 bytesPerRow 向上取整到对齐值的倍数
+        bytesPerRow = Math.ceil(bytesPerRow / alignment) * alignment;
+        // 重新创建resultGPUBuffer
+        if (this.resultGPUBuffer) {
+            this.resultGPUBuffer.destroy();
+            this.resultGPUBuffer = this.device.createBuffer({
+                size: bytesPerRow * height,
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+
+            });
+        }
+
+        if (!this.onePointToTT_DC) {
+            this.onePointToTT_DC = this.initOnePointToTT();
+        }
+        else {
+            this.onePointToTT_DC.destroy();
+            this.onePointToTT_DC = this.initOnePointToTT();
+        }
         for (let UUID in this.GBufferManager.GBuffer) {
             let camera = this.getCameraByUUID(UUID) as BaseCamera;
-            let gbuffer = this.GBufferManager.GBuffer[UUID];
-            let width = this.scene.surface.size.width;
-            let height = this.scene.surface.size.height;
-
+            // 重新创建GBuffer
             let gbuffersOption: IV_GBuffer = {
                 device: this.device,
                 surfaceSize: {
@@ -247,11 +569,18 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
                 backGroudColor: camera.backGroundColor,
                 depthClearValue: this.scene.reversedZ.cleanValue
             };
+            if (camera.name) {
+                gbuffersOption.name = camera.name;
+            }
             this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
         }
+        this.GBufferManager.reInitCommonTransparentGBuffer();
+
+        this.cleanValueOfTT();
+        // 更新所有相机的投影矩阵
         for (let camera of this.list) {
             if (camera instanceof PerspectiveCamera) {
-                camera.inpuValues.aspect = this.scene.aspect;
+                camera.aspect = this.scene.aspect;
                 camera.updateProjectionMatrix();
                 camera.updateByPositionDirection(camera.worldPosition, camera.lookAt, false);
 
@@ -262,14 +591,6 @@ export class CameraManager  extends ECSManager<BaseCamera>  {
             }
         }
     }
-    mergeTransparent(UUID: string) {
-        let camera = this.getCameraByUUID(UUID);
-        /**
-         * 合并透明物体
-         * 1、按照顺序blend合并 commonTransparentGBuffer，4层
-         * 2、blend 到Camera 的color attachment
-         */
-        throw new Error("合并透明物体未实现");
-    }
+
 
 }

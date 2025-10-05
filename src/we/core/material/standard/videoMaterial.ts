@@ -10,6 +10,9 @@ import { SHT_materialTextureFS_mergeToVS, SHT_materialTextureTransparentFS_merge
 import { getBundleOfGBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { IV_OptionVideoTexture, T_modelOfVideo, T_VIdeoSourceType, VideoTexture } from "../../texture/videoTexture";
 import { SHT_materialVideoTextureFS_mergeToVS } from "../../shadermanagemnet/material/videoMaterial";
+import { BaseCamera } from "../../camera/baseCamera";
+import { BaseLight } from "../../light/baseLight";
+import { E_resourceKind } from "../../resources/resourcesGPU";
 
 
 /**
@@ -30,6 +33,7 @@ export interface IV_VideoMaterial extends IV_BaseMaterial {
 }
 
 export class VideoMaterial extends BaseMaterial {
+
 
 
     sampler!: GPUSampler;
@@ -63,7 +67,6 @@ export class VideoMaterial extends BaseMaterial {
         }
         this.textures = {};
         this._state = E_lifeState.destroyed;
-        this._destroy = true;
     }
 
     async readyForGPU(): Promise<any> {
@@ -87,8 +90,16 @@ export class VideoMaterial extends BaseMaterial {
         }
         this._state = E_lifeState.finished;
     }
-
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
+    setTO(): void {
+        this.hasOpaqueOfTransparent = false;
+    }
+    getTTFS(renderObject:BaseCamera|BaseLight,_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -138,6 +149,10 @@ export class VideoMaterial extends BaseMaterial {
 
         //添加到resourcesGPU的Map中
         this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout)
+        this.mapList.push({
+            key: uniformTexture,
+            type: "",//GPUBindGroupEntry  ,
+        });
         //push到uniform1队列
         uniform1.push(uniformTexture);
         //+1
@@ -160,6 +175,10 @@ export class VideoMaterial extends BaseMaterial {
         };
         //添加到resourcesGPU的Map中
         this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout)
+        this.mapList.push({
+            key: uniformSampler,
+            type: "",//GPUBindGroupEntry  ,
+        });
         //push到uniform1队列
         uniform1.push(uniformSampler);
         //+1
@@ -211,7 +230,7 @@ export class VideoMaterial extends BaseMaterial {
             outputFormat.dynamic = dynamic;
         }
 
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat ,bindingNumber:binding};
     }
 
     updateSelf(clock: Clock): void {

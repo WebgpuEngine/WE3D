@@ -27,15 +27,15 @@ export class EntityManager extends ECSManager<BaseEntity> {
             for (let UUID in entity.cameraDC) {//一个entity的所有camera
                 let perCamera = entity.cameraDC[UUID];
                 for (let i in perCamera) {//单个camera
+                    let kind: renderPassName = renderPassName.forward;
+                    if (i == "deferDepth") {
+                        kind = renderPassName.depth;
+                    }
+                    else if (i == "transparent") {
+                        kind = renderPassName.transparent;
+                    }
                     for (let i_pass in perCamera[i as keyof typeof perCamera]) { //单个pass：forward，deferDepth，transparent
                         let perDC = perCamera[i as keyof typeof perCamera][parseInt(i_pass)];       //单个drawCommand
-                        let kind: renderPassName = renderPassName.forward;
-                        if (i_pass == "deferDepth") {
-                            kind = renderPassName.depth;
-                        }
-                        else if (i_pass == "transparent") {
-                            kind = renderPassName.transparent;
-                        }
                         this.renderManager.push(perDC, kind, UUID);
                     }
                 }
@@ -45,16 +45,51 @@ export class EntityManager extends ECSManager<BaseEntity> {
                 let perShadowmap = entity.shadowmapDC[UUID];
                 this.scene.renderManager.initRenderCommandForLight(UUID);
                 for (let i in perShadowmap) {//单个shadowmap
+                    let kind: renderPassName = renderPassName.shadowmapOpacity;
+                    if (i == "transparent") {
+                        kind = renderPassName.shadowmapTransparent;
+                    }
                     for (let i_pass in perShadowmap[i as keyof typeof perShadowmap]) { //单个pass：deth，transparent
                         let perDC = perShadowmap[i as keyof typeof perShadowmap][parseInt(i_pass)];       //单个drawCommand
-                        let kind: renderPassName = renderPassName.shadowmapOpacity;
-                        if (i_pass == "transparent") {
-                            kind = renderPassName.shadowmapTransparent;
-                        }
                         this.renderManager.push(perDC, kind, UUID);
                     }
                 }
             }
+        }
+    }
+    /**
+     * 实体的onResize
+     */
+    onResize(): void {
+        for (let entity of this.list) {
+            entity.onResize();
+        }
+    }
+    getEntityByUUID(UUID: string): BaseEntity {
+        let entity = this.list.find((entity) => entity.UUID == UUID);
+        if (entity) {
+            return entity;
+        }
+        else {
+            throw new Error("Entity not found");
+        }
+    }
+    getEntityByID(ID: number): BaseEntity {
+        let entity = this.list.find((entity) => entity.ID == ID);
+        if (entity) {
+            return entity;
+        }
+        else {
+            throw new Error("Entity not found");
+        }
+    }
+    getEntityByRenderID(renderID: number): BaseEntity {
+        let entity = this.list.find((entity) => entity.renderID == renderID);
+        if (entity) {
+            return entity;
+        }
+        else {
+            throw new Error("Entity not found");
         }
     }
 

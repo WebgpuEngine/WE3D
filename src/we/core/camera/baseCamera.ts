@@ -19,6 +19,7 @@ import { I_viewport } from '../command/DrawCommand';
 import { Clock } from '../scene/clock';
 import { boundingBox, generateBox3 } from '../math/Box';
 import { boundingSphere, generateSphereFromBox3 } from '../math/sphere';
+import { CameraManager } from './cameraManager';
 
 
 
@@ -64,6 +65,7 @@ export interface projectionOptions extends I_Update {
 export abstract class BaseCamera extends RootOfGPU {
   /** 初始化参数  */
   declare inpuValues: projectionOptions;
+  manager!: CameraManager;
   ///////////////////////////////////////////////////////////////////
   //空间属性
   boundingBox!: boundingBox;//initDCC中赋值

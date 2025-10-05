@@ -17,7 +17,7 @@ export interface IV_DirectionalLight extends I_optionBaseLight {
 export class DirectionalLight extends BaseLight {
     async readyForGPU(): Promise<any> {
     }
-    destroy(): void {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
     saveJSON() {

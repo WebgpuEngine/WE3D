@@ -18,7 +18,7 @@ export interface optionPerspProjection extends projectionOptions {
 }
 
 export class PerspectiveCamera extends BaseCamera {
-    destroy(): void {
+    _destroy(): void {
         throw new Error('Method not implemented.');
     }
     saveJSON() {
@@ -84,8 +84,7 @@ export class PerspectiveCamera extends BaseCamera {
         this.updateBoundingBox();
     }
 
-    set aspect(aspect: number) { (this.inpuValues as optionPerspProjection).aspect = aspect }
-    get aspect() { return (this.inpuValues as optionPerspProjection).aspect }
+
     updateBoundingBox(): void {
         let nearHeight = 2 * this.inpuValues.near * Math.tan(this.inpuValues.fov / 2);
         let nearWidth = nearHeight * this.inpuValues.aspect;

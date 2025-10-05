@@ -103,9 +103,25 @@ export enum E_TextureType {
 
 
 
-
+/**
+ * 材质的输出Bundle
+ * I_singleShaderTemplate_Final中包括dynamic 参数
+ */
 export interface I_materialBundleOutput {
-    uniformGroup: T_uniformGroup,
+    bindingNumber: number,
+    uniformGroup: T_uniformGroup,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
     singleShaderTemplateFinal: I_singleShaderTemplate_Final,
-    // dynamic:boolean
 }
+
+/**
+ * 材质的TT部分中使用的uniform参数的bundle
+ * 1、GPUBindGroupEntry[],这个会隐式产生每个entry对应的GPUBindGroupLayoutEntry到resourcesGPU中
+ * 2、groupAndBindingString，这个是在shader中使用的字符串，用于绑定uniform参数
+ * 3、bindingNumber，这个是在shader中使用的绑定号，用于绑定uniform参数
+ */
+export interface I_PartBundleOfUniform_TT {
+    bindingNumber: number,
+    uniformGroup: T_uniformGroup,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
+    groupAndBindingString: string,
+}
+

@@ -6,7 +6,8 @@
     output.normal = vec4f(fsInput.normal, 1);
     output.ru_ma_AO = vec4f(0,0,0, 1);
 
-    output.X = fsInput.worldPosition.x;
-    output.Y = fsInput.worldPosition.y;
-    output.Z = fsInput.worldPosition.z;
+    output.worldPosition = vec4f(fsInput.worldPosition,1);
+    // output.X = fsInput.worldPosition.x;
+    // output.Y = fsInput.worldPosition.y;
+    // output.Z = fsInput.worldPosition.z;
 //end :part_replace.st_gbuffer.output.fs.wgsl

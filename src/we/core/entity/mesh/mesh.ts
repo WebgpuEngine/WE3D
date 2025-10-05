@@ -2,6 +2,7 @@ import { E_lifeState, E_renderForDC, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { T_vsAttribute, V_DC } from "../../command/DrawCommandGenerator";
+import { E_GBufferNames } from "../../gbuffers/base";
 import { BaseGeometry } from "../../geometry/baseGeometry";
 import { BaseLight } from "../../light/baseLight";
 import { mergeLightUUID } from "../../light/lightsManager";
@@ -59,6 +60,9 @@ export interface IV_MeshEntity extends I_optionBaseEntity {
 }
 
 export class Mesh extends BaseEntity {
+    _destroy(): void {
+        throw new Error("Method not implemented.");
+    }
 
     declare inputValues: IV_MeshEntity;
 
@@ -313,10 +317,10 @@ export class Mesh extends BaseEntity {
         // let uniformsMaterial
         // if (wireFrame === false) {
         //     //material 部分：uniform 和 shader模板输出
-        //     uniformsMaterial = this._material.getOneGroupUniformAndShaderTemplateFinal( bindingNumber);
+        //     uniformsMaterial = this._material.getBundleOfForward( bindingNumber);
         // }
         // else {
-        //     uniformsMaterial = this._materialWireframe.getOneGroupUniformAndShaderTemplateFinal( bindingNumber);
+        //     uniformsMaterial = this._materialWireframe.getBundleOfForward( bindingNumber);
         // }
         // if (uniformsMaterial) {
         //     uniform1.push(...uniformsMaterial.uniformGroup);
@@ -326,6 +330,48 @@ export class Mesh extends BaseEntity {
 
         return { bindingNumber: bindingNumber, uniformGroups, shaderTemplateFinal };
     }
+
+    // getAddOnOfTT(bundle:I_EntityBundleOfUniformAndShaderTemplateFinal,camera: BaseCamera,  startBinding: number): I_EntityBundleOfUniformAndShaderTemplateFinal {
+    //     let addUnifrom_1: GPUBindGroupEntry;
+    //     let bindingNumber = startBinding;
+
+    //     //u_camera_opacity_depth
+    //     if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(camera.UUID)) {
+    //         addUnifrom_1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(camera.UUID) as GPUBindGroupEntry;
+    //     }
+    //     else {
+    //         addUnifrom_1 = {
+    //             binding:bindingNumber,
+    //             resource: this.scene.cameraManager.getGBufferTextureByUUID(camera.UUID, E_GBufferNames.depth).createView(),
+    //         };
+    //     }
+    //     let addUniformLayout_1: GPUBindGroupLayoutEntry;
+    //     if (this.scene.resourcesGPU.entriesToEntriesLayout.has(addUnifrom_1)) {
+    //         addUniformLayout_1 = this.scene.resourcesGPU.entriesToEntriesLayout.get(addUnifrom_1) as GPUBindGroupLayoutEntry;
+    //     }
+    //     else {
+    //         addUniformLayout_1 = {
+    //             binding: bindingNumber,
+    //             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+    //             texture: {
+    //                 sampleType: "float",
+    //                 viewDimension: "2d",
+    //                 // multisampled: false,
+    //             },
+    //         };
+    //     }
+    //     //u_camera_opacity_depth在shader中是固定的
+    //     let u_camera_opacity_depth = `  @group(1) @binding(${bundle.bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
+    //     this.scene.resourcesGPU.set(addUnifrom_1, addUniformLayout_1);
+    //     bundle.uniformGroups[0].push(addUnifrom_1);
+    //     bundle.shaderTemplateFinal.entity.groupAndBindingString += u_camera_opacity_depth;
+    //     bindingNumber++;
+    //     bundle.bindingNumber = bindingNumber;
+    //     //4*color 4*depth uniform 
+
+
+    //     return bundle;
+    // }
 
     /**
      * 格式化shader代码
@@ -444,6 +490,11 @@ export class Mesh extends BaseEntity {
             system: {
                 UUID,
                 type
+            },
+            IDS: {
+                UUID: this.UUID,
+                ID: this.ID,
+                renderID: this.renderID,
             }
         }
         // 如果是动态材质，需要在DrawCommand中添加dynamic属性,并每帧重新生成bind group
@@ -507,6 +558,11 @@ export class Mesh extends BaseEntity {
             system: {
                 UUID,
                 type//: E_renderForDC.camera
+            },
+            IDS: {
+                UUID: this.UUID,
+                ID: this.ID,
+                renderID: this.renderID,
             }
         }
         return valueDC;
@@ -521,86 +577,11 @@ export class Mesh extends BaseEntity {
             //mesh VS 模板输出
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
             //材质的shader 模板输出，
-            let uniformsMaterial = this._material.getOneGroupUniformAndShaderTemplateFinal(bundle.bindingNumber);
+            let uniformsMaterial = this._material.getBundleOfForward(bundle.bindingNumber);
             if (uniformsMaterial) {
                 bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
             }
-            // let drawMode: I_drawMode | I_drawModeIndexed;
-            // if (this.inputValues.drawMode != undefined) {
-            //     drawMode = this.inputValues.drawMode;
-            // }
-            // else {
-            //     let drawModeMesh: I_drawMode = {
-            //         vertexCount: 0,
-            //         firstInstance: 0,
-            //         instanceCount: 1,
-            //     };
-            //     let drawModeIndexMesh: I_drawModeIndexed = {
-            //         indexCount: 0,//this.attributes.indexes.length,
-            //         instanceCount: 1,
-            //         firstIndex: 0,
-            //         baseVertex: 0,
-            //         firstInstance: 0,
-            //     }
-            //     if (this.attributes.indexes && this.attributes.indexes.length > 0) {
-            //         drawModeIndexMesh.indexCount = this.attributes.indexes.length;
-            //         drawModeIndexMesh.instanceCount = this.instance.numInstances;
-            //         drawMode = drawModeIndexMesh;
-            //     }
-            //     else {
-            //         if (this.attributes.vertices.has("position")) {
-            //             let pos = this.attributes.vertices.get("position")!;
-            //             if ("data" in pos) {
-            //                 drawModeMesh.vertexCount = pos.count;
-            //             }
-            //             else {
-            //                 drawModeMesh.vertexCount = pos.length / 3;
-            //             }
-            //         }
-            //         drawModeMesh.instanceCount = this.instance.numInstances;
-            //         drawMode = drawModeMesh;
-            //     }
-            // }
-            // if (this.boundingBox == undefined)
-            //     this.generateBoxAndSphere();
-            // let boundingBoxMaxSize = this.getBoundingBoxMaxSize();
-            // if (boundingBoxMaxSize === 0) boundingBoxMaxSize = 1;
-
-            // let valueDC: V_DC = {
-            //     label: "DrawCommand mesh :" + this.Name + " for  camera: " + camera.UUID,
-            //     data: {
-            //         vertices: this.attributes.vertices,
-            //         vertexStepMode: this.attributes.vertexStepMode,
-            //         indexes: this.attributes.indexes,
-            //         uniforms: bundle.uniformGroups,
-
-            //     },
-            //     render: {
-            //         vertex: {
-            //             code: bundle.shaderTemplateFinal,
-            //             entryPoint: "vs",
-            //             constants: {
-            //                 "boundingBoxMaxSize": boundingBoxMaxSize,
-            //             },
-            //         },
-            //         fragment: {
-            //             entryPoint: "fs",
-
-            //         },
-            //         drawMode,
-            //         primitive: {
-            //             cullMode: this._cullMode,
-            //         }
-            //     },
-            //     system: {
-            //         UUID,
-            //         type: E_renderForDC.camera
-            //     }
-            // }
-            // if (this.inputValues.primitive) {
-            //     valueDC.render.primitive = this.inputValues.primitive;
-            // }
             let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
             let dc = this.DCG.generateDrawCommand(valueDC);
             this.cameraDC[UUID][renderPassName.forward].push(dc);
@@ -608,55 +589,11 @@ export class Mesh extends BaseEntity {
         //wireframe 前向渲染
         if (this._wireframe.enable) {
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshWireframeVS);
-            let uniformsMaterial = this._materialWireframe.getOneGroupUniformAndShaderTemplateFinal(bundle.bindingNumber);
+            let uniformsMaterial = this._materialWireframe.getBundleOfForward(bundle.bindingNumber);
             if (uniformsMaterial) {
                 bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
             }
-            // let drawMode: I_drawModeIndexed = {
-            //     indexCount: 0,
-            //     instanceCount: 1,
-            //     firstIndex: 0,
-            //     baseVertex: 0,
-            //     firstInstance: 0,
-            // }
-            // if (this._wireframe.indexes) {
-            //     drawMode.indexCount = this._wireframe.indexCount;
-            //     drawMode.instanceCount = this.instance.numInstances;
-            // }
-            // else {
-            //     throw new Error("Mesh constructor: wireFrame must have geometry or attribute data");
-            // }
-            // let valueDC: V_DC = {
-            //     label: "DrawCommand mesh wireframe :" + this.Name + " for  camera: " + camera.UUID,
-            //     data: {
-            //         vertices: this.attributes.vertices,
-            //         vertexStepMode: this.attributes.vertexStepMode,
-            //         indexes: this._wireframe.indexes,
-            //         uniforms: bundle.uniformGroups,
-            //     },
-            //     render: {
-            //         vertex: {
-            //             code: bundle.shaderTemplateFinal,
-            //             entryPoint: "vs",
-
-            //         },
-            //         fragment: {
-            //             entryPoint: "fs",
-            //             constants: {
-            //                 offsetOfWireframeVale: this._wireframe.offset,
-            //             }
-            //         },
-            //         drawMode,
-            //         primitive: {
-            //             topology: "line-list",
-            //         },
-            //     },
-            //     system: {
-            //         UUID,
-            //         type: E_renderForDC.camera
-            //     }
-            // }
             let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
             let dc = this.DCG.generateDrawCommand(valueDC);
             this.cameraDC[UUID][renderPassName.forward].push(dc);
@@ -667,7 +604,54 @@ export class Mesh extends BaseEntity {
         throw new Error("Method not implemented.");
     }
     createTransparent(camera: BaseCamera): void {
-        throw new Error("Method not implemented.");
+        let UUID = camera.UUID;
+        if (this._wireframe.wireFrameOnly === false) {//非wireframe 才创建前向渲染的DrawCommand
+            //mesh VS 模板输出
+            let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+            //材质的shader 模板输出，
+            let uniformsMaterialTOTT = this._material.getBundleOfToTtTp(camera, bundle.bindingNumber);
+            //如果存在透明的不透明，则按照forwar输出
+            if (uniformsMaterialTOTT.TO) {
+                let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+                bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TO.uniformGroup);
+                bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TO.singleShaderTemplateFinal;
+                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                let dc = this.DCG.generateDrawCommand(valueDC);
+                this.cameraDC[UUID][renderPassName.forward].push(dc);
+            }
+            bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TT.uniformGroup);
+            bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TT.singleShaderTemplateFinal;
+            // this.getAddOnOfTT(bundle,camera,bundle.bindingNumber);              //增加 TT的相关uniform，其中两组commonTransparentGBuffer是动态交换的
+            let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+            //传入function，动态获取TT的RPD
+            // valueDC.renderPassDescriptor =this.scene.cameraManager.getTT_RenderRPD();             //动态还是有时间线冲突，改成copy模式
+            // valueDC.renderPassDescriptor =(()=> this.scene.cameraManager.getTT_RenderRPD());             //TT's RPD，也是动态的，同步commonTransparentGBuffer
+            //TT的DC，需要ID组，用于获取entity的Blend参数
+            //传入colorAttachmentTargets
+            // valueDC.render.fragment!.targets=this.scene.cameraManager.getTTColorAttachmentTargets();
+            //设置为透明
+            let blend = this._material.getBlend();
+            valueDC.transparent = {
+                type: "alpha",
+                blend: [
+                    blend!,
+                ],
+            };
+            let dc = this.DCG.generateDrawCommand(valueDC);
+            this.cameraDC[UUID][renderPassName.transparent].push(dc);
+        }
+        //wireframe 前向渲染,暂时不考虑wireframe 透明渲染
+        if (this._wireframe.enable) {
+            let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshWireframeVS);
+            let uniformsMaterial = this._materialWireframe.getBundleOfForward(bundle.bindingNumber);
+            if (uniformsMaterial) {
+                bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
+                bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
+            }
+            let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+            let dc = this.DCG.generateDrawCommand(valueDC);
+            this.cameraDC[UUID][renderPassName.forward].push(dc);
+        }
     }
     createShadowMapDC(input: I_ShadowMapValueOfDC): void {
         if (this.inputValues.shadow?.generate === false) {

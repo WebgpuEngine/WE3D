@@ -18,7 +18,7 @@ export interface optionOrthProjection extends projectionOptions {
 }
 
 export class OrthographicCamera extends BaseCamera {
-    destroy(): void {
+    _destroy(): void {
         throw new Error('Method not implemented.');
     }
     saveJSON() {

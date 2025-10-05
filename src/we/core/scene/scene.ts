@@ -1,4 +1,4 @@
-import { V_lightNumber, limitsOfWE, E_renderForDC, V_weLinearFormat,  V_shadowMapSize } from "../base/coreDefine";
+import { V_lightNumber, limitsOfWE, E_renderForDC, V_weLinearFormat, V_shadowMapSize } from "../base/coreDefine";
 import { BaseCamera } from "../camera/baseCamera";
 import { CameraManager } from "../camera/cameraManager";
 import { I_bindGroupAndGroupLayout, T_uniformGroup } from "../command/base";
@@ -129,16 +129,22 @@ export class Scene {
         /**反向Z的清除值 */
         depthClearValueOfReveredZ: number,//= 0.0
         /**depthStencil 模板参数 */
-        depthStencil: GPUDepthStencilState
+        depthStencil: GPUDepthStencilState,
+        depthStencilTT: GPUDepthStencilState
     } = {
             depthDefaultFormat: "depth32float",
             depthClearValueOfZ: 1.0,
             depthClearValueOfReveredZ: 0.0,
             depthStencil: {
                 depthWriteEnabled: true,
-                depthCompare: 'less',
+                depthCompare: 'greater',
                 format: "depth32float",
-            }
+            },
+            depthStencilTT: {
+                depthWriteEnabled: false,
+                depthCompare: 'greater',
+                format: "depth32float",
+            },
         };
 
     deferRender: {
@@ -160,9 +166,9 @@ export class Scene {
         cleanValue: number,
         depthCompare: GPUCompareFunction,
     } = {
-            isReversedZ: false,
-            cleanValue: 1.0,
-            depthCompare: 'less',
+            isReversedZ: true,
+            cleanValue: 0,
+            depthCompare: 'greater',
         }
 
 
@@ -269,6 +275,12 @@ export class Scene {
         //深度模板的默认设置
         this.depthMode.depthStencil = {
             depthWriteEnabled: true,
+            depthCompare: this.reversedZ.depthCompare,
+            format: this.depthMode.depthDefaultFormat//'depth32float',
+        };
+
+        this.depthMode.depthStencilTT = {
+            depthWriteEnabled: false,
             depthCompare: this.reversedZ.depthCompare,
             format: this.depthMode.depthDefaultFormat//'depth32float',
         };
@@ -406,21 +418,21 @@ export class Scene {
             if (this.finalTarget.color) {
                 this.finalTarget.color.destroy();
             }
-            // this.finalTarget.color = this.device.createTexture({
-            //     size: [width, height],
-            //     format: this.colorFormatOfCanvas,
-            //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-            //     sampleCount: this.MSAA ? 4 : 1,
-            // });
-            // if (this.finalTarget.depth) {
-            //     this.finalTarget.depth.destroy();
-            // }
-            // this.finalTarget.depth = this.device.createTexture({
-            //     size: [width, height],
-            //     format: this.depthMode.depthDefaultFormat,
-            //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-            //     sampleCount: this.MSAA ? 4 : 1,
-            // });
+            this.finalTarget.color = this.device.createTexture({
+                size: [width, height],
+                format: this.colorFormatOfCanvas,
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                sampleCount: this.MSAA ? 4 : 1,
+            });
+            if (this.finalTarget.depth) {
+                this.finalTarget.depth.destroy();
+            }
+            this.finalTarget.depth = this.device.createTexture({
+                size: [width, height],
+                format: this.depthMode.depthDefaultFormat,
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                sampleCount: this.MSAA ? 4 : 1,
+            });
         }
     }
     /**
@@ -503,9 +515,12 @@ export class Scene {
             // console.log("reseize event at onBeforeRender");
             this.reSize(this.flags.reSize.width, this.flags.reSize.height);
             this.cameraManager.onResize();
+            //实体的onSizeChange
+            this.entityManager.onResize();
             this.flags.reSize.status = false;
         }
         this.renderManager.clean();
+
         this.updateUserDefineEvent(eventOfScene.onBeforeUpdate);
     }
     /**每帧循环 onAfterUpdate */
@@ -558,10 +573,10 @@ export class Scene {
     onAfterRender() {
         this.updateUserDefineEvent(eventOfScene.onAfterRender);
     }
-    render() {
+    async render() {
         this.onRender();
         // this.lightManger.render()
-        this.renderManager.render();        //包括不透明和透明，depth
+        await this.renderManager.render();        //包括不透明和透明，depth
     }
     updateBVH() {
         this.generateBundleOfCameraAndBVH();
@@ -583,7 +598,7 @@ export class Scene {
                 scope.update();
                 scope.onAfterUpdate();
                 scope.onBeforeRender();
-                scope.render();
+                await scope.render();
                 scope.onAfterRender();
                 scope.pickup();
                 scope.postProcess();
@@ -1004,7 +1019,7 @@ export class Scene {
                     // if(lightNumber ===0) lightNumber=1;
                     code = code.replace(perOne.replace, lightNumber.toString());
                 }
-                else  if (perOne.name == "shadowMapNumber") {
+                else if (perOne.name == "shadowMapNumber") {
                     let shadowMapNumber = this.lightsManager.getShadowMapNumber();
                     if (shadowMapNumber === 0) shadowMapNumber = 1;
                     code = code.replace(perOne.replace, shadowMapNumber.toString());

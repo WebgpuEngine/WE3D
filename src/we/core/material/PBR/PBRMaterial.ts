@@ -2,13 +2,14 @@ import { E_lifeState, weColor4, weVec3 } from "../../base/coreDefine";
 import { isWeColor3, isWeVec3 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
 import { T_uniformGroup } from "../../command/base";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialPBRFS_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
 import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_TextureType, IV_BaseMaterial } from "../base";
+import { E_TextureType, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -31,7 +32,15 @@ enum E_ThisTexturesType {
 type T_ThisTexturesType = Texture | weVec3 | number;
 
 export class PBRMaterial extends BaseMaterial {
-
+    getTTFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    setTO(): void {
+        // throw new Error("Method not implemented.");
+    }
     declare inputValues: IV_PBRMaterial;
     declare textures: {
         [name: string]: T_ThisTexturesType
@@ -81,16 +90,16 @@ export class PBRMaterial extends BaseMaterial {
                 //     texture.format = "r8unorm";
                 // }
 
-        
+
                 let textureInstace = new Texture(texture, this.device, this.scene);
                 await textureInstace.init(this.scene);
-       
+
                 this.textures[key] = textureInstace;
             }
         }
         this._state = E_lifeState.finished;
     }
-    destroy(): void {
+    _destroy(): void {
         for (let key in this.textures) {
             let texture = this.textures[key];
             if (texture instanceof Texture) {
@@ -98,7 +107,7 @@ export class PBRMaterial extends BaseMaterial {
             }
         }
     }
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): { uniformGroup: T_uniformGroup; singleShaderTemplateFinal: I_singleShaderTemplate_Final; } {
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -123,7 +132,8 @@ export class PBRMaterial extends BaseMaterial {
             },
         };
         //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout)
+        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
+        this.mapList.push({ key: uniformSampler, type: "GPUBindGroupLayoutEntry" });
         //push到uniform1队列
         uniform1.push(uniformSampler);
         //+1
@@ -197,7 +207,8 @@ export class PBRMaterial extends BaseMaterial {
                     // },
                 };
                 //添加到resourcesGPU的Map中
-                this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout)
+                this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
+                this.mapList.push({ key: uniformTexture, type: "GPUBindGroupLayoutEntry" });
                 //push到uniform1队列
                 uniform1.push(uniformTexture);
 
@@ -297,7 +308,7 @@ export class PBRMaterial extends BaseMaterial {
             binding: binding,
             owner: this,
         }
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
     }
 
     updateSelf(clock: Clock): void {

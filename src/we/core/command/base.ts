@@ -99,20 +99,26 @@ export interface I_uniformBufferPart {
     */
     update?: boolean,
 }
-/**定义一个动态纹理的 接口 */
-export interface I_dynamicTextureEntry {
+/**定义一个动态纹理的External 接口 */
+export interface I_dynamicTextureEntryForExternal {
     label: string,
     binding: number,
     /**动态获取importExternalTexture的箭头函数 */
     getResource: (scopy: any) => GPUBindingResource,
     scopy: any,
 }
-
+/**定义一个动态纹理的view 接口 */
+export interface I_dynamicTextureEntryForView {
+    label: string,
+    binding: number,
+    /**动态获取importExternalTexture的箭头函数 */
+    getResource: () => GPUBindingResource,
+}
 /** 单个bind group的  unifrom 入口的数组格式 
  * I_uniformBufferPart 是自定义的uniformBuffer，用于创建GPUBuffer
  * GPUBindGroupEntry 是标准的
  */
-export type T_uniformEntries = GPUBindGroupEntry | I_uniformBufferPart|I_dynamicTextureEntry;
+export type T_uniformEntries = GPUBindGroupEntry | I_uniformBufferPart | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
 
 /**  bind group的数组  */
 export type T_uniformGroup = T_uniformEntries[];
@@ -124,3 +130,8 @@ export interface I_bindGroupAndGroupLayout {
 }
 //uniform end
 ///////////////////////////////////////////////////////////////////////////////////////////
+export interface I_DrawCommandIDs {
+    UUID: string,
+    ID: number,
+    renderID: number,
+}

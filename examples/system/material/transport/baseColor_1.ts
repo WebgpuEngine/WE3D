@@ -31,6 +31,7 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.01,
   far: 100,
+  // position: [0, 1, 5],
   position: [-9, 6, 6],
   lookAt: [0, 0, 0],
   controlType: "arcball",

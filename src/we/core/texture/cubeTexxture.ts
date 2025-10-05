@@ -80,6 +80,10 @@ export class CubeTexture extends Texture {
                 this.generateMips(this.texture);
             }
             this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+            this.mapList.push({
+                key: source,
+                type: E_resourceKind.texture,
+            });
         }
         this.setTextureLayoutsampleType("float");
         this.setTextureLayoutDimension("cube")

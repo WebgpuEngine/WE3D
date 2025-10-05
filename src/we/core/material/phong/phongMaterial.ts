@@ -31,6 +31,12 @@ export interface IV_PhongMaterial extends IV_BaseMaterial {
 }
 
 export class PhongMaterial extends BaseMaterial {
+  setTO(): void {
+    // throw new Error("Method not implemented.");
+  }
+  getBundleOfTOTT(startBinding: number): { TT: I_materialBundleOutput; TO?: I_materialBundleOutput; } {
+    throw new Error("Method not implemented.");
+  }
   declare inputValues: IV_PhongMaterial;
   declare textures: {
     [name: string]: Texture
@@ -61,7 +67,7 @@ export class PhongMaterial extends BaseMaterial {
     }
 
   }
-  destroy(): void {
+  _destroy(): void {
     throw new Error("Method not implemented.");
   }
   async readyForGPU(): Promise<any> {
@@ -85,7 +91,7 @@ export class PhongMaterial extends BaseMaterial {
     }
     this._state = E_lifeState.finished;
   }
-  getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
+  getBundleOfForward(startBinding: number): I_materialBundleOutput {
     let template: I_ShaderTemplate;
     let groupAndBindingString: string = "";
     let binding: number = startBinding;
@@ -110,7 +116,8 @@ export class PhongMaterial extends BaseMaterial {
       }
     };
     //添加到resourcesGPU的Map中
-    this.scene.resourcesGPU.set(uniformPhong, uniformPhongLayout)
+    this.scene.resourcesGPU.set(uniformPhong, uniformPhongLayout);
+    this.mapList.push({ key: uniformPhong, type: "uniformBuffer" });
     //push到uniform1队列
     uniform1.push(uniformPhong);
     //+1
@@ -140,7 +147,8 @@ export class PhongMaterial extends BaseMaterial {
         },
       };
       //添加到resourcesGPU的Map中
-      this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout)
+      this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
+      this.mapList.push({ key: uniformSampler, type: "GPUBindGroupLayoutEntry" });
       //push到uniform1队列
       uniform1.push(uniformSampler);
       //+1
@@ -172,7 +180,8 @@ export class PhongMaterial extends BaseMaterial {
           texture: this.textures[i].defaultTextureLayout(),
         };
         //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout)
+        this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
+        this.mapList.push({ key: uniformTexture, type: "GPUBindGroupLayoutEntry" });
         //push到uniform1队列
         uniform1.push(uniformTexture);
 

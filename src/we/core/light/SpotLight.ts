@@ -31,7 +31,7 @@ export interface IV_SpotLight extends I_optionBaseLight {
 export class SpotLight extends BaseLight {
     async readyForGPU(): Promise<any> {
     }
-    destroy(): void {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
     saveJSON() {

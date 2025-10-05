@@ -49,6 +49,10 @@ export class Texture extends BaseTexture {
                     await this.generateTextureByImageSource(source);
                 }
                 this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+                this.mapList.push({
+                    key: source,
+                    type: E_resourceKind.texture,
+                });
             }
         }
         return this._state;

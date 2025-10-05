@@ -1,4 +1,4 @@
-import type { I_dynamicTextureEntry, I_uniformBufferPart, T_uniformEntries, T_uniformGroup } from "../command/base";
+import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformBufferPart, T_uniformEntries, T_uniformGroup } from "../command/base";
 
 export class ResourceManagerOfGPU {
     device!: GPUDevice;
@@ -23,7 +23,9 @@ export class ResourceManagerOfGPU {
     uniformGroupToBindGroup: Map<T_uniformGroup, GPUBindGroup> = new Map();
     /** bindGroup 对应的layout */
     bindGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map();
-
+    /////////////////////////////////////////////////////////////////////////////////////////
+    //透明渲染相关
+    cameraToEntryOfDepthTT: Map<string, T_uniformEntries> = new Map();
 
     /////////////////////////////////////////////////////////////////////////////////////////
     // pipeline,按照pipeline进行归类，高效渲染使用
@@ -67,7 +69,7 @@ export class ResourceManagerOfGPU {
     //////////////////////////////////////////////////////////////////////////////////////////
     //sampler
     /**string 可以是sampler的名称等，比如通用的 linear,nearest ,也可以是定制的，linear-mipmap*/
-    samplerOfString: Map<string|GPUSamplerDescriptor, GPUSampler> = new Map();
+    samplerOfString: Map<string | GPUSamplerDescriptor, GPUSampler> = new Map();
     samplerToBindGroupLayoutEntry: Map<GPUSampler, GPUSamplerBindingLayout> = new Map();
 
     has(key: any, _kind?: string) {
@@ -181,27 +183,27 @@ export class ResourceManagerOfGPU {
             }
         }
     }
-    getSampler(key: string):GPUSampler | undefined {
+    getSampler(key: string): GPUSampler | undefined {
         if (this.samplerOfString.has(key)) {
             return this.samplerOfString.get(key);
         }
         else {
-            if(key == "linear"){
-                if(this.samplerOfString.has(key)){
+            if (key == "linear") {
+                if (this.samplerOfString.has(key)) {
                     return this.samplerOfString.get(key);
                 }
-                let linear= this.device.createSampler({
+                let linear = this.device.createSampler({
                     magFilter: "linear",
                     minFilter: "linear",
                 });
                 this.samplerOfString.set(key, linear);
                 return linear;
             }
-            else if(key == "nearest"){
-                if(this.samplerOfString.has(key)){
+            else if (key == "nearest") {
+                if (this.samplerOfString.has(key)) {
                     return this.samplerOfString.get(key);
                 }
-                let nearest= this.device.createSampler({
+                let nearest = this.device.createSampler({
                     magFilter: "nearest",
                     minFilter: "nearest",
                 });
@@ -213,6 +215,46 @@ export class ResourceManagerOfGPU {
             }
         }
     }
+    delete(key: any, _kind?: string) {
+        if (_kind) {
+            if (_kind == E_resourceKind.vertices) this.vertices.delete(key);
+            else if (_kind == E_resourceKind.indexes) this.indexes.delete(key);
+            else if (_kind == E_resourceKind.uniformBuffer) this.uniformBuffer.delete(key);
+            else if (_kind == E_resourceKind.texture) {
+                this.textureOfString.delete(key);
+            }
+            else if (_kind == E_resourceKind.sampler) {
+                this.samplerOfString.delete(key);
+            }
+        }
+        else {
+            if (key instanceof GPUBindGroup) {
+                this.bindGroupToGroupLayout.delete(key as GPUBindGroup);
+            }
+            else if (isUniformGroup(key)) {
+                this.uniformGroupToBindGroup.delete(key);
+            }
+            else if (isGPUBindGroupEntry(key)) {
+                this.entriesToEntriesLayout.delete(key);
+            }
+            else if (isUniformBufferPart(key)) {
+                this.entriesToEntriesLayout.delete(key);
+            }
+            else if (key instanceof GPUTexture) {
+                this.textureToBindGroupLayoutEntry.delete(key);
+            }
+            else if (key instanceof GPUSampler) {
+                this.samplerToBindGroupLayoutEntry.delete(key);
+            }
+            else {
+                this.resources.delete(key);
+            }
+        }
+    }
+    getProperty<K extends keyof ResourceManagerOfGPU>(key: K): ResourceManagerOfGPU[K] {
+    // 此时 this[key] 不会报错，因为 key 被约束为 MyClass 的属性名
+    return this[key];
+  }
 }
 
 export enum E_resourceKind {
@@ -269,15 +311,28 @@ export function isUniformGroup(obj: unknown): obj is T_uniformGroup {
 }
 
 
-export function isDynamicTextureEntry(obj: unknown): obj is I_dynamicTextureEntry {
+
+
+
+export function isDynamicTextureEntryForExternal(obj: unknown): obj is I_dynamicTextureEntryForExternal {
     return (
         typeof obj === 'object' &&
         obj !== null &&
         'binding' in obj &&
-        typeof (obj as I_dynamicTextureEntry).binding === 'number' &&
+        'scopy' in obj &&
+        typeof (obj as I_dynamicTextureEntryForExternal).binding === 'number' &&
         'getResource' in obj &&
-        typeof (obj as I_dynamicTextureEntry).getResource === 'function'
+        typeof (obj as I_dynamicTextureEntryForExternal).getResource === 'function'
     );
 }
 
-
+export function isDynamicTextureEntryForView(obj: unknown): obj is I_dynamicTextureEntryForView {
+    return (
+        typeof obj === 'object' &&
+        obj !== null &&
+        'binding' in obj &&
+        typeof (obj as I_dynamicTextureEntryForView).binding === 'number' &&
+        'getResource' in obj &&
+        typeof (obj as I_dynamicTextureEntryForView).getResource === 'function'
+    );
+}

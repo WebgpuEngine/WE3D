@@ -33,6 +33,7 @@ window.scene = scene;
 let radius = 2;
 let Y = 0;
 let camera = new PerspectiveCamera({
+  name:"defaultCamera",
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
   near: 0.01,

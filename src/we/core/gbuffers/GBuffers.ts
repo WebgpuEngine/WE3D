@@ -5,7 +5,7 @@
  * @requires 
  */
 
-import { I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "./base";
+import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "./base";
 
 
 export interface IV_GBuffer {
@@ -20,6 +20,7 @@ export interface IV_GBuffer {
      */
     backGroudColor: [number, number, number, number],
     depthClearValue: number,
+    name?: string,
 }
 export class GBuffers {
     parent: any;
@@ -28,13 +29,14 @@ export class GBuffers {
      * 每个camera的forward GBuffer及参数集合
      */
     GBuffer: I_GBufferGroup = {};
-    commonTransparentGBuffer: I_TransparentGBufferGroup;
+    commonTransparentGBufferA!: I_TransparentGBufferGroup;
+    commonTransparentGBufferB!: I_TransparentGBufferGroup;
 
 
     constructor(parent: any, device: GPUDevice) {
         this.device = device;
         this.parent = parent;
-        // this.initCommonTransparentGBuffer();
+        this.initCommonTransparentGBuffer();
     }
     getBackgroudColor(premultipliedAlpha: boolean, backGroudColor: [number, number, number, number]): number[] {
         if (premultipliedAlpha) {
@@ -67,10 +69,13 @@ export class GBuffers {
         let colorAttachmentTargets: GPUColorTargetState[] = [];
 
         let gbuffers: I_GBuffer = {};
+        let name = input.name || id;
 
         for (let key in V_ForwardGBufferNames) {
             let perOneBuffer = V_ForwardGBufferNames[key];
+
             let texture = device.createTexture({
+                label: name + " " + perOneBuffer.label,
                 size: [width, height],
                 format: perOneBuffer.format,
                 usage: perOneBuffer.usage,
@@ -170,45 +175,94 @@ export class GBuffers {
         this.initCommonTransparentGBuffer();
     }
     removCommonTransparentGBuffer() {
-        for (let key in this.commonTransparentGBuffer.GBuffer) {
-            this.commonTransparentGBuffer.GBuffer[key].destroy();
+        if (this.commonTransparentGBufferA?.GBuffer) {
+            for (let key in this.commonTransparentGBufferA.GBuffer) {
+                this.commonTransparentGBufferA.GBuffer[key].destroy();
+            }
+            // this.commonTransparentGBufferA.lastTime = 0;
+        }
+        if (this.commonTransparentGBufferB?.GBuffer) {
+            for (let key in this.commonTransparentGBufferB.GBuffer) {
+                this.commonTransparentGBufferB.GBuffer[key].destroy();
+            }
+            // this.commonTransparentGBufferB.lastTime = 0;
         }
     }
     initCommonTransparentGBuffer() {
         let device = this.device;
         let width = this.parent.scene.surface.size.width;
         let height = this.parent.scene.surface.size.height;
-        let premultipliedAlpha = this.parent.scene.premultipliedAlpha;
-        let backgroudColor = this.parent.scene.backGroundColor;
-
-        let colorAttachments: GPURenderPassColorAttachment[] = [];
-        let colorAttachmentTargets: GPUColorTargetState[] = [];
-        let gbuffers: I_GBuffer = {};
-
-        for (let key in V_TransparentGBufferNames) {
-            let perOneBuffer = V_TransparentGBufferNames[key];
-            let texture = device.createTexture({
-                size: [width, height],
-                format: perOneBuffer.format,
-                usage: perOneBuffer.usage,
-            });
-            colorAttachments.push({
-                view: texture.createView(),
-                clearValue: [0.0, 0.0, 0.0, 0.0],
-                loadOp: 'clear',
-                storeOp: 'store',
-            });
-            colorAttachmentTargets.push({ format: perOneBuffer.format });
-            gbuffers[key] = texture;
+        if (width == 0 || height == 0) {
+            return;
         }
-        const rpd: GPURenderPassDescriptor = {
-            colorAttachments: colorAttachments,
-        };
-        this.commonTransparentGBuffer = {
-            RPD: rpd,
-            colorAttachmentTargets: colorAttachmentTargets,
-            GBuffer: gbuffers,
-        };
+        //A
+        {
+            let colorAttachments: GPURenderPassColorAttachment[] = [];
+            let colorAttachmentTargets: GPUColorTargetState[] = [];
+            let gbuffers: I_GBuffer = {};
+
+            for (let key in V_TransparentGBufferNames) {
+                let perOneBuffer = V_TransparentGBufferNames[key];
+                let texture = device.createTexture({
+                    label: "TT A GBuffer " + perOneBuffer.label,
+                    size: [width, height],
+                    format: perOneBuffer.format,
+                    usage: perOneBuffer.usage,
+                });
+                colorAttachments.push({
+                    view: texture.createView(),
+                    // clearValue: [0.0, 0.0, 0.0, 0.0],
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                });
+
+                colorAttachmentTargets.push({ format: perOneBuffer.format });
+                gbuffers[key] = texture;
+            }
+            const rpd: GPURenderPassDescriptor = {
+                colorAttachments: colorAttachments,
+            };
+            this.commonTransparentGBufferA = {
+                RPD: rpd,
+                colorAttachmentTargets: colorAttachmentTargets,
+                GBuffer: gbuffers,
+                name: "A",
+            };
+        }
+        //B
+        {
+            let colorAttachments: GPURenderPassColorAttachment[] = [];
+            let colorAttachmentTargets: GPUColorTargetState[] = [];
+            let gbuffers: I_GBuffer = {};
+
+            for (let key in V_TransparentGBufferNames) {
+                let perOneBuffer = V_TransparentGBufferNames[key];
+                let texture = device.createTexture({
+                    label: "TT B GBuffer " + perOneBuffer.label,
+                    size: [width, height],
+                    format: perOneBuffer.format,
+                    usage: perOneBuffer.usage,
+                });
+
+                colorAttachments.push({
+                    view: texture.createView(),
+                    // clearValue: [0.0, 0.0, 0.0, 0.0],
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                });
+                colorAttachmentTargets.push({ format: perOneBuffer.format });
+                gbuffers[key] = texture;
+            }
+            const rpd: GPURenderPassDescriptor = {
+                colorAttachments: colorAttachments,
+            };
+            this.commonTransparentGBufferB = {
+                RPD: rpd,
+                colorAttachmentTargets: colorAttachmentTargets,
+                GBuffer: gbuffers,
+                name: "B"
+            };
+        }
     }
 
     getRPDByID(id: string): GPURenderPassDescriptor {
@@ -220,7 +274,7 @@ export class GBuffers {
     getColorAttachmentTargetsByID(id: string): GPUColorTargetState[] {
         return this.GBuffer[id].forward.colorAttachmentTargets;
     }
-    getTextureByNameAndUUID(UUID: string, GBufferName: string): GPUTexture {
+    getTextureByNameAndUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
         return this.GBuffer[UUID].forward.GBuffer[GBufferName];
     }
 }

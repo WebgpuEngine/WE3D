@@ -27,13 +27,19 @@ export function WERandomInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
+const usedIds = new Set();
 /**
  * generate ID
  * @returns ID like :17573813347954602
  */
 export function WeGenerateID() {
-    return  WERandomInt(20000, 50000) + WERandomInt(1001, 10000)+ WERandomInt(100, 1000)+ WERandomInt(1, 100);
-    // return Date.now() * 100 + WERandomInt(1000, 10000) + WERandomInt(1, 1000);
+    // return  WERandomInt(10000, 40000) + WERandomInt(1001, 10000)+ WERandomInt(100, 1000)+ WERandomInt(1, 100);
+    let id;
+    do {
+        id = Math.floor(Math.random() * 65536);
+    } while (usedIds.has(id));
+    usedIds.add(id);
+    return id;
 }
 
 /**
@@ -41,7 +47,7 @@ export function WeGenerateID() {
  * @returns UUID
  */
 export function WeGenerateUUID() {
-    let sub=7;
-    let len=36
-    return Math.random().toString(len).substring(sub) + '-' +Math.random().toString(len).substring(sub)  + '-' + Math.random().toString(len).substring(sub)  + '-' +Math.random().toString(len).substring(sub) ;
+    let sub = 7;
+    let len = 36
+    return Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub);
 }

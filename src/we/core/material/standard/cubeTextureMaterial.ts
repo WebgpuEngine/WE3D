@@ -19,6 +19,7 @@ import { IV_TextureMaterial, TextureMaterial } from "./textureMaterial";
 import { CubeTexture } from "../../texture/cubeTexxture";
 import { E_TextureType, I_materialBundleOutput } from "../base";
 import { SHT_materialCubePositionTextureFS_mergeToVS, SHT_materialCubeSkyTextureFS_mergeToVS } from "../../shadermanagemnet/material/cubeTextureMaterial";
+import { E_resourceKind } from "../../resources/resourcesGPU";
 
 export interface IV_CubeTextureMaterial extends IV_TextureMaterial {
     cubeType?: "sky" | "cube"
@@ -71,7 +72,7 @@ export class CubeTextureMaterial extends TextureMaterial {
             });
         }
     }
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -98,7 +99,11 @@ export class CubeTextureMaterial extends TextureMaterial {
             texture: textureLayout
         };
         //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout)
+        this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
+        this.mapList.push({
+            key: uniformTexture,
+            type: E_resourceKind.texture,
+        });
         //push到uniform1队列
         uniform1.push(uniformTexture);
         //+1
@@ -120,7 +125,11 @@ export class CubeTextureMaterial extends TextureMaterial {
             },
         };
         //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout)
+        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
+        this.mapList.push({
+            key: uniformSampler,
+            type: "sampler",
+        });
         //push到uniform1队列
         uniform1.push(uniformSampler);
         //+1

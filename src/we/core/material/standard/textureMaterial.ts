@@ -35,6 +35,16 @@ export interface IV_TextureMaterial extends IV_BaseMaterial {
 }
 
 export class TextureMaterial extends BaseMaterial {
+    getTTFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    setTO(): void {
+        this.hasOpaqueOfTransparent=true;
+    }
+
 
 
     sampler!: GPUSampler;
@@ -68,13 +78,13 @@ export class TextureMaterial extends BaseMaterial {
         // }
 
     }
-    destroy() {
+    _destroy() {
         for (let key in this.textures) {
             this.textures[key].destroy();
         }
         this.textures = {};
         this._state = E_lifeState.destroyed;
-        this._destroy = true;
+        
     }
 
     async readyForGPU(): Promise<any> {
@@ -115,7 +125,7 @@ export class TextureMaterial extends BaseMaterial {
         this._state = E_lifeState.finished;
     }
 
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -136,12 +146,15 @@ export class TextureMaterial extends BaseMaterial {
             texture: {
                 sampleType: "float",
                 viewDimension: "2d",
-                multisampled: false,
-
+                // multisampled: false,
             },
         };
         //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout)
+        this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
+        this.mapList.push({
+            key: uniformTexture,
+            type: E_resourceKind.texture,
+        });
         //push到uniform1队列
         uniform1.push(uniformTexture);
         //+1
@@ -163,7 +176,11 @@ export class TextureMaterial extends BaseMaterial {
             },
         };
         //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout)
+        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
+        this.mapList.push({
+            key: uniformSampler,
+            type: "sampler",
+        });
         //push到uniform1队列
         uniform1.push(uniformSampler);
         //+1

@@ -81,7 +81,7 @@ export class VideoTexture extends BaseTexture {
             this._state = E_lifeState.finished;
         }
         else {
-            if (this.model == "External") {
+            if (this.model == "External") {//external模式 不cache GPU相关
                 await this.getVidoeTexture(source);
             }
             else {
@@ -91,6 +91,10 @@ export class VideoTexture extends BaseTexture {
                 else {
                     await this.getVidoeTexture(source);
                     this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+                    this.mapList.push({
+                       key: source,
+                       type: E_resourceKind.texture,
+                    });
                 }
             }
         }

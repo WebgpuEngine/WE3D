@@ -1,6 +1,7 @@
 import { E_lifeState } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { T_uniformGroup } from "../../command/base";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
@@ -12,6 +13,15 @@ export interface IV_VertexColorMaterial extends IV_BaseMaterial {
 }
 
 export class VertexColorMaterial extends BaseMaterial {
+    setTO(): void {
+       this.hasOpaqueOfTransparent=false;
+    }
+    getTTFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
 
     declare inputValues: IV_BaseMaterial;
     constructor(input?: IV_VertexColorMaterial) {
@@ -21,10 +31,10 @@ export class VertexColorMaterial extends BaseMaterial {
         }
         this.inputValues = input;
     }
-    destroy(): void {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
         let template = SHT_materialColorFS_mergeToVS;
 
         let uniform1: T_uniformGroup = [];
@@ -47,7 +57,7 @@ export class VertexColorMaterial extends BaseMaterial {
             groupAndBindingString: "",
             owner: this,
         }
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: startBinding };
     }
     getTransparent(): boolean {
         return false;

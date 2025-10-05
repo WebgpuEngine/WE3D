@@ -20,7 +20,8 @@ export interface I_GBuffer {
 export interface I_GBufferStruct {
     format: GPUTextureFormat,
     label: string,
-    usage: number
+    usage: number,
+    uniformType?:string,
 }
 export enum E_GBufferNames {
     depth = "depth",
@@ -63,31 +64,31 @@ export var V_ForwardGBufferNames: I_GBufferName = {
         "label": "GBuffer normal :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    // [E_GBufferNames.worldPosition]: {
-    //     "format": "rgba32float",
-    //     "label": "GBuffer worldPosition :",
+    [E_GBufferNames.worldPosition]: {
+        "format": "rgba32float",
+        "label": "GBuffer worldPosition :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    // [E_GBufferNames.ru_ma_AO]: {
+    //     "format": "rgba8unorm",
+    //     "label": "GBuffer ru_ma_AO :",
     //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     // },
-    [E_GBufferNames.ru_ma_AO]: {
-        "format": "rgba8unorm",
-        "label": "GBuffer ru_ma_AO :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-    [E_GBufferNames.X]: {
-        "format": "r32float",
-        "label": "GBuffer worldPosition :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-    [E_GBufferNames.Y]: {
-        "format": "r32float",
-        "label": "GBuffer worldPosition :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-    [E_GBufferNames.Z]: {
-        "format": "r32float",
-        "label": "GBuffer worldPosition :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
+    // [E_GBufferNames.X]: {
+    //     "format": "r32float",
+    //     "label": "GBuffer X :",
+    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // },
+    // [E_GBufferNames.Y]: {
+    //     "format": "r32float",
+    //     "label": "GBuffer Y :",
+    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // },
+    // [E_GBufferNames.Z]: {
+    //     "format": "r32float",
+    //     "label": "GBuffer Z :",
+    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // },
 
 }
 /**
@@ -97,43 +98,49 @@ export var V_TransparentGBufferNames: I_GBufferName = {
 
     "color1": {
         "format": V_weLinearFormat,
-        "label": "GBuffer color :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+        "label": "color 1",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+        uniformType:" texture_2d<f32>",
     },
     "color2": {
         "format": V_weLinearFormat,
-        "label": "GBuffer color :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+        "label": "color 2",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+        uniformType:" texture_2d<f32>",
     },
     "color3": {
         "format": V_weLinearFormat,
-        "label": "GBuffer color :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+        "label": "color 3",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+        uniformType:" texture_2d<f32>",
     },
     "color4": {
         "format": V_weLinearFormat,
-        "label": "GBuffer color :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+        "label": "color 4",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+        uniformType:" texture_2d<f32>",
     },
-    "depth1": {
-        "format": "depth32float",
-        "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // "depth1": {
+    //     "format": "depth32float",
+    //     "label": "depth 1",
+    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // },
+    // "depth2": {
+    //     "format": "depth32float",
+    //     "label": "depth 2",
+    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    // },
+    "depth": {
+        "format": "rgba32float",
+        "label": "depth ",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+        uniformType:" texture_2d<f32>",
     },
-    "depth2": {
-        "format": "depth32float",
-        "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-    "depth3": {
-        "format": "depth32float",
-        "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-    "depth4": {
-        "format": "depth32float",
-        "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    "id": {
+        "format": "rgba32uint",
+        "label": "id",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+        uniformType:" texture_2d<u32>",
     },
 }
 /**
@@ -173,10 +180,11 @@ export interface I_TransparentGBufferGroup {
     RPD: GPURenderPassDescriptor,
     colorAttachmentTargets: GPUColorTargetState[],
     /**每个camera的透明渲染的GBuffer 
-     * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
-     * depthAttachment:1个深度附件
+     * colorAttacheMent:4个color存储，4个depth存储；
+     * 这里只是比较，存储，无blend
      * */
-   GBuffer: I_GBuffer,
+    GBuffer: I_GBuffer,
+    name: string,
 }
 
 /**
@@ -189,6 +197,7 @@ export interface I_GBufferBundle {
 }
 
 /**
+ * 暂未使用：20250928
  * 获取GBuffer的uniform的bundle 
  * 1、获取相机对应的texture的GBuffer的uniform的bundle
  * 2、根据相机对应的texture的GBuffer的uniform的bundle，获取相机对应的texture的GBuffer的uniform的bundle的字符串
@@ -205,7 +214,7 @@ export function getBundleOfGBufferOfUniformOfDefer(binding: number, scene: Scene
         uniformGroup: [],
     }
     Object.entries(V_ForwardGBufferNames).forEach(([name, struct]) => {
-        let texture = scene.cameraManager.getGBufferTextureByUUID(camera.UUID, name);
+        let texture = scene.cameraManager.getGBufferTextureByUUID(camera.UUID, name as E_GBufferNames);
         let uniform: GPUBindGroupEntry = {
             binding: binding,
             resource: texture.createView(),

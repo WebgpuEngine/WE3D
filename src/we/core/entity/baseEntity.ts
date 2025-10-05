@@ -90,8 +90,9 @@ export abstract class BaseEntity extends RootOfGPU {
             // forward: DrawCommand[],
             // transparent: DrawCommand[],
             [renderPassName.depth]: DrawCommand[],
-            [renderPassName.forward]:DrawCommand[],
-            [renderPassName.transparent]:DrawCommand[],
+            [renderPassName.forward]: DrawCommand[],
+            [renderPassName.transparent]: DrawCommand[],
+            [renderPassName.transparentPixcel]: DrawCommand[],
         }
     } = {};
 
@@ -143,15 +144,13 @@ export abstract class BaseEntity extends RootOfGPU {
 
         //////////////////
         //about shader
-
-        this.entity_id = new Uint32Array(this.structUnifomrBuffer, 4 * 4 * this.instance.numInstances * 4, 1);
-        this.stage_id = new Uint32Array(this.structUnifomrBuffer, 4 * 4 * this.instance.numInstances * 4 + 4, 1);
         if (input.shadow) {
             if (input.shadow.accept === false) this._shadow.accept = false;
             if (input.shadow.generate === false) {
                 this._shadow.generate = false;
             }
         }
+        console.log(this.ID);
     }
     checkInstance() {
         if (this.instance.index) {
@@ -193,6 +192,8 @@ export abstract class BaseEntity extends RootOfGPU {
     async init(scene: Scene, parent: RootOfGPU, renderID: number): Promise<number> {
         this.structUnifomrBuffer = new ArrayBuffer(this.getSizeOfUniformArrayBuffer());//4 * 4 * this.numInstances * 4 + this._entityIdSizeForWGSL * 4
         this.matrixWorldBuffer = new Float32Array(this.structUnifomrBuffer, 0, 4 * 4 * this.instance.numInstances);
+        this.entity_id = new Uint32Array(this.structUnifomrBuffer, 4 * 4 * this.instance.numInstances * 4, 1);
+        this.stage_id = new Uint32Array(this.structUnifomrBuffer, 4 * 4 * this.instance.numInstances * 4 + 4, 1);
         await super.init(scene, parent, renderID);
         this.transparent = this.getTransparent();
         this.DCG = new DrawCommandGenerator({ scene: this.scene });
@@ -203,7 +204,8 @@ export abstract class BaseEntity extends RootOfGPU {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // abstract 部分
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    abstract destroy(): void;
+
+
     /**
      * 可见性(visible)、
      * 可用性(enable)、
@@ -321,7 +323,16 @@ export abstract class BaseEntity extends RootOfGPU {
         this.cameraDC = {};
         this.shadowmapDC = {};
     }
-
+    /**
+     * 透明的实体由于使用了camera的GBUffer，所以需要处理onSize
+     */
+    onResize(): void {
+        for (let i in this.cameraDC) {
+            let perCameraDC = this.cameraDC[i];
+            perCameraDC.transparent = [];
+        }
+        this.upgradeCameras();
+    }
     /**更新(创建)关于cameras的DCCC commands
      * 
      * @param parent 
@@ -394,8 +405,8 @@ export abstract class BaseEntity extends RootOfGPU {
                     matrixIndex: i.matrix_self_index
                 };
                 this.shadowmapDC[mergeLightUUID(UUID, i.matrix_self_index)] = {
-                   [renderPassName.shadowmapOpacity]: [],
-                   [renderPassName.shadowmapTransparent]: [],
+                    [renderPassName.shadowmapOpacity]: [],
+                    [renderPassName.shadowmapTransparent]: [],
                 }
                 if (this.transparent === true) {
                     this.createShadowMapTransparentDC(valueOfLight);
@@ -514,9 +525,10 @@ export abstract class BaseEntity extends RootOfGPU {
                 mat4.multiply(this.matrixWorld, perMatrix, perMatrix);     // 先缩放，再旋转，最后平移，然后乘以world matrix ，得到instance的world matrix，在shader中的VS是再次的局部坐标*这个world matrix，得到顶点的world position
                 this.matrixWorldBuffer.set(perMatrix, i * 16);
             }
-            this.entity_id[0] = this.renderID;
-            this.stage_id[0] = this.stageID;
+
         }
+        this.entity_id[0] = this.ID;
+        this.stage_id[0] = this.stageID;
     }
 
     /**

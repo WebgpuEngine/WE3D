@@ -32,6 +32,8 @@ let camera = new PerspectiveCamera({
   near: 0.01,
   far: 100,
   position: [-9, 6, 6],
+  // position: [0, 0.1, 5],
+
   lookAt: [0, 0, 0],
   controlType: "arcball",
 });
@@ -67,7 +69,7 @@ await scene.add(mesh1);
 
 
 let colorMaterial2 = new ColorMaterial({
-  color: [1, 1, 1, 1]
+  color: [0, 1, 0, 1]
 });
 let inputMesh2: IV_MeshEntity = {
   attributes: {

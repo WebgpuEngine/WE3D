@@ -5,8 +5,9 @@ struct ST_GBuffer{
     @location(1) id : u32,
     @location(2) normal : vec4f,
     @location(3) ru_ma_AO : vec4f,
-    @location(4) X : f32,
-    @location(5) Y : f32,
-    @location(6) Z : f32,
+    @location(4) worldPosition : vec4f,
+    // @location(4) X : f32,
+    // @location(5) Y : f32,
+    // @location(6) Z : f32,
 }
 //end : st_gbuffer.fs.wgsl

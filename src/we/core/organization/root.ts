@@ -9,6 +9,8 @@ import { Clock } from "../scene/clock";
 import { BaseEntity } from "../entity/baseEntity";
 import { BaseMaterial } from "../material/baseMaterial";
 import { isWeVec3 } from "../base/coreFunction";
+import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
+import { renderPassName } from "../scene/renderManager";
 
 
 export interface I_UUID {
@@ -68,7 +70,7 @@ export abstract class RootOfOrganization implements I_UUID {
     worldPosition: Vec3 = vec3.create();
 
     enable: boolean = true;
-    _destroy: boolean = false;
+    _isDestroy: boolean = false;
     /**
      * 节点是否可见,如果不在root的树，则visible为false，但没有删除，还在资源池中
      * node visible
@@ -111,8 +113,9 @@ export abstract class RootOfOrganization implements I_UUID {
     constructor(input?: I_Update) {
         this.UUID = WeGenerateUUID();
         this.ID = WeGenerateID();
+        // console.log("create root:", this.ID);
         if (input) this.inputValues = input;
-        if(input?.name) this._name = input!.name!;
+        if (input?.name) this._name = input!.name!;
         else this._name = this.ID.toString();
 
         this.matrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
@@ -121,7 +124,7 @@ export abstract class RootOfOrganization implements I_UUID {
     }
 
     isDestroy() {
-        return this._destroy;
+        return this._isDestroy;
     }
     get children() { return this._children; }
 
@@ -484,8 +487,18 @@ export abstract class RootOfGPU extends RootOfOrganization {
 
     scene!: Scene;
 
+    /**
+     * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
+     * 例如：[texture, bindGroupEntry]
+     * destroy时需要删除映射关系
+     */
+    mapList: {
+        key: any,//key of map
+        type: string, //类型
+        map?: string,//明确的Map<>
+    }[] = [];
 
-
+    resourcesGPU!: ResourceManagerOfGPU;
     /**
      * 节点是否以及GPU准备好
      * node is ready of GPU
@@ -524,6 +537,7 @@ export abstract class RootOfGPU extends RootOfOrganization {
     async setRootENV(scene: Scene) {
         this.device = scene.device;
         this.scene = scene;
+        this.resourcesGPU = scene.resourcesGPU;
         this._readyForGPU = true;
     }
 
@@ -535,7 +549,20 @@ export abstract class RootOfGPU extends RootOfOrganization {
      * when GPU is ready, call this function
      */
     abstract readyForGPU(): Promise<any>
-    abstract destroy(): void;
+    destroy(): void {
+        if (this.resourcesGPU) {
+            for (let i of this.mapList) {
+                if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
+                    (this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>).delete(i.map);
+                }
+                else
+                    this.resourcesGPU.delete(i.key, i.type);
+            }
+        }
+        this._destroy();
+        this._isDestroy = true;
+    }
+    abstract _destroy(): void;
 
     async addChild(child: RootOfGPU): Promise<number> {
         let renderID = await child.init(this.scene, this, this.renderID);
@@ -556,7 +583,7 @@ export abstract class RootOfGPU extends RootOfOrganization {
             this.scene.lightsManager.add(child as BaseLight);
             this.scene.resourcesGPU.cleanSystemUniform();//shadowmap 数量会变化，清除system的map
             if ((child as BaseLight).Shadow)
-                this.scene.renderManager.renderShadowMapTransparentCommand[child.UUID] = [];
+                this.scene.renderManager.RC[renderPassName.transparent][child.UUID] = [];
             // this.scene.renderManager.initRenderCommandForLight(child.UUID);//改到enityManager的update中
 
         }
@@ -582,16 +609,16 @@ export abstract class RootOfGPU extends RootOfOrganization {
         if (childRemoveResult) {
             if (child.type == "Camera") {
                 this.scene.cameraManager.remove(child as BaseCamera);
-                delete this.scene.renderManager.renderCameraForwardCommand[child.UUID];
+                delete this.scene.renderManager.RC[renderPassName.forward][child.UUID];
             }
             else if (child.type == "Light") {
                 this.scene.lightsManager.remove(child as BaseLight);
                 this.scene.resourcesGPU.cleanSystemUniform();//shadowmap 数量会变化，清除system的map
 
-                if (this.scene.renderManager.renderShadowMapTransparentCommand[child.UUID])
-                    delete this.scene.renderManager.renderShadowMapTransparentCommand[child.UUID];
-                if (this.scene.renderManager.renderShadowMapOpacityCommand[child.UUID])
-                    delete this.scene.renderManager.renderShadowMapOpacityCommand[child.UUID];
+                if (this.scene.renderManager.RC[renderPassName.shadowmapTransparent][child.UUID])
+                    delete this.scene.renderManager.RC[renderPassName.shadowmapTransparent][child.UUID];
+                if (this.scene.renderManager.RC[renderPassName.shadowmapOpacity][child.UUID])
+                    delete this.scene.renderManager.RC[renderPassName.shadowmapOpacity][child.UUID];
             }
             else if (child.type == "entity") {
                 this.scene.entityManager.remove(child as BaseEntity);

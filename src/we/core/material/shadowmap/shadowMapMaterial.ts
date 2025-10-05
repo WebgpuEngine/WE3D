@@ -21,7 +21,7 @@ export class ShadowMapMaterial extends BaseMaterial {
     }
 
 
-    getOneGroupUniformAndShaderTemplateFinal( startBinding: number): I_materialBundleOutput {
+    getBundleOfForward( startBinding: number): I_materialBundleOutput {
         if (this.getTransparent()) {
             return this.getTransparentCodeFS(startBinding);
         }
@@ -74,7 +74,7 @@ export class ShadowMapMaterial extends BaseMaterial {
         throw new Error("Method not implemented.");
     }
 
-    destroy(): void {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
 

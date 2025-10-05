@@ -20,6 +20,7 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "muigui": "^0.0.22",
     "webgpu-utils": "^1.11.0",
     "wgpu-matrix": "^3.4.0"
   }

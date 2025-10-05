@@ -1,9 +1,10 @@
 import { I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { VertexColorMaterial } from "../../material/standard/vertexColorMaterial";
-import { I_ShaderTemplate_Final } from "../../shadermanagemnet/base";
+import { I_ShaderTemplate, I_ShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { IV_MeshEntity, Mesh } from "./mesh";
 import { SHT_OneCubeColorVS } from "../../shadermanagemnet/mesh/meshVS";
 import { BaseCamera } from "../../camera/baseCamera";
+import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../base";
 
 
 
@@ -47,7 +48,7 @@ export class OneColoeCube extends Mesh {
         this._material = new VertexColorMaterial();
         await this._material.init(this.scene, this);
     }
-    getUniformAndShaderTemplateFinal(camera: BaseCamera,startBinding: number = 0, wireFrame: boolean = false): { uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final } {
+    getUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate,startBinding: number = 0, wireFrame: boolean = false): I_EntityBundleOfUniformAndShaderTemplateFinal {
         //uniform 部分
         let bindingNumber = startBinding;
         let uniform1: T_uniformGroup = [];
@@ -72,7 +73,7 @@ export class OneColoeCube extends Mesh {
 
         //scene 和 entity 的shader模板部分
         let shaderTemplateFinal: I_ShaderTemplate_Final = {};
-        let SHT_VS = SHT_OneCubeColorVS;
+         SHT_VS = SHT_OneCubeColorVS;
 
         for (let i in SHT_VS) {
             if (i == "scene") {
@@ -90,10 +91,10 @@ export class OneColoeCube extends Mesh {
         let uniformsMaterial
         if (wireFrame === false) {
             //material 部分：uniform 和 shader模板输出
-            uniformsMaterial = this._material.getOneGroupUniformAndShaderTemplateFinal(camera,bindingNumber);
+            uniformsMaterial = this._material.getBundleOfForward(bindingNumber);
         }
         else {
-            uniformsMaterial = this._materialWireframe.getOneGroupUniformAndShaderTemplateFinal(camera,bindingNumber);
+            uniformsMaterial = this._materialWireframe.getBundleOfForward(bindingNumber);
         }
         if (uniformsMaterial) {
             uniform1.push(...uniformsMaterial.uniformGroup);
@@ -101,6 +102,6 @@ export class OneColoeCube extends Mesh {
         }
         let uniformGroups: T_uniformGroup[] = [uniform1];
 
-        return { uniformGroups, shaderTemplateFinal };
+        return { uniformGroups, shaderTemplateFinal, bindingNumber };
     }
 }

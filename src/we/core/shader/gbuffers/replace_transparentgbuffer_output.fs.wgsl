@@ -4,8 +4,7 @@
     output.color2 = color2;
     output.color3 = color3;
     output.color4 = color4;
-    output.depth1 = depth1;
-    output.depth2 = depth2;
-    output.depth3 = depth3;
-    output.depth4 = depth4;
+    output.depth = depthRender;
+    output.id = idRender;
+    // output.id = vec4u(2);
 //end :part_replace.st_gbuffer.output.fs.wgsl

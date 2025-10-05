@@ -1,25 +1,28 @@
-import { Color4, E_lifeState } from "../../base/coreDefine";
-import { isWeColor3, isWeColor4 } from "../../base/coreFunction";
+import { weColor4, E_lifeState } from "../../base/coreDefine";
+import { isWeColor4 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_uniformBufferPart, T_uniformEntries, T_uniformGroup } from "../../command/base";
+import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
+import { E_GBufferNames, V_TransparentGBufferNames } from "../../gbuffers/base";
+import { BaseLight } from "../../light/baseLight";
+import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
-import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
+import { SHT_materialColor_TP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
 import { IV_BaseMaterial, I_TransparentOfMaterial, I_materialBundleOutput } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface I_ColorMaterial extends IV_BaseMaterial {
-    color: Color4;
+    color: weColor4;
     // vertexColor?: boolean,
 }
 
 export class ColorMaterial extends BaseMaterial {
 
 
-
     declare inputValues: I_ColorMaterial;
 
-    color: Color4 = [1, 1, 1, 1];
+    color: weColor4 = [1, 1, 1, 1];
     red: number = 1;
     green: number = 1;
     blue: number = 1;
@@ -30,7 +33,7 @@ export class ColorMaterial extends BaseMaterial {
     constructor(input: I_ColorMaterial) {
         super(input);
         this.inputValues = input;
-        if(isWeColor4(input.color)) {
+        if (isWeColor4(input.color)) {
 
             this.color = input.color;
             this.red = input.color[0];
@@ -77,15 +80,12 @@ export class ColorMaterial extends BaseMaterial {
         // console.log(this._state);
     }
 
+    setTO(): void {
+        this.hasOpaqueOfTransparent = false;
+    }
 
-    getOneGroupUniformAndShaderTemplateFinal(startBinding: number): I_materialBundleOutput {
-        if (this.getTransparent()) {
-            return this.getTransparentCodeFS(startBinding);
-        }
-        else {
-            return this.getOpaqueCodeFS(startBinding);
-        }
-
+    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+        return this.getOpaqueCodeFS(startBinding);
     }
     /**
      *  不透明材质的code
@@ -118,20 +118,81 @@ export class ColorMaterial extends BaseMaterial {
             groupAndBindingString: "",
             owner: this,
         }
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: _startBinding };
+    }
+    getTTFS(_startBinding: number): I_materialBundleOutput {
+        let template = SHT_materialColor_TT_FS_mergeToVS;
+
+        let uniform1: T_uniformGroup = [];
+        let code: string = "";
+        let replaceValue: string = ` output.color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
+        // let replaceValue: string = ` output.color = vec4f(fsInput.uv.xy,1,1); \n`;
+
+
+        for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
+            code += perOne.code;
+        }
+        for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
+            if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
+                code = code.replace(perOne.replace, perOne.replaceCode as string);
+            }
+            //$color
+            if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
+                code = code.replace(perOne.replace, replaceValue);
+            }
+        }
+        let outputFormat: I_singleShaderTemplate_Final = {
+            templateString: code,
+            groupAndBindingString: "",
+            owner: this,
+        }
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: _startBinding };
     }
 
 
     /**
-     * todo 透明材质的code
-     * @param _startBinding 
+     * 格式化TP的shader代码，并返回
+     * @param renderObject 渲染对象，相机或阴影映射
      * @returns 
      */
-    getTransparentCodeFS(_startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
+    formatTPFS(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+        let template: I_ShaderTemplate;
+        let code: string = "";
+        if (renderObject instanceof BaseCamera) {
+            //format code 
+            template = SHT_materialColor_TP_FS_mergeToVS;
+            //add
+            for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
+                code += perOne.code;
+            }
+            //replace
+            for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
+                if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
+                    code = code.replace(perOne.replace, perOne.replaceCode as string);
+                }
+                if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
+                    //$Color
+                    if (perOne.name == "colorFS set color") {
+                        let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
+                        code = code.replace(perOne.replace, replaceValue);
+                    }
+                }
+            }
+        }
+        //light shadow map TT
+        else {
+
+        }
+
+        return code;
     }
 
-    destroy(): void {
+
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        return this.getOpaqueCodeFS(_startBinding);
+    }
+
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
 

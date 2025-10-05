@@ -15,7 +15,7 @@ export class RootManager extends RootOfGPU {
         this.ID = 0;
 
     }
-    destroy(): void {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
     saveJSON() {
