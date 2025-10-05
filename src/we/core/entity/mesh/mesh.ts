@@ -6,6 +6,7 @@ import { E_GBufferNames } from "../../gbuffers/base";
 import { BaseGeometry } from "../../geometry/baseGeometry";
 import { BaseLight } from "../../light/baseLight";
 import { mergeLightUUID } from "../../light/lightsManager";
+import { E_TransparentType, I_TransparentOptionOfMaterial, T_TransparentOfMaterial } from "../../material/base";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { WireFrameMaterial } from "../../material/standard/wireFrameMaterial";
 import { renderPassName } from "../../scene/renderManager";
@@ -630,13 +631,19 @@ export class Mesh extends BaseEntity {
             //传入colorAttachmentTargets
             // valueDC.render.fragment!.targets=this.scene.cameraManager.getTTColorAttachmentTargets();
             //设置为透明
-            let blend = this._material.getBlend();
-            valueDC.transparent = {
-                type: "alpha",
-                blend: [
-                    blend!,
-                ],
-            };
+            let transparentOption  = this._material.getTransparentOption();
+            if(transparentOption){
+                valueDC.transparent = transparentOption as I_TransparentOptionOfMaterial;
+            }
+            else {
+                throw new Error("透明材质的transparentOption不能为空");
+            }
+            // valueDC.transparent = {
+            //     type: E_TransparentType.alpha,
+            //     blend: [
+            //         blend!,
+            //     ],
+            // };
             let dc = this.DCG.generateDrawCommand(valueDC);
             this.cameraDC[UUID][renderPassName.transparent].push(dc);
         }

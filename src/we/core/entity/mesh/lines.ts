@@ -7,7 +7,7 @@ import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_LineVS, SHT_MeshVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityAttributes, I_EntityBundleOfUniformAndShaderTemplateFinal, I_optionBaseEntity } from "../base";
+import { I_EntityAttributes, I_EntityBundleOfUniformAndShaderTemplateFinal, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
 import { BaseEntity } from "../baseEntity";
 
 
@@ -112,7 +112,7 @@ export class Lines extends BaseEntity {
             this._cullMode = "none";
         }
     }
-    _destroy(): void  {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
     checkStatus(): boolean {
@@ -309,6 +309,11 @@ export class Lines extends BaseEntity {
             system: {
                 UUID,
                 type: E_renderForDC.camera
+            },
+            IDS: {
+                UUID: this.UUID,
+                ID: this.ID,
+                renderID: this.renderID,
             }
         };
         if (vsOnly)
@@ -339,10 +344,10 @@ export class Lines extends BaseEntity {
     createTransparent(camera: BaseCamera): void {
         throw new Error("Method not implemented.");
     }
-    createShadowMapDC(light: BaseLight): void {
+    createShadowMapDC(input: I_ShadowMapValueOfDC): void {
         throw new Error("Method not implemented.");
     }
-    createShadowMapTransparentDC(light: BaseLight): void {
+    createShadowMapTransparentDC(input: I_ShadowMapValueOfDC): void {
         throw new Error("Method not implemented.");
     }
     saveJSON() {

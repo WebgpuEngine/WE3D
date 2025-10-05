@@ -13,6 +13,7 @@ import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUnifo
 import { AA } from "../scene/base";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, SHT_refDCG } from "../shadermanagemnet/base";
 import { BaseCamera } from "../camera/baseCamera";
+import { E_TransparentType, I_TransparentOptionOfMaterial } from "../material/base";
 
 export interface IV_DrawCommandGenerator {
     scene: Scene,
@@ -86,10 +87,7 @@ export interface V_DC {
     /**
      * 是否透明渲染,包括alpha 透明，物理透明
      */
-    transparent?: {
-        type: "alpha" | "physical" | "SSS",
-        blend?: GPUBlendState[],
-    },
+     transparent?: I_TransparentOptionOfMaterial,
     //没有意义，取消，因为transparent pass 透明渲染是在forward之后，这时候loadOP已经是load模式
     // /**
     //  * 是否透明渲染
@@ -634,7 +632,7 @@ export class DrawCommandGenerator {
                 if (UUID) {
 
                     targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
-                    if (values.transparent?.type == "alpha" && values.transparent.blend) {
+                    if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
                         for (let i = 0; i < targets.length; i++) {
                             targets[i].blend = values.transparent.blend[i];
                         }
@@ -763,6 +761,11 @@ export class DrawCommandGenerator {
             // dynamic: values.dynamic || false,
         }
 
+        if(values.transparent){
+            if(values.transparent.type){
+                commandOption.transparentType = values.transparent.type;
+            }
+        }
         if (values.render.viewport) commandOption.viewport = values.render.viewport;
         let camera = this.getCamera(values);
         if (camera) {

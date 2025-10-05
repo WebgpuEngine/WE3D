@@ -9,7 +9,7 @@ import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColor_TP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { IV_BaseMaterial, I_TransparentOfMaterial, I_materialBundleOutput } from "../base";
+import { IV_BaseMaterial, T_TransparentOfMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface I_ColorMaterial extends IV_BaseMaterial {
@@ -40,8 +40,17 @@ export class ColorMaterial extends BaseMaterial {
             this.green = input.color[1];
             this.blue = input.color[2];
             this.alpha = input.color[3];
-            if (input.color[3] < 1.0 || (this.inputValues.transparent != undefined && this.inputValues.transparent.opacity != undefined && this.inputValues.transparent.opacity < 1.0)) {//如果是透明的，就设置为透明
-                let transparent: I_TransparentOfMaterial = {
+            if (input.color[3] < 1.0 || (input.transparent != undefined && (input.transparent?.type == undefined || input.transparent.type == "alpha"))) {
+
+                //在BaseMaterial中只验证了有transparent参数时
+                //colorMaterial 如果没有transparent参数，就需要验证alpha是否小于1.0
+                let transparentValue: I_AlphaTransparentOfMaterial | undefined;
+                if (input.transparent)
+                    transparentValue = input.transparent as I_AlphaTransparentOfMaterial;
+                else 
+                    transparentValue = undefined;
+                //如果是透明的，就设置为透明
+                let transparent: I_AlphaTransparentOfMaterial = {
                     blend: {
                         color: {
                             operation: "add",//操作
@@ -53,7 +62,8 @@ export class ColorMaterial extends BaseMaterial {
                             srcFactor: "one",//源
                             dstFactor: "one-minus-src-alpha",//目标
                         }
-                    }
+                    },
+                    type: "alpha",
                 };
                 this._transparent = transparent;
                 if (this.alpha < 1.0) {//如果alpha<1.0，就设置为alpha
@@ -62,12 +72,12 @@ export class ColorMaterial extends BaseMaterial {
                     this.green = this.green * this.alpha;
                     this.blue = this.blue * this.alpha;
                 }
-                else if (this.inputValues.transparent != undefined && this.inputValues.transparent.opacity != undefined && this.inputValues.transparent.opacity < 1.0) {//如果alpha=1.0，就设置为opacity
-                    //预乘
-                    this.red = this.red * this.inputValues.transparent.opacity;
-                    this.green = this.green * this.inputValues.transparent.opacity;
-                    this.blue = this.blue * this.inputValues.transparent.opacity;
-                    this.alpha = this.inputValues.transparent.opacity;
+                else if (transparentValue && transparentValue.opacity && transparentValue.opacity < 1.0) {//如果alpha=1.0，就设置为opacity
+                        //预乘
+                        this.red = this.red * transparentValue.opacity;
+                        this.green = this.green * transparentValue.opacity;
+                        this.blue = this.blue * transparentValue.opacity;
+                        this.alpha = transparentValue.opacity;
                 }
             }
         }

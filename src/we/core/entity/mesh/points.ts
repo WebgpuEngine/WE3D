@@ -6,8 +6,8 @@ import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { ColorMaterial } from "../../material/standard/colorMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";
-import {  SHT_PointEmuSpriteVS, SHT_PointVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityAttributes, I_EntityBundleOfUniformAndShaderTemplateFinal, I_optionBaseEntity } from "../base";
+import { SHT_PointEmuSpriteVS, SHT_PointVS } from "../../shadermanagemnet/mesh/meshVS";
+import { I_EntityAttributes, I_EntityBundleOfUniformAndShaderTemplateFinal, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
 import { BaseEntity } from "../baseEntity";
 
 
@@ -48,6 +48,7 @@ export type T_PointEmulate = "none" | "square" | "circular" | "sphere" | "cube" 
 
 
 export class Points extends BaseEntity {
+
     declare inputValues: IV_PointsEntity;
 
     _material!: BaseMaterial;
@@ -179,7 +180,7 @@ export class Points extends BaseEntity {
             this._cullMode = "none";
         }
     }
-    _destroy(): void  {
+    _destroy(): void {
         throw new Error("Method not implemented.");
     }
     checkStatus(): boolean {
@@ -373,6 +374,11 @@ export class Points extends BaseEntity {
             system: {
                 UUID,
                 type: E_renderForDC.camera
+            },
+            IDS: {
+                UUID: this.UUID,
+                ID: this.ID,
+                renderID: this.renderID,
             }
         };
         if (vsOnly)
@@ -423,7 +429,6 @@ export class Points extends BaseEntity {
                 },
                 fragment: {
                     entryPoint: "fs",
-
                 },
                 primitive,
                 drawMode,
@@ -431,6 +436,11 @@ export class Points extends BaseEntity {
             system: {
                 UUID,
                 type: E_renderForDC.camera
+            },
+            IDS: {
+                UUID: this.UUID,
+                ID: this.ID,
+                renderID: this.renderID,
             }
         };
         if (vsOnly)
@@ -469,10 +479,10 @@ export class Points extends BaseEntity {
     createTransparent(camera: BaseCamera): void {
         throw new Error("Method not implemented.");
     }
-    createShadowMapDC(light: BaseLight): void {
+    createShadowMapDC(input: I_ShadowMapValueOfDC): void {
         throw new Error("Method not implemented.");
     }
-    createShadowMapTransparentDC(light: BaseLight): void {
+    createShadowMapTransparentDC(input: I_ShadowMapValueOfDC): void {
         throw new Error("Method not implemented.");
     }
     saveJSON() {

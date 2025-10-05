@@ -63,7 +63,7 @@ export class VertexColorMaterial extends BaseMaterial {
         return false;
     }
     getBlend(): GPUBlendState | undefined {
-        return this._transparent?.blend;
+        return undefined;
     }
     async readyForGPU(): Promise<any> {
         this._state = E_lifeState.finished;

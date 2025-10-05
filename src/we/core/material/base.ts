@@ -5,10 +5,10 @@ import { Scene } from "../scene/scene";
 import { I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { I_mipmap } from "../texture/base";
 
+export type T_TransparentOfMaterial = I_AlphaTransparentOfMaterial | I_PhysicalTransparentOfMaterial | I_SSSTransparentOfMaterial
 /**透明材质的初始化参数 */
-export interface I_TransparentOfMaterial {
+export interface I_AlphaTransparentOfMaterial {
     /** 不透明度，float32，默认=1.0 
-     * 
      * 如果opacity与alphaTest同时存在，那么alphaTest会覆盖opacity。
     */
     opacity?: number,
@@ -29,6 +29,45 @@ export interface I_TransparentOfMaterial {
      * If the color attachment has no clear color, the value is [0, 0, 0, 0].
     */
     blendConstants?: number[],
+    type: E_TransparentType.alpha,
+}
+/**
+ * 物理透明材质参数
+ */
+export interface I_PhysicalTransparentOfMaterial {
+    type: E_TransparentType.physical,
+}
+/**
+ * 半透明材质参数
+ */
+export interface I_SSSTransparentOfMaterial {
+    type: E_TransparentType.sss,
+}
+/**
+ * 透明材质的类型
+ */
+export enum E_TransparentType {
+    alpha = "alpha",
+    physical = "physical",
+    sss = "sss",
+}
+/**
+ * 透明材质的初始化参数
+ * type 透明材质的类型
+ * blend?: alpha透明材质的blend状态
+ * 其他透明材质的参数后期补充
+ * 
+ * 使用者：
+ * 1、entity
+ * 2、DCG
+ * 3、DC，标注透明类型
+ */
+export interface I_TransparentOptionOfMaterial {
+    type: E_TransparentType,
+    /**这里是数组，因为透明材质可能会有多个blend状态
+     * 例如：alpha透明材质可能会有多个blend状态，分别对应不同的透明度。（todo，20251005，但材质中目前只有一个blend状态，需要后期补充）
+     */
+    blend?: GPUBlendState[],
 }
 
 /**基础材质的初始化参数
@@ -45,7 +84,7 @@ export interface IV_BaseMaterial extends I_Update {
     /**透明材质的初始化参数
      * 默认不透明：没有此参数
      */
-    transparent?: I_TransparentOfMaterial,
+    transparent?: T_TransparentOfMaterial,
     /** 
      * 1、简单设置采样器模式，如果有samplerDescriptor设置 ，则忽略此设置 
      * 2、采样器过滤模式，默认为linear

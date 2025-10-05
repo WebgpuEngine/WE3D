@@ -1,3 +1,4 @@
+import { E_TransparentType } from "../material/base";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
 import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferPart, IV_BaseCommand, T_uniformGroup } from "./base";
@@ -47,10 +48,12 @@ export interface IV_DrawCommand extends IV_BaseCommand {
      * ID组
      */
     IDS?: I_DrawCommandIDs,
+    transparentType?: E_TransparentType,
 }
 
 export class DrawCommand {
 
+    transparentType: E_TransparentType|undefined;
     dynamic: boolean = false;
     scene!: Scene;
     label!: string;
@@ -113,6 +116,7 @@ export class DrawCommand {
         if (input.dynamicUniform) this.dynamic = true;
         if (input.IDS) this.IDS = input.IDS;
         // this.resourcesGPU = input.scene.resourcesGPU;
+        this.transparentType = input.transparentType;
     }
     /**
      * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
