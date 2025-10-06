@@ -63,6 +63,13 @@ export abstract class BaseMaterial extends RootOfGPU {
     hasOpaqueOfTransparent: boolean = false;
 
 
+    /**
+     * 透明材质的TTPF的uniform layer 
+     */
+    uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
+    uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
+
+
     constructor(input?: IV_BaseMaterial) {
         super();
         this.type = "material";
@@ -134,47 +141,68 @@ export abstract class BaseMaterial extends RootOfGPU {
      * TT为透明材质的透明部分，TO为不透明材质的不透明部分
      */
     // abstract getBundleOfTOTT(startBinding: number): { TT: I_materialBundleOutput, TO?: I_materialBundleOutput }
-    getBundleOfToTtTp(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): { TT: I_materialBundleOutput, TO?: I_materialBundleOutput, TP: I_materialBundleOutput } {
-        let TT: I_materialBundleOutput;
+    getBundleOfTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number,meshID:number): {
+        TT: I_materialBundleOutput,
+        TO?: I_materialBundleOutput,
+        TTP: I_materialBundleOutput,
+        TTPF: I_materialBundleOutput
+    } {
+        let TT: I_materialBundleOutput= this.getFS_TT(renderObject, startBinding);;
         let TO: I_materialBundleOutput;
-        let TP: I_materialBundleOutput;
-        TT = this.getTTFS(startBinding);
-        TP = this.getTPFS(renderObject, startBinding);
-        let ToTtTp: { TT: I_materialBundleOutput, TO?: I_materialBundleOutput, TP: I_materialBundleOutput } = { TT, TP };
+        let TTP: I_materialBundleOutput = this.getFS_TTP(renderObject, startBinding);;
+        let TTPF: I_materialBundleOutput = this.getFS_TTPF(renderObject, startBinding);
+        // TT = this.getFS_TT(renderObject, startBinding);
+        // TTP = this.getFS_TTP(renderObject, startBinding);
+        let TTTT: { TT: I_materialBundleOutput, TO?: I_materialBundleOutput, TTP: I_materialBundleOutput, TTPF: I_materialBundleOutput } = { TT, TTP, TTPF };
         if (this.hasOpaqueOfTransparent) {
-            TO = this.getTOFS(startBinding);
-            ToTtTp.TO = TO;
+            TO = this.getFS_TO(startBinding);
+            TTTT.TO = TO;
         }
-        return ToTtTp;
+        return TTTT;
     }
-
-
+    setUniformIDOfTTPF(meshID: number) {
+        let view = new Uint32Array(this.uniformOfTTPF);
+        view[1] = meshID;
+    }
     /**
-     * 透明材质的code
+     * 设置透明材质的TTPF的uniform
+     * @param layer  对应RGBA四层
+     */
+    setUniformLayerOfTTPF(layer: number) {
+        let view = new Uint32Array(this.uniformOfTTPF);
+        view[0] = layer;
+    }
+    /**
+     * 透明材质的code（ transparent  transparent ）
      * @param _startBinding 
      * @returns 
      */
-    abstract getTTFS(_startBinding: number): I_materialBundleOutput;
+    abstract getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput;
     /**
-     * 透明材质的不透明code
+     * 透明材质的透明部分的pixel 的最终输出（ transparent  transparent pixcel final ）
+     * @param _startBinding binding开始值
+     */
+    abstract getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput;
+    /**
+     * 透明材质的不透明code （ transparent  opaque ）
      * @param _startBinding binding开始值
      * @returns 
      */
-    abstract getTOFS(_startBinding: number): I_materialBundleOutput;
+    abstract getFS_TO(_startBinding: number): I_materialBundleOutput;
 
     /**
-     * 格式化TP的shader代码，并返回
+     * 格式化TTP的shader代码，并返回
      * @param renderObject 渲染对象，相机或阴影映射
      * @returns 
      */
-    abstract formatTPFS(renderObject: BaseCamera | I_ShadowMapValueOfDC): string;
+    abstract formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string;
     /**
-     * 透明材质的像素级别对比与处理
+     * 透明材质的像素级别对比与处理 （ transparent  transparent pixcel  ）
      * 针对BVH的包围盒相交的清空
      * @param renderObject 渲染对象，相机或阴影映射
      * @param _startBinding binding开始值
      */
-    getTPFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+    getFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
         let groupAndBindingString = "";
         //生成 bind group相关内容
         let uniform: T_uniformGroup = [];
@@ -182,12 +210,12 @@ export abstract class BaseMaterial extends RootOfGPU {
         let template: I_ShaderTemplate;
         let code: string = "";
         if (renderObject instanceof BaseCamera) {
-            let partBundleOfUniform_TT = this.getUniformEntryOfCamera_TP(renderObject, bindingNumber);
+            let partBundleOfUniform_TT = this.getUniformEntryOfCamera_TTP(renderObject, bindingNumber);
             bindingNumber = partBundleOfUniform_TT.bindingNumber;
             groupAndBindingString += partBundleOfUniform_TT.groupAndBindingString;
             uniform.push(...partBundleOfUniform_TT.uniformGroup);
-            //format code 
-            code = this.formatTPFS(renderObject);
+            //format code ,子材质实现的格式化代码
+            code = this.formatFS_TTP(renderObject);
         }
         //light shadow map TT
         else { }
@@ -201,7 +229,7 @@ export abstract class BaseMaterial extends RootOfGPU {
         return { uniformGroup: uniform, singleShaderTemplateFinal: outputFormat, bindingNumber: bindingNumber };
     }
     /**获取camera 使用的TT的uniformEntry  */
-    getUniformEntryOfCamera_TP(renderObject: BaseCamera, bindingNumber: number): I_PartBundleOfUniform_TT {
+    getUniformEntryOfCamera_TTP(renderObject: BaseCamera, bindingNumber: number): I_PartBundleOfUniform_TT {
         let groupAndBindingString = "";
         let uniform: T_uniformGroup = [];
 
@@ -405,9 +433,9 @@ export abstract class BaseMaterial extends RootOfGPU {
             if (input.transparent != undefined) {
                 if (input.transparent?.type == undefined || input.transparent?.type == E_TransparentType.alpha) {
                     if (this._transparent == undefined) {
-                        this._transparent = {};
+                        this._transparent = {} as T_TransparentOfMaterial;
                     }
-                    this._transparent.type = E_TransparentType.alpha;
+                    (this._transparent as I_AlphaTransparentOfMaterial).type = E_TransparentType.alpha;
                     if (input.transparent.blend != undefined)
                         (this._transparent as I_AlphaTransparentOfMaterial).blend = input.transparent.blend;
                     else {

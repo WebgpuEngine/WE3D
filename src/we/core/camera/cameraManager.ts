@@ -74,7 +74,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
             this.defaultCamera = camera;
         }
         this.GBufferManager.reInitCommonTransparentGBuffer();
-        this.cleanValueOfTT();
+        this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
+
         this.zindexList.push(camera.UUID);
     }
     /**
@@ -207,6 +208,10 @@ export class CameraManager extends ECSManager<BaseCamera> {
         // console.log(this.GBufferManager.getTextureByNameAndUUID(UUID, GBufferName));
         return this.GBufferManager.getTextureByNameAndUUID(UUID, GBufferName);
     }
+    getDepthTextureByUUID(UUID: string): GPUTexture {
+        // let camera = this.getCameraByUUID(UUID);
+        return this.GBufferManager.GBuffer[UUID].forward.GBuffer[E_GBufferNames.depth];
+    }
     /**
      * 获取相机
      * @param id id
@@ -242,17 +247,17 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 获取透明GBuffer的RenderPassDescriptor
      * @returns 透明GBuffer的RenderPassDescriptor
      */
-    getTT_RenderRPD(): GPURenderPassDescriptor {
+    getTT_RenderRPD(UUID: string): GPURenderPassDescriptor {
         if (this.TT_Render) {
-            return this.TT_Render.RPD;
+            return this.TT_Render.RPD[UUID];
         }
         else {
             throw new Error("getTTRPD 透明GBuffer不存在");
         }
     }
-    getTT_UniformRPD(): GPURenderPassDescriptor {
+    getTT_UniformRPD(UUID: string): GPURenderPassDescriptor {
         if (this.TT_Uniform) {
-            return this.TT_Uniform.RPD;
+            return this.TT_Uniform.RPD[UUID];
         }
         else {
             throw new Error("getTT_UniformRPD 透明GBuffer不存在");
@@ -399,6 +404,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         return dc0;
     }
 
+    //作废，代码参考
     copyTextureAToTextureB() {
         let width = this.scene.surface.size.width;
         let height = this.scene.surface.size.height;
@@ -432,6 +438,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @param idTexture 要复制的纹理
      * @returns 复制的纹理数据
      */
+    //作废，代码参考
     async copyTextureToBuffer(idTexture: GPUTexture): Promise<
         {
             result: ArrayBuffer,
@@ -481,6 +488,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         this.resultGPUBuffer.unmap();
         return { result, bytesPerRow, width, height };
     }
+    //作废，代码参考
     async getLayerIDArray(): Promise<number[][]> {
         // let idTexture: GPUTexture = this.TT_Render.GBuffer["color1"];
         let idTexture: GPUTexture = this.TT_Uniform.GBuffer["id"];
@@ -574,9 +582,10 @@ export class CameraManager extends ECSManager<BaseCamera> {
             }
             this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
         }
-        this.GBufferManager.reInitCommonTransparentGBuffer();
 
-        this.cleanValueOfTT();
+        this.GBufferManager.reInitCommonTransparentGBuffer();
+        this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
+
         // 更新所有相机的投影矩阵
         for (let camera of this.list) {
             if (camera instanceof PerspectiveCamera) {

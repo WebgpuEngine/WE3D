@@ -30,9 +30,9 @@ export abstract class BaseEntity extends RootOfGPU {
     ///////////////////////////////////////////
     // shader
     /**for shader  */
-    entity_id: Uint32Array;
+    entity_id!: Uint32Array;
     /**for shader */
-    stage_id: Uint32Array;
+    stage_id!: Uint32Array;
 
     /**entiy 的ID（u32）等其他数据占位，这个需要与wgsl shader中同步更改 */
     _entityIdSizeForWGSL = 4;//以u32（f32）计算

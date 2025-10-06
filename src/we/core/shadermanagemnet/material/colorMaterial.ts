@@ -1,25 +1,24 @@
-////////////////////////////////////////////////////////////////////////////////
-//material
-import colorFSWGSL from "../../shader/material/color/color.fs.wgsl?raw";
-var colorFS = colorFSWGSL.toString();
-
-
-
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, WGSL_replace_gbuffer_output, WGSL_st_Guffer, WGSL_st_transparentbuffer } from "../base"
 import { SHT_replaceTT_FSOutput, SHT_TT, WGSL_transparent_c4d4 } from "./TT";
+////////////////////////////////////////////////////////////////////////////////
+//material
+
+import colorFSWGSL from "../../shader/material/color/color.fs.wgsl?raw";
+var colorFS = colorFSWGSL.toString();
 
 /** 颜色材质, 不透明, 合并到VS中 */
 export var SHT_materialColorFS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "ColorMaterial",
-        add: [{
-            name: "fsOnput",
-            code: WGSL_st_Guffer,
-        },
-        {
-            name: "fs",
-            code: colorFS,
-        },
+        add: [
+            {
+                name: "fsOnput",
+                code: WGSL_st_Guffer,
+            },
+            {
+                name: "fs",
+                code: colorFS,
+            },
         ],
         replace: [
             {
@@ -30,6 +29,39 @@ export var SHT_materialColorFS_mergeToVS: I_ShaderTemplate = {
             },
             {
                 name: "colorFS set color",
+                replace: "$fsOutputColor",           //
+                replaceType: E_shaderTemplateReplaceType.value,                //output.color = vec4f(red, green, blue, alpha);
+            }
+        ],
+    }
+}
+
+import colorTTPF_FSWGSL from "../../shader/material/color/colorTTPF.fs.wgsl?raw";
+var colorTTPF_FS = colorTTPF_FSWGSL.toString();
+
+/** 颜色材质, 不透明, 合并到VS中 */
+export var SHT_materialColor_TTPF_FS_mergeToVS: I_ShaderTemplate = {
+    material: {
+        owner: "ColorMaterial",
+        add: [
+            {
+                name: "fsOnput",
+                code: WGSL_st_Guffer,
+            },
+            {
+                name: "fs",
+                code: colorTTPF_FS,
+            },
+        ],
+        replace: [
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_gbuffer_output
+            // },
+            {
+                name: "fsOutputColor",
                 replace: "$fsOutputColor",           //
                 replaceType: E_shaderTemplateReplaceType.value,                //output.color = vec4f(red, green, blue, alpha);
             }
@@ -44,14 +76,15 @@ var colorTTFS = colorTTFSWGSL.toString();
 export var SHT_materialColor_TT_FS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "ColorMaterial",
-        add: [{
-            name: "fsOnput",
-            code: WGSL_st_Guffer,
-        },
-        {
-            name: "fs",
-            code: colorTTFS,
-        },
+        add: [
+            {
+                name: "fsOnput",
+                code: WGSL_st_Guffer,
+            },
+            {
+                name: "fs",
+                code: colorTTFS,
+            },
         ],
         replace: [
             {
@@ -70,11 +103,11 @@ export var SHT_materialColor_TT_FS_mergeToVS: I_ShaderTemplate = {
 }
 
 
-import colorTPFSWGSL from "../../shader/material/color/colorTP.fs.wgsl?raw";
+import colorTPFSWGSL from "../../shader/material/color/colorTTP.fs.wgsl?raw";
 var colorTPFS = colorTPFSWGSL.toString();
 
 /**colorTP: 像素级别 */
-export var SHT_materialColor_TP_FS_mergeToVS: I_ShaderTemplate = {
+export var SHT_materialColor_TTP_FS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "ColorMaterial",
         add: [

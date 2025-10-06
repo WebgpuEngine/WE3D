@@ -21,7 +21,7 @@ export interface I_GBufferStruct {
     format: GPUTextureFormat,
     label: string,
     usage: number,
-    uniformType?:string,
+    uniformType?: string,
 }
 export enum E_GBufferNames {
     depth = "depth",
@@ -100,25 +100,25 @@ export var V_TransparentGBufferNames: I_GBufferName = {
         "format": V_weLinearFormat,
         "label": "color 1",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        uniformType:" texture_2d<f32>",
+        uniformType: " texture_2d<f32>",
     },
     "color2": {
         "format": V_weLinearFormat,
         "label": "color 2",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        uniformType:" texture_2d<f32>",
+        uniformType: " texture_2d<f32>",
     },
     "color3": {
         "format": V_weLinearFormat,
         "label": "color 3",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        uniformType:" texture_2d<f32>",
+        uniformType: " texture_2d<f32>",
     },
     "color4": {
         "format": V_weLinearFormat,
         "label": "color 4",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        uniformType:" texture_2d<f32>",
+        uniformType: " texture_2d<f32>",
     },
     // "depth1": {
     //     "format": "depth32float",
@@ -134,13 +134,13 @@ export var V_TransparentGBufferNames: I_GBufferName = {
         "format": "rgba32float",
         "label": "depth ",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        uniformType:" texture_2d<f32>",
+        uniformType: " texture_2d<f32>",
     },
     "id": {
         "format": "rgba32uint",
         "label": "id",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        uniformType:" texture_2d<u32>",
+        uniformType: " texture_2d<u32>",
     },
 }
 /**
@@ -153,8 +153,8 @@ export interface I_GBufferGroup {
             /** 每个camera最终的GBuffer的渲染描述 */
             RPD: GPURenderPassDescriptor,
             /**
-             * 每个camera最终的GBuffer的颜色附件描述
-             */
+            * 每个camera最终的GBuffer的颜色附件描述
+            */
             colorAttachmentTargets: GPUColorTargetState[],
             /** 每个camera的forward GBuffer存储位置 */
             GBuffer: I_GBuffer,
@@ -177,7 +177,13 @@ export interface I_GBufferGroup {
     }
 }
 export interface I_TransparentGBufferGroup {
-    RPD: GPURenderPassDescriptor,
+    // RPD: GPURenderPassDescriptor,
+    /**
+     * 每个camera的RPD，带有depth附件
+     */
+    RPD: {
+        [UUID: string]: GPURenderPassDescriptor
+    },
     colorAttachmentTargets: GPUColorTargetState[],
     /**每个camera的透明渲染的GBuffer 
      * colorAttacheMent:4个color存储，4个depth存储；

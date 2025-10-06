@@ -2,7 +2,7 @@
 // @group(1) @binding(1) var<uniform> u_Shininess : f32;
 // @group(1) @binding(2) var<uniform> u_metalness : f32;
 // @group(1) @binding(3) var<uniform> u_roughness : f32;
-struct bulin_phong {
+struct st_bulin_phong {
   shininess: f32,
   metalness: f32,
   roughness: f32,

@@ -1,15 +1,15 @@
 import { weColor4, E_lifeState } from "../../base/coreDefine";
 import { isWeColor4 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base";
+import { I_dynamicTextureEntryForView, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_GBufferNames, V_TransparentGBufferNames } from "../../gbuffers/base";
 import { BaseLight } from "../../light/baseLight";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialColor_TP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { IV_BaseMaterial, T_TransparentOfMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial } from "../base";
+import { SHT_materialColor_TTP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS, SHT_materialColor_TTPF_FS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
+import { IV_BaseMaterial, T_TransparentOfMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface I_ColorMaterial extends IV_BaseMaterial {
@@ -18,6 +18,7 @@ export interface I_ColorMaterial extends IV_BaseMaterial {
 }
 
 export class ColorMaterial extends BaseMaterial {
+
 
 
     declare inputValues: I_ColorMaterial;
@@ -47,7 +48,7 @@ export class ColorMaterial extends BaseMaterial {
                 let transparentValue: I_AlphaTransparentOfMaterial | undefined;
                 if (input.transparent)
                     transparentValue = input.transparent as I_AlphaTransparentOfMaterial;
-                else 
+                else
                     transparentValue = undefined;
                 //如果是透明的，就设置为透明
                 let transparent: I_AlphaTransparentOfMaterial = {
@@ -63,7 +64,7 @@ export class ColorMaterial extends BaseMaterial {
                             dstFactor: "one-minus-src-alpha",//目标
                         }
                     },
-                    type: "alpha",
+                    type: E_TransparentType.alpha,
                 };
                 this._transparent = transparent;
                 if (this.alpha < 1.0) {//如果alpha<1.0，就设置为alpha
@@ -73,11 +74,11 @@ export class ColorMaterial extends BaseMaterial {
                     this.blue = this.blue * this.alpha;
                 }
                 else if (transparentValue && transparentValue.opacity && transparentValue.opacity < 1.0) {//如果alpha=1.0，就设置为opacity
-                        //预乘
-                        this.red = this.red * transparentValue.opacity;
-                        this.green = this.green * transparentValue.opacity;
-                        this.blue = this.blue * transparentValue.opacity;
-                        this.alpha = transparentValue.opacity;
+                    //预乘
+                    this.red = this.red * transparentValue.opacity;
+                    this.green = this.green * transparentValue.opacity;
+                    this.blue = this.blue * transparentValue.opacity;
+                    this.alpha = transparentValue.opacity;
                 }
             }
         }
@@ -130,7 +131,7 @@ export class ColorMaterial extends BaseMaterial {
         }
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: _startBinding };
     }
-    getTTFS(_startBinding: number): I_materialBundleOutput {
+    getFS_TT(_renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
         let template = SHT_materialColor_TT_FS_mergeToVS;
 
         let uniform1: T_uniformGroup = [];
@@ -159,18 +160,99 @@ export class ColorMaterial extends BaseMaterial {
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: _startBinding };
     }
 
+    getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+        let template = SHT_materialColor_TTPF_FS_mergeToVS;
+        let bindingNumber = startBinding;
+
+        let groupAndBindingString = "";
+        let uniform1: T_uniformGroup = [];
+        let code: string = "";
+        let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
+        if (renderObject instanceof BaseCamera) {
+
+            // uniform  层数
+            let unifrom10: I_uniformBufferPart = {
+                label: this.Name + " uniform at group(1) binding(0)",
+                binding: bindingNumber,
+                size: this.uniformOfTTPFSize,
+                data: this.uniformOfTTPF,
+                update: true,
+            };
+            let uniform10Layout: GPUBindGroupLayoutEntry = {
+                binding: bindingNumber,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: "uniform"
+                }
+            };
+            groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var <uniform> u_TTPF : st_TTPF; \n `;
+
+            this.scene.resourcesGPU.set(unifrom10, uniform10Layout);
+            bindingNumber++;
+            uniform1.push(unifrom10);
+
+
+            // uniform  纹理ID
+            let uniforIDTexture: GPUBindGroupEntry = {
+                binding: bindingNumber,
+                resource: renderObject.manager.getTTUniformTexture("id"),
+            };
+            let uniforIDTextureLayout: GPUBindGroupLayoutEntry = {
+                binding: bindingNumber,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                texture: {
+                    sampleType: "uint",
+                    viewDimension: "2d",
+                    // multisampled: false,
+                },
+            };
+            //添加到resourcesGPU的Map中
+            this.scene.resourcesGPU.entriesToEntriesLayout.set(uniforIDTexture, uniforIDTextureLayout);
+            this.mapList.push({
+                key: uniforIDTexture,
+                type: "entriesToEntriesLayout",
+                map: "entriesToEntriesLayout"
+            });
+            groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_texture_ID: texture_2d<u32>; \n `;
+
+            //push到uniform1队列
+            uniform1.push(uniforIDTexture);
+            //+1
+            bindingNumber++;
+
+            //格式化SHT  ，同TT
+            for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
+                code += perOne.code;
+            }
+            for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
+                if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
+                    code = code.replace(perOne.replace, perOne.replaceCode as string);
+                }
+                //$color
+                if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
+                    code = code.replace(perOne.replace, replaceValue);
+                }
+            }
+        }
+        let outputFormat: I_singleShaderTemplate_Final = {
+            templateString: code,
+            groupAndBindingString: groupAndBindingString,
+            owner: this,
+        }
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: bindingNumber };
+    }
 
     /**
      * 格式化TP的shader代码，并返回
      * @param renderObject 渲染对象，相机或阴影映射
      * @returns 
      */
-    formatTPFS(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+    formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
         let template: I_ShaderTemplate;
         let code: string = "";
         if (renderObject instanceof BaseCamera) {
             //format code 
-            template = SHT_materialColor_TP_FS_mergeToVS;
+            template = SHT_materialColor_TTP_FS_mergeToVS;
             //add
             for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
                 code += perOne.code;
@@ -198,7 +280,7 @@ export class ColorMaterial extends BaseMaterial {
     }
 
 
-    getTOFS(_startBinding: number): I_materialBundleOutput {
+    getFS_TO(_startBinding: number): I_materialBundleOutput {
         return this.getOpaqueCodeFS(_startBinding);
     }
 
@@ -207,9 +289,9 @@ export class ColorMaterial extends BaseMaterial {
     }
 
 
-    getBlend(): GPUBlendState | undefined {
-        return this._transparent?.blend;
-    }
+    // getBlend(): GPUBlendState | undefined {
+    //     return this._transparent?.blend;
+    // }
     updateSelf(clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
@@ -219,16 +301,16 @@ export class ColorMaterial extends BaseMaterial {
     loadJSON(json: any): void {
         throw new Error("Method not implemented.");
     }
-    getTransparent(): boolean {
-        if (this.alpha < 1.0) {
-            return true;
-        }
-        else if (this.inputValues.transparent?.opacity != undefined && this.inputValues.transparent.opacity < 1.0) {
-            return true;
-        }
-        else {
-            return false;
-        }
-        // return this.alpha != 1.0 ? true : false;
-    }
+    // getTransparent(): boolean {
+    //     if (this.alpha < 1.0) {
+    //         return true;
+    //     }
+    //     else if (this.inputValues.transparent?.opacity != undefined && this.inputValues.transparent.opacity < 1.0) {
+    //         return true;
+    //     }
+    //     else {
+    //         return false;
+    //     }
+    //     // return this.alpha != 1.0 ? true : false;
+    // }
 }

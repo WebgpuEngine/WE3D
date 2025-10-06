@@ -99,7 +99,7 @@ export class PhongMaterial extends BaseMaterial {
     let code: string = "";
     ///////////group binding
     ////group binding  texture 字符串
-    groupAndBindingString = ` @group(1) @binding(${binding})  var<uniform> u_bulinphong : bulin_phong;\n `;
+    groupAndBindingString = ` @group(1) @binding(${binding})  var<uniform> u_bulinphong : st_bulin_phong;\n `;
     //uniform texture
     let uniformPhong: I_uniformBufferPart = {
       binding: binding,

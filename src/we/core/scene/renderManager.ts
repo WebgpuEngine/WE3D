@@ -2,8 +2,10 @@ import { E_renderForDC, V_weLinearFormat } from "../base/coreDefine";
 import { commmandType, I_PipelineStructure } from "../command/base";
 import { DrawCommand } from "../command/DrawCommand";
 import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
+import { Mesh } from "../entity/mesh/mesh";
 import { E_GBufferNames } from "../gbuffers/base";
 import { splitLightUUID } from "../light/lightsManager";
+import { BaseMaterial } from "../material/baseMaterial";
 import { Scene } from "./scene";
 
 /**
@@ -94,7 +96,10 @@ export class RenderManager {
         [renderPassName.depth]: I_renderDrawCommand,
         [renderPassName.forward]: I_renderDrawCommand,
         [renderPassName.transparent]: I_renderDrawOfDistancesLine,
-        [renderPassName.transparentPixcel]: I_renderDrawOfDistancesLine,
+        /**
+         * 透明通道的pixcel级别的绘制命令队列，
+         */
+        // [renderPassName.transparentPixcel]: I_renderDrawOfDistancesLine,
         [renderPassName.sprite]: I_renderDrawCommand,
         [renderPassName.spriteTransparent]: I_renderDrawOfTimeline,
         [renderPassName.postprocess]: commmandType[],
@@ -110,7 +115,7 @@ export class RenderManager {
             [renderPassName.depth]: {},
             [renderPassName.forward]: {},
             [renderPassName.transparent]: {},
-            [renderPassName.transparentPixcel]: {},
+            // [renderPassName.transparentPixcel]: {},
             [renderPassName.sprite]: {},
             [renderPassName.spriteTransparent]: {},
             [renderPassName.postprocess]: [],
@@ -401,7 +406,7 @@ export class RenderManager {
      * 透明渲染DC
      * @param list 透明渲染列表
      */
-    async renderTransParentDC(list: I_renderDrawOfTimeline) {
+    async renderTransParentDC(list: I_renderDrawOfDistancesLine) {
         // let cameraRendered: {
         //     [name: string]: number
         // } = {};
@@ -411,224 +416,84 @@ export class RenderManager {
             let perOne = list[i];
             let UUID = i;
             //2 for 单个camera的command
-            for (let perCommand of perOne) {
-                this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
-
-                this.cameraRendered[UUID]++;//更改 TT loadOP计数器
-                //2.1 渲染与输出：color*4,depth(RGBA),ID(RGBA)
-                perCommand.submit();//A
-                // await this.device.queue.onSubmittedWorkDone();
-
-                // this.scene.cameraManager.copyTextureAToTextureB();
-                // 等待第 1 个同步范围完成（隐式同步点）
-
-                //2.2 交换colorAttachment 与 uniform 缓冲区
-                // this.scene.cameraManager.switchTT();
-            }
+            // for (let perCommand of perOne) {
+            //     if (Array.isArray(perCommand)) {
+            //         this.renderTTP(UUID, perCommand);
+            //     }
+            //     else {
+            //         this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
+            //         this.cameraRendered[UUID]++;//更改 TT loadOP计数器
+            //         perCommand.submit();  // 渲染
+            //     }
+            // }
+            await this.renderTTP(UUID, perOne as commmandType[]);
 
         }// end for of camera UUID
     }
 
-    renderTP() {
+    async renderTTP(UUID: string, list: commmandType[]) {
         //像素级别多层渲染排序
         /**
-         *  按照camera UUID 逐个进行
-         *  1 清空纹理，
-         *  2 for 单个camera的command{
-         *      2.1 渲染与输出：color*4,depth(RGBA),ID(RGBA)
-         *      2.2 交换colorAttachment 与 uniform 缓冲区
-         *    }
-         *  3 Map 深度数据，形成3个层级的渲染队列（三个新的）
-         *    3.1 map GPUTexture(注意这里是switch后的)到数组，返回多层的ID数组,并去重
-         *    3.2 获取每个RenderID的material的Blend参数
-         *  4 逐层blend render到camera的color attachment
-         *    4.1 新建RPD，
-         *    4.2 新建GPUColorTargetState[],将Blend参数传入
-         *    4.3 新建DC，
-         *          A、将renderID 写入shader code，FS code只比较ID，有则blend，无则discard
-         *          B、shader 为极简，没有vertex等其他参数，
-         *          C、uniform的texture，按照层级进行绑定
-         *    4.4 分多层，多个Rendid进行
-         *          A、总渲染数量=所有层数的ID数量总和
-         *          B、渲染尺寸：屏幕大小的两个三角形
+         *  1、 清空纹理，
+         *  2、 循环list DC的TT,并渲染TTP(TTP,通过resourcesGPU获取)的command，渲染到 通用的GBuffer
+         *    2.1 uniform ：
+         *          A、 相机depth纹理，方案二选一
+         *              没有是有depth test，因为rpd在每个camera是不同的。
+         *              也可以为每个camera创建RPD，用于deptp test，这样性能更好些
+         *          B、 depth RGBAfloat32 纹理
+         *          C、 ID RGBAuint32 纹理。这个是最终的需要的数据。
+         *          D、 color纹理
+         *              如果是alpha，color可以复用在TB
+         *              如果是物理透明，color无用，因为物理透明是计算折射的背景
+         * 
+         *    2.2 渲染到GBuffer
+         * 
+         *  3A、方案A：TTPF(通过resourcesGPU获取)
+         *          A、渲染层数通过uniform传递
+         *          B、RGBA共四层（最多，相交的BVH的包围盒保留的透明度数量） 
+         *          C、渲染次数 4*N个（N是相交的BVH的包围盒数量 ）
+         * 
+         *  3B、方案B：TTPF的层数适用computer shader计算优化，得到实际每层的渲染次数（ID）的集合
+         * 
+         *  4、渲染总数量
+         *          A、TTP：N个
+         *          B、TTPF：4*N个
+         *          C、总计：5*N
+         * 
         */
         //1 清空纹理
-        // this.scene.cameraManager.cleanValueOfTT();
-        ////2 for 单个camera的command
-        // for (let perCommand of perOne) {
-        //     cameraRendered[UUID] = this.autoChangeTTRPD_loadOP(cameraRendered[UUID]);
-        //     cameraRendered[UUID]++;//更改 TT loadOP计数器
-        //     //2.1 渲染与输出：color*4,depth(RGBA),ID(RGBA)
-        //     perCommand.submit();//A
-        //     await this.device.queue.onSubmittedWorkDone();
+        this.scene.cameraManager.cleanValueOfTT();
+        let listOfTTPF: DrawCommand[] = [];
+        await this.device.queue.onSubmittedWorkDone();
 
-        //     // this.scene.cameraManager.copyTextureAToTextureB();
-        //     // 等待第 1 个同步范围完成（隐式同步点）
+        //2 for 单个camera的command
+        for (let TT of list) {
+            let TTP = this.scene.resourcesGPU.TT2TTP.get(TT as DrawCommand);
+            let TTPF = this.scene.resourcesGPU.TT2TTPF.get(TT as DrawCommand);
+            if (TTP && TTPF) {
+                listOfTTPF.push(TTPF as DrawCommand);
+                this.cameraRendered[UUID] = this.autoChangeTTRPD_loadOP(UUID, this.cameraRendered[UUID]);
+                this.cameraRendered[UUID]++;//更改 TT loadOP计数器
+                TTP.submit();
+                await this.device.queue.onSubmittedWorkDone();
 
-        //     //2.2 交换colorAttachment 与 uniform 缓冲区
-        //     this.scene.cameraManager.switchTT();
-        // }
-        // // //如果有TT渲染
-        // if (cameraRendered[UUID] > 0) {
-        //     //3.1 map数据到数组,并去重
-        //     let RGBA: number[][] = await this.scene.cameraManager.getLayerIDArray();
-        //     //3.2 获取每个RenderID的material的Blend参数
-        //     let blendParams: { id: number, blend: GPUBlendState }[][] = [
-        //         [],//0,R
-        //         [],//1,G
-        //         [],//2,B
-        //         [],//3,A
-        //     ];
-        //     for (let i in RGBA) {
-        //         let perGroupOfID = RGBA[i];
-        //         for (let j in perGroupOfID) {
-        //             let perID = perGroupOfID[j];
-        //             // 过滤掉 ID 为 0 的情况
-        //             if (perID === 0) {
-        //                 continue;
-        //             }
-        //             let perEntity = this.scene.entityManager.getEntityByID(perID);
-        //             let blendParam = perEntity.getBlend();
-        //             if (blendParam) {
-        //                 blendParams[i].push({ id: perID, blend: blendParam });
-        //             }
-        //             else {
-        //                 console.warn("entity name :", perEntity.Name, perEntity);
-        //                 throw new Error("Blend参数为空，RenderID：" + perID);
-        //             }
-        //         }
-        //     }
-        // //4 逐层blend render到camera的color attachment
-        // for (let i in blendParams) {
-        //     let perGroupOfID = blendParams[i];
-        //     for (let j in perGroupOfID) {
-        //         let perBlendAndID = perGroupOfID[j];
-        //         //4.1 新建RPD，
-        //         let perRPD: GPURenderPassDescriptor = {
-        //             colorAttachments: [
-        //                 {
-        //                     view: this.scene.cameraManager.getGBufferTextureByUUID(UUID, E_GBufferNames.color).createView(),
-        //                     loadOp: "load",
-        //                     storeOp: "store",
-        //                 }
-        //             ],
-        //         };
+                //交换colorAttachment 与 uniform 缓冲区
+                this.scene.cameraManager.switchTT();
+                await this.device.queue.onSubmittedWorkDone();
 
-        //         //4.2 新建GPUColorTargetState[],将Blend参数传入
-        //         let perColorTargetState: GPUColorTargetState = { format: V_weLinearFormat };
-        //         perColorTargetState.blend = perBlendAndID.blend;
-        //         //4.3 新建DC，
-        //         //4.3.A shader
-        //         let ID = perBlendAndID.id;
-        //         let idChannel = "a";
-        //         if (i == "3") {
-        //             idChannel = "a";
-        //         }
-        //         else if (i == "2") {
-        //             idChannel = "g";
-        //         }
-        //         else if (i == "1") {
-        //             idChannel = "b";
-        //         }
-        //         else if (i == "0") {
-        //             idChannel = "r";
-        //         }
-        //         let shader = ` 
-        //             @group(0) @binding(0) var u_colorTexture: texture_2d<f32>;                        
-        //             @group(0) @binding(1) var u_idTexture: texture_2d<u32>;                        
-        //             @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
-        //                 let pos = array(
-        //                         vec2f( -1.0,  -1.0),  // bottom left
-        //                         vec2f( 1.0,  -1.0),  // top left
-        //                         vec2f( -1.0,  1.0),  // top right
-        //                         vec2f( 1.0,  1.0),  // bottom right
-        //                         );
-        //                 return vec4f(pos[vertexIndex], 0.0, 1.0);
-        //             }
-        //             @fragment fn fs(@builtin(position) pos: vec4f ) -> @location(0) vec4f {
-        //                 var id:u32 = textureLoad(u_idTexture, vec2i(floor( pos.xy)),0 ).${idChannel};
-        //                 let mask:u32 = (1<<30)-1;
-        //                 id=id&mask;
-        //                 id=id>>14;
-        //                 let ID:u32 =${ID};
-        //                 if(id!=ID){
-        //                     discard;
-        //                     // return vec4f(0,0,1,0.03);
-        //                 }
-        //                 return textureLoad(u_colorTexture,  vec2i(floor( pos.xy)),0);    
-        //                 // return vec4f(1,0,0,0.31);
-        //             }
-        //             `;
-        //         //4.3.B uniform
-        //         let uniform;
-        //         let colorIndex = parseInt(i)+1;//i 从0开始，color的数字从1开始
-        //         let colorTextureName = "color" + colorIndex;
-        //         let idTextureName = "id";
-        //         // let valueDC: V_DC = {
-        //         //     label: "renderManager TT blend render to camera :" + UUID,
-        //         //     data: {
-        //         //         uniforms: [
-        //         //             [
-        //         //                 //不需要sampler，使用textureLoad(),精确读取数据
-        //         //                 {
-        //         //                     binding: 0,
-        //         //                     resource: this.scene.cameraManager.getTTRenderTexture(colorTextureName).createView(),
-        //         //                 },
-        //         //                 {
-        //         //                     binding: 1,
-        //         //                     resource: this.scene.cameraManager.getTTRenderTexture(idTextureName).createView(),
-        //         //                 },
-        //         //             ]
-        //         //         ],
-        //         //         unifromLayout: [
-        //         //             [
-        //         //                 {
-        //         //                     binding: 0,
-        //         //                     visibility: GPUShaderStage.FRAGMENT,
-        //         //                     texture: {
-        //         //                         sampleType: "float",
-        //         //                         viewDimension: "2d",
-        //         //                     },
-        //         //                 },
-        //         //                 {
-        //         //                     binding: 1,
-        //         //                     visibility: GPUShaderStage.FRAGMENT,
-        //         //                     texture: {
-        //         //                         sampleType: "uint",
-        //         //                         viewDimension: "2d",
-        //         //                     },
-        //         //                 },
-        //         //             ]
-        //         //         ],
-        //         //     },
-        //         //     render: {
-        //         //         vertex: {
-        //         //             code: shader,
-        //         //             entryPoint: "vs",
-        //         //         },
-        //         //         fragment: {
-        //         //             entryPoint: "fs",
-        //         //             targets: [perColorTargetState],
-        //         //         },
-        //         //         drawMode: {
-        //         //             vertexCount: 4
-        //         //         },
-        //         //         primitive: {
-        //         //             topology: "triangle-strip",
-        //         //         },
-        //         //         depthStencil: false,
-        //         //     },
-        //         //     renderPassDescriptor: perRPD,
-        //         // };
-        //         // let dc = this.DCG.generateDrawCommand(valueDC);
-
-        //         // //4.4 分多层，多个Rendid进行
-        //         // dc.submit()
-        //         // dc.destroy();
-        //         // dc = {} as DrawCommand;
-        //     }//4.0 j
-        // }//4.0 i
-        // }// end if 如果有TT渲染
+            }
+        }
+        for (let i = 0; i < 4; i++) {
+            for (let perTTPF of listOfTTPF) {
+                let perEntity = this.scene.entityManager.getEntityByUUID(perTTPF.IDS.UUID);
+                if (perEntity) {
+                    if ("_material" in perEntity) {
+                        (perEntity._material as BaseMaterial).setUniformLayerOfTTPF(i);
+                        perTTPF.submit();
+                    }
+                }
+            }
+        }
     }
     renderForwaredDC(commands: I_renderDrawCommand) {
         // let cameraRendered: {
@@ -688,15 +553,14 @@ export class RenderManager {
 
         //defer render Of depth
         this.renderForwaredDC(this.RC[renderPassName.forward]);
-
-
-
         //不透明enity
         this.renderForwaredDC(this.RC[renderPassName.forward]);
-
         ////透明enity
         // this.renderTimelineDC(this.renderCameraTransParentCommand);
         await this.renderTransParentDC(this.RC[renderPassName.transparent]);
+
+        //像素级别多层渲染排序
+        // this.renderTPOLD(this.RC[renderPassName.transparent]);
 
         //sprite
         this.renderForwaredDC(this.RC[renderPassName.sprite]);
@@ -761,9 +625,9 @@ export class RenderManager {
         }
         return countOfUUID;
     }
-    autoChangeTTRPD_loadOP(countOfUUID: number): number {
+    autoChangeTTRPD_loadOP(UUID: string, countOfUUID: number): number {
 
-        let rpd = this.scene.cameraManager.getTT_RenderRPD();
+        let rpd = this.scene.cameraManager.getTT_RenderRPD(UUID);
         if (countOfUUID == undefined) {//没有记录，增加UUID记录
             countOfUUID = 0;//A
             for (let perColorAttachment of rpd.colorAttachments) {
@@ -771,24 +635,233 @@ export class RenderManager {
                     perColorAttachment.loadOp = "clear";
             }
         }
-        else if (countOfUUID == 1) {// B 
+        else if (countOfUUID == 0 || countOfUUID == 1) {// B 
             for (let perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "clear";
             }
         }
-        else if (countOfUUID == 3) {// A+
+        else if (countOfUUID == 2 || countOfUUID == 3) {// A+
             for (let perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "load";
             }
         }
-        else if (countOfUUID == 4) {// B+
-            for (let perColorAttachment of rpd.colorAttachments) {
-                if (perColorAttachment)
-                    perColorAttachment.loadOp = "load";
-            }
-        }
+        // else if (countOfUUID == 3) {// B+
+        //     for (let perColorAttachment of rpd.colorAttachments) {
+        //         if (perColorAttachment)
+        //             perColorAttachment.loadOp = "load";
+        //     }
+        // }
         return countOfUUID;
+    }
+
+    async renderTPOLD(list: I_renderDrawOfDistancesLine) {
+        //像素级别多层渲染排序
+        /**
+         *  按照camera UUID 逐个进行
+         *  1 清空纹理，
+         *  2 for 单个camera的command{
+         *      2.1 渲染与输出：color*4,depth(RGBA),ID(RGBA)
+         *      2.2 交换colorAttachment 与 uniform 缓冲区
+         *    }
+         *  3 Map 深度数据，形成3个层级的渲染队列（三个新的）
+         *    3.1 map GPUTexture(注意这里是switch后的)到数组，返回多层的ID数组,并去重
+         *    3.2 获取每个RenderID的material的Blend参数
+         *  4 逐层blend render到camera的color attachment
+         *    4.1 新建RPD，
+         *    4.2 新建GPUColorTargetState[],将Blend参数传入
+         *    4.3 新建DC，
+         *          A、将renderID 写入shader code，FS code只比较ID，有则blend，无则discard
+         *          B、shader 为极简，没有vertex等其他参数，
+         *          C、uniform的texture，按照层级进行绑定
+         *    4.4 分多层，多个Rendid进行
+         *          A、总渲染数量=所有层数的ID数量总和
+         *          B、渲染尺寸：屏幕大小的两个三角形
+        */
+        await this.device.queue.onSubmittedWorkDone();
+        for (let i in list) {//camera UUID
+            // let submitCommand: GPUCommandBuffer[] = [];
+            let perOne = list[i];
+            let UUID = i;
+            //1 清空纹理
+            this.scene.cameraManager.cleanValueOfTT();
+            //2 for 单个camera的command
+            for (let perCommand of perOne as commmandType[]) {
+                this.cameraRendered[UUID] = this.autoChangeTTRPD_loadOP(UUID, this.cameraRendered[UUID]);
+                this.cameraRendered[UUID]++;//更改 TT loadOP计数器
+                //2.1 渲染与输出：color*4,depth(RGBA),ID(RGBA)
+                perCommand.submit();//A
+                await this.device.queue.onSubmittedWorkDone();
+
+                // this.scene.cameraManager.copyTextureAToTextureB();
+                // 等待第 1 个同步范围完成（隐式同步点）
+
+                //2.2 交换colorAttachment 与 uniform 缓冲区
+                this.scene.cameraManager.switchTT();
+            }
+            // //如果有TT渲染
+            if (this.cameraRendered[UUID] > 0) {
+                //3.1 map数据到数组,并去重
+                let RGBA: number[][] = await this.scene.cameraManager.getLayerIDArray();
+                //3.2 获取每个RenderID的material的Blend参数
+                let blendParams: { id: number, blend: GPUBlendState }[][] = [
+                    [],//0,R
+                    [],//1,G
+                    [],//2,B
+                    [],//3,A
+                ];
+                for (let i in RGBA) {
+                    let perGroupOfID = RGBA[i];
+                    for (let j in perGroupOfID) {
+                        let perID = perGroupOfID[j];
+                        // 过滤掉 ID 为 0 的情况
+                        if (perID === 0) {
+                            continue;
+                        }
+                        let perEntity = this.scene.entityManager.getEntityByID(perID);
+                        let blendParam = perEntity.getBlend();
+                        if (blendParam) {
+                            blendParams[i].push({ id: perID, blend: blendParam });
+                        }
+                        else {
+                            console.warn("entity name :", perEntity.Name, perEntity);
+                            throw new Error("Blend参数为空，RenderID：" + perID);
+                        }
+                    }
+                }
+                //4 逐层blend render到camera的color attachment
+                for (let i in blendParams) {
+                    let perGroupOfID = blendParams[i];
+                    for (let j in perGroupOfID) {
+                        let perBlendAndID = perGroupOfID[j];
+                        //4.1 新建RPD，
+                        let perRPD: GPURenderPassDescriptor = {
+                            colorAttachments: [
+                                {
+                                    view: this.scene.cameraManager.getGBufferTextureByUUID(UUID, E_GBufferNames.color).createView(),
+                                    loadOp: "load",
+                                    storeOp: "store",
+                                }
+                            ],
+                        };
+
+                        //4.2 新建GPUColorTargetState[],将Blend参数传入
+                        let perColorTargetState: GPUColorTargetState = { format: V_weLinearFormat };
+                        perColorTargetState.blend = perBlendAndID.blend;
+                        //4.3 新建DC，
+                        //4.3.A shader
+                        let ID = perBlendAndID.id;
+                        let idChannel = "a";
+                        if (i == "3") {
+                            idChannel = "a";
+                        }
+                        else if (i == "2") {
+                            idChannel = "g";
+                        }
+                        else if (i == "1") {
+                            idChannel = "b";
+                        }
+                        else if (i == "0") {
+                            idChannel = "r";
+                        }
+                        let shader = ` 
+                    @group(0) @binding(0) var u_colorTexture: texture_2d<f32>;                        
+                    @group(0) @binding(1) var u_idTexture: texture_2d<u32>;                        
+                    @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
+                        let pos = array(
+                                vec2f( -1.0,  -1.0),  // bottom left
+                                vec2f( 1.0,  -1.0),  // top left
+                                vec2f( -1.0,  1.0),  // top right
+                                vec2f( 1.0,  1.0),  // bottom right
+                                );
+                        return vec4f(pos[vertexIndex], 0.0, 1.0);
+                    }
+                    @fragment fn fs(@builtin(position) pos: vec4f ) -> @location(0) vec4f {
+                        var id:u32 = textureLoad(u_idTexture, vec2i(floor( pos.xy)),0 ).${idChannel};
+                        let mask:u32 = (1<<30)-1;
+                        id=id&mask;
+                        id=id>>14;
+                        let ID:u32 =${ID};
+                        if(id!=ID){
+                            discard;
+                            // return vec4f(0,0,1,0.03);
+                        }
+                        return textureLoad(u_colorTexture,  vec2i(floor( pos.xy)),0);    
+                        // return vec4f(1,0,0,0.31);
+                    }
+                    `;
+                        //4.3.B uniform
+                        let uniform;
+                        let colorIndex = parseInt(i) + 1;//i 从0开始，color的数字从1开始
+                        let colorTextureName = "color" + colorIndex;
+                        let idTextureName = "id";
+                        let valueDC: V_DC = {
+                            label: "renderManager TT blend render to camera :" + UUID,
+                            data: {
+                                uniforms: [
+                                    [
+                                        //不需要sampler，使用textureLoad(),精确读取数据
+                                        {
+                                            binding: 0,
+                                            resource: this.scene.cameraManager.getTTRenderTexture(colorTextureName).createView(),
+                                        },
+                                        {
+                                            binding: 1,
+                                            resource: this.scene.cameraManager.getTTRenderTexture(idTextureName).createView(),
+                                        },
+                                    ]
+                                ],
+                                unifromLayout: [
+                                    [
+                                        {
+                                            binding: 0,
+                                            visibility: GPUShaderStage.FRAGMENT,
+                                            texture: {
+                                                sampleType: "float",
+                                                viewDimension: "2d",
+                                            },
+                                        },
+                                        {
+                                            binding: 1,
+                                            visibility: GPUShaderStage.FRAGMENT,
+                                            texture: {
+                                                sampleType: "uint",
+                                                viewDimension: "2d",
+                                            },
+                                        },
+                                    ]
+                                ],
+                            },
+                            render: {
+                                vertex: {
+                                    code: shader,
+                                    entryPoint: "vs",
+                                },
+                                fragment: {
+                                    entryPoint: "fs",
+                                    targets: [perColorTargetState],
+                                },
+                                drawMode: {
+                                    vertexCount: 4
+                                },
+                                primitive: {
+                                    topology: "triangle-strip",
+                                },
+                                depthStencil: false,
+                            },
+                            renderPassDescriptor: perRPD,
+                            IDS: undefined
+                        };
+                        let dc = this.DCG.generateDrawCommand(valueDC);
+
+                        //4.4 分多层，多个Rendid进行
+                        dc.submit()
+                        dc.destroy();
+                        dc = {} as DrawCommand;
+                    }//4.0 j
+                }//4.0 i
+            }// end if 如果有TT渲染
+        }
     }
 }

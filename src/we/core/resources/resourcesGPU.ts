@@ -1,4 +1,5 @@
 import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformBufferPart, T_uniformEntries, T_uniformGroup } from "../command/base";
+import { DrawCommand } from "../command/DrawCommand";
 
 export class ResourceManagerOfGPU {
     device!: GPUDevice;
@@ -71,6 +72,10 @@ export class ResourceManagerOfGPU {
     /**string 可以是sampler的名称等，比如通用的 linear,nearest ,也可以是定制的，linear-mipmap*/
     samplerOfString: Map<string | GPUSamplerDescriptor, GPUSampler> = new Map();
     samplerToBindGroupLayoutEntry: Map<GPUSampler, GPUSamplerBindingLayout> = new Map();
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // 透明渲染
+    TT2TTP:Map<DrawCommand,DrawCommand> = new Map();
+    TT2TTPF:Map<DrawCommand,DrawCommand> = new Map();
 
     has(key: any, _kind?: string) {
         if (_kind) {

@@ -633,7 +633,7 @@ export class DrawCommandGenerator {
 
                     targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
                     if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
-                        for (let i = 0; i < targets.length; i++) {
+                        for (let i = 0; i <values.transparent.blend.length; i++) {
                             targets[i].blend = values.transparent.blend[i];
                         }
                     }
@@ -687,7 +687,8 @@ export class DrawCommandGenerator {
             }
         }
 
-        if (values.render.depthStencil !== false) {
+
+        if (values.render.depthStencil !== false) {//TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
             if (values.render.depthStencil) descriptor.depthStencil = values.render.depthStencil;
             else {
                 //透明渲染，使用透明模板

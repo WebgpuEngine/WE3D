@@ -36,7 +36,7 @@ export class GBuffers {
     constructor(parent: any, device: GPUDevice) {
         this.device = device;
         this.parent = parent;
-        this.initCommonTransparentGBuffer();
+        // this.initCommonTransparentGBuffer();
     }
     getBackgroudColor(premultipliedAlpha: boolean, backGroudColor: [number, number, number, number]): number[] {
         if (premultipliedAlpha) {
@@ -46,7 +46,36 @@ export class GBuffers {
             return [backGroudColor[0], backGroudColor[1], backGroudColor[2], backGroudColor[3]];
         }
     }
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // 不透明GBuffer
+    /////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * TTPF 使用的RPD
+     * @param UUID 
+     * @returns 不透明GBuffer的color RenderPassDescriptor
+     */
+    getGBufferColorRPD(UUID: string): GPURenderPassDescriptor {
+        let rpd: GPURenderPassDescriptor = {
+            colorAttachments: [
+                {
+                    view: this.GBuffer[UUID].forward.GBuffer[E_GBufferNames.color].createView(),
+                    loadOp: 'load',
+                    storeOp: 'store',
+                },
+            ]
+        }
+        return rpd;
+    }
+    /**
+     * TTPF 使用的GPUColorTargetState
+     * @param UUID 
+     * @returns 不透明GBuffer的color RenderPassDescriptor
+     */
+    getGBufferColorCTS(): GPUColorTargetState[] {
+
+        return [{ format: V_ForwardGBufferNames[E_GBufferNames.color].format }];
+    }
     /**
      * 初始化GBufferByID
      * @param id ：GBuffer的id
@@ -165,6 +194,23 @@ export class GBuffers {
         this.removeGBuffer(id);
         this.initGBuffer(id, input);
     }
+    getRPDByID(id: string): GPURenderPassDescriptor {
+        return this.GBuffer[id].forward.RPD;
+    }
+    getGBufferByID(id: string): I_GBuffer {
+        return this.GBuffer[id].forward.GBuffer;
+    }
+    getColorAttachmentTargetsByID(id: string): GPUColorTargetState[] {
+        return this.GBuffer[id].forward.colorAttachmentTargets;
+    }
+    getTextureByNameAndUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
+        return this.GBuffer[UUID].forward.GBuffer[GBufferName];
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // 透明GBuffer
+    /////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * 重新初始化GBufferByID
      * @param id ：GBuffer的id
@@ -174,20 +220,28 @@ export class GBuffers {
         this.removCommonTransparentGBuffer();
         this.initCommonTransparentGBuffer();
     }
+
+    /**
+     * 移除透明GBuffer
+     */
     removCommonTransparentGBuffer() {
         if (this.commonTransparentGBufferA?.GBuffer) {
             for (let key in this.commonTransparentGBufferA.GBuffer) {
                 this.commonTransparentGBufferA.GBuffer[key].destroy();
             }
-            // this.commonTransparentGBufferA.lastTime = 0;
+            this.commonTransparentGBufferA = {} as I_TransparentGBufferGroup;
         }
         if (this.commonTransparentGBufferB?.GBuffer) {
             for (let key in this.commonTransparentGBufferB.GBuffer) {
                 this.commonTransparentGBufferB.GBuffer[key].destroy();
             }
-            // this.commonTransparentGBufferB.lastTime = 0;
+            this.commonTransparentGBufferB = {} as I_TransparentGBufferGroup;
         }
     }
+
+    /**
+     * 初始化GBuffer的RenderPassDescriptor
+     */
     initCommonTransparentGBuffer() {
         let device = this.device;
         let width = this.parent.scene.surface.size.width;
@@ -219,9 +273,10 @@ export class GBuffers {
                 colorAttachmentTargets.push({ format: perOneBuffer.format });
                 gbuffers[key] = texture;
             }
-            const rpd: GPURenderPassDescriptor = {
-                colorAttachments: colorAttachments,
-            };
+            // const rpd: GPURenderPassDescriptor = {
+            //     colorAttachments: colorAttachments,
+            // };
+            let rpd = this.initCommonTransparentRPB_ByUUID(this.getUUIDFromGBuffer(), gbuffers);
             this.commonTransparentGBufferA = {
                 RPD: rpd,
                 colorAttachmentTargets: colorAttachmentTargets,
@@ -253,9 +308,7 @@ export class GBuffers {
                 colorAttachmentTargets.push({ format: perOneBuffer.format });
                 gbuffers[key] = texture;
             }
-            const rpd: GPURenderPassDescriptor = {
-                colorAttachments: colorAttachments,
-            };
+            let rpd = this.initCommonTransparentRPB_ByUUID(this.getUUIDFromGBuffer(), gbuffers);
             this.commonTransparentGBufferB = {
                 RPD: rpd,
                 colorAttachmentTargets: colorAttachmentTargets,
@@ -264,17 +317,58 @@ export class GBuffers {
             };
         }
     }
+    /**
+     * 获取GBuffer的UUIDs
+     * @returns string[]
+     */
+    getUUIDFromGBuffer() {
+        let UUIDs: string[] = [];
+        for (let key in this.GBuffer) {
+            UUIDs.push(key);
+        }
+        return UUIDs;
+    }
+    /**
+     * 初始化GBuffer的RenderPassDescriptor
+     * @param UUIDs ：GBuffer的UUIDs
+     * @param gbuffers CommonTransparentGBuffer的GBuffer
+     * @returns 
+     */
+    initCommonTransparentRPB_ByUUID(UUIDs: string[], gbuffers: I_GBuffer) {
+        let rpd: {
+            [UUID: string]: GPURenderPassDescriptor
+        } = {};
+        for (let UUID of UUIDs) {
+            let colorAttachments: GPURenderPassColorAttachment[] = [];
+            for (let key in gbuffers) {
+                let texture = gbuffers[key];
+                colorAttachments.push({
+                    view: texture.createView(),
+                    // clearValue: [0.0, 0.0, 0.0, 0.0],
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                });
+            }
+            rpd[UUID] = { colorAttachments: colorAttachments };
+            // let depthTextureOfUUID = this.GBuffer[UUID].forward.GBuffer["depth"];
+            // rpd[UUID].depthStencilAttachment = {
+            //     view: depthTextureOfUUID.createView(),
+            //     depthLoadOp: 'load',
+            //     depthStoreOp: 'store',
+            // };
+        }
+        return rpd;
+    }
+    /**
+     * 更新GBuffer的RenderPassDescriptor
+     * 增加camera之后
+     */
+    updateCommonTransparentGBuffer() {
+        let rpd = this.initCommonTransparentRPB_ByUUID(this.getUUIDFromGBuffer(), this.commonTransparentGBufferA.GBuffer);
+        this.commonTransparentGBufferA.RPD = rpd;
+        rpd = this.initCommonTransparentRPB_ByUUID(this.getUUIDFromGBuffer(), this.commonTransparentGBufferB.GBuffer);
+        this.commonTransparentGBufferB.RPD = rpd;
+    }
 
-    getRPDByID(id: string): GPURenderPassDescriptor {
-        return this.GBuffer[id].forward.RPD;
-    }
-    getGBufferByID(id: string): I_GBuffer {
-        return this.GBuffer[id].forward.GBuffer;
-    }
-    getColorAttachmentTargetsByID(id: string): GPUColorTargetState[] {
-        return this.GBuffer[id].forward.colorAttachmentTargets;
-    }
-    getTextureByNameAndUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
-        return this.GBuffer[UUID].forward.GBuffer[GBufferName];
-    }
+
 }
