@@ -101,12 +101,13 @@ export class GBuffers {
 
         let gbuffers: I_GBuffer = {};
         let name = input.name || id;
+        let unixTime=new Date().getTime();
 
         for (let key in V_ForwardGBufferNames) {
             let perOneBuffer = V_ForwardGBufferNames[key];
 
             let texture = device.createTexture({
-                label: name + " " + perOneBuffer.label,
+                label: name + " " + perOneBuffer.label+" "+unixTime,
                 size: [width, height],
                 format: perOneBuffer.format,
                 usage: perOneBuffer.usage,
@@ -229,12 +230,15 @@ export class GBuffers {
     removCommonTransparentGBuffer() {
         if (this.commonTransparentGBufferA?.GBuffer) {
             for (let key in this.commonTransparentGBufferA.GBuffer) {
+                console.log("Destroying texture:", this.commonTransparentGBufferA.GBuffer[key].label);
                 this.commonTransparentGBufferA.GBuffer[key].destroy();
             }
             this.commonTransparentGBufferA = {} as I_TransparentGBufferGroup;
         }
         if (this.commonTransparentGBufferB?.GBuffer) {
             for (let key in this.commonTransparentGBufferB.GBuffer) {
+                console.log("Destroying texture:", this.commonTransparentGBufferB.GBuffer[key].label);
+
                 this.commonTransparentGBufferB.GBuffer[key].destroy();
             }
             this.commonTransparentGBufferB = {} as I_TransparentGBufferGroup;
@@ -251,6 +255,7 @@ export class GBuffers {
         let premultipliedAlpha = this.parent.defaultCamera.premultipliedAlpha;
         let backgroudColor = this.parent.defaultCamera.backGroundColor;
         // let depthClearValue = input.depthClearValue;
+         let unixTime=new Date().getTime();
         if (width == 0 || height == 0) {
             console.error("透明GBuffer初始化失败，因为场景的大小为0");
             return;
@@ -264,7 +269,7 @@ export class GBuffers {
             for (let key in V_TransparentGBufferNames) {
                 let perOneBuffer = V_TransparentGBufferNames[key];
                 let texture = device.createTexture({
-                    label: "TT A GBuffer " + perOneBuffer.label,
+                    label: "TT A GBuffer " + perOneBuffer.label +" "+unixTime,
                     size: [width, height],
                     format: perOneBuffer.format,
                     usage: perOneBuffer.usage,
@@ -301,7 +306,7 @@ export class GBuffers {
             for (let key in V_TransparentGBufferNames) {
                 let perOneBuffer = V_TransparentGBufferNames[key];
                 let texture = device.createTexture({
-                    label: "TT B GBuffer " + perOneBuffer.label,
+                    label: "TT B GBuffer " + perOneBuffer.label +" "+unixTime,
                     size: [width, height],
                     format: perOneBuffer.format,
                     usage: perOneBuffer.usage,

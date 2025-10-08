@@ -192,11 +192,15 @@ export class ColorMaterial extends BaseMaterial {
             // uniform1.push(unifrom10);
 
 
-            // uniform  纹理ID
-            let uniforIDTexture: GPUBindGroupEntry = {
+            // uniform  纹理ID GPUBindGroupEntry
+            // let uniforIDTexture: GPUBindGroupEntry={
+                // binding: bindingNumber,
+                // resource: renderObject.manager.getTTRenderTexture("id"),
+            // };
+            let uniforIDTexture: I_dynamicTextureEntryForView = {
+                label: this.Name + " texture ID at group(1) binding(" + bindingNumber + ")",
                 binding: bindingNumber,
-                resource: renderObject.manager.getTTRenderTexture("id"),
-                // resource: renderObject.manager.getTTUniformTexture("id"),
+                getResource: () => { return renderObject.manager.getTTRenderTexture("id"); },
             };
             let uniforIDTextureLayout: GPUBindGroupLayoutEntry = {
                 binding: bindingNumber,
@@ -239,6 +243,8 @@ export class ColorMaterial extends BaseMaterial {
             templateString: code,
             groupAndBindingString: groupAndBindingString,
             owner: this,
+            dynamic: true
+
         }
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: bindingNumber };
     }

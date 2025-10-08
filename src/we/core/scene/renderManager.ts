@@ -527,6 +527,7 @@ export class RenderManager {
                 }
             }
         }
+          await this.device.queue.onSubmittedWorkDone();
     }
     renderForwaredDC(commands: I_renderDrawCommand) {
         // let cameraRendered: {

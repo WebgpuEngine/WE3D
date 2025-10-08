@@ -711,7 +711,7 @@ export class Mesh extends BaseEntity {
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
 
                 //RPD
-                valueDC.renderPassDescriptor = camera.manager.GBufferManager.getGBufferColorRPD_TTPF(UUID);
+                valueDC.renderPassDescriptor =()=>{ return camera.manager.GBufferManager.getGBufferColorRPD_TTPF(UUID);};
                 //label
                 valueDC.label = "mesh:" + this.ID + " TTPF";
                 ////没有深度比较，没有深度写入

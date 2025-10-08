@@ -293,6 +293,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     getTTRenderTexture(name: string): GPUTexture {
         if (this.TT_Render && this.TT_Render.GBuffer[name]) {
+                // console.log( "texture:", this.TT_Render.GBuffer[name].label);
             return this.TT_Render.GBuffer[name];
         }
         else {
@@ -470,6 +471,87 @@ export class CameraManager extends ECSManager<BaseCamera> {
 
 
 
+
+    //end TT
+
+   async onResize() {
+      
+
+        let width = this.scene.surface.size.width;
+        let height = this.scene.surface.size.height;
+        // 计算基础每行字节数（未对齐）
+        let bytesPerRow = width * 4 * 4;
+        // 获取设备的内存对齐要求
+        const alignment = this.device.limits.minStorageBufferOffsetAlignment;
+        // 向上 bytesPerRow 向上取整到对齐值的倍数
+        bytesPerRow = Math.ceil(bytesPerRow / alignment) * alignment;
+        // 重新创建resultGPUBuffer
+        if (this.resultGPUBuffer) {
+            this.resultGPUBuffer.destroy();
+            this.resultGPUBuffer = this.device.createBuffer({
+                size: bytesPerRow * height,
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+
+            });
+        }
+
+
+        for (let UUID in this.GBufferManager.GBuffer) {
+            let camera = this.getCameraByUUID(UUID) as BaseCamera;
+            // 重新创建GBuffer
+            let gbuffersOption: IV_GBuffer = {
+                device: this.device,
+                surfaceSize: {
+                    width: width,
+                    height: height
+                },
+                premultipliedAlpha: camera.premultipliedAlpha,
+                backGroudColor: camera.backGroundColor,
+                depthClearValue: this.scene.reversedZ.cleanValue
+            };
+            if (camera.name) {
+                gbuffersOption.name = camera.name;
+            }
+            this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
+        }
+
+        {
+            // let gbuffersOption: IV_GBuffer = {
+            //     device: this.device,
+            //     surfaceSize: {
+            //         width: width,
+            //         height: height
+            //     },
+            //     premultipliedAlpha: this.defaultCamera.premultipliedAlpha,
+            //     backGroudColor: this.defaultCamera.backGroundColor,
+            //     depthClearValue: this.scene.reversedZ.cleanValue
+            // };
+            this.GBufferManager.reInitCommonTransparentGBuffer();
+        }
+        if (this.onePointToTT_DC_A && this.onePointToTT_DC_A.IsDestroy === false)
+            this.onePointToTT_DC_A.destroy();
+        if (this.onePointToTT_DC_B && this.onePointToTT_DC_B.IsDestroy === false)
+            this.onePointToTT_DC_B.destroy();
+
+        this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
+
+
+        // 更新所有相机的投影矩阵
+        for (let camera of this.list) {
+            if (camera instanceof PerspectiveCamera) {
+                camera.aspect = this.scene.aspect;
+                camera.updateProjectionMatrix();
+                camera.updateByPositionDirection(camera.worldPosition, camera.lookAt, false);
+
+            }
+            else if (camera instanceof OrthographicCamera) {
+                camera.updateProjectionMatrix();
+
+            }
+        }
+    }
+
+
     //作废，代码参考
     copyTextureAToTextureB() {
         let width = this.scene.surface.size.width;
@@ -600,84 +682,5 @@ export class CameraManager extends ECSManager<BaseCamera> {
         // console.log(RArray, GArray, BArray, AArray);
         return [RArray, GArray, BArray, AArray];
     }
-
-
-    //end TT
-
-    onResize() {
-        let width = this.scene.surface.size.width;
-        let height = this.scene.surface.size.height;
-        // 计算基础每行字节数（未对齐）
-        let bytesPerRow = width * 4 * 4;
-        // 获取设备的内存对齐要求
-        const alignment = this.device.limits.minStorageBufferOffsetAlignment;
-        // 向上 bytesPerRow 向上取整到对齐值的倍数
-        bytesPerRow = Math.ceil(bytesPerRow / alignment) * alignment;
-        // 重新创建resultGPUBuffer
-        if (this.resultGPUBuffer) {
-            this.resultGPUBuffer.destroy();
-            this.resultGPUBuffer = this.device.createBuffer({
-                size: bytesPerRow * height,
-                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-
-            });
-        }
-
-
-        for (let UUID in this.GBufferManager.GBuffer) {
-            let camera = this.getCameraByUUID(UUID) as BaseCamera;
-            // 重新创建GBuffer
-            let gbuffersOption: IV_GBuffer = {
-                device: this.device,
-                surfaceSize: {
-                    width: width,
-                    height: height
-                },
-                premultipliedAlpha: camera.premultipliedAlpha,
-                backGroudColor: camera.backGroundColor,
-                depthClearValue: this.scene.reversedZ.cleanValue
-            };
-            if (camera.name) {
-                gbuffersOption.name = camera.name;
-            }
-            this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
-        }
-
-        {
-            // let gbuffersOption: IV_GBuffer = {
-            //     device: this.device,
-            //     surfaceSize: {
-            //         width: width,
-            //         height: height
-            //     },
-            //     premultipliedAlpha: this.defaultCamera.premultipliedAlpha,
-            //     backGroudColor: this.defaultCamera.backGroundColor,
-            //     depthClearValue: this.scene.reversedZ.cleanValue
-            // };
-            this.GBufferManager.reInitCommonTransparentGBuffer();
-        }
-        if (this.onePointToTT_DC_A && this.onePointToTT_DC_A.IsDestroy === false)
-            this.onePointToTT_DC_A.destroy();
-        if (this.onePointToTT_DC_B && this.onePointToTT_DC_B.IsDestroy === false)
-            this.onePointToTT_DC_B.destroy();
-
-        this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
-
-
-        // 更新所有相机的投影矩阵
-        for (let camera of this.list) {
-            if (camera instanceof PerspectiveCamera) {
-                camera.aspect = this.scene.aspect;
-                camera.updateProjectionMatrix();
-                camera.updateByPositionDirection(camera.worldPosition, camera.lookAt, false);
-
-            }
-            else if (camera instanceof OrthographicCamera) {
-                camera.updateProjectionMatrix();
-
-            }
-        }
-    }
-
 
 }
