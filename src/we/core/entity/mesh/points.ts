@@ -2,7 +2,6 @@ import { weColor3, E_lifeState, E_renderForDC } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { V_DC } from "../../command/DrawCommandGenerator";
-import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { ColorMaterial } from "../../material/standard/colorMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";

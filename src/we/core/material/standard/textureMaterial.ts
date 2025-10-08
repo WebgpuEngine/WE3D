@@ -116,6 +116,11 @@ export class TextureMaterial extends BaseMaterial {
         this._state = E_lifeState.finished;
     }
 
+    /**
+     * 获取前向渲染的不透明材质的bundle，用于生成DC
+     * @param startBinding 起始binding
+     * @returns 前向渲染的bundle
+     */
     getBundleOfForward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
@@ -177,25 +182,18 @@ export class TextureMaterial extends BaseMaterial {
         //+1
         binding++;
 
-        if (this.getTransparent()) {
-            let bundle = getBundleOfGBufferOfUniformOfDefer(binding, this.scene, camera);
-            uniform1.push(...bundle.uniformGroup);
-            groupAndBindingString += bundle.groupAndBindingString;
-            binding = bundle.binding;
-            template = SHT_materialTextureTransparentFS_mergeToVS;
+
+        ////////////////shader 模板格式化部分
+        template = SHT_materialTextureFS_mergeToVS;
+        for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
+            code += perOne.code;
         }
-        else {
-            ////////////////shader 模板格式化部分
-            template = SHT_materialTextureFS_mergeToVS;
-            for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
-                code += perOne.code;
-            }
-            for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
-                if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
-                    code = code.replace(perOne.replace, perOne.replaceCode as string);
-                }
+        for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
+            if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
+                code = code.replace(perOne.replace, perOne.replaceCode as string);
             }
         }
+
 
         let outputFormat: I_singleShaderTemplate_Final = {
             templateString: code,
@@ -203,7 +201,7 @@ export class TextureMaterial extends BaseMaterial {
             binding: binding,
             owner: this,
         }
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat ,bindingNumber:binding};
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
 
     }
     setTO(): void {

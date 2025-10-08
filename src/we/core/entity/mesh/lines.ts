@@ -3,7 +3,6 @@ import { BaseCamera } from "../../camera/baseCamera";
 import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { T_vsAttribute, V_DC } from "../../command/DrawCommandGenerator";
 import { BaseGeometry } from "../../geometry/baseGeometry";
-import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_LineVS, SHT_MeshVS } from "../../shadermanagemnet/mesh/meshVS";
@@ -38,27 +37,6 @@ export class Lines extends BaseEntity {
 
     _geometry!: BaseGeometry;
     _material!: BaseMaterial;
-    // _materialWireframe!: BaseMaterial;
-    // _wireframe: {
-    //     /**只显示线框 */
-    //     wireFrameOnly?: boolean;
-    //     /**线框颜色，默认黑色(0,0,0,1)
-    //      * 数值范围：0-1
-    //     */
-    //     wireFrameColor?: Color4,
-    //     enable: boolean,
-    //     indexes: number[],
-    //     indexCount: number,
-    //     offset: number,
-    // } = {
-    //         wireFrameOnly: false,
-    //         wireFrameColor: [0, 0, 0, 1],
-    //         enable: false,
-    //         offset: 1,
-    //         indexes: [],
-    //         indexCount: 0,
-    //     };
-
 
     /** 顶点数据 */
     attributes: I_EntityAttributes = {

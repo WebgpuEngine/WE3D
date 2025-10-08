@@ -1,18 +1,16 @@
 
 import { RootOfGPU } from "../organization/root";
 
-import { BaseEntity } from "../entity/baseEntity";
 import { E_lifeState } from "../base/coreDefine";
-import { I_optionShadowEntity, I_ShadowMapValueOfDC } from "../entity/base";
+import { I_ShadowMapValueOfDC } from "../entity/base";
 import { IV_BaseMaterial, I_PartBundleOfUniform_TT, T_TransparentOfMaterial, I_materialBundleOutput, E_TransparentType, I_AlphaTransparentOfMaterial, I_TransparentOptionOfMaterial } from "./base";
 import { commmandType, I_dynamicTextureEntryForView, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate, I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { Scene } from "../scene/scene";
 import { BaseCamera } from "../camera/baseCamera";
-import { E_resourceKind, ResourceManagerOfGPU } from "../resources/resourcesGPU";
+import { E_resourceKind } from "../resources/resourcesGPU";
 import { I_mipmap } from "../texture/base";
 import { Clock } from "../scene/clock";
-import { BaseLight } from "../light/baseLight";
 import { E_GBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 
 
@@ -21,12 +19,6 @@ import { E_GBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 export abstract class BaseMaterial extends RootOfGPU {
     declare inputValues: IV_BaseMaterial;
 
-
-    /**新的材质，这个是需要处理的（异步数据的加载后，改为true，或没有异步数据加载，在init()中改为true）；
-     * constructor中设置为false。 
-     * 如果更改为为true，在材质不工作
-    */
-    // _already: E_lifeState = E_lifeState.unstart;
     /**
      * blending混合的状态interface
      * 
@@ -34,13 +26,15 @@ export abstract class BaseMaterial extends RootOfGPU {
      * 2、如果是object，说明混合
      */
     _transparent: T_TransparentOfMaterial | undefined;
+
     /**
      * 纹理
      * ！！！这里定义的是any，后续各种材质所需要的纹理根据情况，进行declare
     */
     textures!: any
 
-    _shadow!: I_optionShadowEntity;
+    // _shadow!: I_optionShadowEntity;
+
     /**
      * 是否更新过，由entity调用，
      * 1、如果是true，说明已经更新过（比如非uniform的内容，FS code、texture等），entity则需要重新生成command、pipeline。
@@ -48,26 +42,31 @@ export abstract class BaseMaterial extends RootOfGPU {
      */
     _reBuild: boolean = false;
 
+    /**
+     * 材质的sampler是否存在，不存在就创建一个。
+    */
     _samplerBindingType: GPUSamplerBindingType = "filtering";
 
+    /**
+     * mipmap设置
+     */
     _mipmap: I_mipmap = {
         enable: true,
         level: 3
     };
 
+    /**
+     * 材质的更新命令队列
+     * 1、有materialManager调用，每帧更新一次。
+     * 2、非必须，比如video材质的External就需要
+     */
     commands: commmandType[] = [];
-    // resourcesGPU!: ResourceManagerOfGPU;
+
     /**
      * 透明材质是否有不透明的部分
      */
     hasOpaqueOfTransparent: boolean = false;
 
-
-    // /**
-    //  * 透明材质的TTPF的uniform layer 
-    //  */
-    // uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
-    // uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
 
 
     constructor(input?: IV_BaseMaterial) {
@@ -87,6 +86,9 @@ export abstract class BaseMaterial extends RootOfGPU {
         if (input?.mipmap) this._mipmap = input.mipmap;
         this._state = E_lifeState.unstart;
     }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 基础功能部分
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     get needUpdate() { return this._reBuild; }
     set needUpdate(value: boolean) { this._reBuild = value; }
@@ -95,19 +97,19 @@ export abstract class BaseMaterial extends RootOfGPU {
     /**获取状态 */
     get LifeState(): E_lifeState { return this._state; }
     /**
- * 材质是否已经准备好，
- * 判断两个值，
- * 1、this._readyForGPU：延迟GPU device相关的资源建立需要延迟。 需要其顶级使用者被加入到stage中后，才能开始。
- * 2、this._state：材质自身的初始化是否完成。
- * 
- * @returns true：可以使用，false：需要等待。     
- */
+     * 材质是否已经准备好，
+     * 判断两个值，
+     * 1、this._readyForGPU：延迟GPU device相关的资源建立需要延迟。 需要其顶级使用者被加入到stage中后，才能开始。
+     * 2、this._state：材质自身的初始化是否完成。
+     * 
+     * @returns true：可以使用，false：需要等待。     
+     */
     getReady(): E_lifeState {
         return this._state;
     }
 
     async init(scene: Scene, parent: RootOfGPU, renderID: number = 0): Promise<number> {
-        this._shadow = (parent as BaseEntity)._shadow;
+        // this._shadow = (parent as BaseEntity)._shadow;
         this.renderID = renderID
         await super.init(scene, parent, renderID);
 
@@ -124,6 +126,7 @@ export abstract class BaseMaterial extends RootOfGPU {
      * 设置透明材质的不透明部分是否存在
      */
     abstract setTO(): void;
+
     /**
      * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
      * 涉及三个部分：
@@ -134,13 +137,13 @@ export abstract class BaseMaterial extends RootOfGPU {
      * @returns I_materialBundleOutput
      */
     abstract getBundleOfForward(startBinding: number): I_materialBundleOutput;
+
     /**
      * 透明材质bundle
      * @param startBinding 透明材质的binding开始值
      * @returns { TT: I_materialBundleOutput, TO: I_materialBundleOutput }  透明材质的uniform和shader模板输出,
      * TT为透明材质的透明部分，TO为不透明材质的不透明部分
      */
-    // abstract getBundleOfTOTT(startBinding: number): { TT: I_materialBundleOutput, TO?: I_materialBundleOutput }
     getBundleOfTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): {
         TT: I_materialBundleOutput,
         TO?: I_materialBundleOutput,
@@ -149,7 +152,7 @@ export abstract class BaseMaterial extends RootOfGPU {
     } {
         // this.setUniformIDOfTTPF(meshID);
 
-        let TT: I_materialBundleOutput= this.getFS_TT(renderObject, startBinding);;
+        let TT: I_materialBundleOutput = this.getFS_TT(renderObject, startBinding);;
         let TO: I_materialBundleOutput;
         let TTP: I_materialBundleOutput = this.getFS_TTP(renderObject, startBinding);;
         let TTPF: I_materialBundleOutput = this.getFS_TTPF(renderObject, startBinding);
@@ -162,18 +165,7 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
         return TTTT;
     }
-    // setUniformIDOfTTPF(meshID: number) {
-    //     let view = new Uint32Array(this.uniformOfTTPF);
-    //     view[1] = meshID;
-    // }
-    // /**
-    //  * 设置透明材质的TTPF的uniform
-    //  * @param layer  对应RGBA四层
-    //  */
-    // setUniformLayerOfTTPF(layer: number) {
-    //     let view = new Uint32Array(this.uniformOfTTPF);
-    //     view[0] = layer;
-    // }
+
     /**
      * 透明材质的code（ transparent  transparent ）
      * @param _startBinding 
@@ -235,40 +227,47 @@ export abstract class BaseMaterial extends RootOfGPU {
         let groupAndBindingString = "";
         let uniform: T_uniformGroup = [];
 
-        //camera 的深度纹理，用于透明度测试（像素是否在不透明的前面）
-        let uniform1: I_dynamicTextureEntryForView;
-        if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(renderObject.UUID)) {
-            uniform1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(renderObject.UUID) as I_dynamicTextureEntryForView;
+        /**end 
+         * 是否开启TTP的深度测试	
+         * 
+         * 20251008，暂缓，开启并去除uniform深度纹理后，有问题，多色混合有问题，待查
+         */
+        {
+            //camera 的深度纹理，用于透明度测试（像素是否在不透明的前面）
+            let uniform1: I_dynamicTextureEntryForView;
+            if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(renderObject.UUID)) {
+                uniform1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(renderObject.UUID) as I_dynamicTextureEntryForView;
+            }
+            else {
+                uniform1 = {
+                    label: "colorTT camera depth of " + renderObject.UUID,
+                    binding: bindingNumber,
+                    getResource: () => { return renderObject.manager.getGBufferTextureByUUID(renderObject.UUID, E_GBufferNames.depth); },
+                };
+            }
+            let uniformLayout_1: GPUBindGroupLayoutEntry;
+            if (this.scene.resourcesGPU.entriesToEntriesLayout.has(uniform1)) {
+                uniformLayout_1 = this.scene.resourcesGPU.entriesToEntriesLayout.get(uniform1) as GPUBindGroupLayoutEntry;
+            }
+            else {
+                uniformLayout_1 = {
+                    binding: bindingNumber,
+                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    texture: {
+                        sampleType: "depth",
+                        viewDimension: "2d",
+                        // multisampled: false,
+                    },
+                };
+                this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
+                this.mapList.push({ key: uniform1, type: "GPUBindGroupLayoutEntry", map: "entriesToEntriesLayout" });
+            }
+            //u_camera_opacity_depth在shader中是固定的
+            groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
+            // this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
+            uniform.push(uniform1);
+            bindingNumber++;
         }
-        else {
-            uniform1 = {
-                label: "colorTT camera depth of " + renderObject.UUID,
-                binding: bindingNumber,
-                getResource: () => { return renderObject.manager.getGBufferTextureByUUID(renderObject.UUID, E_GBufferNames.depth); },
-            };
-        }
-        let uniformLayout_1: GPUBindGroupLayoutEntry;
-        if (this.scene.resourcesGPU.entriesToEntriesLayout.has(uniform1)) {
-            uniformLayout_1 = this.scene.resourcesGPU.entriesToEntriesLayout.get(uniform1) as GPUBindGroupLayoutEntry;
-        }
-        else {
-            uniformLayout_1 = {
-                binding: bindingNumber,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                texture: {
-                    sampleType: "depth",
-                    viewDimension: "2d",
-                    // multisampled: false,
-                },
-            };
-            this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
-            this.mapList.push({ key: uniform1, type: "GPUBindGroupLayoutEntry", map: "entriesToEntriesLayout" });
-        }
-        //u_camera_opacity_depth在shader中是固定的
-        groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
-        // this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
-        uniform.push(uniform1);
-        bindingNumber++;
 
         //循环 绑定透明材质的GBuffer of uniform
         for (let key in V_TransparentGBufferNames) {
@@ -332,20 +331,14 @@ export abstract class BaseMaterial extends RootOfGPU {
         return { uniformGroup: uniform, groupAndBindingString: groupAndBindingString, bindingNumber };
     }
 
-
-    //end TO TT  TP
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // 透明信息
     /////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**这里是数组，因为透明材质可能会有多个blend状态
-     * 例如：alpha透明材质可能会有多个blend状态，分别对应不同的透明度。（todo，20251005，但材质中目前只有一个blend状态，需要后期补充）
-     */
-
     /**获取透明材质的初始化参数
      * @returns I_TransparentOptionOfMaterial | boolean 透明材质的初始化参数，或者false表示不是透明材质
      * 
-     * 
+     * 1、alpha的blend：是数组，因为透明材质可能会有多个blend状态
+     *      例如：alpha透明材质可能会有多个blend状态，分别对应不同的透明度。（todo，20251005，但材质中目前只有一个blend状态，需要后期补充）
      */
     getTransparentOption(): I_TransparentOptionOfMaterial | boolean {
         let isTransparent = this.getTransparent();
@@ -371,12 +364,10 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
         return isTransparent;
     }
-
     /**
      * 是否为透明材质
      * @returns boolean  true：是透明材质，false：不是透明材质
      */
-    // abstract getTransparent(): boolean;
     getTransparent(): boolean {
         if (this._transparent) {
             return true;
@@ -412,6 +403,10 @@ export abstract class BaseMaterial extends RootOfGPU {
         (this._transparent as I_AlphaTransparentOfMaterial).blend = blend;
         this._state = E_lifeState.updated;
     }
+    /**设置混合常量
+     * @param blendConstants number[] 混合常量
+     *  20251008，目前未测试，未使用过
+     */
     setblendConstants(blendConstants: number[]) {
         if (this._transparent) {
             if (this._transparent?.type == E_TransparentType.alpha) {
@@ -426,12 +421,11 @@ export abstract class BaseMaterial extends RootOfGPU {
      */
     checkTransparent(input: IV_BaseMaterial) {
         if (input.transparent != undefined) {// && this.input.transparent.opacity != undefined && this.input.transparent.opacity < 1.0)) {//如果是透明的，就设置为透明
-
-
+            //如果input存在，则使用input的参数
             if (input.transparent != undefined) {
                 this._transparent = input.transparent;
             }
-
+            //如果input没有，则判断处理（ColorMaterial 除外）
             if (input.transparent != undefined) {
                 if (input.transparent?.type == undefined || input.transparent?.type == E_TransparentType.alpha) {
                     if (this._transparent == undefined) {
@@ -467,18 +461,12 @@ export abstract class BaseMaterial extends RootOfGPU {
                     }
                 }
             }
-
-
-
-
         }
     }
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 透明信息
+    // sampler 采样器
     /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
     /**
      * 1、检查材质的sampler是否存在，不存在就创建一个。
      * 2、设置this._samplerBindingType:GPUSamplerBindingType
@@ -512,7 +500,9 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
         return sampler;
     }
-
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    // update
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 正常更新，从上到下 
      * @param clock Clock 时钟

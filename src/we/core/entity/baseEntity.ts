@@ -17,8 +17,8 @@ import { Clock } from "../scene/clock";
 import { DrawCommand } from "../command/DrawCommand";
 import { BaseCamera } from "../camera/baseCamera";
 import { BaseLight } from "../light/baseLight";
-import { I_uniformBufferPart, T_uniformGroup } from "../command/base";
-import { I_ShaderTemplate, I_ShaderTemplate_Final } from "../shadermanagemnet/base";
+import { I_uniformBufferPart } from "../command/base";
+import { I_ShaderTemplate } from "../shadermanagemnet/base";
 import { EntityManager } from "./entityManager";
 import { Scene } from "../scene/scene";
 import { DrawCommandGenerator } from "../command/DrawCommandGenerator";
@@ -112,7 +112,6 @@ export abstract class BaseEntity extends RootOfGPU {
      * DrawCommand 生成器
      */
     DCG!: DrawCommandGenerator;
-
 
     ////////////////////////////////////////////////////////////////////////////
     //渲染相关
@@ -312,7 +311,7 @@ export abstract class BaseEntity extends RootOfGPU {
     getShadowmAccept() {
         return this._shadow.accept;
     }
-    
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //// update 部分
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

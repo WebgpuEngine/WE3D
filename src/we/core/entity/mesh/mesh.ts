@@ -2,11 +2,9 @@ import { E_lifeState, E_renderForDC, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { T_vsAttribute, V_DC } from "../../command/DrawCommandGenerator";
-import { E_GBufferNames } from "../../gbuffers/base";
 import { BaseGeometry } from "../../geometry/baseGeometry";
-import { BaseLight } from "../../light/baseLight";
 import { mergeLightUUID } from "../../light/lightsManager";
-import { E_TransparentType, I_TransparentOptionOfMaterial, T_TransparentOfMaterial } from "../../material/base";
+import { I_TransparentOptionOfMaterial } from "../../material/base";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { WireFrameMaterial } from "../../material/standard/wireFrameMaterial";
 import { renderPassName } from "../../scene/renderManager";
@@ -18,7 +16,6 @@ import { BaseEntity } from "../baseEntity";
 
 /**mesh的顶点结构与材质，各有一个，一一对应 */
 export interface IV_MeshEntity extends I_optionBaseEntity {
-
     /** 顶点属性 和几何体二选一*/
     attributes: {
         /**几何体 */
@@ -35,6 +32,7 @@ export interface IV_MeshEntity extends I_optionBaseEntity {
 
     /**材质 */
     material?: BaseMaterial, //| BaseMaterial[],
+    /**线框 wireframe    */
     wireFrame?: {
         /**是否显示线框 */
         enable: boolean;
@@ -55,28 +53,25 @@ export interface IV_MeshEntity extends I_optionBaseEntity {
         offset?: number,
         indexes?: number[],
     }
+    /** 图元状态 */
     primitive?: GPUPrimitiveState,
+    /**绘制方式 */
     drawMode?: I_drawMode | I_drawModeIndexed,
-
 }
 
 export class Mesh extends BaseEntity {
-    _destroy(): void {
-        // //1、删除所有的DrawCommand
-        // this.TT2TTP.forEach((value, key) => {
-        //     key.destroy();
-        // });
-        // this.TT2TTPF.forEach((value, key) => {
-        //     key.destroy();
-        // });
-        throw new Error("Method not implemented.");
-    }
-
     declare inputValues: IV_MeshEntity;
-
+    /**mesh的geometry内部对象，获取attribute使用 */
     _geometry!: BaseGeometry;
+    /**
+     * mesh的material内部对象，获取uniform、bindingroup字符串、SHT等使用
+     */
     _material!: BaseMaterial;
+    /**
+     * mesh的wireframe材质内部对象，获取uniform、bindingroup字符串、SHT等使用
+     */
     _materialWireframe!: BaseMaterial;
+    /**线框 */
     _wireframe: {
         /**只显示线框 */
         wireFrameOnly?: boolean;
@@ -96,27 +91,12 @@ export class Mesh extends BaseEntity {
             indexes: [],
             indexCount: 0,
         };
-
-
     /** 顶点数据 */
     attributes: I_EntityAttributes = {
         vertices: new Map(),
         vertexStepMode: "vertex",
         indexes: [],
     };
-
-    invertNormal() {
-        if (this.attributes.vertices.has("normal")) {
-            let normal = this.attributes.vertices.get("normal") as number[];
-            if (normal) {
-                for (let i = 0; i < normal.length; i += 3) {
-                    normal[i] = -normal[i];
-                    normal[i + 1] = -normal[i + 1];
-                    normal[i + 2] = -normal[i + 2];
-                }
-            }
-        }
-    }
 
     constructor(input: IV_MeshEntity) {
         super(input);
@@ -217,6 +197,16 @@ export class Mesh extends BaseEntity {
         else
             this._material = input.material;
     }
+    _destroy(): void {
+        // //1、删除所有的DrawCommand
+        // this.TT2TTP.forEach((value, key) => {
+        //     key.destroy();
+        // });
+        // this.TT2TTPF.forEach((value, key) => {
+        //     key.destroy();
+        // });
+        throw new Error("Method not implemented.");
+    }
     /**三段式初始化的第三段
      * 覆写 Root的function,因为材料类需要GPUDevice */
     async readyForGPU() {
@@ -231,9 +221,25 @@ export class Mesh extends BaseEntity {
             this._cullMode = "none";
         }
     }
-    destroy() {
-        throw new Error("Method not implemented.");
+    /**
+     * 反转法线，未测试过
+     */
+    invertNormal() {
+        if (this.attributes.vertices.has("normal")) {
+            let normal = this.attributes.vertices.get("normal") as number[];
+            if (normal) {
+                for (let i = 0; i < normal.length; i += 3) {
+                    normal[i] = -normal[i];
+                    normal[i + 1] = -normal[i + 1];
+                    normal[i + 2] = -normal[i + 2];
+                }
+            }
+        }
     }
+    /**
+     * 状态检查，是否已经完成初始化。updateSelf()中调用
+     * @returns 是否完成初始化
+     */
     checkStatus(): boolean {
         let readyForMaterial: boolean;
         //完成状态，正常情况
@@ -264,9 +270,25 @@ export class Mesh extends BaseEntity {
             }
         }
     }
+    getBoundingBoxMaxSize(): number {
+        let box3 = this.boundingBox;
+        if (box3) {
+            return Math.max(box3.max[0] - box3.min[0], box3.max[1] - box3.min[1], box3.max[2] - box3.min[2]);
+        }
+        return 0;
+    }
+    /**
+     * 获取blend状态
+     * 20251008，目前获取blend的状态不在使用此function
+     * @returns 
+     */
     getBlend(): GPUBlendState | undefined {
         return this._material.getBlend();
     }
+    /**
+     * 从材质获取是否为透明材质
+     * @returns  boolean
+     */
     getTransparent(): boolean {
         return this._material.getTransparent();
     }
@@ -340,48 +362,6 @@ export class Mesh extends BaseEntity {
         return { bindingNumber: bindingNumber, uniformGroups, shaderTemplateFinal };
     }
 
-    // getAddOnOfTT(bundle:I_EntityBundleOfUniformAndShaderTemplateFinal,camera: BaseCamera,  startBinding: number): I_EntityBundleOfUniformAndShaderTemplateFinal {
-    //     let addUnifrom_1: GPUBindGroupEntry;
-    //     let bindingNumber = startBinding;
-
-    //     //u_camera_opacity_depth
-    //     if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(camera.UUID)) {
-    //         addUnifrom_1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(camera.UUID) as GPUBindGroupEntry;
-    //     }
-    //     else {
-    //         addUnifrom_1 = {
-    //             binding:bindingNumber,
-    //             resource: this.scene.cameraManager.getGBufferTextureByUUID(camera.UUID, E_GBufferNames.depth).createView(),
-    //         };
-    //     }
-    //     let addUniformLayout_1: GPUBindGroupLayoutEntry;
-    //     if (this.scene.resourcesGPU.entriesToEntriesLayout.has(addUnifrom_1)) {
-    //         addUniformLayout_1 = this.scene.resourcesGPU.entriesToEntriesLayout.get(addUnifrom_1) as GPUBindGroupLayoutEntry;
-    //     }
-    //     else {
-    //         addUniformLayout_1 = {
-    //             binding: bindingNumber,
-    //             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-    //             texture: {
-    //                 sampleType: "float",
-    //                 viewDimension: "2d",
-    //                 // multisampled: false,
-    //             },
-    //         };
-    //     }
-    //     //u_camera_opacity_depth在shader中是固定的
-    //     let u_camera_opacity_depth = `  @group(1) @binding(${bundle.bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
-    //     this.scene.resourcesGPU.set(addUnifrom_1, addUniformLayout_1);
-    //     bundle.uniformGroups[0].push(addUnifrom_1);
-    //     bundle.shaderTemplateFinal.entity.groupAndBindingString += u_camera_opacity_depth;
-    //     bindingNumber++;
-    //     bundle.bindingNumber = bindingNumber;
-    //     //4*color 4*depth uniform 
-
-
-    //     return bundle;
-    // }
-
     /**
      * 格式化shader代码
      * @param template 
@@ -413,13 +393,7 @@ export class Mesh extends BaseEntity {
         }
         return code;
     }
-    getBoundingBoxMaxSize(): number {
-        let box3 = this.boundingBox;
-        if (box3) {
-            return Math.max(box3.max[0] - box3.min[0], box3.max[1] - box3.min[1], box3.max[2] - box3.min[2]);
-        }
-        return 0;
-    }
+
     /**
      * 生成DrawCommand的input value
      * @param type 渲染类型
@@ -467,7 +441,7 @@ export class Mesh extends BaseEntity {
         }
         if (this.boundingBox == undefined)
             this.generateBoxAndSphere();
-        let boundingBoxMaxSize = this.getBoundingBoxMaxSize();
+        let boundingBoxMaxSize = this.getBoundingBoxMaxSize();//生成 shader 中的cubeVecUV使用
         if (boundingBoxMaxSize === 0) boundingBoxMaxSize = 1;
 
         let valueDC: V_DC = {
@@ -703,7 +677,7 @@ export class Mesh extends BaseEntity {
                     this.scene.resourcesGPU.set(unifromTTPF, uniformTTPF_Layout);
                     bindingNumber++;
                     uniformsMaterialTOTT.TTPF.uniformGroup.push(unifromTTPF);
-                    this.unifromTTPF=unifromTTPF;
+                    this.unifromTTPF = unifromTTPF;
                 }
                 //增加TTPF部分
                 bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TTPF.uniformGroup);
@@ -711,7 +685,7 @@ export class Mesh extends BaseEntity {
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
 
                 //RPD
-                valueDC.renderPassDescriptor =()=>{ return camera.manager.GBufferManager.getGBufferColorRPD_TTPF(UUID);};
+                valueDC.renderPassDescriptor = () => { return camera.manager.GBufferManager.getGBufferColorRPD_TTPF(UUID); };
                 //label
                 valueDC.label = "mesh:" + this.ID + " TTPF";
                 ////没有深度比较，没有深度写入
@@ -748,9 +722,7 @@ export class Mesh extends BaseEntity {
             this.cameraDC[UUID][renderPassName.forward].push(dc);
         }
     }
-    updateUniformLayerOfTTPF(): void{
-        this.DCG.updateUniformOfGPUBuffer(this.unifromTTPF);
-    }
+
     createShadowMapDC(input: I_ShadowMapValueOfDC): void {
         if (this.inputValues.shadow?.generate === false) {
             return;
@@ -777,6 +749,12 @@ export class Mesh extends BaseEntity {
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * 生成线框的索引
+     * @param position 顶点位置数组
+     * @param indeices 索引数组
+     * @returns wireframe 索引数组
+     */
     createWrieFrame(position: number[], indeices: number[]) {
         let list: { [name: string]: number[] };
         list = {};
@@ -807,5 +785,11 @@ export class Mesh extends BaseEntity {
             indeicesWireframe.push(list[i][0], list[i][1]);
         }
         return indeicesWireframe;
+    }
+    /**
+     * 更新TTPF的uniform
+     */
+    updateUniformLayerOfTTPF(): void {
+        this.DCG.updateUniformOfGPUBuffer(this.unifromTTPF);
     }
 }

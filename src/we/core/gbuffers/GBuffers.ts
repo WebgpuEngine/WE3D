@@ -366,6 +366,11 @@ export class GBuffers {
                 });
             }
             rpd[UUID] = { colorAttachments: colorAttachments };
+            /**
+             * 是否开启TTP的深度测试	
+             * 
+             * 20251008，暂缓，开启并去除uniform深度纹理后，有问题，多色混合有问题，待查
+             */
             // let depthTextureOfUUID = this.GBuffer[UUID].forward.GBuffer["depth"];
             // rpd[UUID].depthStencilAttachment = {
             //     view: depthTextureOfUUID.createView(),

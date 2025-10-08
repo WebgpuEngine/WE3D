@@ -96,6 +96,11 @@ export var V_ForwardGBufferNames: I_GBufferName = {
  */
 export var V_TransparentGBufferNames: I_GBufferName = {
 
+    /**
+     * 调试用的color
+     * 1、不用时，注释掉，	节省8个纹理
+     * 2、若开启，需要在shader多个，cameraMan啊个人，等处同步，参加20251008的开发日志
+     */
     // "color1": {
     //     "format": V_weLinearFormat,
     //     "label": "color 1",
@@ -155,7 +160,7 @@ export interface I_GBufferGroup {
             /**
              * TTPF 使用
              */
-            RPD_TTPF?:GPURenderPassDescriptor,
+            RPD_TTPF?: GPURenderPassDescriptor,
             /**
             * 每个camera最终的GBuffer的颜色附件描述
             */

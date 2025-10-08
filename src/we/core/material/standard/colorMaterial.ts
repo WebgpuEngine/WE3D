@@ -1,35 +1,25 @@
 import { weColor4, E_lifeState } from "../../base/coreDefine";
 import { isWeColor4 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_dynamicTextureEntryForView, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
+import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
-import { E_GBufferNames, V_TransparentGBufferNames } from "../../gbuffers/base";
-import { BaseLight } from "../../light/baseLight";
-import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColor_TTP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS, SHT_materialColor_TTPF_FS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { IV_BaseMaterial, T_TransparentOfMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType } from "../base";
+import { IV_BaseMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface I_ColorMaterial extends IV_BaseMaterial {
     color: weColor4;
-    // vertexColor?: boolean,
 }
 
 export class ColorMaterial extends BaseMaterial {
-
-
-
     declare inputValues: I_ColorMaterial;
-
     color: weColor4 = [1, 1, 1, 1];
     red: number = 1;
     green: number = 1;
     blue: number = 1;
     alpha: number = 1;
-    // vertexColor: boolean;
-
 
     constructor(input: I_ColorMaterial) {
         super(input);
@@ -194,8 +184,8 @@ export class ColorMaterial extends BaseMaterial {
 
             // uniform  纹理ID GPUBindGroupEntry
             // let uniforIDTexture: GPUBindGroupEntry={
-                // binding: bindingNumber,
-                // resource: renderObject.manager.getTTRenderTexture("id"),
+            // binding: bindingNumber,
+            // resource: renderObject.manager.getTTRenderTexture("id"),
             // };
             let uniforIDTexture: I_dynamicTextureEntryForView = {
                 label: this.Name + " texture ID at group(1) binding(" + bindingNumber + ")",
@@ -290,15 +280,9 @@ export class ColorMaterial extends BaseMaterial {
     getFS_TO(_startBinding: number): I_materialBundleOutput {
         return this.getOpaqueCodeFS(_startBinding);
     }
-
     _destroy(): void {
-        throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
     }
-
-
-    // getBlend(): GPUBlendState | undefined {
-    //     return this._transparent?.blend;
-    // }
     updateSelf(clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
@@ -308,16 +292,5 @@ export class ColorMaterial extends BaseMaterial {
     loadJSON(json: any): void {
         throw new Error("Method not implemented.");
     }
-    // getTransparent(): boolean {
-    //     if (this.alpha < 1.0) {
-    //         return true;
-    //     }
-    //     else if (this.inputValues.transparent?.opacity != undefined && this.inputValues.transparent.opacity < 1.0) {
-    //         return true;
-    //     }
-    //     else {
-    //         return false;
-    //     }
-    //     // return this.alpha != 1.0 ? true : false;
-    // }
+
 }
