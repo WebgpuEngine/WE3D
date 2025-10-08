@@ -17,7 +17,7 @@ import { Clock } from "../scene/clock";
 import { DrawCommand } from "../command/DrawCommand";
 import { BaseCamera } from "../camera/baseCamera";
 import { BaseLight } from "../light/baseLight";
-import { T_uniformGroup } from "../command/base";
+import { I_uniformBufferPart, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate, I_ShaderTemplate_Final } from "../shadermanagemnet/base";
 import { EntityManager } from "./entityManager";
 import { Scene } from "../scene/scene";
@@ -113,6 +113,8 @@ export abstract class BaseEntity extends RootOfGPU {
      * DrawCommand 生成器
      */
     DCG!: DrawCommandGenerator;
+
+
     ////////////////////////////////////////////////////////////////////////////
     //渲染相关
     //延迟渲染，depth模式，先绘制depth，单像素
@@ -329,7 +331,7 @@ export abstract class BaseEntity extends RootOfGPU {
     onResize(): void {
         for (let i in this.cameraDC) {
             let perCameraDC = this.cameraDC[i];
-            perCameraDC.transparent = [];
+            // perCameraDC.transparent = [];
         }
         this.upgradeCameras();
     }
@@ -542,6 +544,24 @@ export abstract class BaseEntity extends RootOfGPU {
         return "";
     }
 
+    /**
+     * 透明材质的TTPF的uniform layer 
+     */
+    uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
+    uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
+    unifromTTPF:I_uniformBufferPart;
+    /**
+     * 设置透明材质的TTPF的uniform
+     * @param layer  对应RGBA四层
+     */
+    setUniformLayerOfTTPF(layer: number) {
+        let view = new Uint32Array(this.uniformOfTTPF);
+        view[0] = layer;
+        view[1] = this.ID;
+        this.updateUniformLayerOfTTPF();
+        // console.log(view)
+    }
+    abstract updateUniformLayerOfTTPF(): void
 
 }
 

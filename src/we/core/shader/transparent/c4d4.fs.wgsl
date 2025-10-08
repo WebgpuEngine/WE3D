@@ -35,8 +35,6 @@ fn fs(fsInput: VertexShaderOutput) -> ST_TransParentGBuffer {
         var color: vec4f = vec4f(0,0,0,0);
         var depth: f32 = fsInput.position.z;
         let id=fsInput.entityID;
-        
-
 
         //1、颜色的alpha逻辑
         $Color    //输出颜色
@@ -47,13 +45,10 @@ fn fs(fsInput: VertexShaderOutput) -> ST_TransParentGBuffer {
         var color2: vec4f = vec4f(0,0,0,0);
         var color3: vec4f = vec4f(0,0,0,0);
         var color4: vec4f = vec4f(0,0,0,0);
-        // var depthUniform: vec4f = vec4f(0.0);
         var depthRender: vec4f = vec4f(0.0);
-        // var idUniform: vec4u = vec4u(0,0,0,0);
         var idRender: vec4u = vec4u(0,0,0,0);
 
         //2、像素比较逻辑
-        // $pixelCompare 
          color1 = textureLoad(u_color1, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);
          color2 = textureLoad(u_color2, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);
          color3 = textureLoad(u_color3, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);
@@ -62,53 +57,55 @@ fn fs(fsInput: VertexShaderOutput) -> ST_TransParentGBuffer {
          depthRender = textureLoad(u_depth, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);   
          idRender = textureLoad(u_id, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);
 
-         let depth1 = depthRender.r;
-         let depth2 = depthRender.g;
-         let depth3 = depthRender.b;
-         let depth4 = depthRender.a;
          
         if U_MVP.reversedZ == 1 {    //是否有reveredZ
   
-            if(depth < depth1 && depth < depth2 && depth < depth3 && depth >depth4)
+            if(depth >  depthRender.a )
             {
+                color1 = color2;
+                color2 = color3;
+                color3 = color4;
                 color4 = color;
+
+                depthRender.r = depthRender.g;
+                depthRender.g = depthRender.b;
+                depthRender.b = depthRender.a;
                 depthRender.a = depth;
+
+                idRender.r=idRender.g;
+                idRender.g=idRender.b;
+                idRender.b=idRender.a;
                 idRender.a=id;
-            }
-            else if(depth < depth1 && depth < depth2 && depth > depth3)
+            }   
+            else if( depth >depthRender.b)
             {
-                color4 = color3;
+                color1 = color2;
+                color2 = color3;
                 color3 = color;
-                depthRender.a = depthRender.b;
+                depthRender.r = depthRender.g;
+                depthRender.g = depthRender.b;
                 depthRender.b = depth;
-                idRender.a=idRender.b;
+                
+                idRender.r=idRender.g;
+                idRender.g=idRender.b;
                 idRender.b=id;
             }
-            else if(depth < depth1 && depth > depth2)
+            else if(depth > depthRender.g)
             {
-                color4 = color3;
-                color3 = color2;
+                color1 = color2;
                 color2 = color;
-                depthRender.a = depthRender.b;
-                depthRender.b = depthRender.g;
-                depthRender.g = depth;
-                idRender.a=idRender.b;
-                idRender.b=idRender.g;
+
+                depthRender.r = depthRender.g;
+                depthRender.b = depth;
+
+                idRender.r=idRender.g;
                 idRender.g=id;
             }
-            else if(depth > depth1 )
+   
+            else if( depth >depthRender.r)
             {
-                color4 = color3;
-                color3 = color2;
-                color2 = color1;
                 color1 = color;
-                depthRender.a = depthRender.b;
-                depthRender.b = depthRender.g;
-                depthRender.g = depthRender.r;
                 depthRender.r = depth;
-                idRender.a=idRender.b;
-                idRender.b=idRender.g;
-                idRender.g=idRender.r;
                 idRender.r=id;
             }
             else
@@ -118,46 +115,52 @@ fn fs(fsInput: VertexShaderOutput) -> ST_TransParentGBuffer {
             
         }
         else {
-             if(depth > depth1 && depth > depth2 && depth > depth3 && depth <depth4)
+            if(depth <  depthRender.a )
             {
+                color1 = color2;
+                color2 = color3;
+                color3 = color4;
                 color4 = color;
+
+                depthRender.r = depthRender.g;
+                depthRender.g = depthRender.b;
+                depthRender.b = depthRender.a;
                 depthRender.a = depth;
-                idRender.a=id;                
-            }
-            else if(depth > depth1 && depth > depth2 && depth < depth3)
+
+                idRender.r=idRender.g;
+                idRender.g=idRender.b;
+                idRender.b=idRender.a;
+                idRender.a=id;
+            }   
+            else if( depth < depthRender.b)
             {
-                color4 = color3;
+                color1 = color2;
+                color2 = color3;
                 color3 = color;
-                depthRender.a = depthRender.b;
+                depthRender.r = depthRender.g;
+                depthRender.g = depthRender.b;
                 depthRender.b = depth;
-                idRender.a=idRender.b;
+                
+                idRender.r=idRender.g;
+                idRender.g=idRender.b;
                 idRender.b=id;
             }
-            else if(depth > depth1 && depth < depth2)
+            else if(depth < depthRender.g)
             {
-                color4 = color3;
-                color3 = color2;
+                color1 = color2;
                 color2 = color;
-                depthRender.a = depthRender.b;
-                depthRender.b = depthRender.g;
-                depthRender.g = depth;
-                idRender.a=idRender.b;
-                idRender.b=idRender.g;
+
+                depthRender.r = depthRender.g;
+                depthRender.b = depth;
+
+                idRender.r=idRender.g;
                 idRender.g=id;
             }
-            else if(depth < depth1 )
+   
+            else if( depth < depthRender.r)
             {
-                color4 = color3;
-                color3 = color2;
-                color2 = color1;
                 color1 = color;
-                depthRender.a = depthRender.b;
-                depthRender.b = depthRender.g;
-                depthRender.g = depthRender.r;
                 depthRender.r = depth;
-                idRender.a=idRender.b;
-                idRender.b=idRender.g;
-                idRender.g=idRender.r;
                 idRender.r=id;
             }
             else

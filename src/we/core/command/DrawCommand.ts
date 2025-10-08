@@ -165,6 +165,13 @@ export class DrawCommand {
             ID: 0,
             renderID: 0,
         }
+        this._isDestroy=true;
+    }
+    get IsDestroy(){
+        return this._isDestroy;
+    }
+    set IsDestroy(v:boolean){
+        this._isDestroy=v;
     }
     /**
      * 完整的绘制命令编码

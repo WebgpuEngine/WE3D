@@ -294,7 +294,6 @@ export class Mesh extends BaseEntity {
                 type: "uniform"
             }
         };
-
         let uniform10GroupAndBindingString = " @group(1) @binding(0) var<uniform> entity : ST_entity; \n ";
         this.scene.resourcesGPU.set(unifrom10, uniform10Layout);
         bindingNumber++;
@@ -618,7 +617,7 @@ export class Mesh extends BaseEntity {
             //mesh VS 模板输出
             //材质的shader 模板输出，
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
-            let uniformsMaterialTOTT = this._material.getBundleOfTTTT(camera, bundle.bindingNumber);
+            let uniformsMaterialTOTT = this._material.getBundleOfTTTT(camera, bundle.bindingNumber, this.ID);
             //TO
             if (uniformsMaterialTOTT.TO) {
                 let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
@@ -660,17 +659,14 @@ export class Mesh extends BaseEntity {
                 bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TTP.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TTP.singleShaderTemplateFinal;
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-                //RPD 
-                //let rpd=camera.manager.getTT_RenderRPD(UUID);
+                // let rpd=camera.manager.getTT_RenderRPD(UUID);
                 valueDC.renderPassDescriptor = () => {
                     return camera.manager.getTT_RenderRPD(UUID);
                 };
-                //label
                 valueDC.label = "mesh:" + this.ID + " TTP";
                 if (valueDC.render.fragment)
                     valueDC.render.fragment.targets = camera.manager.getTTColorAttachmentTargets();
-                //深度
-                valueDC.render.depthStencil = false;//没有深度比较，没有深度写入
+                // valueDC.render.depthStencil = false;//没有深度比较，没有深度写入
                 let dc = this.DCG.generateDrawCommand(valueDC);
                 // this.cameraDC[UUID][renderPassName.transparent].push(dc);
                 this.resourcesGPU.TT2TTP.set(dcTT, dc);
@@ -679,54 +675,14 @@ export class Mesh extends BaseEntity {
             // //TTPF
             if (uniformsMaterialTOTT.TTPF) {
                 let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
-
-                let bindingNumber = uniformsMaterialTOTT.TTPF.bindingNumber;
-                //增加TTPF的layer uniform到TTPF
-                {
-                    // uniform  层数
-                    let unifromTTPF: I_uniformBufferPart = {
-                        label: this.Name + " uniform at group(1) binding(" + bindingNumber + ")",
-                        binding: bindingNumber,
-                        size: this.uniformOfTTPFSize,
-                        data: this.uniformOfTTPF,
-                        update: true,
-                    };
-                    let uniformTTPF_Layout: GPUBindGroupLayoutEntry = {
-                        binding: bindingNumber,
-                        visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                        buffer: {
-                            type: "uniform"
-                        }
-                    };
-                    uniformsMaterialTOTT.TTPF.singleShaderTemplateFinal.groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var <uniform> u_TTPF : st_TTPF; \n `;
-
-                    this.scene.resourcesGPU.set(unifromTTPF, uniformTTPF_Layout);
-                    bindingNumber++;
-                    uniformsMaterialTOTT.TTPF.uniformGroup.push(unifromTTPF);
-                    this.unifromTTPF=unifromTTPF;
-                }
-                //增加TTPF部分
                 bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TTPF.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TTPF.singleShaderTemplateFinal;
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-
-                //RPD
-                valueDC.renderPassDescriptor = camera.manager.GBufferManager.getGBufferColorRPD_TTPF(UUID);
-                //label
+                valueDC.renderPassDescriptor = camera.manager.GBufferManager.getGBufferColorRPD(UUID);
                 valueDC.label = "mesh:" + this.ID + " TTPF";
-                ////没有深度比较，没有深度写入
-                valueDC.render.depthStencil = false;
-                // GPUColorTargetState
                 if (valueDC.render.fragment)
                     valueDC.render.fragment.targets = camera.manager.GBufferManager.getGBufferColorCTS();
-                //设置为透明
-                let transparentOption = this._material.getTransparentOption();
-                if (transparentOption) {
-                    valueDC.transparent = transparentOption as I_TransparentOptionOfMaterial;
-                }
-                else {
-                    throw new Error("透明材质的transparentOption不能为空");
-                }
+                valueDC.render.depthStencil = false;//没有深度比较，没有深度写入
 
                 let dc = this.DCG.generateDrawCommand(valueDC);
                 // this.cameraDC[UUID][renderPassName.transparent].push(dc);
@@ -747,9 +703,6 @@ export class Mesh extends BaseEntity {
             let dc = this.DCG.generateDrawCommand(valueDC);
             this.cameraDC[UUID][renderPassName.forward].push(dc);
         }
-    }
-    updateUniformLayerOfTTPF(): void{
-        this.DCG.updateUniformOfGPUBuffer(this.unifromTTPF);
     }
     createShadowMapDC(input: I_ShadowMapValueOfDC): void {
         if (this.inputValues.shadow?.generate === false) {

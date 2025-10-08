@@ -69,9 +69,9 @@ export class ColorMaterial extends BaseMaterial {
                 this._transparent = transparent;
                 if (this.alpha < 1.0) {//如果alpha<1.0，就设置为alpha
                     //预乘
-                    this.red = this.red * this.alpha;
-                    this.green = this.green * this.alpha;
-                    this.blue = this.blue * this.alpha;
+                    this.red = this.red;// * this.alpha;
+                    this.green = this.green;// * this.alpha;
+                    this.blue = this.blue;// * this.alpha;
                 }
                 else if (transparentValue && transparentValue.opacity && transparentValue.opacity < 1.0) {//如果alpha=1.0，就设置为opacity
                     //预乘
@@ -170,32 +170,33 @@ export class ColorMaterial extends BaseMaterial {
         let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         if (renderObject instanceof BaseCamera) {
 
-            // uniform  层数
-            let unifrom10: I_uniformBufferPart = {
-                label: this.Name + " uniform at group(1) binding(0)",
-                binding: bindingNumber,
-                size: this.uniformOfTTPFSize,
-                data: this.uniformOfTTPF,
-                update: true,
-            };
-            let uniform10Layout: GPUBindGroupLayoutEntry = {
-                binding: bindingNumber,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: "uniform"
-                }
-            };
-            groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var <uniform> u_TTPF : st_TTPF; \n `;
+            // // uniform  层数
+            // let unifrom10: I_uniformBufferPart = {
+            //     label: this.Name + " uniform at group(1) binding(0)",
+            //     binding: bindingNumber,
+            //     size: this.uniformOfTTPFSize,
+            //     data: this.uniformOfTTPF,
+            //     update: true,
+            // };
+            // let uniform10Layout: GPUBindGroupLayoutEntry = {
+            //     binding: bindingNumber,
+            //     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+            //     buffer: {
+            //         type: "uniform"
+            //     }
+            // };
+            // groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var <uniform> u_TTPF : st_TTPF; \n `;
 
-            this.scene.resourcesGPU.set(unifrom10, uniform10Layout);
-            bindingNumber++;
-            uniform1.push(unifrom10);
+            // this.scene.resourcesGPU.set(unifrom10, uniform10Layout);
+            // bindingNumber++;
+            // uniform1.push(unifrom10);
 
 
             // uniform  纹理ID
             let uniforIDTexture: GPUBindGroupEntry = {
                 binding: bindingNumber,
-                resource: renderObject.manager.getTTUniformTexture("id"),
+                resource: renderObject.manager.getTTRenderTexture("id"),
+                // resource: renderObject.manager.getTTUniformTexture("id"),
             };
             let uniforIDTextureLayout: GPUBindGroupLayoutEntry = {
                 binding: bindingNumber,

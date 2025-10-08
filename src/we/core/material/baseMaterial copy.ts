@@ -63,11 +63,11 @@ export abstract class BaseMaterial extends RootOfGPU {
     hasOpaqueOfTransparent: boolean = false;
 
 
-    // /**
-    //  * 透明材质的TTPF的uniform layer 
-    //  */
-    // uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
-    // uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
+    /**
+     * 透明材质的TTPF的uniform layer 
+     */
+    uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
+    uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
 
 
     constructor(input?: IV_BaseMaterial) {
@@ -141,14 +141,13 @@ export abstract class BaseMaterial extends RootOfGPU {
      * TT为透明材质的透明部分，TO为不透明材质的不透明部分
      */
     // abstract getBundleOfTOTT(startBinding: number): { TT: I_materialBundleOutput, TO?: I_materialBundleOutput }
-    getBundleOfTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): {
+    getBundleOfTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number,meshID:number): {
         TT: I_materialBundleOutput,
         TO?: I_materialBundleOutput,
         TTP: I_materialBundleOutput,
         TTPF: I_materialBundleOutput
     } {
-        // this.setUniformIDOfTTPF(meshID);
-
+        this.setUniformIDOfTTPF(meshID);
         let TT: I_materialBundleOutput= this.getFS_TT(renderObject, startBinding);;
         let TO: I_materialBundleOutput;
         let TTP: I_materialBundleOutput = this.getFS_TTP(renderObject, startBinding);;
@@ -162,18 +161,18 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
         return TTTT;
     }
-    // setUniformIDOfTTPF(meshID: number) {
-    //     let view = new Uint32Array(this.uniformOfTTPF);
-    //     view[1] = meshID;
-    // }
-    // /**
-    //  * 设置透明材质的TTPF的uniform
-    //  * @param layer  对应RGBA四层
-    //  */
-    // setUniformLayerOfTTPF(layer: number) {
-    //     let view = new Uint32Array(this.uniformOfTTPF);
-    //     view[0] = layer;
-    // }
+    setUniformIDOfTTPF(meshID: number) {
+        let view = new Uint32Array(this.uniformOfTTPF);
+        view[1] = meshID;
+    }
+    /**
+     * 设置透明材质的TTPF的uniform
+     * @param layer  对应RGBA四层
+     */
+    setUniformLayerOfTTPF(layer: number) {
+        let view = new Uint32Array(this.uniformOfTTPF);
+        view[0] = layer;
+    }
     /**
      * 透明材质的code（ transparent  transparent ）
      * @param _startBinding 
@@ -235,40 +234,40 @@ export abstract class BaseMaterial extends RootOfGPU {
         let groupAndBindingString = "";
         let uniform: T_uniformGroup = [];
 
-        //camera 的深度纹理，用于透明度测试（像素是否在不透明的前面）
-        let uniform1: I_dynamicTextureEntryForView;
-        if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(renderObject.UUID)) {
-            uniform1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(renderObject.UUID) as I_dynamicTextureEntryForView;
-        }
-        else {
-            uniform1 = {
-                label: "colorTT camera depth of " + renderObject.UUID,
-                binding: bindingNumber,
-                getResource: () => { return renderObject.manager.getGBufferTextureByUUID(renderObject.UUID, E_GBufferNames.depth); },
-            };
-        }
-        let uniformLayout_1: GPUBindGroupLayoutEntry;
-        if (this.scene.resourcesGPU.entriesToEntriesLayout.has(uniform1)) {
-            uniformLayout_1 = this.scene.resourcesGPU.entriesToEntriesLayout.get(uniform1) as GPUBindGroupLayoutEntry;
-        }
-        else {
-            uniformLayout_1 = {
-                binding: bindingNumber,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                texture: {
-                    sampleType: "depth",
-                    viewDimension: "2d",
-                    // multisampled: false,
-                },
-            };
-            this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
-            this.mapList.push({ key: uniform1, type: "GPUBindGroupLayoutEntry", map: "entriesToEntriesLayout" });
-        }
-        //u_camera_opacity_depth在shader中是固定的
-        groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
-        // this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
-        uniform.push(uniform1);
-        bindingNumber++;
+        // //camera 的深度纹理，用于透明度测试（像素是否在不透明的前面）
+        // let uniform1: I_dynamicTextureEntryForView;
+        // if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(renderObject.UUID)) {
+        //     uniform1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(renderObject.UUID) as I_dynamicTextureEntryForView;
+        // }
+        // else {
+        //     uniform1 = {
+        //         label: "colorTT camera depth of " + renderObject.UUID,
+        //         binding: bindingNumber,
+        //         getResource: () => { return renderObject.manager.getGBufferTextureByUUID(renderObject.UUID, E_GBufferNames.depth); },
+        //     };
+        // }
+        // let uniformLayout_1: GPUBindGroupLayoutEntry;
+        // if (this.scene.resourcesGPU.entriesToEntriesLayout.has(uniform1)) {
+        //     uniformLayout_1 = this.scene.resourcesGPU.entriesToEntriesLayout.get(uniform1) as GPUBindGroupLayoutEntry;
+        // }
+        // else {
+        //     uniformLayout_1 = {
+        //         binding: bindingNumber,
+        //         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+        //         texture: {
+        //             sampleType: "depth",
+        //             viewDimension: "2d",
+        //             // multisampled: false,
+        //         },
+        //     };
+        //     this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
+        //     this.mapList.push({ key: uniform1, type: "GPUBindGroupLayoutEntry", map: "entriesToEntriesLayout" });
+        // }
+        // //u_camera_opacity_depth在shader中是固定的
+        // groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
+        // // this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
+        // uniform.push(uniform1);
+        // bindingNumber++;
 
         //循环 绑定透明材质的GBuffer of uniform
         for (let key in V_TransparentGBufferNames) {

@@ -8,29 +8,32 @@ struct st_TTPF{
 @fragment  fn fs(fsInput: VertexShaderOutput) -> @location(0) vec4f {    
 //@fragment fn fs(@builtin(position) pos: vec4f ) -> @location(0) vec4f {
     var id:u32 =0;
+    let IDs=textureLoad(u_texture_ID, vec2i(floor( fsInput.position.xy)),0 );
     if(u_TTPF.layer==1){
-        id   = textureLoad(u_texture_ID, vec2i(floor( fsInput.position.xy)),0 ).g;
+        id   = IDs.g;
     }
     else if(u_TTPF.layer==2){
-        id   = textureLoad(u_texture_ID, vec2i(floor( fsInput.position.xy)),0 ).b;
+        id   = IDs.b;
     }
-    else if(u_TTPF.layer==3){
-        id   = textureLoad(u_texture_ID, vec2i(floor( fsInput.position.xy)),0 ).a;
+    else 
+    if(u_TTPF.layer==3){
+        id   = IDs.a;
     }
     else {
-        id   = textureLoad(u_texture_ID, vec2i(floor( fsInput.position.xy)),0 ).r;
+        id   = IDs.r;
     }
+    //   id   = IDs.a;
     let mask:u32 = (1<<30)-1;
     id=id&mask;
     id=id>>14;
     let ID:u32 =u_TTPF.meshID;
-    if(id!=ID){
-        discard;
-        // return vec4f(0,0,1,0.03);
+    if(id==ID && id !=0){
+        var color:vec4f =vec4f(1);
+        $fsOutputColor
+        // return vec4f(1,1,0,.51);
+        return color;
     }
-    var color:vec4f =vec4f(1);
-    $fsOutputColor
-    return color;
-    // return vec4f(1,0,0,0.31);
+    discard;
+    return vec4f(1,1,1,1);
 }
 //end : color.fs.wgsl

@@ -55,19 +55,17 @@ export class GBuffers {
      * @param UUID 
      * @returns 不透明GBuffer的color RenderPassDescriptor
      */
-    getGBufferColorRPD_TTPF(UUID: string): GPURenderPassDescriptor {
-        if (!this.GBuffer[UUID].forward.RPD_TTPF) {
-            this.GBuffer[UUID].forward.RPD_TTPF = {
-                colorAttachments: [
-                    {
-                        view: this.GBuffer[UUID].forward.GBuffer[E_GBufferNames.color].createView(),
-                        loadOp: 'load',
-                        storeOp: 'store',
-                    },
-                ]
-            }
+    getGBufferColorRPD(UUID: string): GPURenderPassDescriptor {
+        let rpd: GPURenderPassDescriptor = {
+            colorAttachments: [
+                {
+                    view: this.GBuffer[UUID].forward.GBuffer[E_GBufferNames.color].createView(),
+                    loadOp: 'load',
+                    storeOp: 'store',
+                },
+            ]
         }
-        return this.GBuffer[UUID].forward.RPD_TTPF;
+        return rpd;
     }
     /**
      * TTPF 使用的GPUColorTargetState
@@ -248,11 +246,7 @@ export class GBuffers {
         let device = this.device;
         let width = this.parent.scene.surface.size.width;
         let height = this.parent.scene.surface.size.height;
-        let premultipliedAlpha = this.parent.defaultCamera.premultipliedAlpha;
-        let backgroudColor = this.parent.defaultCamera.backGroundColor;
-        // let depthClearValue = input.depthClearValue;
         if (width == 0 || height == 0) {
-            console.error("透明GBuffer初始化失败，因为场景的大小为0");
             return;
         }
         //A
@@ -272,8 +266,6 @@ export class GBuffers {
                 colorAttachments.push({
                     view: texture.createView(),
                     // clearValue: [0.0, 0.0, 0.0, 0.0],
-                    // clearValue: this.getBackgroudColor(premultipliedAlpha, backgroudColor),
-
                     loadOp: 'clear',
                     storeOp: 'store',
                 });
@@ -324,7 +316,6 @@ export class GBuffers {
                 name: "B"
             };
         }
-        console.log("init common transparent GBuffer");
     }
     /**
      * 获取GBuffer的UUIDs
@@ -354,17 +345,17 @@ export class GBuffers {
                 colorAttachments.push({
                     view: texture.createView(),
                     // clearValue: [0.0, 0.0, 0.0, 0.0],
-                    loadOp: 'load',
+                    loadOp: 'clear',
                     storeOp: 'store',
                 });
             }
             rpd[UUID] = { colorAttachments: colorAttachments };
-            // let depthTextureOfUUID = this.GBuffer[UUID].forward.GBuffer["depth"];
-            // rpd[UUID].depthStencilAttachment = {
-            //     view: depthTextureOfUUID.createView(),
-            //     depthLoadOp: 'load',
-            //     depthStoreOp: 'store',
-            // };
+            let depthTextureOfUUID = this.GBuffer[UUID].forward.GBuffer["depth"];
+            rpd[UUID].depthStencilAttachment = {
+                view: depthTextureOfUUID.createView(),
+                depthLoadOp: 'load',
+                depthStoreOp: 'store',
+            };
         }
         return rpd;
     }

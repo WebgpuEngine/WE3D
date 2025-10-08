@@ -416,7 +416,6 @@ export class RenderManager {
             let perOne = list[i];
             let UUID = i;
             //2 for 单个camera的command
-
             // for (let perCommand of perOne) {
             //     if (Array.isArray(perCommand)) {
             //         this.renderTTP(UUID, perCommand);
@@ -463,7 +462,7 @@ export class RenderManager {
          * 
         */
         //1 清空纹理
-        this.scene.cameraManager.cleanValueOfTT(UUID);
+        this.scene.cameraManager.cleanValueOfTT();
         let listOfTTPF: DrawCommand[] = [];
         await this.device.queue.onSubmittedWorkDone();
 
@@ -475,54 +474,26 @@ export class RenderManager {
             let TTPF = this.scene.resourcesGPU.TT2TTPF.get(TT as DrawCommand);
             if (TTP && TTPF) {
                 listOfTTPF.push(TTPF as DrawCommand);
-                // this.cameraRendered[UUID_TTPF] = this.autoChangeTT_RPD_loadOP(UUID, this.cameraRendered[UUID_TTPF]);
-                // this.cameraRendered[UUID_TTPF]++;//更改 TT loadOP计数器
+                this.cameraRendered[UUID_TTPF] = this.autoChangeTT_RPD_loadOP(UUID, this.cameraRendered[UUID_TTPF]);
+                this.cameraRendered[UUID_TTPF]++;//更改 TT loadOP计数器
                 TTP.submit();
-                //交换colorAttachment 与 uniform 缓冲区
-                // this.scene.cameraManager.switchTT();
-                this.scene.cameraManager.copyTextureAToTextureB();
+                await this.device.queue.onSubmittedWorkDone();
 
-                // TTP.submit();
-                // // //交换colorAttachment 与 uniform 缓冲区
-                // this.scene.cameraManager.switchTT();
-                // break;
+                //交换colorAttachment 与 uniform 缓冲区
+                this.scene.cameraManager.switchTT();
+                await this.device.queue.onSubmittedWorkDone();
 
             }
         }
-        // {
-        //     let perTTPF = listOfTTPF[0];
-        //     let perEntity = this.scene.entityManager.getEntityByUUID(perTTPF.IDS.UUID);
-        //     this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
-        //     this.cameraRendered[UUID]++;//更改 TT loadOP计数器
-        //     perEntity.setUniformLayerOfTTPF(3);//设置uniform ：layer ，ID
-        //     perTTPF.submit();
-            
-        //     this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
-        //     this.cameraRendered[UUID]++;//更改 TT loadOP计数器
-        //     perEntity.setUniformLayerOfTTPF(2);//设置uniform ：layer ，ID
-        //     perTTPF.submit();
-
-        // }
-
-
-        // console.log("========================")
-        // // for (let i = 3; i >= 3; i--) {
         for (let i = 0; i < 4; i++) {
-            let j = 0;
             for (let perTTPF of listOfTTPF) {
                 let perEntity = this.scene.entityManager.getEntityByUUID(perTTPF.IDS.UUID);
                 if (perEntity) {
                     if ("_material" in perEntity) {//必须有材质
                         this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
                         this.cameraRendered[UUID]++;//更改 TT loadOP计数器
-                        perEntity.setUniformLayerOfTTPF(i);//设置uniform ：layer ，ID
-                        // perEntity.setUniformLayerOfTTPF(2);//设置uniform ：layer ，ID
-                        // if (j++ == 1) //白色是否透明，影响数字，有白透明是，0，1，2。没有是：0，1
-                        {
-                            // this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
-                            // this.cameraRendered[UUID]++;//更改 TT loadOP计数器
-                            perTTPF.submit();
-                        }
+                        (perEntity._material as BaseMaterial).setUniformLayerOfTTPF(i);//设置uniform ：layer ，ID
+                        perTTPF.submit();
                     }
                 }
             }
@@ -620,7 +591,12 @@ export class RenderManager {
         if (submitCommand.length > 0)
             this.device.queue.submit(submitCommand);
     }
-
+    /**
+     * 自动适配相机或灯光的渲染次数，第一次渲染时loadOp="clear"，第二次渲染时loadOp="load"
+     * @param UUID 相机或灯光的UUID
+     * @param countOfUUID 相机或灯光的渲染次数
+     * @returns 相机或灯光的渲染次数
+     */
     autoChangeTTPF_RPD_loadOP(UUID: string, countOfUUID: number): number {
         let kind: E_renderForDC = E_renderForDC.camera;
         if (UUID.indexOf("__") != -1) {
@@ -628,10 +604,9 @@ export class RenderManager {
         }
         let rpd;
         if (kind == E_renderForDC.camera)
-            rpd = this.scene.cameraManager.GBufferManager.getGBufferColorRPD_TTPF(UUID);
+            rpd = this.scene.cameraManager.getRPDByUUID(UUID);
         else
             rpd = this.scene.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
-
         if (countOfUUID == undefined || countOfUUID == 0) {//没有记录，增加UUID记录
             countOfUUID = 0;
             if (rpd !== false) {                                        //forward render loadOp="clear"
@@ -649,8 +624,6 @@ export class RenderManager {
                 }
             }
         }
-        // console.log(rpd.colorAttachments[0].loadOp);
-
         return countOfUUID;
     }
     /**
@@ -669,7 +642,7 @@ export class RenderManager {
             rpd = this.scene.cameraManager.getRPDByUUID(UUID);
         else
             rpd = this.scene.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
-        if (countOfUUID == undefined) {//没有记录，增加UUID记录
+        if (countOfUUID == undefined || countOfUUID == 0) {//没有记录，增加UUID记录
             countOfUUID = 0;
             if (rpd !== false) {                                        //forward render loadOp="clear"
                 for (let perColorAttachment of rpd.colorAttachments) {
@@ -693,7 +666,7 @@ export class RenderManager {
     autoChangeTT_RPD_loadOP(UUID: string, countOfUUID: number): number {
 
         let rpd = this.scene.cameraManager.getTT_RenderRPD(UUID);
-        if (countOfUUID == undefined) {//没有记录，增加UUID记录
+        if (countOfUUID == undefined || countOfUUID == 0) {//没有记录，增加UUID记录
             countOfUUID = 0;//A
             for (let perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
@@ -753,7 +726,7 @@ export class RenderManager {
             this.scene.cameraManager.cleanValueOfTT();
             //2 for 单个camera的command
             for (let perCommand of perOne as commmandType[]) {
-                this.cameraRendered[UUID] = this.autoChangeTTRPD_loadOP(UUID, this.cameraRendered[UUID]);
+                this.cameraRendered[UUID] = this.autoChangeTT_RPD_loadOP(UUID, this.cameraRendered[UUID]);
                 this.cameraRendered[UUID]++;//更改 TT loadOP计数器
                 //2.1 渲染与输出：color*4,depth(RGBA),ID(RGBA)
                 perCommand.submit();//A

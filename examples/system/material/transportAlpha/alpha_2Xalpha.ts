@@ -50,7 +50,7 @@ let planeGeometry = new PlaneGeometry({
 let geometry = new SphereGeometry();
 
 let colorMaterial0 = new ColorMaterial({
-  color: [0, 0, 1,1]
+  color: [1, 1, 1, .61]
 });
 let inputMesh0: IV_MeshEntity = {
   attributes: {
@@ -60,16 +60,19 @@ let inputMesh0: IV_MeshEntity = {
   primitive: {
     cullMode: "none",
   },
-  position: [0, 0, -3],
+  position: [0, -5, 0],
+  scale: [10, 10, 10],
+  rotate: [1, 0, 0, Math.PI / 2],
+
 
 }
 let mesh0 = new Mesh(inputMesh0);
-// await scene.add(mesh0);
+await scene.add(mesh0);
 
 
 
 let colorMaterial1 = new ColorMaterial({
-  color: [1, 0.5, 0.5,0.81]
+  color: [1, 0., 0., 0.2]
 });
 
 let inputMesh1: IV_MeshEntity = {
@@ -87,14 +90,14 @@ await scene.add(mesh1);
 
 
 let colorMaterial2 = new ColorMaterial({
-  color: [0, 1, 0, .51]
+  color: [0, 1, 0, .3]
 });
 let inputMesh2: IV_MeshEntity = {
   attributes: {
     geometry: planeGeometry,
   },
   material: colorMaterial2,
-  rotate: [ 1, 0, 0, Math.PI / 2],
+  rotate: [1, 0, 0, Math.PI / 2],
   primitive: {
     cullMode: "none",
   }

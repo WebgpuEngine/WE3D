@@ -84,12 +84,14 @@ let inputMesh2: IV_MeshEntity = {
 let mesh2 = new Mesh(inputMesh2);
 await scene.add(mesh2);
 
-
+let colorMaterial3 = new ColorMaterial({
+  color: [1, 1, 0, 0.61]
+});
 let inputMesh3: IV_MeshEntity = {
   attributes: {
     geometry: planeGeometry,
   },
-  material: colorMaterial2,
+  material: colorMaterial3,
   primitive: {
     cullMode: "none",
   },

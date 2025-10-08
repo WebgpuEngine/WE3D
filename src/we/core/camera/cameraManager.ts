@@ -1,4 +1,4 @@
-import { DrawCommand } from "../command/DrawCommand";
+import { DrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
 import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_TransparentGBufferNames } from "../gbuffers/base";
 import { GBuffers, IV_GBuffer } from "../gbuffers/GBuffers";
@@ -35,7 +35,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     DCG: DrawCommandGenerator;
 
-    onePointToTT_DC!: DrawCommand;
+    onePointToTT_DC_A!: DrawCommand;
+    onePointToTT_DC_B!: DrawCommand;
     constructor(input: IV_CameraManager) {
         super(input.scene);
         this.GBufferManager = new GBuffers(this, this.scene.device);
@@ -278,6 +279,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     getTTUniformTexture(name: string): GPUTexture {
         if (this.TT_Uniform && this.TT_Uniform.GBuffer[name]) {
+            // console.log("TTUniform :" + this.TT_Uniform.name);
             return this.TT_Uniform.GBuffer[name];
         }
         else {
@@ -290,13 +292,15 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @returns 透明GBuffer的render texture
      */
     getTTRenderTexture(name: string): GPUTexture {
-        if (this.TT_Uniform && this.TT_Uniform.GBuffer[name]) {
-            return this.TT_Uniform.GBuffer[name];
+        if (this.TT_Render && this.TT_Render.GBuffer[name]) {
+            return this.TT_Render.GBuffer[name];
         }
         else {
-            throw new Error("getTTUniform 透明GBuffer不存在:" + name);
+            throw new Error("getTTRenderTexture 透明GBuffer不存在:" + name);
         }
     }
+
+
     /**
      * 作废，两个texture组的切换，在时间线上还是有冲突，改为copy模式 
      * 切换透明GBuffer 
@@ -304,13 +308,16 @@ export class CameraManager extends ECSManager<BaseCamera> {
     switchTT() {
         // console.log("uniform="+this.TT_Uniform.name,"render="+this.TT_Render.name);
 
-        if (this.TT_Uniform.name === "B") {
-            this.TT_Uniform = this.GBufferManager.commonTransparentGBufferA;
+        if (this.TT_Render.name === "A") {
             this.TT_Render = this.GBufferManager.commonTransparentGBufferB;
+            this.TT_Uniform = this.GBufferManager.commonTransparentGBufferA;
+            console.log("render A->B");
         }
         else {
-            this.TT_Uniform = this.GBufferManager.commonTransparentGBufferB;
+
             this.TT_Render = this.GBufferManager.commonTransparentGBufferA;
+            this.TT_Uniform = this.GBufferManager.commonTransparentGBufferB;
+            console.log("render B->A");
         }
     }
     /**
@@ -319,7 +326,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 3、清除透明GBuffer的值
      * 
      */
-    cleanValueOfTT() {
+    cleanValueOfTT(UUID?: string) {
         this.TT_Render = this.GBufferManager.commonTransparentGBufferA;
         this.TT_Uniform = this.GBufferManager.commonTransparentGBufferB;
         for (let perOne of this.GBufferManager.commonTransparentGBufferA.colorAttachmentTargets) {
@@ -330,26 +337,29 @@ export class CameraManager extends ECSManager<BaseCamera> {
             perOne.blend = undefined;
             perOne.writeMask = undefined
         }
-        //20250930 ,使用clear模式，交换两组缓存，应该可以自动清除
-        // this.renderOnePointToTT();//清除uniform的transparentGBuffer
-        // this.switchTT();
-        // this.renderOnePointToTT();
+        if (UUID) {
+            this.renderOnePointToTT(UUID);//清除uniform的transparentGBuffer
+        }
     }
     /**
      * 使用渲染一个点清空Textures
      */
-    renderOnePointToTT() {
-        if (!this.onePointToTT_DC) {
-            this.onePointToTT_DC = this.initOnePointToTT();
+    renderOnePointToTT(UUID: string) {
+        if (!this.onePointToTT_DC_A || this.onePointToTT_DC_A.IsDestroy === true) {
+            this.onePointToTT_DC_A = this.initOnePointToTT(this.GBufferManager.commonTransparentGBufferA.GBuffer);
         }
-        this.onePointToTT_DC.submit();
+        if (!this.onePointToTT_DC_B || this.onePointToTT_DC_B.IsDestroy === true) {
+            this.onePointToTT_DC_B = this.initOnePointToTT(this.GBufferManager.commonTransparentGBufferB.GBuffer);
+        }
+        this.onePointToTT_DC_A.submit();
+        this.onePointToTT_DC_B.submit();
     }
 
     /**
      * 初始化一个点渲染到透明GBuffer中,改为uniform的，render的是clear
      * @returns 
      */
-    initOnePointToTT() {
+    initOnePointToTT(gbuffers: I_GBuffer) {
         let shader = `   
         struct ST_GBuffer{
         @location(0) color1 : vec4f,
@@ -372,37 +382,93 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 gbuffer.id = vec4u(0, 0, 0, 0);
                 return gbuffer;
             }`;
-        let valueDC: V_DC = {
-            label: "cameraManager renderOnePointToTT",
-            data: {
-                // vertices: new Map([
-                //     ["position", [0, 0, 0]],
-                // ]),
+        // let valueDC: V_DC = {
+        //     label: "cameraManager renderOnePointToTT",
+        //     data: {
+        //         // vertices: new Map([
+        //         //     ["position", [0, 0, 0]],
+        //         // ]),
+        //     },
+        //     render: {
+        //         vertex: {
+        //             code: shader,
+        //             entryPoint: "vs",
+        //         },
+        //         fragment: {
+        //             entryPoint: "fs",
+        //             targets: this.getTTColorAttachmentTargets(),
+        //         },
+        //         drawMode: {
+        //             vertexCount: 1
+        //         },
+        //         primitive: {
+        //             topology: "point-list",
+        //         },
+        //         depthStencil: false,
+        //     },
+        //     renderPassDescriptor: () => this.getTT_UniformRPD(UUID),
+        //     dynamic: true,
+        //     IDS: {
+        //         UUID: "initOnePointToTT",
+        //         ID: 0,
+        //         renderID: 0
+        //     }
+        // };
+        let moduleVS = this.device.createShaderModule({
+            label: "OnePointToTT",
+            code: shader,
+        });
+        let descriptor: GPURenderPipelineDescriptor = {
+            label: "OnePointToTT",
+            vertex: {
+                module: moduleVS,
+                entryPoint: "vs",
             },
-            render: {
-                vertex: {
-                    code: shader,
-                    entryPoint: "vs",
-                },
-                fragment: {
-                    entryPoint: "fs",
-                    targets: this.getTTColorAttachmentTargets(),
-                },
-                drawMode: {
-                    vertexCount: 1
-                },
-                primitive: {
-                    topology: "point-list",
-                },
-                depthStencil: false,
+            fragment: {
+                module: moduleVS,
+                entryPoint: "fs",
+                targets: this.getTTColorAttachmentTargets(),
+
             },
-            renderPassDescriptor: () => this.getTT_UniformRPD(),
-            dynamic: true,
-        };
-        let dc0 = this.DCG.generateDrawCommand(valueDC);
-        // dc0.submit()
-        return dc0;
+            layout: "auto",
+            primitive: {
+                topology: "point-list",
+            },
+        }
+        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
+
+        let colorAttachments: GPURenderPassColorAttachment[] = [];
+        for (let key in gbuffers) {
+            let texture = gbuffers[key];
+            colorAttachments.push({
+                view: texture.createView(),
+                // clearValue: [0.0, 0.0, 0.0, 0.0],
+                loadOp: 'clear',
+                storeOp: 'store',
+            });
+        }
+        let rpd = () => ({ colorAttachments: colorAttachments });
+
+        let valuesDC: IV_DrawCommand = {
+            scene: this.scene,
+            pipeline: pipeline,
+            renderPassDescriptor: rpd,
+            drawMode: {
+                vertexCount: 1
+            },
+            device: this.device,
+            label: "initOnePointToTT DC "
+        }
+
+
+        // const commandEncoder = this.device.createCommandEncoder({ label: "Draw Command :commandEncoder" });
+        // const passEncoder = commandEncoder.beginRenderPass(rpd);
+        // passEncoder.setPipeline(pipeline);
+
+        return new DrawCommand(valuesDC);
     }
+
+
 
     //作废，代码参考
     copyTextureAToTextureB() {
@@ -557,13 +623,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
             });
         }
 
-        if (!this.onePointToTT_DC) {
-            this.onePointToTT_DC = this.initOnePointToTT();
-        }
-        else {
-            this.onePointToTT_DC.destroy();
-            this.onePointToTT_DC = this.initOnePointToTT();
-        }
+
         for (let UUID in this.GBufferManager.GBuffer) {
             let camera = this.getCameraByUUID(UUID) as BaseCamera;
             // 重新创建GBuffer
@@ -583,8 +643,26 @@ export class CameraManager extends ECSManager<BaseCamera> {
             this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
         }
 
-        this.GBufferManager.reInitCommonTransparentGBuffer();
+        {
+            // let gbuffersOption: IV_GBuffer = {
+            //     device: this.device,
+            //     surfaceSize: {
+            //         width: width,
+            //         height: height
+            //     },
+            //     premultipliedAlpha: this.defaultCamera.premultipliedAlpha,
+            //     backGroudColor: this.defaultCamera.backGroundColor,
+            //     depthClearValue: this.scene.reversedZ.cleanValue
+            // };
+            this.GBufferManager.reInitCommonTransparentGBuffer();
+        }
+        if (this.onePointToTT_DC_A && this.onePointToTT_DC_A.IsDestroy === false)
+            this.onePointToTT_DC_A.destroy();
+        if (this.onePointToTT_DC_B && this.onePointToTT_DC_B.IsDestroy === false)
+            this.onePointToTT_DC_B.destroy();
+
         this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
+
 
         // 更新所有相机的投影矩阵
         for (let camera of this.list) {

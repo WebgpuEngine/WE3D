@@ -87,7 +87,7 @@ export interface V_DC {
     /**
      * 是否透明渲染,包括alpha 透明，物理透明
      */
-     transparent?: I_TransparentOptionOfMaterial,
+    transparent?: I_TransparentOptionOfMaterial,
     //没有意义，取消，因为transparent pass 透明渲染是在forward之后，这时候loadOP已经是load模式
     // /**
     //  * 是否透明渲染
@@ -209,7 +209,7 @@ export class DrawCommandGenerator {
                     for (let perEntry of perGroup)
                         if ("data" in perEntry && "update" in perEntry && perEntry.update === true) {//需要更新,只更新数据
                             if (this.resources.has(perEntry, "uniformBuffer")) {
-                                let buffer = this.resources.get(perEntry, "uniformBuffer");
+                                let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
                                 if (buffer) {
                                     updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferPart).data)
                                 }
@@ -226,6 +226,20 @@ export class DrawCommandGenerator {
         }
     }
 
+    updateUniformOfGPUBuffer(perEntry: I_uniformBufferPart) {
+        if (this.resources.has(perEntry, "uniformBuffer")) {
+            let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
+            if (buffer) {
+                updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferPart).data)
+            }
+            else {
+                console.warn(perEntry, "获取uiform对应的GPUBuffer资源获取失败");
+            }
+        }
+        else {
+            console.warn(perEntry, "查询uiform对应的GPUBuffer资源获取失败");
+        }
+    }
 
     /**
      * 生成DrawCommand
@@ -626,21 +640,22 @@ export class DrawCommandGenerator {
         let fragment: GPUFragmentState | undefined;
         if (values.render.fragment) {
             let targets: GPUColorTargetState[] = [];
-            if (values.render.fragment.targets) targets = values.render.fragment.targets;//使用传入参数
+            if (values.render.fragment.targets) {
+                targets = values.render.fragment.targets;//使用传入参数
+            }
             else if (values.system && values.render.fragment.targets == undefined) {//获取默认camera
                 let UUID = this.checkUUID(values);
                 if (UUID) {
-
                     targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
-                    if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
-                        for (let i = 0; i <values.transparent.blend.length; i++) {
-                            targets[i].blend = values.transparent.blend[i];
-                        }
-                    }
                 }
                 else
                     // console.error("获取UUID失败");
                     this.errorUUID();
+            }
+            if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
+                for (let i = 0; i < values.transparent.blend.length; i++) {
+                    targets[i].blend = values.transparent.blend[i];
+                }
             }
             let constansFS = {};
             if (values.render.fragment.code) {
@@ -703,6 +718,24 @@ export class DrawCommandGenerator {
         //     if (values.render.depthStencil) descriptor.depthStencil = values.render.depthStencil;
         // }
 
+
+
+        //3.6 生产pipeline
+        let pipeline: GPURenderPipeline;
+        if (this.resources.renderPipelineDescriptor.has(descriptor)) {
+            const pl = this.resources.renderPipelineDescriptor.get(descriptor);
+            if (pl)
+                pipeline = pl;
+            else {
+                pipeline = this.device.createRenderPipeline(descriptor);
+                this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
+            }
+        }
+        else {
+            pipeline = this.device.createRenderPipeline(descriptor);
+            this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
+        }
+
         //4、GPURenderPassDescriptor
         let renderPassDescriptor = () => {
             let renderPassDescriptor: GPURenderPassDescriptor;
@@ -731,23 +764,6 @@ export class DrawCommandGenerator {
             return renderPassDescriptor!;
         }
 
-
-        //3.6 生产pipeline
-        let pipeline: GPURenderPipeline;
-        if (this.resources.renderPipelineDescriptor.has(descriptor)) {
-            const pl = this.resources.renderPipelineDescriptor.get(descriptor);
-            if (pl)
-                pipeline = pl;
-            else {
-                pipeline = this.device.createRenderPipeline(descriptor);
-                this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
-            }
-        }
-        else {
-            pipeline = this.device.createRenderPipeline(descriptor);
-            this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
-        }
-
         //5、传参，生产DC
         let commandOption: IV_DrawCommand = {
             scene: this.scene,
@@ -762,8 +778,8 @@ export class DrawCommandGenerator {
             // dynamic: values.dynamic || false,
         }
 
-        if(values.transparent){
-            if(values.transparent.type){
+        if (values.transparent) {
+            if (values.transparent.type) {
                 commandOption.transparentType = values.transparent.type;
             }
         }
