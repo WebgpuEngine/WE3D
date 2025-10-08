@@ -509,14 +509,14 @@ export class Scene {
 
 
     /**每帧循环 onBeforeUpdate */
-    onBeforeUpdate() {
+    async onBeforeUpdate() {
         this.Box3s = [];//清空包围盒
         if (this.flags.reSize.status) {
             // console.log("reseize event at onBeforeRender");
             this.reSize(this.flags.reSize.width, this.flags.reSize.height);
-            this.cameraManager.onResize();
+            await this.cameraManager.onResize();
             //实体的onSizeChange
-            this.entityManager.onResize();
+            await this.entityManager.onResize();
             this.flags.reSize.status = false;
         }
         this.renderManager.clean();
@@ -524,15 +524,15 @@ export class Scene {
         this.updateUserDefineEvent(eventOfScene.onBeforeUpdate);
     }
     /**每帧循环 onAfterUpdate */
-    onAfterUpdate() {
+    async onAfterUpdate() {
         this.updateUserDefineEvent(eventOfScene.onAfterUpdate);
     }
     /**每帧循环 onUpdate */
-    onUpdate() {
+    async onUpdate() {
         this.updateUserDefineEvent(eventOfScene.onUpdate);
     }
 
-    update() {
+    async update() {
         this.onUpdate();
 
         //texture manager
@@ -562,15 +562,15 @@ export class Scene {
         this.updateBVH();
     }
     /**每帧循环 onBeforeRender */
-    onBeforeRender() {
+    async onBeforeRender() {
         this.updateUserDefineEvent(eventOfScene.onBeforeRender);
     }
     /**每帧循环 onRender */
-    onRender() {
+    async onRender() {
         this.updateUserDefineEvent(eventOfScene.onRender);
     }
     /**每帧循环 onAfterRender */
-    onAfterRender() {
+    async onAfterRender() {
         this.updateUserDefineEvent(eventOfScene.onAfterRender);
     }
     async render() {
@@ -578,13 +578,13 @@ export class Scene {
         // this.lightManger.render()
         await this.renderManager.render();        //包括不透明和透明，depth
     }
-    updateBVH() {
+    async updateBVH() {
         this.generateBundleOfCameraAndBVH();
     }
     /**
      * 生成相机（包括camera 和 light的shadowmap）和BVH的bundle
      */
-    generateBundleOfCameraAndBVH() { }
+    async generateBundleOfCameraAndBVH() { }
 
 
     run() {
@@ -594,16 +594,16 @@ export class Scene {
             if (scope.flags.realTimeRender) {//是否开启实时更新
                 //时间更新
                 scope.clock.update();
-                scope.onBeforeUpdate();
-                scope.update();
-                scope.onAfterUpdate();
-                scope.onBeforeRender();
+                await scope.onBeforeUpdate();
+                await scope.update();
+                await scope.onAfterUpdate();
+                await scope.onBeforeRender();
                 await scope.render();
-                scope.onAfterRender();
-                scope.pickup();
-                scope.postProcess();
-                scope.showGBuffersVisualize();
-                scope.renderToSurface();
+                await scope.onAfterRender();
+                await scope.pickup();
+                await scope.postProcess();
+                await scope.showGBuffersVisualize();
+                await scope.renderToSurface();
                 requestAnimationFrame(perFrameRun);
             }
         }

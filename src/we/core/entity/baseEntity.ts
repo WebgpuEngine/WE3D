@@ -92,7 +92,6 @@ export abstract class BaseEntity extends RootOfGPU {
             [renderPassName.depth]: DrawCommand[],
             [renderPassName.forward]: DrawCommand[],
             [renderPassName.transparent]: DrawCommand[],
-            [renderPassName.transparentPixcel]: DrawCommand[],
         }
     } = {};
 
@@ -154,6 +153,9 @@ export abstract class BaseEntity extends RootOfGPU {
         }
         console.log(this.ID);
     }
+    /**
+     * 检查instance是否合法
+     */
     checkInstance() {
         if (this.instance.index) {
             if (this.instance.index.length < this.instance.numInstances) {
@@ -206,8 +208,6 @@ export abstract class BaseEntity extends RootOfGPU {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // abstract 部分
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
     /**
      * 可见性(visible)、
      * 可用性(enable)、
@@ -243,6 +243,7 @@ export abstract class BaseEntity extends RootOfGPU {
      * @returns  uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
      */
     abstract getUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate, startBinding: number): I_EntityBundleOfUniformAndShaderTemplateFinal
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 基础部分
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -294,6 +295,7 @@ export abstract class BaseEntity extends RootOfGPU {
         }
         return false;
     }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 阴影相关部分
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -310,6 +312,7 @@ export abstract class BaseEntity extends RootOfGPU {
     getShadowmAccept() {
         return this._shadow.accept;
     }
+    
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //// update 部分
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -544,12 +547,15 @@ export abstract class BaseEntity extends RootOfGPU {
         return "";
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //TTPF 相关部分
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 透明材质的TTPF的uniform layer 
      */
     uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
     uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
-    unifromTTPF:I_uniformBufferPart;
+    unifromTTPF!:I_uniformBufferPart;
     /**
      * 设置透明材质的TTPF的uniform
      * @param layer  对应RGBA四层

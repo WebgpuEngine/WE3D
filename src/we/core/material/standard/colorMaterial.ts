@@ -170,7 +170,7 @@ export class ColorMaterial extends BaseMaterial {
         let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         if (renderObject instanceof BaseCamera) {
 
-            // // uniform  层数
+            // // uniform  层数,不再使用，使用
             // let unifrom10: I_uniformBufferPart = {
             //     label: this.Name + " uniform at group(1) binding(0)",
             //     binding: bindingNumber,

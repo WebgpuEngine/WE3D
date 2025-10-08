@@ -293,7 +293,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     getTTRenderTexture(name: string): GPUTexture {
         if (this.TT_Render && this.TT_Render.GBuffer[name]) {
-                // console.log( "texture:", this.TT_Render.GBuffer[name].label);
+            // console.log( "texture:", this.TT_Render.GBuffer[name].label);
             return this.TT_Render.GBuffer[name];
         }
         else {
@@ -361,60 +361,42 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @returns 
      */
     initOnePointToTT(gbuffers: I_GBuffer) {
+        // let shader = `   
+        // struct ST_GBuffer{
+        // @location(0) color1 : vec4f,
+        // @location(1) color2 : vec4f,
+        // @location(2) color3 : vec4f,
+        // @location(3) color4 : vec4f,
+        // @location(4) depth : vec4f,
+        // @location(5) id : vec4u,
+        // }
+        //     @vertex fn vs() -> @builtin(position)  vec4f {
+        //             return vec4f(0.0, 0.0, 0.0,  0.0);
+        //     }
+        //     @fragment fn fs(@builtin(position) pos: vec4f ) -> ST_GBuffer{
+        //         var gbuffer: ST_GBuffer;
+        //         gbuffer.color1 = vec4f(0.0, 0.0, 0.0, 0.0);
+        //         gbuffer.color2 = vec4f(0.0, 0.0, 0.0, 0.0);
+        //         gbuffer.color3 = vec4f(0.0, 0.0, 0.0, 0.0);
+        //         gbuffer.color4 = vec4f(0.0, 0.0, 0.0, 0.0);
+        //         gbuffer.depth = vec4f(0.0, 0.0, 0.0, 0.0);
+        //         gbuffer.id = vec4u(0, 0, 0, 0);
+        //         return gbuffer;
+        //     }`;
         let shader = `   
         struct ST_GBuffer{
-        @location(0) color1 : vec4f,
-        @location(1) color2 : vec4f,
-        @location(2) color3 : vec4f,
-        @location(3) color4 : vec4f,
-        @location(4) depth : vec4f,
-        @location(5) id : vec4u,
+        @location(0) depth : vec4f,
+        @location(1) id : vec4u,
         }
             @vertex fn vs() -> @builtin(position)  vec4f {
                     return vec4f(0.0, 0.0, 0.0,  0.0);
             }
             @fragment fn fs(@builtin(position) pos: vec4f ) -> ST_GBuffer{
                 var gbuffer: ST_GBuffer;
-                gbuffer.color1 = vec4f(0.0, 0.0, 0.0, 0.0);
-                gbuffer.color2 = vec4f(0.0, 0.0, 0.0, 0.0);
-                gbuffer.color3 = vec4f(0.0, 0.0, 0.0, 0.0);
-                gbuffer.color4 = vec4f(0.0, 0.0, 0.0, 0.0);
                 gbuffer.depth = vec4f(0.0, 0.0, 0.0, 0.0);
                 gbuffer.id = vec4u(0, 0, 0, 0);
                 return gbuffer;
             }`;
-        // let valueDC: V_DC = {
-        //     label: "cameraManager renderOnePointToTT",
-        //     data: {
-        //         // vertices: new Map([
-        //         //     ["position", [0, 0, 0]],
-        //         // ]),
-        //     },
-        //     render: {
-        //         vertex: {
-        //             code: shader,
-        //             entryPoint: "vs",
-        //         },
-        //         fragment: {
-        //             entryPoint: "fs",
-        //             targets: this.getTTColorAttachmentTargets(),
-        //         },
-        //         drawMode: {
-        //             vertexCount: 1
-        //         },
-        //         primitive: {
-        //             topology: "point-list",
-        //         },
-        //         depthStencil: false,
-        //     },
-        //     renderPassDescriptor: () => this.getTT_UniformRPD(UUID),
-        //     dynamic: true,
-        //     IDS: {
-        //         UUID: "initOnePointToTT",
-        //         ID: 0,
-        //         renderID: 0
-        //     }
-        // };
         let moduleVS = this.device.createShaderModule({
             label: "OnePointToTT",
             code: shader,
@@ -474,8 +456,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
 
     //end TT
 
-   async onResize() {
-      
+    async onResize() {
+
+        await this.device.queue.onSubmittedWorkDone();
 
         let width = this.scene.surface.size.width;
         let height = this.scene.surface.size.height;
@@ -485,15 +468,15 @@ export class CameraManager extends ECSManager<BaseCamera> {
         const alignment = this.device.limits.minStorageBufferOffsetAlignment;
         // 向上 bytesPerRow 向上取整到对齐值的倍数
         bytesPerRow = Math.ceil(bytesPerRow / alignment) * alignment;
-        // 重新创建resultGPUBuffer
-        if (this.resultGPUBuffer) {
-            this.resultGPUBuffer.destroy();
-            this.resultGPUBuffer = this.device.createBuffer({
-                size: bytesPerRow * height,
-                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+        // // 重新创建resultGPUBuffer，Map GPUBuffer 到 resultGPUBuffer
+        // if (this.resultGPUBuffer) {
+        //     this.resultGPUBuffer.destroy();
+        //     this.resultGPUBuffer = this.device.createBuffer({
+        //         size: bytesPerRow * height,
+        //         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
 
-            });
-        }
+        //     });
+        // }
 
 
         for (let UUID in this.GBufferManager.GBuffer) {
@@ -516,24 +499,14 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
 
         {
-            // let gbuffersOption: IV_GBuffer = {
-            //     device: this.device,
-            //     surfaceSize: {
-            //         width: width,
-            //         height: height
-            //     },
-            //     premultipliedAlpha: this.defaultCamera.premultipliedAlpha,
-            //     backGroudColor: this.defaultCamera.backGroundColor,
-            //     depthClearValue: this.scene.reversedZ.cleanValue
-            // };
+            if (this.onePointToTT_DC_A && this.onePointToTT_DC_A.IsDestroy === false)
+                this.onePointToTT_DC_A.destroy();
+            if (this.onePointToTT_DC_B && this.onePointToTT_DC_B.IsDestroy === false)
+                this.onePointToTT_DC_B.destroy();
             this.GBufferManager.reInitCommonTransparentGBuffer();
         }
-        if (this.onePointToTT_DC_A && this.onePointToTT_DC_A.IsDestroy === false)
-            this.onePointToTT_DC_A.destroy();
-        if (this.onePointToTT_DC_B && this.onePointToTT_DC_B.IsDestroy === false)
-            this.onePointToTT_DC_B.destroy();
 
-        this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
+        // this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
 
 
         // 更新所有相机的投影矩阵

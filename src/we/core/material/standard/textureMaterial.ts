@@ -23,6 +23,7 @@ import { SHT_materialTextureFS_mergeToVS, SHT_materialTextureTransparentFS_merge
 import { BaseCamera } from "../../camera/baseCamera";
 import { getBundleOfGBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
 
 
 /**
@@ -35,16 +36,6 @@ export interface IV_TextureMaterial extends IV_BaseMaterial {
 }
 
 export class TextureMaterial extends BaseMaterial {
-    getTTFS(_startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
-    getTOFS(_startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
-    setTO(): void {
-        this.hasOpaqueOfTransparent=true;
-    }
-
 
 
     sampler!: GPUSampler;
@@ -84,7 +75,7 @@ export class TextureMaterial extends BaseMaterial {
         }
         this.textures = {};
         this._state = E_lifeState.destroyed;
-        
+
     }
 
     async readyForGPU(): Promise<any> {
@@ -206,17 +197,29 @@ export class TextureMaterial extends BaseMaterial {
             }
         }
 
-
-
-
         let outputFormat: I_singleShaderTemplate_Final = {
             templateString: code,
             groupAndBindingString: groupAndBindingString,
             binding: binding,
             owner: this,
         }
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat ,bindingNumber:binding};
 
+    }
+    setTO(): void {
+        this.hasOpaqueOfTransparent = true;
+    }
+    getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+        throw new Error("Method not implemented.");
     }
 
     updateSelf(clock: Clock): void {

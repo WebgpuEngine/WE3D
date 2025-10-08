@@ -60,7 +60,7 @@ export class EntityManager extends ECSManager<BaseEntity> {
     /**
      * 实体的onResize
      */
-    onResize(): void {
+    async onResize() {
         for (let entity of this.list) {
             entity.onResize();
         }
