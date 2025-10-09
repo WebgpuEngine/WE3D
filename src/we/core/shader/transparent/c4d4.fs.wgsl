@@ -29,15 +29,18 @@ fn fs(fsInput: VertexShaderOutput) -> ST_TransParentGBuffer {
     let isTransparent = checkDepthOfTransparent(fsInput);
         initSystemOfFS();
 
+    //1、颜色的alpha逻辑.//统一工作流问题，
+    var color: vec4f = vec4f(0,0,0,0); 
+    $Color    //输出颜色
+
     //检查是否在不透明颜色之前    
     if(isTransparent)//u_camera_opacity_depth是固定的
     {      
-        var color: vec4f = vec4f(0,0,0,0);
+
         var depth: f32 = fsInput.position.z;
         let id=fsInput.entityID;
 
-        //1、颜色的alpha逻辑
-        $Color    //输出颜色
+    
         if(color.a>=1.0)    {
                 discard; //如果颜色的a大于等于1.0， discard。
         }

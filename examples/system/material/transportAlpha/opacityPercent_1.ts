@@ -51,7 +51,11 @@ let planeGeometry = new PlaneGeometry({
 let geometry = new SphereGeometry();
 
 let colorMaterial1 = new ColorMaterial({
-  color: [1, 0.5, 0.5, 1],
+  color: [1, 0., 0., 1],
+  transparent: {
+    opacity: 0.9,
+    type: E_TransparentType.alpha
+  }
 });
 
 

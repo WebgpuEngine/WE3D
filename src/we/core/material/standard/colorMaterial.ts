@@ -14,6 +14,7 @@ export interface I_ColorMaterial extends IV_BaseMaterial {
 }
 
 export class ColorMaterial extends BaseMaterial {
+
     declare inputValues: I_ColorMaterial;
     color: weColor4 = [1, 1, 1, 1];
     red: number = 1;
@@ -159,62 +160,12 @@ export class ColorMaterial extends BaseMaterial {
         let code: string = "";
         let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         if (renderObject instanceof BaseCamera) {
-
-            // // uniform  层数,不再使用，使用
-            // let unifrom10: I_uniformBufferPart = {
-            //     label: this.Name + " uniform at group(1) binding(0)",
-            //     binding: bindingNumber,
-            //     size: this.uniformOfTTPFSize,
-            //     data: this.uniformOfTTPF,
-            //     update: true,
-            // };
-            // let uniform10Layout: GPUBindGroupLayoutEntry = {
-            //     binding: bindingNumber,
-            //     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            //     buffer: {
-            //         type: "uniform"
-            //     }
-            // };
-            // groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var <uniform> u_TTPF : st_TTPF; \n `;
-
-            // this.scene.resourcesGPU.set(unifrom10, uniform10Layout);
-            // bindingNumber++;
-            // uniform1.push(unifrom10);
-
-
-            // uniform  纹理ID GPUBindGroupEntry
-            // let uniforIDTexture: GPUBindGroupEntry={
-            // binding: bindingNumber,
-            // resource: renderObject.manager.getTTRenderTexture("id"),
-            // };
-            let uniforIDTexture: I_dynamicTextureEntryForView = {
-                label: this.Name + " texture ID at group(1) binding(" + bindingNumber + ")",
-                binding: bindingNumber,
-                getResource: () => { return renderObject.manager.getTTRenderTexture("id"); },
-            };
-            let uniforIDTextureLayout: GPUBindGroupLayoutEntry = {
-                binding: bindingNumber,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                texture: {
-                    sampleType: "uint",
-                    viewDimension: "2d",
-                    // multisampled: false,
-                },
-            };
-            //添加到resourcesGPU的Map中
-            this.scene.resourcesGPU.entriesToEntriesLayout.set(uniforIDTexture, uniforIDTextureLayout);
-            this.mapList.push({
-                key: uniforIDTexture,
-                type: "entriesToEntriesLayout",
-                map: "entriesToEntriesLayout"
-            });
-            groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_texture_ID: texture_2d<u32>; \n `;
-
-            //push到uniform1队列
-            uniform1.push(uniforIDTexture);
-            //+1
-            bindingNumber++;
-
+            {//获取当前材质的TTPF的输出uniform bundle 。
+                let uniformBundle = this.getUniformEntryBundleOfTTPF(renderObject, bindingNumber);
+                uniform1.push(...uniformBundle.entry);
+                bindingNumber = uniformBundle.bindingNumber;
+                groupAndBindingString += uniformBundle.groupAndBindingString;
+            }
             //格式化SHT  ，同TT
             for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
                 code += perOne.code;
@@ -233,8 +184,7 @@ export class ColorMaterial extends BaseMaterial {
             templateString: code,
             groupAndBindingString: groupAndBindingString,
             owner: this,
-            dynamic: true
-
+            dynamic: true// 因为绑定的uniform有camera的texture，如果resize，会变，所以时动态的
         }
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: bindingNumber };
     }
@@ -272,10 +222,21 @@ export class ColorMaterial extends BaseMaterial {
         else {
 
         }
-
         return code;
     }
-
+    /**
+     * ColorMaterial 的没有uniform，所以返回的都是空数组和空字符串
+     * @param startBinding 
+     * @returns 
+     */
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+        this.unifromEntryBundle_Common = {
+            bindingNumber: startBinding,
+            groupAndBindingString: "",
+            entry: []
+        };
+        return this.unifromEntryBundle_Common;
+    }
 
     getFS_TO(_startBinding: number): I_materialBundleOutput {
         return this.getOpaqueCodeFS(_startBinding);

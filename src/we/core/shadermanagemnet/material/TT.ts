@@ -25,3 +25,6 @@ export var SHT_TT: I_shaderTemplateAdd =
     name: "TT",
     code: WGSL_transparent_c4d4,
 }
+
+import colorTTPF_FSWGSL from "../../shader/transparent/TTPF.fs.wgsl?raw";
+export var TTPF_FS = colorTTPF_FSWGSL.toString();

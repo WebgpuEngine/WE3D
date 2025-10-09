@@ -1,4 +1,4 @@
-//start : color.fs.wgsl
+//start : TTPF.fs.wgsl
 
 struct st_TTPF{
      layer:u32,
@@ -27,13 +27,16 @@ struct st_TTPF{
     id=id&mask;
     id=id>>14;
     let ID:u32 =u_TTPF.meshID;
+    
+    //放在这里时统一工作流的问题，不能放在if中
+    var color:vec4f =vec4f(1);
+    $fsOutputColor
+
     if(id==ID && id !=0){
-        var color:vec4f =vec4f(1);
-        $fsOutputColor
         // return vec4f(1,1,0,.51);
         return color;
     }
     discard;
     return vec4f(1,1,1,1);
 }
-//end : color.fs.wgsl
+//end : TTPF.fs.wgsl

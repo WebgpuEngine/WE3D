@@ -10,6 +10,7 @@ import { TextureMaterial } from "../../../../src/we/core/material/standard/textu
 import { IV_Scene } from "../../../../src/we/core/scene/base";
 import { initScene } from "../../../../src/we/core/scene/fn";
 import { Texture } from "../../../../src/we/core/texture/texture";
+import { E_TransparentType } from "../../../../src/we/core/material/base";
 
 //from webgpufundemental
 const hsl = (h: number, s: number, l: number) => `hsl(${h * 360 | 0}, ${s * 100}%, ${l * 100 | 0}%)`;
@@ -127,21 +128,28 @@ let dstTextureUnPremultiplied = new Texture({
   source: dstCanvas,
   name: "dstTextureUnPremultiplied",
   premultipliedAlpha: false,
-}, scene.device);
-// await dstTextureUnPremultiplied.init();
+},
+  scene.device,
+  scene
+);
+await dstTextureUnPremultiplied.init();
 
 //预乘DST
 let dstTexturePremultiplied = new Texture({
   source: dstCanvas,
   name: "dstTextureUnPremultiplied",
   premultipliedAlpha: true,
-}, scene.device);
-// await dstTexturePremultiplied.init();
+},
+  scene.device,
+  scene
+);
+await dstTexturePremultiplied.init();
 
 
 
 let dstMaterial = new TextureMaterial({
   transparent: {
+    type: E_TransparentType.alpha,
     alphaTest: 0.
   },
   textures: {
@@ -165,22 +173,27 @@ let srcTextureUnPremultiplied = new Texture({
   source: srcCanvas,
   name: "srcTextureUnPremultiplied",
   premultipliedAlpha: false,
-}, scene.device);
-// await srcTextureUnPremultiplied.init();
+},
+  scene.device,
+  scene);
+await srcTextureUnPremultiplied.init();
 
 //预乘 SRC
 let srcTexturePremultiplied = new Texture({
   source: srcCanvas,
   name: "srcTexturePremultiplied",
   premultipliedAlpha: true,
-}, scene.device);
-// await srcTexturePremultiplied.init();
+},
+  scene.device,
+  scene);
+await srcTexturePremultiplied.init();
 
 
 
 
 let srcMaterial = new TextureMaterial({
   transparent: {
+    type: E_TransparentType.alpha,
     alphaTest: 0.
   },
   textures: {

@@ -3,7 +3,7 @@ import { RootOfGPU } from "../organization/root";
 
 import { E_lifeState } from "../base/coreDefine";
 import { I_ShadowMapValueOfDC } from "../entity/base";
-import { IV_BaseMaterial, I_PartBundleOfUniform_TT, T_TransparentOfMaterial, I_materialBundleOutput, E_TransparentType, I_AlphaTransparentOfMaterial, I_TransparentOptionOfMaterial } from "./base";
+import { IV_BaseMaterial, I_PartBundleOfUniform_TT, T_TransparentOfMaterial, I_materialBundleOutput, E_TransparentType, I_AlphaTransparentOfMaterial, I_TransparentOptionOfMaterial, I_UniformBundleOfMaterial } from "./base";
 import { commmandType, I_dynamicTextureEntryForView, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate, I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { Scene } from "../scene/scene";
@@ -68,6 +68,26 @@ export abstract class BaseMaterial extends RootOfGPU {
     hasOpaqueOfTransparent: boolean = false;
 
 
+    /**
+     * 不透明、TO、TT、TTP、TTPF公用的uniform
+     * 1、bindingNumber 绑定的槽号的通用的计数器。
+     *      只在第一次计数，然后不要再增加。
+     *      不透明，TO,TT，三个相同，其他TTP、TTPF的特殊的在此数字之后，不需要增加到此计数器
+     * 
+     * 2、 uniform 的@group(1) @binding(x) 绑定字符串。
+     *      只在第一次进行，然后不要再增加。
+     *      与uniformEntry顺序一一对应
+     * 
+     * 3、 uniform 的绑定，必须在材质uniform的第一顺序序列，否则，绑定槽会不同而报错
+     *      只在第一次进行，然后不要再增加。
+     *      A、不透明和TO会用
+     *      B、TT会用
+     *      C、TTP会用（判断是否透明）
+     *      D、TTPF会用（输出color，进行Blend）
+     */
+    unifromEntryBundle_Common: I_UniformBundleOfMaterial | undefined;
+    /**TTPF 的uniform Bundle  */
+    unifromEntryBundle_TTPF: I_UniformBundleOfMaterial | undefined;
 
     constructor(input?: IV_BaseMaterial) {
         super();
@@ -126,7 +146,67 @@ export abstract class BaseMaterial extends RootOfGPU {
      * 设置透明材质的不透明部分是否存在
      */
     abstract setTO(): void;
+    /**
+      * 获取当前材质的uniform组和layout组，必须在材质uniform的第一顺序序列，否则，绑定槽会不同而报错
+      * @param startBinding  起始绑定槽位
+      * @returns 绑定槽位，组绑定字符串，uniform组，layout组
+      */
+    abstract getUniformEntryBundleOfCommon(startBinding: number): {
+        bindingNumber: number,
+        groupAndBindingString: string,
+        entry: T_uniformGroup,
+    }
+    /**
+     * 获取当前材质的TTPF的输出uniform bundle 。（在common uniform bundle之后）
+     * @param renderObject 
+     * @param startBinding 
+     * @returns I_UniformBundleOfMaterial
+     */
+    getUniformEntryBundleOfTTPF(renderObject: BaseCamera, startBinding: number): I_UniformBundleOfMaterial {
+        if (this.unifromEntryBundle_TTPF != undefined) {
+            return this.unifromEntryBundle_TTPF;
+        }
+        else {//uniform ID纹理
+            let bindingNumber = startBinding;
+            let groupAndBindingString = "";
+            let uniform1: T_uniformGroup = [];
+            let layout: GPUBindGroupLayoutEntry[] = [];
+            let uniforIDTexture: I_dynamicTextureEntryForView = {
+                label: this.Name + " texture ID at group(1) binding(" + bindingNumber + ")",
+                binding: bindingNumber,
+                getResource: () => { return renderObject.manager.getTTRenderTexture("id"); },
+            };
+            let uniforIDTextureLayout: GPUBindGroupLayoutEntry = {
+                binding: bindingNumber,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                texture: {
+                    sampleType: "uint",
+                    viewDimension: "2d",
+                    // multisampled: false,
+                },
+            };
+            //添加到resourcesGPU的Map中
+            this.scene.resourcesGPU.entriesToEntriesLayout.set(uniforIDTexture, uniforIDTextureLayout);
+            this.mapList.push({
+                key: uniforIDTexture,
+                type: "entriesToEntriesLayout",
+                map: "entriesToEntriesLayout"
+            });
+            groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_texture_ID: texture_2d<u32>; \n `;
 
+            //push到uniform1队列
+            uniform1.push(uniforIDTexture);
+            //+1
+            bindingNumber++;
+
+            this.unifromEntryBundle_TTPF = {
+                bindingNumber: bindingNumber,
+                groupAndBindingString: groupAndBindingString,
+                entry: uniform1,
+            };
+            return this.unifromEntryBundle_TTPF;
+        }
+    }
     /**
      * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
      * 涉及三个部分：
@@ -190,6 +270,7 @@ export abstract class BaseMaterial extends RootOfGPU {
      * @returns 
      */
     abstract formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string;
+
     /**
      * 透明材质的像素级别对比与处理 （ transparent  transparent pixcel  ）
      * 针对BVH的包围盒相交的清空
@@ -223,10 +304,17 @@ export abstract class BaseMaterial extends RootOfGPU {
         return { uniformGroup: uniform, singleShaderTemplateFinal: outputFormat, bindingNumber: bindingNumber };
     }
     /**获取camera 使用的TT的uniformEntry  */
-    getUniformEntryOfCamera_TTP(renderObject: BaseCamera, bindingNumber: number): I_PartBundleOfUniform_TT {
+    getUniformEntryOfCamera_TTP(renderObject: BaseCamera, _bindingNumber: number): I_PartBundleOfUniform_TT {
+        let bindingNumber = _bindingNumber;
         let groupAndBindingString = "";
-        let uniform: T_uniformGroup = [];
+        let uniformRoot: T_uniformGroup = [];
 
+        {//获取固定uniform序列
+            let uniformBundle = this.getUniformEntryBundleOfCommon(bindingNumber);
+            uniformRoot.push(...uniformBundle.entry);
+            bindingNumber = uniformBundle.bindingNumber;
+            groupAndBindingString += uniformBundle.groupAndBindingString;
+        }
         /**end 
          * 是否开启TTP的深度测试	
          * 
@@ -265,7 +353,7 @@ export abstract class BaseMaterial extends RootOfGPU {
             //u_camera_opacity_depth在shader中是固定的
             groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_camera_opacity_depth : texture_depth_2d; \n `;
             // this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform1, uniformLayout_1);
-            uniform.push(uniform1);
+            uniformRoot.push(uniform1);
             bindingNumber++;
         }
 
@@ -320,7 +408,7 @@ export abstract class BaseMaterial extends RootOfGPU {
             }
             this.scene.resourcesGPU.entriesToEntriesLayout.set(uniform2, uniformLayout_2);  //这里的资源需要注销管理
             this.mapList.push({ key: uniform2, type: "GPUBindGroupLayoutEntry", map: "entriesToEntriesLayout" });
-            uniform.push(uniform2);
+            uniformRoot.push(uniform2);
             let uniformType = V_TransparentGBufferNames[key as E_GBufferNames].uniformType;
             groupAndBindingString += ` @group(1) @binding(${bindingNumber}) var u_${key} : ${uniformType}; \n `;
 
@@ -328,7 +416,7 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
 
 
-        return { uniformGroup: uniform, groupAndBindingString: groupAndBindingString, bindingNumber };
+        return { uniformGroup: uniformRoot, groupAndBindingString: groupAndBindingString, bindingNumber };
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -364,6 +452,17 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
         return isTransparent;
     }
+
+    /**设置透明状态 
+     * @param transparent  T_TransparentOfMaterial 透明状态
+     * 1、如果是undefined，说明不透明
+     * 2、如果是object，说明透明
+     * 3、如果是object，并且object中没有alphaTest，那么alphaTest会被设置为0
+    */
+    setTransparentOption(transparent: T_TransparentOfMaterial) {
+        this._transparent = transparent;
+        // this._state = E_lifeState.updated;
+    }
     /**
      * 是否为透明材质
      * @returns boolean  true：是透明材质，false：不是透明材质
@@ -373,16 +472,6 @@ export abstract class BaseMaterial extends RootOfGPU {
             return true;
         }
         else return false;
-    }
-    /**设置透明状态 
-     * @param transparent  T_TransparentOfMaterial 透明状态
-     * 1、如果是undefined，说明不透明
-     * 2、如果是object，说明透明
-     * 3、如果是object，并且object中没有alphaTest，那么alphaTest会被设置为0
-    */
-    setTransParent(transparent: T_TransparentOfMaterial) {
-        this._transparent = transparent;
-        this._state = E_lifeState.updated;
     }
     /**
      * 获取混合状态
@@ -417,6 +506,7 @@ export abstract class BaseMaterial extends RootOfGPU {
     }
     /**
      * 检查透明状态,如果是透明的，就设置为透明.（color 透明的除外，需要在color material中验证）
+     * 默认：alpha透明，没有设置alphaTest，图像本身alpha=0.0的将透明（diacard） ）
      * @param input IV_BaseMaterial  基础材质的初始化参数
      */
     checkTransparent(input: IV_BaseMaterial) {

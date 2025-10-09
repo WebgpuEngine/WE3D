@@ -163,4 +163,32 @@ export interface I_PartBundleOfUniform_TT {
     uniformGroup: T_uniformGroup,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
     groupAndBindingString: string,
 }
-
+/**
+ * 材质中具有共性的使用的uniform参数的bundle
+ * 1、common部分
+ * 2、TTPF的unifomr部分等
+ */
+export interface I_UniformBundleOfMaterial {
+    /**
+     * bindingNumber 绑定的槽号的通用的计数器。
+     * 只在第一次计数，然后不要再增加。
+     * 不透明，TO,TT，三个相同，其他TTP、TTPF的特殊的在此数字之后，不需要增加到此计数器
+     */
+    bindingNumber: number,
+    /**
+     * uniform 的@group(1) @binding(x) 绑定字符串。
+     * 只在第一次进行，然后不要再增加。
+     * 与uniformEntry顺序一一对应
+     */
+    groupAndBindingString: string,
+    /**
+     * uniform 的绑定，必须在材质uniform的第一顺序序列，否则，绑定槽会不同而报错
+     * 只在第一次进行，然后不要再增加。
+     * 1、不透明和TO会用
+     * 2、TT会用
+     * 3、TTP会用（判断是否透明）
+     * 4、TTPF会用（输出color，进行Blend）
+     */
+    entry: T_uniformGroup,
+    // layout: GPUBindGroupLayoutEntry[]
+}

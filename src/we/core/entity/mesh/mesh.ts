@@ -634,6 +634,11 @@ export class Mesh extends BaseEntity {
                 bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TTP.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TTP.singleShaderTemplateFinal;
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                /** 不需要设置透明，TTP的透明是xxxTTP.wgsl 中的透明逻辑,按需写代码。
+                 *   ColorMaterial 不需要设置透明 （要么不透明，要么全透明）
+                 *   TextureMaterial，是discard判断 。
+                */
+
                 //RPD 
                 //let rpd=camera.manager.getTT_RenderRPD(UUID);
                 valueDC.renderPassDescriptor = () => {

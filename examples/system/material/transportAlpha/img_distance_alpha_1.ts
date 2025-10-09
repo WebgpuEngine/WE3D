@@ -8,6 +8,7 @@ import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
 import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
 import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
 import { E_TransparentType } from "../../../../src/we/core/material/base";
+import { TextureMaterial } from "../../../../src/we/core/material/standard/textureMaterial";
 
 declare global {
   interface Window {
@@ -33,7 +34,7 @@ let camera = new PerspectiveCamera({
   near: 0.01,
   far: 100,
   position: [-9, 6, 6],
-  // position: [0, 0.1, 5],
+  // position: [0, 1,15],
 
   lookAt: [0, 0, 0],
   controlType: "arcball",
@@ -51,15 +52,25 @@ let planeGeometry = new PlaneGeometry({
 let geometry = new SphereGeometry();
 
 let colorMaterial1 = new ColorMaterial({
-  color: [1, 0.5, 0.5, 1],
+  color: [1, 0.5, 0.5, 0.51],
+});
+let textureMaterial = new TextureMaterial({
+  textures: {
+    color: "/examples/resource/images/img/we3D_alpha.png",
+  },
 });
 
+let colorMaterial2 = new ColorMaterial({
+  color: [0, 1, 0, 1]
+});
 
 let inputMesh1: IV_MeshEntity = {
   attributes: {
     geometry: planeGeometry,
   },
-  material: colorMaterial1,
+  material: textureMaterial,
+  position: [0, 0, -2],
+
   primitive: {
     cullMode: "none",
   }
@@ -69,15 +80,14 @@ await scene.add(mesh1);
 
 
 
-let colorMaterial2 = new ColorMaterial({
-  color: [0, 1, 0, 1]
-});
+
 let inputMesh2: IV_MeshEntity = {
   attributes: {
     geometry: planeGeometry,
   },
-  material: colorMaterial2,
-  rotate: [1, 0, 0, Math.PI / 2],
+  material: colorMaterial1,
+  position: [0, 0, 2],
+  // rotate: [1, 0, 0, Math.PI / 2],
   primitive: {
     cullMode: "none",
   }

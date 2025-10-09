@@ -619,6 +619,8 @@ export class DrawCommandGenerator {
         else {
             shadercode = this.formatShaderCode(values.render.vertex.code, DC_vertexNames, DC_localtions);
         }
+        // if (values.transparent)
+        //     console.log(shadercode);
         moduleVS = this.device.createShaderModule({
             label: values.label + " createShaderModule()",
             code: shadercode,

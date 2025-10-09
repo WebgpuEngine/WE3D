@@ -232,14 +232,14 @@ export class GBuffers {
             for (let key in this.commonTransparentGBufferA.GBuffer) {
                 // console.log("Destroying texture:", this.commonTransparentGBufferA.GBuffer[key].label);
                 this.commonTransparentGBufferA.GBuffer[key].destroy();
-                console.log("Destroying texture:",key, this.commonTransparentGBufferA.GBuffer[key].label);
+                // console.log("Destroying texture:",key, this.commonTransparentGBufferA.GBuffer[key].label);
             }
             this.commonTransparentGBufferA = {} as I_TransparentGBufferGroup;
         }
         if (this.commonTransparentGBufferB?.GBuffer) {
             for (let key in this.commonTransparentGBufferB.GBuffer) {
                 // console.log("Destroying texture:", this.commonTransparentGBufferB.GBuffer[key].label);
-                console.log("Destroying texture:",key, this.commonTransparentGBufferB.GBuffer[key].label);
+                // console.log("Destroying texture:",key, this.commonTransparentGBufferB.GBuffer[key].label);
 
                 this.commonTransparentGBufferB.GBuffer[key].destroy();
             }
