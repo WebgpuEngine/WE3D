@@ -5,6 +5,7 @@
  * @requires 
  */
 
+import { V_weLinearFormat } from "../base/coreDefine";
 import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "./base";
 
 
@@ -21,6 +22,7 @@ export interface IV_GBuffer {
     backGroudColor: [number, number, number, number],
     depthClearValue: number,
     name?: string,
+    MSAA: boolean,
 }
 export class GBuffers {
     parent: any;
@@ -84,6 +86,7 @@ export class GBuffers {
      * @param input ：GBuffer的初始化参数
      */
     initGBuffer(id: string, input: IV_GBuffer) {
+        let MSAA = input.MSAA;
         if (this.GBuffer[id]) {
             console.warn("GBuffer id:" + id + " already exist");
             return;
@@ -101,51 +104,126 @@ export class GBuffers {
 
         let gbuffers: I_GBuffer = {};
         let name = input.name || id;
-        let unixTime=new Date().getTime();
+        let unixTime = new Date().getTime();
+        //gbuffers
+        {
+            for (let key in V_ForwardGBufferNames) {
+                let perOneBuffer = V_ForwardGBufferNames[key];
 
-        for (let key in V_ForwardGBufferNames) {
-            let perOneBuffer = V_ForwardGBufferNames[key];
-
-            let texture = device.createTexture({
-                label: name + " " + perOneBuffer.label+" "+unixTime,
-                size: [width, height],
-                format: perOneBuffer.format,
-                usage: perOneBuffer.usage,
-            });
-            if (key != "depth") {
-                if (key == "id") {
-                    colorAttachments.push({
-                        view: texture.createView(),
-                        loadOp: 'clear',
-                        storeOp: 'store',
-                    });
+                let texture = device.createTexture({
+                    label: name + " " + perOneBuffer.label + " " + unixTime,
+                    size: [width, height],
+                    format: perOneBuffer.format,
+                    usage: perOneBuffer.usage,
+                    sampleCount: MSAA ? 4 : 1,
+                });
+                if (key != "depth") {
+                    if (key == "id") {
+                        colorAttachments.push({
+                            view: texture.createView(),
+                            loadOp: 'clear',
+                            storeOp: 'store',
+                        });
+                    }
+                    else {
+                        colorAttachments.push({
+                            view: texture.createView(),
+                            clearValue: this.getBackgroudColor(premultipliedAlpha, backgroudColor),
+                            loadOp: 'clear',
+                            storeOp: 'store',
+                        });
+                    }
+                    colorAttachmentTargets.push({ format: perOneBuffer.format });
                 }
-                else {
-                    colorAttachments.push({
-                        view: texture.createView(),
-                        clearValue: this.getBackgroudColor(premultipliedAlpha, backgroudColor),
-                        loadOp: 'clear',
-                        storeOp: 'store',
-                    });
-                }
-                colorAttachmentTargets.push({ format: perOneBuffer.format });
+                gbuffers[key] = texture;
             }
-            gbuffers[key] = texture;
+
         }
-        const rpd: GPURenderPassDescriptor = {
-            colorAttachments: colorAttachments,
-            depthStencilAttachment: {
-                view: gbuffers["depth"].createView(),
-                depthClearValue: depthClearValue,
-                depthLoadOp: 'clear',// depthLoadOp: 'load',
-                depthStoreOp: 'store',
-            },
-        };
-        if (this.parent.scene.deferRender.enable === true && this.parent.scene.deferRender.deferRenderDepth === true) {
-            let deferRPD: GPURenderPassDescriptor = {
-                colorAttachments: [],
+        //finalRender
+        {
+            let toneMappingTexture: GPUTexture = device.createTexture({
+                size: [width, height],
+                format: V_weLinearFormat,
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+            });
+            let finalColor: GPUTexture;
+            let idTexture: GPUTexture = device.createTexture({
+                size: [width, height],
+                format: "r32uint",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+            });;
+            let rpdToneMapping: GPURenderPassDescriptor = {
+                colorAttachments: [
+                    {
+                        view: toneMappingTexture.createView(),
+                        // clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
+                        loadOp: 'load',
+                        storeOp: "store"
+                    }
+                ],
+            };
+            let resolveTargetOfMSAA: GPUTexture | undefined;
+            let rpdMSAA: GPURenderPassDescriptor | undefined;
+            if (MSAA) {
+                resolveTargetOfMSAA = device.createTexture({
+                    size: [width, height],
+                    format: V_weLinearFormat,
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                });
+                finalColor = device.createTexture({
+                    size: [width, height],
+                    format: V_weLinearFormat,
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                });
+                rpdMSAA = {
+                    colorAttachments: [
+                        {
+                            view: gbuffers[E_GBufferNames.color].createView(),
+                            resolveTarget: resolveTargetOfMSAA.createView(),
+                            clearValue: this.parent.scene.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
+                            loadOp: 'load',
+                            storeOp: "store"
+                        },
+                        {
+                            view: gbuffers[E_GBufferNames.id].createView(),
+                            resolveTarget: idTexture.createView(),
+                            loadOp: 'load',
+                            storeOp: "store"
+                        },
+                    ],
+                    // depthStencilAttachment: {
+                    //     view: this.scene.finalTarget.depth!.createView(),
+                    //     depthClearValue: this.scene.reversedZ.cleanValue,// 1.0,                
+                    //     depthLoadOp: 'clear',// depthLoadOp: 'load',
+                    //     depthStoreOp: 'store',
+                    // },
+                };
+            }
+            else {
+                idTexture = gbuffers[E_GBufferNames.id];
+                finalColor = gbuffers[E_GBufferNames.color];
+            }
+            let finalRender = {
+                finalLinearColor: finalColor,
+                id: idTexture,
+                toneMappingTexture: toneMappingTexture,
+                resolveTargetOfMSAA: MSAA ? resolveTargetOfMSAA : undefined,
+                rpdToneMapping: rpdToneMapping,
+                rpdMSAA: MSAA ? rpdMSAA : undefined,
+                toneMappingColorAttachmentTargets:
+                    [
+                        { format: V_ForwardGBufferNames[E_GBufferNames.color].format }
+                    ],
+                msaaColorAttachmentTargets:
+                    [
+                        { format: V_ForwardGBufferNames[E_GBufferNames.color].format },
+                        { format: V_ForwardGBufferNames[E_GBufferNames.id].format }
+                    ],
+            };
+            const rpd: GPURenderPassDescriptor = {
+                colorAttachments: colorAttachments,
                 depthStencilAttachment: {
-                    view: gbuffers["deferGBuffer"].createView(),
+                    view: gbuffers["depth"].createView(),
                     depthClearValue: depthClearValue,
                     depthLoadOp: 'clear',// depthLoadOp: 'load',
                     depthStoreOp: 'store',
@@ -157,35 +235,45 @@ export class GBuffers {
                     colorAttachmentTargets: colorAttachmentTargets,
                     GBuffer: gbuffers,
                 },
-                deferDepth: {
+                finalRender,
+            };
+        }
+        //defer 
+        {
+            if (this.parent.scene.deferRender.enable === true && this.parent.scene.deferRender.deferRenderDepth === true) {
+                let deferRPD: GPURenderPassDescriptor = {
+                    colorAttachments: [],
+                    depthStencilAttachment: {
+                        view: gbuffers["deferGBuffer"].createView(),
+                        depthClearValue: depthClearValue,
+                        depthLoadOp: 'clear',// depthLoadOp: 'load',
+                        depthStoreOp: 'store',
+                    },
+                };
+                this.GBuffer[id].deferDepth = {
                     RPD: deferRPD,
                     GBuffer: device.createTexture({
                         size: [width, height],
                         format: "depth32float",
                         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
                     })
-                },
-                // transparent: {
-                //     RPD: rpd,
-                //     colorAttachmentTargets: colorAttachmentTargets,
-                //     transparentGBuffer: gbuffers,
-                // },
-            };
-        }
-        else {
-            this.GBuffer[id] = {
-                forward: {
-                    RPD: rpd,
-                    colorAttachmentTargets: colorAttachmentTargets,
-                    GBuffer: gbuffers,
-                },
-            };
+                };
+            }
         }
     }
     removeGBuffer(id: string) {
         for (let key in this.GBuffer[id].forward.GBuffer) {
             this.GBuffer[id].forward.GBuffer[key].destroy();
         }
+        if (this.GBuffer[id].finalRender.id)
+            this.GBuffer[id].finalRender.id.destroy();
+        if (this.GBuffer[id].finalRender.finalLinearColor)
+            this.GBuffer[id].finalRender.finalLinearColor.destroy();
+        if (this.GBuffer[id].finalRender.toneMappingTexture)
+            this.GBuffer[id].finalRender.toneMappingTexture.destroy();
+        if (this.GBuffer[id].finalRender.resolveTargetOfMSAA)
+            this.GBuffer[id].finalRender.resolveTargetOfMSAA.destroy();
+
         delete this.GBuffer[id];
     }
     /**
@@ -257,7 +345,7 @@ export class GBuffers {
         let premultipliedAlpha = this.parent.defaultCamera.premultipliedAlpha;
         let backgroudColor = this.parent.defaultCamera.backGroundColor;
         // let depthClearValue = input.depthClearValue;
-         let unixTime=new Date().getTime();
+        let unixTime = new Date().getTime();
         if (width == 0 || height == 0) {
             console.error("透明GBuffer初始化失败，因为场景的大小为0");
             return;
@@ -271,7 +359,7 @@ export class GBuffers {
             for (let key in V_TransparentGBufferNames) {
                 let perOneBuffer = V_TransparentGBufferNames[key];
                 let texture = device.createTexture({
-                    label: "TT A GBuffer " + perOneBuffer.label +" "+unixTime,
+                    label: "TT A GBuffer " + perOneBuffer.label + " " + unixTime,
                     size: [width, height],
                     format: perOneBuffer.format,
                     usage: perOneBuffer.usage,
@@ -308,7 +396,7 @@ export class GBuffers {
             for (let key in V_TransparentGBufferNames) {
                 let perOneBuffer = V_TransparentGBufferNames[key];
                 let texture = device.createTexture({
-                    label: "TT B GBuffer " + perOneBuffer.label +" "+unixTime,
+                    label: "TT B GBuffer " + perOneBuffer.label + " " + unixTime,
                     size: [width, height],
                     format: perOneBuffer.format,
                     usage: perOneBuffer.usage,

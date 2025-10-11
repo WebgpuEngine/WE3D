@@ -23,7 +23,15 @@ export interface I_DynamicUniformOfDrawCommand {
      * 数据的buffer，通过arrayBuffer 写入GPUBuffer，其在DrawCommandGenerator.update()实现；
      */
     bindGroupLayout: GPUBindGroupLayout[],
+    /**
+     * 动态uniform，每帧都需要更新的uniform，例如：视频纹理的External模式，也可以扩展。
+     * 有system，从1开始，共3个
+     * 没有system，从0开始，共4个
+     */
     bindGroupsUniform: T_uniformGroup[],
+    /**
+     * bind group layout 索引，从几开始（有system，从1开始，没有system，从0开始）
+     */
     layoutNumber: number,
 }
 
@@ -308,7 +316,7 @@ export class DrawCommand {
         let uniformGroup = this.inputValues.dynamicUniform!.bindGroupsUniform;
         let bindGroupLayouts = values.dynamicUniform!.bindGroupLayout;
 
-        let layoutNumber = values.dynamicUniform!.layoutNumber;
+        let layoutNumber = values.dynamicUniform!.layoutNumber;//bind group layout 索引，从几开始（有system，从1开始，没有system，从0开始）
 
         // resources: ResourceManagerOfGPU;
         if (!uniformGroup) {

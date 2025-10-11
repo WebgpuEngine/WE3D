@@ -11,7 +11,7 @@ declare global {
     DC: any
   }
 }
-let input: IV_Scene = { canvas: "render" }
+let input: IV_Scene = { canvas: "render", reversedZ: false }
 let scene = new Scene(input);
 await scene._init();
 

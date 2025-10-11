@@ -1,9 +1,12 @@
 import { V_lightNumber, limitsOfWE, E_renderForDC, V_weLinearFormat, V_shadowMapSize } from "../base/coreDefine";
+import { copyTextureToTexture } from "../base/coreFunction";
 import { BaseCamera } from "../camera/baseCamera";
 import { CameraManager } from "../camera/cameraManager";
 import { I_bindGroupAndGroupLayout, T_uniformGroup } from "../command/base";
+import { DrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { CamreaControl } from "../control/cameracCntrol";
 import { EntityManager } from "../entity/entityManager";
+import { E_GBufferNames, V_ForwardGBufferNames } from "../gbuffers/base";
 import { AmbientLight } from "../light/ambientLight";
 import { LightsManager } from "../light/lightsManager";
 import { MaterialManager } from "../material/materialManager";
@@ -93,15 +96,31 @@ export class Scene {
     /**最后的各个功能输出的target texture 
      * color: 这里是最后输出到canvas的颜色纹理，绘制
      * depth: 配套finalTarget的深度纹理， 为了在DC中的RAW模式中可以使用深度而设置的
+     * id: 配套finalTarget的id纹理， pickup使用
+     * NDC: 是否为NDC模式。默认=false
       */
     finalTarget: {
+        /**
+         * 默认：false
+         * NDC，测试使用或Raw模式下需要使用
+         * 
+         */
+        NDC: boolean,
         color: GPUTexture | undefined,
+        /**
+         * NDC模式下有深度纹理
+         */
         depth: GPUTexture | undefined,
-        renderPassDescriptor: GPURenderPassDescriptor | undefined
+        /**
+         * NDC模式下不需要id纹理
+         * camera模式的最终输出，需要，pickup使用
+         */
+        id: GPUTexture | undefined,
     } = {
+            NDC: false,
             color: undefined,
             depth: undefined,
-            renderPassDescriptor: undefined
+            id: undefined
         }
     //////////////////////////////
     //临时配置,初期重构使用
@@ -111,9 +130,16 @@ export class Scene {
      * canvas颜色通道输出的纹理格式
      */
     colorFormatOfCanvas: GPUTextureFormat = V_weLinearFormat;
-
-
-
+    /**
+     * 颜色空间和线性空间的配置
+     */
+    colorSpaceAndLinearSpace: {
+        colorSpace: PredefinedColorSpace,//"srgb"|"display-p3",
+        linearSpace: GPUTextureFormat,
+    } = {
+            colorSpace: "display-p3",
+            linearSpace: V_weLinearFormat,
+        };
     /////////////////////////////////////
 
 
@@ -269,7 +295,7 @@ export class Scene {
             this.reversedZ = {
                 isReversedZ: value.reversedZ,
                 cleanValue: value.reversedZ ? this.depthMode.depthClearValueOfReveredZ : this.depthMode.depthClearValueOfZ,
-                depthCompare: value.reversedZ ? 'greater' : 'less',
+                depthCompare: value.reversedZ ? 'greater-equal' : 'less-equal',
             }
         }
         //深度模板的默认设置
@@ -350,6 +376,7 @@ export class Scene {
         this.reSize(this.canvas.clientWidth * devicePixelRatio, this.canvas.clientHeight * devicePixelRatio);
     }
 
+
     /**
      * 
      *format "rgba16float"|"rgba8unorm"|"bgra8unorm"
@@ -369,13 +396,16 @@ export class Scene {
                     usage
                 });
                 this.colorFormatOfCanvas = this._inputValue.surface.format;
+                this.colorSpaceAndLinearSpace.colorSpace = this._inputValue.surface.colorSpace;
             } catch (e) {
                 (this.context as GPUCanvasContext).configure({
                     device: this.device,
                     format: this.presentationFormat,
+                    colorSpace: "srgb",
                     alphaMode: this.premultipliedAlpha ? "premultiplied" : "opaque", //'premultiplied',//预乘透明度
                     usage
                 });
+                this.colorSpaceAndLinearSpace.colorSpace = "srgb";
                 this.colorFormatOfCanvas = this.presentationFormat;
             }
         }
@@ -390,6 +420,7 @@ export class Scene {
                     usage
                 });
                 this.colorFormatOfCanvas = V_weLinearFormat;//"rgba16float";
+                this.colorSpaceAndLinearSpace.colorSpace = "display-p3";
             } catch (e) {
                 (this.context as GPUCanvasContext).configure({
                     device: this.device,
@@ -398,9 +429,12 @@ export class Scene {
                     usage
                 });
                 this.colorFormatOfCanvas = this.presentationFormat;
+                this.colorSpaceAndLinearSpace.colorSpace = "srgb";
             }
         }
+        this.colorSpaceAndLinearSpace.linearSpace = this.colorFormatOfCanvas;
     }
+
     /**
      * 重新设置画布和渲染纹理大小
      * reszie canvas and texture
@@ -418,21 +452,24 @@ export class Scene {
             if (this.finalTarget.color) {
                 this.finalTarget.color.destroy();
             }
-            this.finalTarget.color = this.device.createTexture({
-                size: [width, height],
-                format: this.colorFormatOfCanvas,
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-                sampleCount: this.MSAA ? 4 : 1,
-            });
             if (this.finalTarget.depth) {
                 this.finalTarget.depth.destroy();
             }
-            this.finalTarget.depth = this.device.createTexture({
+            this.finalTarget.color = this.device.createTexture({
+                label: "finalTarget.color",
                 size: [width, height],
-                format: this.depthMode.depthDefaultFormat,
+                format: this.colorFormatOfCanvas,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-                sampleCount: this.MSAA ? 4 : 1,
+                // sampleCount: this.MSAA ? 4 : 1,
             });
+            if (this.finalTarget.NDC === true)
+                this.finalTarget.depth = this.device.createTexture({
+                    label: "finalTarget.depth",
+                    size: [width, height],
+                    format: this.depthMode.depthDefaultFormat,
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                    // sampleCount: this.MSAA ? 4 : 1,
+                });
         }
     }
     /**
@@ -565,19 +602,8 @@ export class Scene {
     async onBeforeRender() {
         this.updateUserDefineEvent(eventOfScene.onBeforeRender);
     }
-    /**每帧循环 onRender */
-    async onRender() {
-        this.updateUserDefineEvent(eventOfScene.onRender);
-    }
-    /**每帧循环 onAfterRender */
-    async onAfterRender() {
-        this.updateUserDefineEvent(eventOfScene.onAfterRender);
-    }
-    async render() {
-        this.onRender();
-        // this.lightManger.render()
-        await this.renderManager.render();        //包括不透明和透明，depth
-    }
+
+
     async updateBVH() {
         this.generateBundleOfCameraAndBVH();
     }
@@ -600,6 +626,7 @@ export class Scene {
                 await scope.onBeforeRender();
                 await scope.render();
                 await scope.onAfterRender();
+                await scope.renderToneMapping();
                 await scope.pickup();
                 await scope.postProcess();
                 await scope.showGBuffersVisualize();
@@ -609,94 +636,52 @@ export class Scene {
         }
         requestAnimationFrame(perFrameRun)
     }
-    pickup() { }
-    postProcess() { }
-    showGBuffersVisualize() { }
-    // finalCommand:commmandType[]=[];
-    renderToSurface() {
+    /**每帧循环 onRender */
+    async onRender() {
+        this.updateUserDefineEvent(eventOfScene.onRender);
+    }
+    async render() {
+        this.onRender();
+        // this.lightManger.render()
+        await this.renderManager.render();        //包括不透明和透明，depth
+    }
+    /**每帧循环 onAfterRender 
+     * 1、用户自定义事件
+    */
+    async onAfterRender() {
+        this.updateUserDefineEvent(eventOfScene.onAfterRender);
+    }
+    /**
+     * 1、for 每个相机渲染GBuffer到最终目标
+     * 2、渲染色调映射
+     */
+    async renderToneMapping() {
+        this.cameraManager.renderCameraGBufferToFinalTexture();
+        this.cameraManager.renderToneMapping();
+    }
+
+    async pickup() { }
+    async postProcess() { }
+    async showGBuffersVisualize() { }
+
+    async renderToSurface() {
         let defaultCamera = this.cameraManager.defaultCamera;
         if (defaultCamera) {
-            let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].forward.GBuffer["color"];
-            this.copyTextureToTexture(finalColorOfGBuffer, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
+            //直接copy GBuffer的color到canvas
+            // let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].forward.GBuffer["color"];
+            let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].finalRender.toneMappingTexture;
+            copyTextureToTexture(this.device, finalColorOfGBuffer, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
+
+
+            //copy finalTarget.color to canvas
+            // copyTextureToTexture(this.device, this.finalTarget.color!, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
         }
         else {
             // console.error("没有默认相机");
         }
     }
-    /**
-     * GPUTexture 之间的copy
-     * 
-     * A、B这个两个GPUTexture在一个frame ，不能同时是GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC，否则会产生同步错误
-     * 
-     * @param A :GPUTexture
-     * @param B :GPUTexture
-     * @param size :{ width: number, height: number }
-     */
-    copyTextureToTexture(A: GPUTexture, B: GPUTexture, size: { width: number, height: number }) {
-        const commandEncoder = this.device.createCommandEncoder();
 
-        commandEncoder.copyTextureToTexture(
 
-            {
-                texture: A
-            },
-            {
-                texture: B,
-            },
-            [size.width, size.height]
-        );
-        const commandBuffer = commandEncoder.finish();
-        this.device.queue.submit([commandBuffer]);
-    }
-    /**
-     * rpd for NDC
-     * @returns 
-     */
-    getRenderPassDescriptorForNDC(): GPURenderPassDescriptor {
-        if (this.MSAA) {
-            const renderPassDescriptor: GPURenderPassDescriptor = {
-                colorAttachments: [
-                    {
-                        view: this.finalTarget.color!.createView(),
-                        resolveTarget: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
-                        clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
-                        loadOp: 'clear',
-                        storeOp: "store"
-                    }
-                ],
-                depthStencilAttachment: {
-                    view: this.finalTarget.depth!.createView(),
-                    depthClearValue: this.reversedZ.cleanValue,// 1.0,                
-                    depthLoadOp: 'clear',// depthLoadOp: 'load',
-                    depthStoreOp: 'store',
-
-                },
-            };
-            return renderPassDescriptor;
-        }
-        else {
-            // let colorAttachments: GPURenderPassColorAttachment[] = [];
-            const renderPassDescriptor: GPURenderPassDescriptor = {
-                colorAttachments: [
-                    {
-                        // view: this.finalTarget.createView(),
-                        view: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
-                        // clearValue: this.backgroudColor,//未预乘alpha
-                        clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
-                        loadOp: 'clear',
-                        storeOp: "store"
-                    }
-                ],
-                depthStencilAttachment: {
-                    view: this.finalTarget.depth!.createView(),
-                    depthClearValue: this.reversedZ.cleanValue,
-                    depthLoadOp: 'clear',// depthLoadOp: 'load',
-                    depthStoreOp: 'store',
-                },
-            };
-            return renderPassDescriptor;
-        }
-    }
     /**
      * 
      * @returns 
@@ -747,7 +732,7 @@ export class Scene {
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //uniform 部分
+    //uniform , RPD,CATs 部分
 
 
     /**
@@ -1040,4 +1025,63 @@ export class Scene {
         }
         return outputFormat;
     }
+    /**
+     * rpd for NDC
+     * @returns 
+     */
+    getRenderPassDescriptorForNDC(): GPURenderPassDescriptor {
+        if (this.MSAA) {
+            const renderPassDescriptor: GPURenderPassDescriptor = {
+                colorAttachments: [
+                    {
+                        view: this.finalTarget.color!.createView(),
+                        resolveTarget: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
+                        clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
+                        loadOp: 'clear',
+                        storeOp: "store"
+                    }
+                ],
+                depthStencilAttachment: {
+                    view: this.finalTarget.depth!.createView(),
+
+                    depthClearValue: this.reversedZ.cleanValue,// 1.0,                
+                    depthLoadOp: 'clear',// depthLoadOp: 'load',
+                    depthStoreOp: 'store',
+
+                },
+            };
+            return renderPassDescriptor;
+        }
+        else {
+            // let colorAttachments: GPURenderPassColorAttachment[] = [];
+            const renderPassDescriptor: GPURenderPassDescriptor = {
+                colorAttachments: [
+                    {
+                        // view: this.finalTarget.createView(),
+                        view: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
+                        // clearValue: this.backgroudColor,//未预乘alpha
+                        clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
+                        // clearValue: [1,1,1,1],
+                        loadOp: 'clear',
+                        storeOp: "store"
+                    }
+                ],
+                depthStencilAttachment: {
+                    view: this.finalTarget.depth!.createView(),
+                    depthClearValue: this.reversedZ.cleanValue,
+                    depthLoadOp: 'clear',// depthLoadOp: 'load',
+                    depthStoreOp: 'store',
+                },
+            };
+            return renderPassDescriptor;
+        }
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // render GBuffer to FinalTexture
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 }

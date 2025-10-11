@@ -8,7 +8,10 @@ declare global {
     DC: any
   }
 }
-let input: IV_Scene = { canvas: "render" }
+let input: IV_Scene = {
+  canvas: "render",
+  reversedZ: false
+}
 let scene = new Scene(input);
 await scene._init();
 
@@ -68,9 +71,9 @@ const oneTriangleVertexArray = [
   0.5, -0.5, 0,
 ];
 const oneTriangleColorArray = [
-  1, 0, 0, 
-  1, 1, 1, 
-  1, 1, 1, ];
+  1, 0, 0,
+  1, 1, 1,
+  1, 1, 1,];
 const oneTriangleIndexArray = [
   0, 1, 2,
 ];
@@ -80,13 +83,13 @@ const oneTriangleVertexArray_1 = [
   0.5, -0.5, 0.9,
 ];
 const oneTriangleColorArray_1 = [
-  0, 1, 0, 
-  0, 1, 0, 
-  0, 1, 0, 
+  0, 1, 0,
+  0, 1, 0,
+  0, 1, 0,
 ];
 
 let rpd = scene.getRenderPassDescriptorForNDC();
-let depthStencil = scene.depthStencil;
+let depthStencil = scene.depthMode.depthStencil;
 
 let valueDC: V_DC = {
   label: "dc0",
@@ -118,6 +121,7 @@ let valueDC: V_DC = {
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene
 }
+
 let DCManager = new DrawCommandGenerator(inputDC);
 let dc0 = DCManager.generateDrawCommand(valueDC);
 dc0.submit()

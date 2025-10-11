@@ -1,14 +1,7 @@
 // Note: The code in this file does not use the 'dst' output parameter of functions in the
 // 'wgpu-matrix' library, so produces many temporary vectors and matrices.
 // This is intentional, as this sample prefers readability over performance.
-import {
-  Mat4,
-  Vec3,
-  Vec4,
-  mat4,
-  vec3,
-  vec4
-} from 'wgpu-matrix';
+import { Mat4, Vec3, Vec4, mat4, vec3, vec4 } from 'wgpu-matrix';
 import { RootOfGPU, } from '../organization/root';
 import { CamreaControl, optionCamreaControl } from '../control/cameracCntrol';
 import { I_Update } from '../base/coreDefine';
@@ -43,12 +36,21 @@ export interface projectionOptions extends I_Update {
   position: [number, number, number],
   lookAt?: [number, number, number],
   viewport?: I_viewport;
-  backGroundColor?: [number, number, number, number];
-  premultipliedAlpha?: boolean;
+  backGroundColor?: [number, number, number, number],
+  premultipliedAlpha?: boolean,
   /**附加的控制器，与contrlType互斥 */
-  control?: CamreaControl;
+  control?: CamreaControl,
   /**附加的控制器类型，自动创建，与contrl互斥 */
-  controlType?: cameracCntrolType;
+  controlType?: cameracCntrolType,
+  /**
+   * 相机尺寸的大小，若有多个viewport，可以优化性能
+   * 1、默认与场景大小相同
+   * 2、可以手动设置大小
+   */
+  size?: {
+    width: number,
+    height: number,
+  }
 }
 // //todo
 // export interface cameraRayValues {
@@ -68,6 +70,17 @@ export abstract class BaseCamera extends RootOfGPU {
   manager!: CameraManager;
   ///////////////////////////////////////////////////////////////////
   //空间属性
+  /**
+   * todo:20251011，需要一系列验证;另外，最终输出的时候也需要考虑尺寸，尤其是copy的情况
+   * 
+   * 相机管理器的大小
+   * 1、默认与场景大小相同
+   * 2、可以手动设置大小
+   */
+  size: {
+    width: number,
+    height: number,
+  }|undefined;
   boundingBox!: boundingBox;//initDCC中赋值
   boundingSphere!: boundingSphere;
   aspect!: number;
@@ -169,6 +182,13 @@ export abstract class BaseCamera extends RootOfGPU {
   constructor(option: projectionOptions) {
     super(option);
     this.type = 'Camera';
+    ///////////////////////////////////////////////////////////////////
+    //空间属性
+    if (option.size) {
+      this.size = option.size;
+    }
+
+
 
 
     if (option.viewport) {

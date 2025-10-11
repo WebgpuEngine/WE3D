@@ -12,7 +12,8 @@ let input: IV_Scene = {
   canvas: "render",
   AA: {
     type: "MSAA"
-  }
+  },
+  reversedZ:false,
 
 }
 let scene = new Scene(input);

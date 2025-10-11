@@ -1,4 +1,4 @@
-//1. ACES 色调映射（线性 HDR → 线性 LDR）
+//ACES 色调映射（线性 HDR → 线性 LDR）
 fn acesToneMap(linearHDR : vec3 < f32>) -> vec3 < f32> {
   let a = 2.51;
   let b = 0.03;
@@ -8,6 +8,7 @@ fn acesToneMap(linearHDR : vec3 < f32>) -> vec3 < f32> {
   return clamp((linearHDR * (a * linearHDR + b)) / (linearHDR * (c * linearHDR + d) + e), 0.0, 1.0);
 }
 
+//reinhard色调映射
 fn reinhardToneMap(hdrColor : vec3 < f32>, gamma : f32) -> vec3 < f32> {
   //const gamma = 2.2;
   //Reinhard色调映射
@@ -16,7 +17,7 @@ fn reinhardToneMap(hdrColor : vec3 < f32>, gamma : f32) -> vec3 < f32> {
   //mapped = pow(mapped, vec3(1.0 / gamma));
   return mapped;
 }
-
+//exposure曝光色调映射
 fn exposureToneMap(hdrColor : vec3 < f32>, exposure : f32) -> vec3 < f32> {
   //const gamma = 2.2;
   //曝光色调映射

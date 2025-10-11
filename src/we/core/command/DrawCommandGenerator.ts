@@ -101,7 +101,7 @@ export interface V_DC {
     /**
      * ID组,TT使用，用于获取entity的Blend参数
      */
-    IDS: I_DrawCommandIDs,
+    IDS?: I_DrawCommandIDs,
     data: {
         vertices?: Map<string, T_vsAttribute>,
         vertexStepMode?: GPUVertexStepMode,
@@ -776,10 +776,12 @@ export class DrawCommandGenerator {
             label: values.label,
             uniform: DC_bindGroups,
             renderPassDescriptor,
-            IDS: values.IDS,
             // dynamic: values.dynamic || false,
         }
-
+        
+        if (values.IDS) {
+            commandOption.IDS = values.IDS;
+        }
         if (values.transparent) {
             if (values.transparent.type) {
                 commandOption.transparentType = values.transparent.type;

@@ -87,7 +87,8 @@ let onelight = new SpotLight({
   isLookAt: true,
   position: [0, 0, 0],
   // position: [3, 3, 3],
-  intensity: 55.0,
+  intensity: 15.0,
+  // intensity: 55.0,//没有进行tone mapping 之前
   // angle: 25 / 180 * Math.PI,
   // angleOut: 30 / 180 * Math.PI,
   angle: 20 * (Math.PI) / 180,
@@ -101,7 +102,8 @@ await light1Entity1.addChild(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.01
+       intensity: 0.00001
+
   }
 )
 await scene.add(ambientLight);

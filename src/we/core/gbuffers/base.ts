@@ -69,11 +69,11 @@ export var V_ForwardGBufferNames: I_GBufferName = {
         "label": "GBuffer worldPosition :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    // [E_GBufferNames.ru_ma_AO]: {
-    //     "format": "rgba8unorm",
-    //     "label": "GBuffer ru_ma_AO :",
-    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    // },
+    [E_GBufferNames.ru_ma_AO]: {
+        "format": V_weLinearFormat,
+        "label": "GBuffer ru_ma_AO :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
     // [E_GBufferNames.X]: {
     //     "format": "r32float",
     //     "label": "GBuffer X :",
@@ -157,9 +157,7 @@ export interface I_GBufferGroup {
         forward: {
             /** 每个camera最终的GBuffer的渲染描述 */
             RPD: GPURenderPassDescriptor,
-            /**
-             * TTPF 使用
-             */
+            /**entity  创建TTPF DC时私用 */
             RPD_TTPF?: GPURenderPassDescriptor,
             /**
             * 每个camera最终的GBuffer的颜色附件描述
@@ -174,6 +172,46 @@ export interface I_GBufferGroup {
             /** 每个camera的延迟渲染的buffer ：1个*/
             GBuffer: GPUTexture,
         },
+        finalRender: {
+            /**
+             * 最终的颜色纹理,必须
+             * MSAA时，新建
+             * 非MSAA时，使用forward的GBuffer的color
+             */
+            finalLinearColor: GPUTexture,
+            /**
+             * 最终的id纹理,必须
+             * MSAA时，新建
+             * 非MSAA时，使用forward的GBuffer的color
+             */
+            id: GPUTexture,
+            /**
+             * ToneMapping的输出纹理,必须
+             */
+            toneMappingTexture: GPUTexture,
+            /**
+             * ToneMapping的颜色附件描述,必须
+             */
+            toneMappingColorAttachmentTargets: GPUColorTargetState[],
+            /**
+             * ToneMapping的渲染描述,必须
+             */
+            rpdToneMapping: GPURenderPassDescriptor,
+
+            /**
+             * MSAA的resolve目标纹理,可选（MSAA开启时，需要）
+             */
+            resolveTargetOfMSAA?: GPUTexture,
+            /**
+             * MSAA的渲染描述,可选（MSAA开启时，需要）
+             */
+            rpdMSAA?: GPURenderPassDescriptor,
+            /**
+             * MSAA的颜色附件描述,可选（MSAA开启时，需要）
+             */
+            msaaColorAttachmentTargets: GPUColorTargetState[],
+
+        }
         // transparent?: {
         //     RPD: GPURenderPassDescriptor,
         //     colorAttachmentTargets: GPUColorTargetState[],

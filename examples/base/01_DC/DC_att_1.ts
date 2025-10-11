@@ -8,7 +8,7 @@ declare global {
     DC: any
   }
 }
-let input: IV_Scene = { canvas: "render" }
+let input: IV_Scene = { canvas: "render", reversedZ: false }
 let scene = new Scene(input);
 await scene._init();
 
@@ -71,9 +71,10 @@ let valueDC: V_DC = {
     drawMode: {
       vertexCount: 3
     },
+    // depthStencil: false,
+
     // primitive: undefined,
     // multisample: undefined,
-    layout: "auto",
     // depthStencil: undefined
   },
   // system: {

@@ -12,7 +12,8 @@ let input: IV_Scene = {
   canvas: "render",
   AA: {
     type: "MSAA"
-  }
+  },
+  reversedZ:false,
 
 }
 let scene = new Scene(input);
@@ -138,7 +139,7 @@ const observer = new ResizeObserver(entries => {
           format: scene.depthMode.depthDefaultFormat,
           sampleCount: 4,
           usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-          sampleCount: scene.MSAA ? 4 : 1,
+          // sampleCount: scene.MSAA ? 4 : 1,
 
         });
     }

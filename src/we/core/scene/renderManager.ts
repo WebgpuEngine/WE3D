@@ -619,6 +619,14 @@ export class RenderManager {
             this.device.queue.submit(submitCommand);
     }
 
+    /**
+     * TTPF 适配RPD的loadOp
+     * 1、在TTPF渲染之前有forward渲染，此时有GBuffer的内容，且loadOp已经=load
+     * 2、纯透明entity，或测试透明的示例，可能没有过渲染，且GBuffer没有被clear过，是上一帧内容。这时就需要将loadOp更改为：clear
+     * @param UUID string 
+     * @param countOfUUID number 
+     * @returns number
+     */
     autoChangeTTPF_RPD_loadOP(UUID: string, countOfUUID: number): number {
         let kind: E_renderForDC = E_renderForDC.camera;
         if (UUID.indexOf("__") != -1) {

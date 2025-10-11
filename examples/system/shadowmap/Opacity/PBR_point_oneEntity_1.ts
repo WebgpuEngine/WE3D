@@ -76,7 +76,8 @@ let onelight = new PointLight(
   {
     position: [0, 0, 0],
     // position: [1, 1, 1],
-    intensity: 20,
+    intensity: 15,
+    // intensity: 20,//没有进行tone mapping 之前
     shadow: true,
 
   }
@@ -86,7 +87,7 @@ await light1Entity1.addChild(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.01
+    intensity: 0.0000001
   }
 )
 await scene.add(ambientLight);
