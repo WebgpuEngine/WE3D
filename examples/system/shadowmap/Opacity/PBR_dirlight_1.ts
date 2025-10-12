@@ -71,7 +71,7 @@ let ambientLight = new AmbientLight(
     intensity: 0.1
   }
 )
-await scene.add(ambientLight);
+// await scene.add(ambientLight);
 
 
 //实体球

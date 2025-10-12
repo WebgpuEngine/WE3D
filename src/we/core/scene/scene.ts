@@ -191,11 +191,17 @@ export class Scene {
         isReversedZ: boolean,
         cleanValue: number,
         depthCompare: GPUCompareFunction,
-    } = {
-            isReversedZ: true,
-            cleanValue: 0,
-            depthCompare: 'greater',
-        }
+    } =
+         {
+                isReversedZ: true,
+                cleanValue: 0,
+                depthCompare: 'greater',
+            }
+        // {
+        //     isReversedZ: false,
+        //     cleanValue: 1,
+        //     depthCompare: 'less',
+        // }
 
 
     //////////////////////////////////////////////////////////
@@ -880,9 +886,16 @@ export class Scene {
                             samplerLayout = this.resourcesGPU.samplerToBindGroupLayoutEntry.get(sampler)!;
                         }
                         else {
-                            sampler = this.device.createSampler({
-                                compare: 'less',
-                            });
+                            if (this.reversedZ.isReversedZ === true) {
+                                sampler = this.device.createSampler({
+                                    compare: "greater-equal",
+                                });
+                            }
+                            else {
+                                sampler = this.device.createSampler({
+                                    compare: 'less',
+                                });
+                            }
                             this.resourcesGPU.samplerOfString.set(samplerName, sampler);
                             samplerLayout = {
                                 type: "comparison"

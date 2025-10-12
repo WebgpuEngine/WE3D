@@ -52,7 +52,7 @@ let ambientLight = new AmbientLight(
     // intensity: 0.1  //没有进行tone mapping 之前
   }
 )
-await scene.add(ambientLight);
+// await scene.add(ambientLight);
 // //方向光1
 // let onelightdir = new DirectionalLight({
 //   color: [1, 1, 1],

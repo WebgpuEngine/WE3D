@@ -22,7 +22,7 @@ fn fs(fsInput: VertexShaderOutput) -> ST_TransParentGBuffer {
         var idRender: vec4u = vec4u(0,0,0,0);
 
         //2、像素比较逻辑
-         depthRender = textureLoad(u_depth, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);   
+         depthRender = textureLoad(u_depth, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0   );   
          idRender = textureLoad(u_id, vec2i(i32(fsInput.position.x), i32(fsInput.position.y)), 0);
 
          let depth1 = depthRender.r;  //r 距离camera far

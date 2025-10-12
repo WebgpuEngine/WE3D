@@ -21,7 +21,7 @@ declare global {
 let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.],
-  // reversedZ:true,
+  reversedZ:true,
 };
 let scene = await initScene({
   initConfig: input,
@@ -62,7 +62,7 @@ await scene.add(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.1
+    intensity: 0.001
   }
 )
 await scene.add(ambientLight);

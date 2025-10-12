@@ -47,7 +47,7 @@ await scene.add(camera);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.1
+    intensity: 0.0071
   }
 )
 await scene.add(ambientLight);
@@ -83,7 +83,7 @@ let onelight = new PointLight(
   {
     position: [0, 0, 0],
     // position: [1, 1, 1],
-    intensity: 1.0,
+    intensity: .750,
     shadow: true,
     // update(scope) {
     //   const now = Date.now() / 1000;

@@ -175,8 +175,11 @@ export class LightsManager extends ECSManager<BaseLight> {
     *          B、如果光源不产生阴影，就无所谓数量了
    */
     _maxlightNumber: number;
-    /**     环境光     */
-    ambientLight: AmbientLight = new AmbientLight({ color: [1, 1, 1], intensity: 0.21 });
+    /**     环境光     
+     * 1、在PBR中，尽可能小
+     * 2、在非PBR，设置在0.01比较合适。原有设定为0.21
+    */
+    ambientLight: AmbientLight = new AmbientLight({ color: [1, 1, 1], intensity: 0.000021 });
 
     //20250918 ,取消，使用renderManger的 renderShadowMapOpacityCommand
     // /**

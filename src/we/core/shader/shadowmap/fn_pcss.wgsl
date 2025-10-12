@@ -47,9 +47,17 @@ fn findBlocker(uv: vec2f, zReceiver: f32, depth_texture: texture_depth_2d_array,
     for (var i = 0 ; i <= NUM_SAMPLES; i++) {
         let offset = disk[i] * searchRadius;
         let depth = textureLoad(depth_texture, vec2i(floor((uv + offset) * shadowDepthTextureSize)), array_index, 0);//uv转成vec2i,因为使用textureLoad，uv必须是vec2i
-        if zReceiver > depth+0.001  {
-            blockerNum += 1;
-            blockDepth += depth;
+        if(U_MVP.reversedZ == 1){
+            if zReceiver < depth+0.001  {
+                blockerNum += 1;
+                blockDepth += depth;
+            }
+        }
+        else{
+            if zReceiver > depth+0.001  {
+                blockerNum += 1;
+                blockDepth += depth;
+            }
         }
     }
     if blockerNum == 0 {
@@ -74,13 +82,13 @@ fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: ve
     let shadowPos = vec3(posFromLight.xy * vec2(0.5, -0.5) + vec2(0.5), posFromLight.z);  //这里的z是深度数据,xy是UV在光源depth texture中的位置
     let zReceiver = posFromLight.z;
     let avgBlockerDepth = findBlocker(vec2f(shadowPos.x, shadowPos.y), zReceiver, U_shadowMap_depth_texture, shadow_map_index);
-    let EPS = 1e-3;    
+    let EPS = 1e-6;    
     //半影
-    let  LIGHT_SIZE_UV = 5. / 400.;
+    let  LIGHT_SIZE_UV = 05. / 400.;
     var  penumbra: f32;//= (zReceiver - avgBlockerDepth) * LIGHT_SIZE_UV / avgBlockerDepth;
     let  pcfBiasC = .08;    // 有PCF时的Shadow Bias
     let oneOverShadowDepthTextureSize = FILTER_RADIUS / shadowDepthTextureSize;
-    let bias = getShadowBias(biasC, oneOverShadowDepthTextureSize, normal, onelight.direction);
+    var bias = getShadowBias(biasC, oneOverShadowDepthTextureSize, normal, onelight.direction);
     // let disk = uniformDiskSamples(vec2f(shadowPos.x, shadowPos.y));//todo，改成从findBlocker中获取的结构体
     let disk = poissonDiskSamples(vec2f(shadowPos.x, shadowPos.y));//todo，改成从findBlocker中获取的结构体
     var visibility = 0.0;
@@ -88,6 +96,9 @@ fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: ve
         penumbra = oneOverShadowDepthTextureSize;
     } else {
         penumbra = (zReceiver - avgBlockerDepth) * LIGHT_SIZE_UV / avgBlockerDepth;
+    }
+    if(U_MVP.reversedZ == 1){
+        bias = -bias;
     }
     for (var i = 0 ; i <= NUM_SAMPLES; i++) {
          var offset = disk[i] * oneOverShadowDepthTextureSize;
@@ -107,13 +118,18 @@ fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: ve
     visibility /= f32(NUM_SAMPLES);
     //无遮挡物
     if avgBlockerDepth < -EPS {
-        return 1.0;
+        if(U_MVP.reversedZ == 1){
+            return 1.0;
+        }
+        else {
+            return 1.0;
+        }
     } else {
         return visibility;
     }
 }
 fn shadowMapVisibilityPCF(onelight: ST_Light,shadow_map_index:i32, position: vec3f, normal: vec3f, biasC: f32) -> f32 {
-    let bias = max(0.005 * (1.0 - dot(normal, onelight.direction)), 0.005);
+    var bias = max(0.005 * (1.0 - dot(normal, onelight.direction)), 0.005);
     var posFromLight =matrix_z* U_shadowMapMatrix[shadow_map_index].MVP * vec4(position, 1.0);    //光源视界的位置
     if(posFromLight.w < 0.000001   && posFromLight.w > -0.000001){       //posFromLight =posFromLight/posFromLight.w;
     }
@@ -125,6 +141,9 @@ fn shadowMapVisibilityPCF(onelight: ST_Light,shadow_map_index:i32, position: vec
     let oneOverShadowDepthTextureSize = FILTER_RADIUS / shadowDepthTextureSize;
     let disk = poissonDiskSamples(vec2f(shadowPos.x, shadowPos.y));
     var visibility = 0.0;
+    if(U_MVP.reversedZ == 1){
+        bias = -bias;
+    }
     for (var i = 0 ; i <= NUM_SAMPLES; i++) {
         var offset = disk[i] * oneOverShadowDepthTextureSize;
         visibility += textureSampleCompare(
@@ -140,7 +159,7 @@ fn shadowMapVisibilityPCF(onelight: ST_Light,shadow_map_index:i32, position: vec
     return visibility;
 }
 fn shadowMapVisibilityPCF_3x3(onelight: ST_Light,shadow_map_index:i32, position: vec3f, normal: vec3f) -> f32 {
-    let bias =0.007;// max(0.05 * (1.0 - dot(normal, onelight.direction)), 0.005);
+    var bias =0.007;// max(0.05 * (1.0 - dot(normal, onelight.direction)), 0.005);
     var posFromLight =matrix_z* U_shadowMapMatrix[shadow_map_index].MVP * vec4(position, 1.0);    //光源视界的位置
      if(posFromLight.w < 0.000001   && posFromLight.w > -0.000001){
        //posFromLight =posFromLight/posFromLight.w;
@@ -152,6 +171,9 @@ fn shadowMapVisibilityPCF_3x3(onelight: ST_Light,shadow_map_index:i32, position:
     let shadowPos = vec3(posFromLight.xy * vec2(0.5, -0.5) + vec2(0.5), posFromLight.z);  //这里的z是深度数据,xy是UV在光源depth texture中的位置
     let oneOverShadowDepthTextureSize = 1.0 / shadowDepthTextureSize;
     var visibility = 0.0;
+    if(U_MVP.reversedZ == 1){
+        bias = -bias;
+    }
     for (var y = -1; y <= 1; y++) {
         for (var x = -1; x <= 1; x++) {
             let offset = vec2f(vec2(x, y)) * oneOverShadowDepthTextureSize;
@@ -181,12 +203,16 @@ fn shadowMapVisibilityHard(onelight: ST_Light,shadow_map_index:i32, position: ve
         posFromLight.z
     );
     var visibility = 0.0;
+    var bias = 0.007;
+    if(U_MVP.reversedZ == 1){
+        bias = -bias;
+    }
     visibility += textureSampleCompare(
         U_shadowMap_depth_texture,                  //t: texture_depth_2d_array
         shadowSampler,                              //s: sampler_comparison,
         shadowPos.xy,                      //coords: vec2<f32>,
         shadow_map_index,// onelight.shadow_map_array_index,            //array_index: A,
-        shadowPos.z - 0.007                         //depth_ref: f32,
+        shadowPos.z - bias                         //depth_ref: f32,
     );
     return visibility;
 }
