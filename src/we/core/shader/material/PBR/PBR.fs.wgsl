@@ -28,7 +28,6 @@ fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
         for (var i : u32 = 0; i < U_lights.lightNumber; i = i + 1)
         {
             let onelight = U_lights.lights[i ];  
-            var visibility = getVisibilityOflight(onelight,fsInput.worldPosition,normal); 
 
             let lightColor = U_lights.lights[i].color;
             let lightPosition = U_lights.lights[i].position;
@@ -64,15 +63,17 @@ fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
             //add to outgoing radiance Lo
             let diffuse = (kD * albedo / PI) * radiance * NdotL;//only diffuse light is currently implemented
             //let ambient = getAmbientColor(albedo, ao);
-            Lo += (diffuse + specular) * radiance * visibility;
+            var visibility = getVisibilityOflight(onelight,fsInput.worldPosition,normal); 
+            Lo += (diffuse + specular) * radiance* visibility;
+            // Lo += (diffuse + specular) * radiance;
             //Lo=vec3f(metallic);          
         }
     }
     let ambient = getAmbientColor(albedo, ao);
     var colorOfPBR = (ambient + Lo);
         //HDR tonemapping,取消单个的，最后集中进行
-    colorOfPBR = colorOfPBR / (colorOfPBR + vec3f(1.0));
-    colorOfPBR = pow(colorOfPBR, vec3f(1.0 / 2.2)) * materialColor.rgb;
+    // colorOfPBR = colorOfPBR / (colorOfPBR + vec3f(1.0));
+    // colorOfPBR = pow(colorOfPBR, vec3f(1.0 / 2.2)) * materialColor.rgb;
     //  colorOfPBR = colorOfPBR * materialColor.rgb;
     var output : ST_GBuffer;
     $fsOutput                         //占位符

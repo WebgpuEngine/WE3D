@@ -52,7 +52,7 @@ let ballGeometry = new SphereGeometry({
 });
 let lightMaterial = new ColorMaterial({ color: [1, 1, 1, 1] });
 let lightRadius = 3.1;
-let lightZ = 2;
+let lightY = 2;
 let light1Entity1 = new Mesh(
   {
     attributes: {
@@ -66,7 +66,7 @@ let light1Entity1 = new Mesh(
     },
     update: (scope: any) => {
       const now = Date.now() / 1000;
-      let pos = [Math.sin(now) * lightRadius, lightZ, Math.cos(now) * lightRadius];
+      let pos = [Math.sin(now) * lightRadius, lightY, Math.cos(now) * lightRadius];
       scope.Position = pos;
     }
   });

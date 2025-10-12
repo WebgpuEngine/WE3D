@@ -58,7 +58,7 @@ let ballGeometry = new SphereGeometry({
 });
 let lightMaterial = new ColorMaterial({ color: [1, 1, 1, 1] });
 let lightRadius = 4.5;
-let lightZ = 3.5;
+let lightY = 3;
 let light1Entity1 = new Mesh(
   {
     name:"ballLightMesh",
@@ -73,7 +73,7 @@ let light1Entity1 = new Mesh(
     },
     update: (scope: any) => {
       const now = Date.now() / 1000;
-      let pos = [Math.sin(now) * lightRadius, lightZ, Math.cos(now) * lightRadius];
+      let pos = [Math.sin(now) * lightRadius, lightY, Math.cos(now) * lightRadius];
       scope.Position = pos;
     }
   });
@@ -87,7 +87,7 @@ let onelight = new SpotLight({
   isLookAt: true,
   position: [0, 0, 0],
   // position: [3, 3, 3],
-  intensity: 15.0,
+  intensity: 35.0,
   // intensity: 55.0,//没有进行tone mapping 之前
   // angle: 25 / 180 * Math.PI,
   // angleOut: 30 / 180 * Math.PI,
@@ -102,11 +102,11 @@ await light1Entity1.addChild(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-       intensity: 0.00001
+       intensity: 0.0021
 
   }
 )
-// await scene.add(ambientLight);
+await scene.add(ambientLight);
 
 ///////////////////////////////////////////////////////////////////////
 let sphere = new SphereGeometry({
