@@ -150,7 +150,7 @@ export abstract class BaseEntity extends RootOfGPU {
                 this._shadow.generate = false;
             }
         }
-        console.log(this.ID);
+        // console.log(this.ID);
     }
     /**
      * 检查instance是否合法

@@ -47,7 +47,7 @@ await scene.add(camera);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.3
+    intensity: 0.13
   }
 )
 await scene.add(ambientLight);
@@ -92,7 +92,7 @@ let onelight = new PointLight(
   {
     position: [0,0,0],
     // position: [1, 1, 1],
-    intensity: 2.0,
+    intensity: 1.0,
   }
 );
 await light1Entity1.addChild(onelight);

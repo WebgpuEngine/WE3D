@@ -38,8 +38,23 @@ export enum renderPassName {
     // spriteTop = "spriteTop",
     spriteTransparent = "spriteTransparent",
     // spriteTransparentTop = "spriteTransparentTop",
+    MSAA = "MSAA",
+    toneMapping = "toneMapping",
     postprocess = "postprocess",
+    /**
+     * UI通道
+     * 1、这个可以预留的2bit的stage（ID：0-3），用于UI的绘制。stage=0，是world；stage=1，给UI；stage=2，待定
+     * 2、UI的通道与其他工作一样
+     * 3、合并UI与world，采用render模式；UI在前，world在后；UI覆盖world，透明的进行Blend
+     */
     ui = "ui",
+    /**
+     * output通道，
+     * 考虑方向：
+     * 1、UI与world的合并
+     * 2、多viewport或多camera的合并
+     * 3、可视化工作，单独的纹理可视化，layout的可视化等
+     */
     output = "output",
 }
 /**DrawCommand 通道 */
@@ -417,17 +432,17 @@ export class RenderManager {
             let UUID = i;
             //2 for 单个camera的command
 
-            // for (let perCommand of perOne) {
-            //     if (Array.isArray(perCommand)) {
-            //         this.renderTTP(UUID, perCommand);
-            //     }
-            //     else {
-            //         this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
-            //         this.cameraRendered[UUID]++;//更改 TT loadOP计数器
-            //         perCommand.submit();  // 渲染
-            //     }
-            // }
-            await this.renderTTP(UUID, perOne as commmandType[]);
+            for (let perCommand of perOne) {
+                if (Array.isArray(perCommand)) {
+                    this.renderTTP(UUID, perCommand);
+                }
+                else {
+                    this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
+                    this.cameraRendered[UUID]++;//更改 TT loadOP计数器
+                    perCommand.submit();  // 渲染
+                }
+            }
+            // await this.renderTTP(UUID, perOne as commmandType[]);
 
         }// end for of camera UUID
     }

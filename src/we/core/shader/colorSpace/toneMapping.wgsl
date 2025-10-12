@@ -5,7 +5,7 @@ fn acesToneMap(linearHDR : vec3 < f32>) -> vec3 < f32> {
   let c = 2.43;
   let d = 0.59;
   let e = 0.14;
-  return clamp((linearHDR * (a * linearHDR + b)) / (linearHDR * (c * linearHDR + d) + e), 0.0, 1.0);
+  return clamp((linearHDR * (a * linearHDR + b)) / (linearHDR * (c * linearHDR + d) + e),  vec3f(0.0), vec3f(1.0));
 }
 
 //reinhard色调映射

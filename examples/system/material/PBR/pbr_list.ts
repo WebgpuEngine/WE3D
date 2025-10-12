@@ -59,14 +59,14 @@ await scene.add(ambientLight);
 
 
 let geometry = new SphereGeometry({
-  widthSegments: 128,
-  heightSegments: 128,
+  // widthSegments: 128,
+  // heightSegments: 128,
 
 });
 
 
 let space = 1.5;
-let n = 7
+let n = 5
 let step = radius + space;
 let x = -n * space / 2;
 

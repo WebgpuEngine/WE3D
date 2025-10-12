@@ -570,8 +570,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
             this.DC_renderFinal_MSAA.destroy();
         if (this.DC_renderFinal_ToneMapping)
             this.DC_renderFinal_ToneMapping.destroy();
-        this.RPD_MSAA = undefined;
-        this.RPD_ToneMapping = undefined;
+        // this.RPD_MSAA = undefined;
+        // this.RPD_ToneMapping = undefined;
     }
 
     createDrawCommandOfRenderFinalMSAA(UUID: string): DrawCommand {
@@ -628,7 +628,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
     createDrawCommandOfToneMapping(UUID: string): DrawCommand {
         // let rpd = () => { return this.getRPD_ToneMapping_ForFinalTarget(UUID); }
         // const colorSpaceCode = colorSpace
-        let returnColor = "return vec4f( linearToDisplayP3(color.rgb), color.a);";
+        // let returnColor = "return vec4f( testACES(),1);";
+
+        let returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
         if (this.scene.colorSpaceAndLinearSpace.colorSpace == "srgb")
             returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
         let shader = `   

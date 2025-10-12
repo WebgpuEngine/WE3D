@@ -81,6 +81,15 @@ for (let i = 1; i < n; i++) {//X方向，roughness
       }
     }
     let pbrMaterial = new PBRMaterial(PBROption);
+    // let pbrMaterial = new ColorMaterial({
+    //   color: [0, 0.1, 0.2, 1]
+    // });
+    // let pbrMaterial = new PhongMaterial({
+    //   color: [0, 0.9, 1, 1],
+    //   roughness: 0.5,
+    //   metalness: 1.5,
+    //   shininess: 32
+    // });
     //box实体
     let boxEntity = new Mesh(
       {

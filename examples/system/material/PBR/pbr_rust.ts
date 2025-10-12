@@ -45,8 +45,8 @@ await scene.add(camera);
 
 let dirlight = new DirectionalLight({
   color: [1, 1, 1],
-  direction: [0, 0, 1],
-  intensity: 2,
+  direction: [1, 1, 1],
+  intensity: 0.25,
 
 });
 await scene.add(dirlight);
@@ -54,7 +54,7 @@ await scene.add(dirlight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.01
+    intensity: 0.000001
   }
 )
 await scene.add(ambientLight);
@@ -136,7 +136,7 @@ let onelight = new PointLight(
   {
     position: [0,0,0],
     // position: [1, 1, 1],
-    intensity: 3.0,
+    intensity: 2.0,
   }
 );
 await light1Entity1.addChild(onelight);

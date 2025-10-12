@@ -98,6 +98,7 @@ export class PBRMaterial extends BaseMaterial {
             }
         }
         this._state = E_lifeState.finished;
+        console.log("PBRMaterial readyForGPU");
     }
     _destroy(): void {
         for (let key in this.textures) {
@@ -308,6 +309,7 @@ export class PBRMaterial extends BaseMaterial {
             binding: binding,
             owner: this,
         }
+        console.log("PBRMaterial getBundleOfForward()",this.scene.clock.last);
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
     }
 

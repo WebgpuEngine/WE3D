@@ -34,7 +34,7 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.01,
   far: 100,
-  position: [0, 1, 3],
+  position: [0, 0, 3],
   lookAt: [0, 0, 0],
   controlType: "arcball",
 });
@@ -52,7 +52,7 @@ await scene.add(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.3
+    intensity: 0.13
   }
 )
 await scene.add(ambientLight);

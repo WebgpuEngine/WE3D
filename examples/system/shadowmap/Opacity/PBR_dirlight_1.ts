@@ -53,7 +53,7 @@ await scene.add(camera);
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [1, 1,-1],
-  intensity: 3,
+  intensity: 1,
   shadow: true,
   update: (light) => {
     const now = Date.now() / 400; 

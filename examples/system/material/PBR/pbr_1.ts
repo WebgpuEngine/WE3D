@@ -52,7 +52,7 @@ await scene.add(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.06
+    intensity: 0.0006
   }
 )
 await scene.add(ambientLight);
