@@ -44,7 +44,7 @@ await scene.add(camera);
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [0, 0, 1],
-  intensity: 3,
+  intensity: 1,
 
 });
 await scene.add(onelight);

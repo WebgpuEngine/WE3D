@@ -127,8 +127,10 @@ fn linearToSRGB(linearColor : vec3f) -> vec3f  {
 //3、ACES色调映射后，颜色偏亮（考虑是ACES色调映射的风格问题，电影风格），而非映射问题。比如：纯白色经ACES转换后变为(0.8,0.8,0.8)左右，这是正常现象
 fn processColorToSRGB(hdrLinearColor : vec3f) -> vec3f  {
     //1. HDR线性空间 -> LDR线性空间（ACES色调映射）
-    // let ldrLinear = acesToneMap(hdrLinearColor);
-    let ldrLinear = hdrLinearColor;//不使用ACES色调映射，直接使用线性空间颜色
+    let ldrLinear = acesToneMap(hdrLinearColor);
+    // let ldrLinear = acesToneMapWithWhite(hdrLinearColor);
+    
+    // let ldrLinear = hdrLinearColor;//不使用ACES色调映射，直接使用线性空间颜色
 
     //2. 选择目标色域（二选一）
     let displayColor = linearToSRGB(ldrLinear);    //转换到sRGB

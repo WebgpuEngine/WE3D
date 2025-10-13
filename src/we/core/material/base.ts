@@ -134,8 +134,8 @@ export enum E_TextureType {
     roughness = "roughness",
     /** 环境光遮蔽贴图 */
     ao = "ao",
-    /** 深度贴图 */
-    depthMap = "depthMap",
+    // /** 深度贴图 */
+    // depthMap = "depthMap",//这个是深度|高度|视差贴图，前面已有parallax
     /** 视频贴图 */
     video = "video",
 }

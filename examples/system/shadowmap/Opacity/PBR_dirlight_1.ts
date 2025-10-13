@@ -56,7 +56,7 @@ let onelight = new DirectionalLight({
   intensity: 1,
   shadow: true,
   update: (light) => {
-    const now = Date.now() / 400; 
+    const now = Date.now() / 1000; 
     light.Direction=[Math.sin(now), 1,Math.cos(now)];
   }
 });

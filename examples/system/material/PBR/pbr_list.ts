@@ -44,7 +44,7 @@ await scene.add(camera);
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [0, 0, 1],
-  intensity: 3,
+  intensity: 1,
 
 });
 await scene.add(onelight);
@@ -66,7 +66,7 @@ let geometry = new SphereGeometry({
 
 
 let space = 1.5;
-let n = 5
+let n = 7
 let step = radius + space;
 let x = -n * space / 2;
 
@@ -78,7 +78,7 @@ for (let i = 1; i < n; i++) {//X方向，roughness
         albedo: [1.0, 0.71, 0.29],
         metallic: j / n,
         roughness: i / n,
-        color: [0, 0.9, 1],
+        // color: [0, 0.9, 1],
       }
     }
     let pbrMaterial = new PBRMaterial(PBROption);

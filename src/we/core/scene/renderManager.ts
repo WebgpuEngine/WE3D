@@ -29,9 +29,21 @@ export enum renderPassName {
     renderTarget = "renderTarget",
     shadowmapOpacity = "shadowmapOpacity",
     shadowmapTransparent = "shadowmapTransparent",
+    /**
+     * 延迟渲染的深度渲染通道
+     * 1、单像素深度渲染，用于延迟渲染的深度测试（后续使用forward进行正常渲染，单像素模式）
+     * 2、此模式不能解决GPU编译时间成本、光照与阴影的简单多变种问题
+     * 3、淘汰
+     */
     depth = "depth",
     forward = "forward",
-    // forwardDynamic = "forwardDynamic",
+    /**
+     * 延迟通道
+     * 1、光照处理
+     * 2、阴影处理
+     * 
+     */
+    defer = "defer",
     transparent = "transparent",
     transparentPixcel = "transparentPixcel",
     sprite = "sprite",

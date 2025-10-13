@@ -74,7 +74,7 @@ fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
         //HDR tonemapping,取消单个的，最后集中进行
     // colorOfPBR = colorOfPBR / (colorOfPBR + vec3f(1.0));
     // colorOfPBR = pow(colorOfPBR, vec3f(1.0 / 2.2)) * materialColor.rgb;
-    //  colorOfPBR = colorOfPBR * materialColor.rgb;
+     colorOfPBR = colorOfPBR * materialColor.rgb;
     var output : ST_GBuffer;
     $fsOutput                         //占位符
     //output.color = vec4f(normal*0.5+0.5, 1);    //
