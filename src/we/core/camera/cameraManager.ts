@@ -38,7 +38,13 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     DCG: DrawCommandGenerator;
 
+    /**TTP使用
+     * 每个像素级别透明渲染的list[]在渲染前，清除纹理使用
+     */
     onePointToTT_DC_A!: DrawCommand;
+    /**TTP使用
+     * 每个像素级别透明渲染的list[]在渲染前，清除纹理使用
+     */
     onePointToTT_DC_B!: DrawCommand;
     constructor(input: IV_CameraManager) {
         super(input.scene);
@@ -537,13 +543,13 @@ export class CameraManager extends ECSManager<BaseCamera> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // finally output the result to the screen
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    finalTarget: {
-        color: GPUTexture | undefined,
-        id: GPUTexture | undefined,
-    } = {
-            color: undefined,
-            id: undefined,
+    cameraDrawCommandOfFinalStep: {
+        [UUID: string]: {
+            MSAA: DrawCommand | undefined,
+            toneMapping: DrawCommand | undefined,
+            defer: DrawCommand | undefined,
         }
+    }
     /**
      * 合并MSAA渲染目标的RPD，用于可能存在多个camera，所以使用函数返回
      * 每次调用时，都返回一个新的RPD，在renderCameraGBufferToFinalTexture（）中更新

@@ -54,12 +54,19 @@ export enum renderPassName {
     toneMapping = "toneMapping",
     postprocess = "postprocess",
     /**
-     * UI通道
-     * 1、这个可以预留的2bit的stage（ID：0-3），用于UI的绘制。stage=0，是world；stage=1，给UI；stage=2，待定
+     * UI通道,用于UI的绘制。
+     * UI 与 stage 的关系
+     * 1、这个可以预留的2bit的stage（ID：0-3）。（具体数据在shader/enity/mesh/replace_output.vs.wgsl 中，如果stage数量不够，后期按需调整）
+     *      A、stage=0，是world；
+     *      B、stage=1，给UI；
+     *      C、stage=2，辅助viewport（比如：三维导航等。三维导航也可以通过其他方式，比如：最后在NDC的空间内绘制一个三维导航器，同时写入深度，写入ID，关闭深度测试）；
+     *      D、stage=3，object control （这个可以预留，用于对象的控制，比如选中，拖动，缩放等），快速判断是否需要控制对象
      * 2、UI的通道与其他工作一样
      * 3、合并UI与world，采用render模式；UI在前，world在后；UI覆盖world，透明的进行Blend
      */
     ui = "ui",
+    stage2 = "stage2",
+    stage3 = "stage3",
     /**
      * output通道，
      * 考虑方向：
@@ -430,6 +437,7 @@ export class RenderManager {
     }
 
     /**
+     * TT
      * 透明渲染DC
      * @param list 透明渲染列表
      */
@@ -458,7 +466,12 @@ export class RenderManager {
 
         }// end for of camera UUID
     }
-
+    /**
+     * TTP+TTPF
+     * 透明渲染DC
+     * @param UUID camera UUID
+     * @param list 透明渲染列表
+     */
     async renderTTP(UUID: string, list: commmandType[]) {
         //像素级别多层渲染排序
         /**
@@ -496,7 +509,7 @@ export class RenderManager {
 
         let UUID_TTPF = UUID + new Date().getTime();
 
-        //2 for 单个camera的command
+        //2 TTP
         for (let TT of list) {
             let TTP = this.scene.resourcesGPU.TT2TTP.get(TT as DrawCommand);
             let TTPF = this.scene.resourcesGPU.TT2TTPF.get(TT as DrawCommand);
@@ -516,7 +529,8 @@ export class RenderManager {
 
             }
         }
-        // {//最简测试
+
+        // {//最简测试TTPF
         //     let perTTPF = listOfTTPF[0];
         //     let perEntity = this.scene.entityManager.getEntityByUUID(perTTPF.IDS.UUID);
         //     this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
@@ -529,9 +543,7 @@ export class RenderManager {
         //     perTTPF.submit();
         // }
 
-
-        // console.log("========================")
-        // // for (let i = 3; i >= 3; i--) {
+        //TTPF
         for (let i = 0; i < 4; i++) {
             let j = 0;
             for (let perTTPF of listOfTTPF) {

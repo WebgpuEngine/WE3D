@@ -51,7 +51,7 @@ let ballGeometry = new SphereGeometry({
   heightSegments: 64
 });
 let lightMaterial = new ColorMaterial({ color: [1, 1, 1, 1] });
-let lightRadius = 3.1;
+let lightRadius = 3.0;
 let lightY = 2;
 let light1Entity1 = new Mesh(
   {
@@ -76,7 +76,7 @@ let onelight = new PointLight(
   {
     position: [0, 0, 0],
     // position: [1, 1, 1],
-    intensity: 15,
+    intensity: 9,
     // intensity: 20,//没有进行tone mapping 之前
     shadow: true,
 

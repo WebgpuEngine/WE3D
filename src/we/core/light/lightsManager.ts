@@ -179,7 +179,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * 1、在PBR中，尽可能小
      * 2、在非PBR，设置在0.01比较合适。原有设定为0.21
     */
-    ambientLight: AmbientLight = new AmbientLight({ color: [1, 1, 1], intensity: 0.000021 });
+    ambientLight: AmbientLight = new AmbientLight({ color: [1, 1, 1], intensity: 0.004 });
 
     //20250918 ,取消，使用renderManger的 renderShadowMapOpacityCommand
     // /**

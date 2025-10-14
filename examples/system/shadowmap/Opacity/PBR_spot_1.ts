@@ -106,7 +106,7 @@ let ambientLight = new AmbientLight(
 
   }
 )
-await scene.add(ambientLight);
+// await scene.add(ambientLight);
 
 ///////////////////////////////////////////////////////////////////////
 let sphere = new SphereGeometry({

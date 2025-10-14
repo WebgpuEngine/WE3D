@@ -28,6 +28,7 @@ export function WERandomInt(min: number, max: number): number {
 }
 
 const usedIds = new Set();
+const usedUUIDs = new Set();
 /**
  * generate ID
  * @returns ID like :17573813347954602
@@ -47,7 +48,12 @@ export function WeGenerateID() {
  * @returns UUID
  */
 export function WeGenerateUUID() {
-    let sub = 7;
-    let len = 36
-    return Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub);
+    let UUID: string;
+    do {
+        let sub = 7;
+        let len = 36
+        UUID = Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub);
+    } while (usedUUIDs.has(UUID));
+    usedUUIDs.add(UUID);
+    return UUID;
 }

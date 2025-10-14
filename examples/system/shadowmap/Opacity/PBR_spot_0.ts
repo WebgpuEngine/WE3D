@@ -48,11 +48,13 @@ await scene.add(camera);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.01  ,
+    intensity: 0.02  ,
     // intensity: 0.1  //没有进行tone mapping 之前
   }
 )
-// await scene.add(ambientLight);
+await scene.add(ambientLight);
+
+
 // //方向光1
 // let onelightdir = new DirectionalLight({
 //   color: [1, 1, 1],
@@ -101,7 +103,7 @@ let onelight = new SpotLight({
   isLookAt: false,
   position: [0, 0, 0],
   // position: [3, 3, 3],
-  intensity: 15.0,
+  intensity: 25.0,
   // intensity: 55.0, //没有进行tone mapping 之前
   // angle: 25 / 180 * Math.PI,
   // angleOut: 30 / 180 * Math.PI,
