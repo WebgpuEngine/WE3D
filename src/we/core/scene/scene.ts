@@ -7,6 +7,7 @@ import { DrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { CamreaControl } from "../control/cameracCntrol";
 import { EntityManager } from "../entity/entityManager";
 import { E_GBufferNames, V_ForwardGBufferNames } from "../gbuffers/base";
+import { InputManager } from "../input/inputManager";
 import { AmbientLight } from "../light/ambientLight";
 import { LightsManager } from "../light/lightsManager";
 import { MaterialManager } from "../material/materialManager";
@@ -247,6 +248,8 @@ export class Scene {
     materialManager!: MaterialManager;
     /**光源管理器 */
     lightsManager!: LightsManager;
+    /**输入管理器 */
+    inputManager!: InputManager;
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -373,6 +376,7 @@ export class Scene {
         this.textureManager = new TextureManager(this);
         this.materialManager = new MaterialManager(this);
         this.lightsManager = new LightsManager(this);
+        this.inputManager = new InputManager(this);
 
         const devicePixelRatio = window.devicePixelRatio;//设备像素比
         const width = this.canvas.clientWidth * devicePixelRatio;
@@ -619,7 +623,9 @@ export class Scene {
      */
     async generateBundleOfCameraAndBVH() { }
 
-
+    async cleanUp() {
+        this.inputManager.clean();
+    }
     run() {
         let scope = this;
         this.clock.update();
@@ -639,6 +645,7 @@ export class Scene {
                 await scope.postProcess();
                 await scope.showGBuffersVisualize();
                 await scope.renderToSurface();
+                await scope.cleanUp();
                 requestAnimationFrame(perFrameRun);
             }
         }

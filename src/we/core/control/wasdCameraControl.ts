@@ -3,6 +3,7 @@ import { Vec3, vec3 } from 'wgpu-matrix';
 import { CamreaControl, optionCamreaControl } from "./cameracCntrol"
 
 import * as MathFun from "../math/baseFunction"
+import { InputManager } from '../input/inputManager';
 
 
 /**
@@ -29,8 +30,8 @@ export class WASDCameraControl extends CamreaControl {
     // 1: Instantly stops moving
     frictionCoefficient = 0.99;
 
-    constructor(option: optionCamreaControl) {
-        super(option);
+    constructor(option: optionCamreaControl, manager: InputManager) {
+        super(option, manager);
         this.pitch = 0;
         this.yaw = 0;
     }
@@ -58,7 +59,8 @@ export class WASDCameraControl extends CamreaControl {
         // throw new Error('Method not implemented.');
     }
     update(deltaTime: number): boolean {
-        let input = this.inputHandler(this);
+        // let input = this.inputHandler(this);
+        let input = this.getInputValue();
         const sign = (positive: boolean, negative: boolean) =>
             (positive ? 1 : 0) - (negative ? 1 : 0);
 

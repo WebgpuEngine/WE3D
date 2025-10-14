@@ -40,6 +40,7 @@ export class ArcballCameraControl extends CamreaControl {
         vec3.copy(vec, this.axis_);
     }
 
+
     // constructor(option: optionCamreaControl) {
     //     super(option)
     // }
@@ -48,7 +49,8 @@ export class ArcballCameraControl extends CamreaControl {
     }
     update(deltaTime: number): boolean {
         if (typeof this.camera !== 'boolean') {
-            let input = this.inputHandler(this);
+            // let input = this.inputHandler(this);
+            let input = this.getInputValue();
 
             let position = this.camera.worldPosition;
             //计算当前距离，旋转距离不变

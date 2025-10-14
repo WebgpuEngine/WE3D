@@ -80,7 +80,7 @@ export abstract class BaseCamera extends RootOfGPU {
   size: {
     width: number,
     height: number,
-  }|undefined;
+  } | undefined;
   boundingBox!: boundingBox;//initDCC中赋值
   boundingSphere!: boundingSphere;
   aspect!: number;
@@ -268,10 +268,10 @@ export abstract class BaseCamera extends RootOfGPU {
     }
     switch (control) {
       case "arcball":
-        this._control = new ArcballCameraControl(controlOption);
+        this._control = new ArcballCameraControl(controlOption, this.scene.inputManager);
         break;
       case "wasd":
-        this._control = new WASDCameraControl(controlOption);
+        this._control = new WASDCameraControl(controlOption, this.scene.inputManager);
         break;
     }
   }
