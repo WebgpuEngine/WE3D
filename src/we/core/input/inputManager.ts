@@ -222,7 +222,7 @@ export class InputManager extends ECSManager<BaseInputControl> {
     pickupMove() { }
     update(clock: Clock): void {
         //最前面
-        this.pickupClick();
+        // this.pickupClick();cleanRegisterEvent() 
 
     }
     keyDown(scope: InputManager, event: KeyboardEvent) {

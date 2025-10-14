@@ -1,5 +1,8 @@
 import { BaseInputControl } from "./baseInputControl";
 
+/**
+ * 预定义的input manager 处理的事件类型
+ */
 export enum E_InputEvent {
     keydown = "keydown",
     keyup = "keyup",
