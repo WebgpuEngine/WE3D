@@ -1,6 +1,6 @@
 import { ECSManager } from "../organization/manager";
 import { Clock } from "../scene/clock";
-import { RenderManager, renderPassName } from "../scene/renderManager";
+import { RenderManager, E_renderPassName } from "../scene/renderManager";
 import { Scene } from "../scene/scene";
 import { BaseEntity } from "./baseEntity";
 
@@ -27,12 +27,12 @@ export class EntityManager extends ECSManager<BaseEntity> {
             for (let UUID in entity.cameraDC) {//一个entity的所有camera
                 let perCamera = entity.cameraDC[UUID];
                 for (let i in perCamera) {//单个camera
-                    let kind: renderPassName = renderPassName.forward;
+                    let kind: E_renderPassName = E_renderPassName.forward;
                     if (i == "deferDepth") {
-                        kind = renderPassName.depth;
+                        kind = E_renderPassName.depth;
                     }
                     else if (i == "transparent") {
-                        kind = renderPassName.transparent;
+                        kind = E_renderPassName.transparent;
                     }
                     for (let i_pass in perCamera[i as keyof typeof perCamera]) { //单个pass：forward，deferDepth，transparent
                         let perDC = perCamera[i as keyof typeof perCamera][parseInt(i_pass)];       //单个drawCommand
@@ -45,9 +45,9 @@ export class EntityManager extends ECSManager<BaseEntity> {
                 let perShadowmap = entity.shadowmapDC[UUID];
                 this.scene.renderManager.initRenderCommandForLight(UUID);
                 for (let i in perShadowmap) {//单个shadowmap
-                    let kind: renderPassName = renderPassName.shadowmapOpacity;
+                    let kind: E_renderPassName = E_renderPassName.shadowmapOpacity;
                     if (i == "transparent") {
-                        kind = renderPassName.shadowmapTransparent;
+                        kind = E_renderPassName.shadowmapTransparent;
                     }
                     for (let i_pass in perShadowmap[i as keyof typeof perShadowmap]) { //单个pass：deth，transparent
                         let perDC = perShadowmap[i as keyof typeof perShadowmap][parseInt(i_pass)];       //单个drawCommand

@@ -5,7 +5,7 @@ import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera
 import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
 import { initScene } from "../../../src/we/core/scene/fn";
-import { renderPassName } from "../../../src/we/core/scene/renderManager";
+import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
 import { Scene } from "../../../src/we/core/scene/scene";
 import { ArcballCameraControl } from "../../../src/we/core/control/arcballCameraControl";
 import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";

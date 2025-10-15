@@ -22,7 +22,7 @@ import { I_ShaderTemplate } from "../shadermanagemnet/base";
 import { EntityManager } from "./entityManager";
 import { Scene } from "../scene/scene";
 import { DrawCommandGenerator } from "../command/DrawCommandGenerator";
-import { renderPassName } from "../scene/renderManager";
+import { E_renderPassName } from "../scene/renderManager";
 import { mergeLightUUID } from "../light/lightsManager";
 
 
@@ -89,9 +89,9 @@ export abstract class BaseEntity extends RootOfGPU {
             // deferDepth: DrawCommand[],
             // forward: DrawCommand[],
             // transparent: DrawCommand[],
-            [renderPassName.depth]: DrawCommand[],
-            [renderPassName.forward]: DrawCommand[],
-            [renderPassName.transparent]: DrawCommand[],
+            [E_renderPassName.depth]: DrawCommand[],
+            [E_renderPassName.forward]: DrawCommand[],
+            [E_renderPassName.transparent]: DrawCommand[],
         }
     } = {};
 
@@ -104,8 +104,8 @@ export abstract class BaseEntity extends RootOfGPU {
         [name: string]: {
             // depth: DrawCommand[],
             // transparent: DrawCommand[],
-            [renderPassName.shadowmapOpacity]: DrawCommand[],
-            [renderPassName.shadowmapTransparent]: DrawCommand[],
+            [E_renderPassName.shadowmapOpacity]: DrawCommand[],
+            [E_renderPassName.shadowmapTransparent]: DrawCommand[],
         }
     } = {}
     /**
@@ -360,9 +360,9 @@ export abstract class BaseEntity extends RootOfGPU {
             else {
                 if (this.cameraDC[camera.UUID] == undefined) {
                     this.cameraDC[camera.UUID] = {
-                        [renderPassName.forward]: [],
-                        [renderPassName.depth]: [],
-                        [renderPassName.transparent]: [],
+                        [E_renderPassName.forward]: [],
+                        [E_renderPassName.depth]: [],
+                        [E_renderPassName.transparent]: [],
                     }
                 }
                 if (this.transparent === true) {
@@ -409,8 +409,8 @@ export abstract class BaseEntity extends RootOfGPU {
                     matrixIndex: i.matrix_self_index
                 };
                 this.shadowmapDC[mergeLightUUID(UUID, i.matrix_self_index)] = {
-                    [renderPassName.shadowmapOpacity]: [],
-                    [renderPassName.shadowmapTransparent]: [],
+                    [E_renderPassName.shadowmapOpacity]: [],
+                    [E_renderPassName.shadowmapTransparent]: [],
                 }
                 if (this.transparent === true) {
                     this.createShadowMapTransparentDC(valueOfLight);

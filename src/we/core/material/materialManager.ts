@@ -1,6 +1,6 @@
 import { ECSManager } from "../organization/manager";
 import { Clock } from "../scene/clock";
-import { renderPassName } from "../scene/renderManager";
+import { E_renderPassName } from "../scene/renderManager";
 import { BaseMaterial } from "./baseMaterial";
 
 
@@ -10,7 +10,7 @@ export class MaterialManager extends ECSManager<BaseMaterial> {
         for (let i of this.list) {
             i.update(clock);
             for (let j of i.commands) {
-                this.scene.renderManager.push(j, renderPassName.material);
+                this.scene.renderManager.push(j, E_renderPassName.material);
             }
         }
     }

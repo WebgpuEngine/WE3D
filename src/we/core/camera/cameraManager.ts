@@ -5,7 +5,7 @@ import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V
 import { GBuffers, IV_GBuffer } from "../gbuffers/GBuffers";
 import { ECSManager } from "../organization/manager";
 import { Clock } from "../scene/clock";
-import { renderPassName } from "../scene/renderManager";
+import { E_renderPassName } from "../scene/renderManager";
 import { Scene } from "../scene/scene";
 import { colorSpace } from "../shadermanagemnet/colorSpace/colorSpace";
 import { BaseCamera } from "./baseCamera";
@@ -263,9 +263,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
     async update(clock: Clock) {
         for (let camera of this.list) {
             let UUID = camera.UUID;
-            // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].MSAA!, renderPassName.MSAA, UUID);
-            this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].toneMapping!, renderPassName.toneMapping, UUID);
-            // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].defer!, renderPassName.defer, UUID);
+            // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].MSAA!, E_renderPassName.MSAA, UUID);
+            this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].toneMapping!, E_renderPassName.toneMapping, UUID);
+            // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].defer!, E_renderPassName.defer, UUID);
         }
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////

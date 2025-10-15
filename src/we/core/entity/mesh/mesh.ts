@@ -7,7 +7,7 @@ import { mergeLightUUID } from "../../light/lightsManager";
 import { I_TransparentOptionOfMaterial } from "../../material/base";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { WireFrameMaterial } from "../../material/standard/wireFrameMaterial";
-import { renderPassName } from "../../scene/renderManager";
+import { E_renderPassName } from "../../scene/renderManager";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_MeshShadowMapVS, SHT_MeshVS, SHT_MeshWireframeVS } from "../../shadermanagemnet/mesh/meshVS";
 import { I_EntityAttributes, I_EntityBundleOfUniformAndShaderTemplateFinal, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
@@ -567,7 +567,7 @@ export class Mesh extends BaseEntity {
             }
             let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
             let dc = this.DCG.generateDrawCommand(valueDC);
-            this.cameraDC[UUID][renderPassName.forward].push(dc);
+            this.cameraDC[UUID][E_renderPassName.forward].push(dc);
         }
         //wireframe 前向渲染
         if (this._wireframe.enable) {
@@ -579,7 +579,7 @@ export class Mesh extends BaseEntity {
             }
             let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
             let dc = this.DCG.generateDrawCommand(valueDC);
-            this.cameraDC[UUID][renderPassName.forward].push(dc);
+            this.cameraDC[UUID][E_renderPassName.forward].push(dc);
         }
     }
 
@@ -600,7 +600,7 @@ export class Mesh extends BaseEntity {
                 bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TO.singleShaderTemplateFinal;
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
                 let dc = this.DCG.generateDrawCommand(valueDC);
-                this.cameraDC[UUID][renderPassName.forward].push(dc);
+                this.cameraDC[UUID][E_renderPassName.forward].push(dc);
             }
             let dcTT;
             //TT
@@ -626,7 +626,7 @@ export class Mesh extends BaseEntity {
                 valueDC.label = "mesh:" + this.ID + " TT";
 
                 dcTT = this.DCG.generateDrawCommand(valueDC);
-                this.cameraDC[UUID][renderPassName.transparent].push(dcTT);
+                this.cameraDC[UUID][E_renderPassName.transparent].push(dcTT);
             }
             // //TTP
             if (uniformsMaterialTOTT.TTP) {
@@ -651,7 +651,7 @@ export class Mesh extends BaseEntity {
                 //深度
                 valueDC.render.depthStencil = false;//没有深度比较，没有深度写入
                 let dc = this.DCG.generateDrawCommand(valueDC);
-                // this.cameraDC[UUID][renderPassName.transparent].push(dc);
+                // this.cameraDC[UUID][E_renderPassName.transparent].push(dc);
                 this.resourcesGPU.TT2TTP.set(dcTT, dc);
                 this.mapList.push({ key: dcTT, type: "TTP", map: "TT2TTP" });
             }
@@ -708,7 +708,7 @@ export class Mesh extends BaseEntity {
                 }
 
                 let dc = this.DCG.generateDrawCommand(valueDC);
-                // this.cameraDC[UUID][renderPassName.transparent].push(dc);
+                // this.cameraDC[UUID][E_renderPassName.transparent].push(dc);
                 this.resourcesGPU.TT2TTPF.set(dcTT, dc);
                 this.mapList.push({ key: dcTT, type: "TTPF", map: "TT2TTPF" });
             }
@@ -724,7 +724,7 @@ export class Mesh extends BaseEntity {
             }
             let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
             let dc = this.DCG.generateDrawCommand(valueDC);
-            this.cameraDC[UUID][renderPassName.forward].push(dc);
+            this.cameraDC[UUID][E_renderPassName.forward].push(dc);
         }
     }
 
@@ -739,7 +739,7 @@ export class Mesh extends BaseEntity {
 
             let valueDC = this.generateInputValueOfDC(E_renderForDC.light, UUID, bundle, true);
             let dc = this.DCG.generateDrawCommand(valueDC);
-            this.shadowmapDC[UUID][renderPassName.shadowmapOpacity].push(dc);
+            this.shadowmapDC[UUID][E_renderPassName.shadowmapOpacity].push(dc);
         }
 
 

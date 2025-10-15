@@ -4,7 +4,7 @@ import { OrthographicCamera } from "../../../src/we/core/camera/orthographicCame
 import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
 import { initScene } from "../../../src/we/core/scene/fn";
-import { renderPassName } from "../../../src/we/core/scene/renderManager";
+import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
 import { Scene } from "../../../src/we/core/scene/scene";
 
 declare global {
@@ -171,7 +171,7 @@ let dc = DCManager.generateDrawCommand(valueDC);
 let oneCall: userDefineEventCall = {
   call: (scope: Scene) => {
     // scope.renderManager.clean();
-    scope.renderManager.push(dc, renderPassName.forward, orthCamera.UUID)
+    scope.renderManager.push(dc, E_renderPassName.forward, orthCamera.UUID)
     // dc.submit()
   },
   name: "",

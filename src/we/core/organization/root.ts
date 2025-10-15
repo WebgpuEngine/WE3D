@@ -10,7 +10,7 @@ import { BaseEntity } from "../entity/baseEntity";
 import { BaseMaterial } from "../material/baseMaterial";
 import { isWeVec3 } from "../base/coreFunction";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
-import { renderPassName } from "../scene/renderManager";
+import { E_renderPassName } from "../scene/renderManager";
 
 
 export interface I_UUID {
@@ -583,7 +583,7 @@ export abstract class RootOfGPU extends RootOfOrganization {
             this.scene.lightsManager.add(child as BaseLight);
             this.scene.resourcesGPU.cleanSystemUniform();//shadowmap 数量会变化，清除system的map
             if ((child as BaseLight).Shadow)
-                this.scene.renderManager.RC[renderPassName.transparent][child.UUID] = [];
+                this.scene.renderManager.RC[E_renderPassName.transparent][child.UUID] = [];
             // this.scene.renderManager.initRenderCommandForLight(child.UUID);//改到enityManager的update中
 
         }
@@ -609,16 +609,16 @@ export abstract class RootOfGPU extends RootOfOrganization {
         if (childRemoveResult) {
             if (child.type == "Camera") {
                 this.scene.cameraManager.remove(child as BaseCamera);
-                delete this.scene.renderManager.RC[renderPassName.forward][child.UUID];
+                delete this.scene.renderManager.RC[E_renderPassName.forward][child.UUID];
             }
             else if (child.type == "Light") {
                 this.scene.lightsManager.remove(child as BaseLight);
                 this.scene.resourcesGPU.cleanSystemUniform();//shadowmap 数量会变化，清除system的map
 
-                if (this.scene.renderManager.RC[renderPassName.shadowmapTransparent][child.UUID])
-                    delete this.scene.renderManager.RC[renderPassName.shadowmapTransparent][child.UUID];
-                if (this.scene.renderManager.RC[renderPassName.shadowmapOpacity][child.UUID])
-                    delete this.scene.renderManager.RC[renderPassName.shadowmapOpacity][child.UUID];
+                if (this.scene.renderManager.RC[E_renderPassName.shadowmapTransparent][child.UUID])
+                    delete this.scene.renderManager.RC[E_renderPassName.shadowmapTransparent][child.UUID];
+                if (this.scene.renderManager.RC[E_renderPassName.shadowmapOpacity][child.UUID])
+                    delete this.scene.renderManager.RC[E_renderPassName.shadowmapOpacity][child.UUID];
             }
             else if (child.type == "entity") {
                 this.scene.entityManager.remove(child as BaseEntity);

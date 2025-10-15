@@ -24,7 +24,7 @@ export interface run_commandAndPipeline {
  * 1、depth,forwar,transparent,sprite,spriteTransparent,defer这些都是world stage的。world starge 隐式=stage0;
  * 2、world stage 是按照camera（一个或多个）进行渲染的。也可以理解为：每个camera都有一个world stage。
  */
-export enum renderPassName {
+export enum E_renderPassName {
     compute = "compute",
     texture = "texture",
     material = "material",
@@ -144,55 +144,55 @@ export class RenderManager {
      * 3、目前明确只有内容线的：depth、forward、transparency、shadowmapOpacity,shadowmapTransparent，即都是和渲染相关的命令；
      */
     RC: {
-        [renderPassName.compute]: commmandType[],
-        [renderPassName.texture]: commmandType[],
-        [renderPassName.material]: commmandType[],
-        [renderPassName.renderTarget]: commmandType[],
-        [renderPassName.shadowmapOpacity]: I_renderDrawOfTimeline,
-        [renderPassName.shadowmapTransparent]: I_renderDrawOfTimeline,
-        [renderPassName.depth]: I_renderDrawCommand,
-        [renderPassName.forward]: I_renderDrawCommand,
-        [renderPassName.defer]: commmandType[],
-        [renderPassName.transparent]: I_renderDrawOfDistancesLine,
-        [renderPassName.sprite]: I_renderDrawCommand,
-        [renderPassName.spriteTransparent]: I_renderDrawOfTimeline,
-        [renderPassName.MSAA]: commmandType[],
-        [renderPassName.toneMapping]: commmandType[],
-        [renderPassName.postprocess]: commmandType[],
-        [renderPassName.stage1]: commmandType[],
-        [renderPassName.stage2]: commmandType[],
-        [renderPassName.ui]: commmandType[],
-        [renderPassName.output]: commmandType[],
+        [E_renderPassName.compute]: commmandType[],
+        [E_renderPassName.texture]: commmandType[],
+        [E_renderPassName.material]: commmandType[],
+        [E_renderPassName.renderTarget]: commmandType[],
+        [E_renderPassName.shadowmapOpacity]: I_renderDrawOfTimeline,
+        [E_renderPassName.shadowmapTransparent]: I_renderDrawOfTimeline,
+        [E_renderPassName.depth]: I_renderDrawCommand,
+        [E_renderPassName.forward]: I_renderDrawCommand,
+        [E_renderPassName.defer]: commmandType[],
+        [E_renderPassName.transparent]: I_renderDrawOfDistancesLine,
+        [E_renderPassName.sprite]: I_renderDrawCommand,
+        [E_renderPassName.spriteTransparent]: I_renderDrawOfTimeline,
+        [E_renderPassName.MSAA]: commmandType[],
+        [E_renderPassName.toneMapping]: commmandType[],
+        [E_renderPassName.postprocess]: commmandType[],
+        [E_renderPassName.stage1]: commmandType[],
+        [E_renderPassName.stage2]: commmandType[],
+        [E_renderPassName.ui]: commmandType[],
+        [E_renderPassName.output]: commmandType[],
     } = {
-            [renderPassName.compute]: [],
-            [renderPassName.texture]: [],
-            [renderPassName.material]: [],
-            [renderPassName.renderTarget]: [],
-            [renderPassName.shadowmapOpacity]: {},
-            [renderPassName.shadowmapTransparent]: {},
-            [renderPassName.depth]: {},
-            [renderPassName.forward]: {},
-            [renderPassName.defer]: [],
-            [renderPassName.transparent]: {},
-            // [renderPassName.transparentPixcel]: {},
-            [renderPassName.sprite]: {},
-            [renderPassName.spriteTransparent]: {},
-            [renderPassName.MSAA]: [],
-            [renderPassName.toneMapping]: [],
-            [renderPassName.postprocess]: [],
-            [renderPassName.stage1]: [],
-            [renderPassName.stage2]: [],
-            [renderPassName.ui]: [],
-            [renderPassName.output]: [],
+            [E_renderPassName.compute]: [],
+            [E_renderPassName.texture]: [],
+            [E_renderPassName.material]: [],
+            [E_renderPassName.renderTarget]: [],
+            [E_renderPassName.shadowmapOpacity]: {},
+            [E_renderPassName.shadowmapTransparent]: {},
+            [E_renderPassName.depth]: {},
+            [E_renderPassName.forward]: {},
+            [E_renderPassName.defer]: [],
+            [E_renderPassName.transparent]: {},
+            // [E_renderPassName.transparentPixcel]: {},
+            [E_renderPassName.sprite]: {},
+            [E_renderPassName.spriteTransparent]: {},
+            [E_renderPassName.MSAA]: [],
+            [E_renderPassName.toneMapping]: [],
+            [E_renderPassName.postprocess]: [],
+            [E_renderPassName.stage1]: [],
+            [E_renderPassName.stage2]: [],
+            [E_renderPassName.ui]: [],
+            [E_renderPassName.output]: [],
         };
     /**
      * 前四个连续的渲染通道，为了render时，省些代码
      */
     listCommandType: any[] = [
-        this.RC[renderPassName.compute],
-        this.RC[renderPassName.texture],
-        this.RC[renderPassName.material],
-        this.RC[renderPassName.renderTarget],
+        this.RC[E_renderPassName.compute],
+        this.RC[E_renderPassName.texture],
+        this.RC[E_renderPassName.material],
+        this.RC[E_renderPassName.renderTarget],
     ]
     /**
      * TTP早期测试使用
@@ -216,30 +216,30 @@ export class RenderManager {
      * @param UUID 
      */
     initRenderCommandForCamera(UUID: string) {
-        if (!this.RC[renderPassName.forward][UUID]) {
-            this.RC[renderPassName.forward][UUID] = {
+        if (!this.RC[E_renderPassName.forward][UUID]) {
+            this.RC[E_renderPassName.forward][UUID] = {
                 pipelineOrder: new Map(),
                 dynmaicOrder: [],
             };
         }
-        if (!this.RC[renderPassName.depth][UUID]) {
-            this.RC[renderPassName.depth][UUID] = {
+        if (!this.RC[E_renderPassName.depth][UUID]) {
+            this.RC[E_renderPassName.depth][UUID] = {
                 pipelineOrder: new Map(),
                 dynmaicOrder: [],
             };
         }
-        if (!this.RC[renderPassName.transparent][UUID]) {
-            this.RC[renderPassName.transparent][UUID] = [];
+        if (!this.RC[E_renderPassName.transparent][UUID]) {
+            this.RC[E_renderPassName.transparent][UUID] = [];
         }
 
-        if (!this.RC[renderPassName.sprite][UUID]) {
-            this.RC[renderPassName.sprite][UUID] = {
+        if (!this.RC[E_renderPassName.sprite][UUID]) {
+            this.RC[E_renderPassName.sprite][UUID] = {
                 pipelineOrder: new Map(),
                 dynmaicOrder: [],
             };
         }
-        if (!this.RC[renderPassName.spriteTransparent][UUID]) {
-            this.RC[renderPassName.spriteTransparent][UUID] = [];
+        if (!this.RC[E_renderPassName.spriteTransparent][UUID]) {
+            this.RC[E_renderPassName.spriteTransparent][UUID] = [];
         }
 
     }
@@ -248,11 +248,11 @@ export class RenderManager {
      * @param UUID 光源的UUID
      */
     initRenderCommandForLight(UUID: string) {
-        if (!this.RC[renderPassName.shadowmapOpacity][UUID]) {
-            this.RC[renderPassName.shadowmapOpacity][UUID] = [];
+        if (!this.RC[E_renderPassName.shadowmapOpacity][UUID]) {
+            this.RC[E_renderPassName.shadowmapOpacity][UUID] = [];
         }
-        if (!this.RC[renderPassName.shadowmapTransparent][UUID]) {
-            this.RC[renderPassName.shadowmapTransparent][UUID] = [];
+        if (!this.RC[E_renderPassName.shadowmapTransparent][UUID]) {
+            this.RC[E_renderPassName.shadowmapTransparent][UUID] = [];
         }
     }
 
@@ -261,47 +261,47 @@ export class RenderManager {
      */
     clean() {
         this.cameraRendered = {};
-        this.RC[renderPassName.compute] = [];
-        this.RC[renderPassName.texture] = [];
-        this.RC[renderPassName.material] = [];
-        this.RC[renderPassName.renderTarget] = [];
+        this.RC[E_renderPassName.compute] = [];
+        this.RC[E_renderPassName.texture] = [];
+        this.RC[E_renderPassName.material] = [];
+        this.RC[E_renderPassName.renderTarget] = [];
 
-        for (let UUID in this.RC[renderPassName.shadowmapOpacity]) {
-            this.RC[renderPassName.shadowmapOpacity][UUID as renderPassName] = [];
+        for (let UUID in this.RC[E_renderPassName.shadowmapOpacity]) {
+            this.RC[E_renderPassName.shadowmapOpacity][UUID as E_renderPassName] = [];
         }
-        for (let UUID in this.RC[renderPassName.shadowmapTransparent]) {
-            this.RC[renderPassName.shadowmapTransparent][UUID as renderPassName] = [];
+        for (let UUID in this.RC[E_renderPassName.shadowmapTransparent]) {
+            this.RC[E_renderPassName.shadowmapTransparent][UUID as E_renderPassName] = [];
         }
-        for (let UUID in this.RC[renderPassName.forward]) {
-            let cameraCommand = this.RC[renderPassName.forward][UUID as renderPassName];
+        for (let UUID in this.RC[E_renderPassName.forward]) {
+            let cameraCommand = this.RC[E_renderPassName.forward][UUID as E_renderPassName];
             cameraCommand.pipelineOrder.clear();
             cameraCommand.dynmaicOrder = [];
         }
-        for (let UUID in this.RC[renderPassName.depth]) {
-            let cameraCommand = this.RC[renderPassName.depth][UUID as renderPassName];
+        for (let UUID in this.RC[E_renderPassName.depth]) {
+            let cameraCommand = this.RC[E_renderPassName.depth][UUID as E_renderPassName];
             cameraCommand.pipelineOrder.clear();
             cameraCommand.dynmaicOrder = [];
         }
-        this.RC[renderPassName.defer] = [];
-        for (let UUID in this.RC[renderPassName.transparent]) {
-            this.RC[renderPassName.transparent][UUID as renderPassName] = [];
+        this.RC[E_renderPassName.defer] = [];
+        for (let UUID in this.RC[E_renderPassName.transparent]) {
+            this.RC[E_renderPassName.transparent][UUID as E_renderPassName] = [];
         }
 
-        for (let UUID in this.RC[renderPassName.sprite]) {
-            let spriteCommand = this.RC[renderPassName.sprite][UUID as renderPassName];
+        for (let UUID in this.RC[E_renderPassName.sprite]) {
+            let spriteCommand = this.RC[E_renderPassName.sprite][UUID as E_renderPassName];
             spriteCommand.pipelineOrder.clear();
             spriteCommand.dynmaicOrder = [];
         }
-        for (let UUID in this.RC[renderPassName.spriteTransparent]) {
-            this.RC[renderPassName.spriteTransparent][UUID as renderPassName] = [];
+        for (let UUID in this.RC[E_renderPassName.spriteTransparent]) {
+            this.RC[E_renderPassName.spriteTransparent][UUID as E_renderPassName] = [];
         }
-        this.RC[renderPassName.MSAA] = [];
-        this.RC[renderPassName.toneMapping] = [];
-        this.RC[renderPassName.postprocess] = [];
-        this.RC[renderPassName.stage1] = [];
-        this.RC[renderPassName.stage2] = [];
-        this.RC[renderPassName.ui] = [];
-        this.RC[renderPassName.output] = [];
+        this.RC[E_renderPassName.MSAA] = [];
+        this.RC[E_renderPassName.toneMapping] = [];
+        this.RC[E_renderPassName.postprocess] = [];
+        this.RC[E_renderPassName.stage1] = [];
+        this.RC[E_renderPassName.stage2] = [];
+        this.RC[E_renderPassName.ui] = [];
+        this.RC[E_renderPassName.output] = [];
     }
 
     /**
@@ -309,9 +309,9 @@ export class RenderManager {
      * @param command 绘制命令
      * @param kind 渲染通道
      */
-    push(command: commmandType, kind: renderPassName, _UUID?: string) {
+    push(command: commmandType, kind: E_renderPassName, _UUID?: string) {
         if (!_UUID) {
-            if (kind == renderPassName.forward || kind == renderPassName.transparent || kind == renderPassName.depth) {
+            if (kind == E_renderPassName.forward || kind == E_renderPassName.transparent || kind == E_renderPassName.depth) {
                 if (this.scene.cameraManager.defaultCamera)
                     _UUID = this.scene.cameraManager.defaultCamera.UUID;
                 else {
@@ -322,110 +322,110 @@ export class RenderManager {
         }
         let flag;
         switch (kind) {
-            case renderPassName.compute:
-                this.RC[renderPassName.compute].push(command);
+            case E_renderPassName.compute:
+                this.RC[E_renderPassName.compute].push(command);
                 break;
-            case renderPassName.texture:
-                this.RC[renderPassName.texture].push(command);
+            case E_renderPassName.texture:
+                this.RC[E_renderPassName.texture].push(command);
                 break;
-            case renderPassName.material:
-                this.RC[renderPassName.material].push(command);
+            case E_renderPassName.material:
+                this.RC[E_renderPassName.material].push(command);
                 break;
-            case renderPassName.renderTarget:
-                this.RC[renderPassName.renderTarget].push(command);
+            case E_renderPassName.renderTarget:
+                this.RC[E_renderPassName.renderTarget].push(command);
                 break;
-            case renderPassName.shadowmapOpacity:
-                this.RC[renderPassName.shadowmapOpacity][_UUID!].push(command);
+            case E_renderPassName.shadowmapOpacity:
+                this.RC[E_renderPassName.shadowmapOpacity][_UUID!].push(command);
                 break;
-            case renderPassName.shadowmapTransparent:
-                this.RC[renderPassName.shadowmapTransparent][_UUID!].push(command);
+            case E_renderPassName.shadowmapTransparent:
+                this.RC[E_renderPassName.shadowmapTransparent][_UUID!].push(command);
                 break;
-            case renderPassName.forward:
+            case E_renderPassName.forward:
                 if (command instanceof DrawCommand) {
                     if (command.dynamic === false) {
                         flag = (command as DrawCommand).getPipeLineStructure();
-                        if (this.RC[renderPassName.forward][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
-                            this.RC[renderPassName.forward][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
+                        if (this.RC[E_renderPassName.forward][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
+                            this.RC[E_renderPassName.forward][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
                         }
                         else {                                                                            //没有map
-                            this.RC[renderPassName.forward][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
+                            this.RC[E_renderPassName.forward][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
                         }
                     }
                     else {
-                        this.RC[renderPassName.forward][_UUID!].dynmaicOrder.push(command);
+                        this.RC[E_renderPassName.forward][_UUID!].dynmaicOrder.push(command);
                     }
                 }
                 else {
-                    this.RC[renderPassName.forward][_UUID!].dynmaicOrder.push(command);
+                    this.RC[E_renderPassName.forward][_UUID!].dynmaicOrder.push(command);
                 }
                 break;
-            case renderPassName.sprite:
+            case E_renderPassName.sprite:
                 if (command instanceof DrawCommand) {
                     if (command.dynamic === false) {
                         flag = (command as DrawCommand).getPipeLineStructure();
-                        if (this.RC[renderPassName.sprite][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
-                            this.RC[renderPassName.sprite][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
+                        if (this.RC[E_renderPassName.sprite][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
+                            this.RC[E_renderPassName.sprite][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
                         } else {                                                                               //没有map
-                            this.RC[renderPassName.sprite][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
+                            this.RC[E_renderPassName.sprite][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
                         }
                     }
                     else {
-                        this.RC[renderPassName.sprite][_UUID!].dynmaicOrder.push(command);
+                        this.RC[E_renderPassName.sprite][_UUID!].dynmaicOrder.push(command);
                     }
                 }
                 else {
-                    this.RC[renderPassName.sprite][_UUID!].dynmaicOrder.push(command);
+                    this.RC[E_renderPassName.sprite][_UUID!].dynmaicOrder.push(command);
                 }
                 break;
-            case renderPassName.depth:
+            case E_renderPassName.depth:
                 if (command instanceof DrawCommand) {
                     if (command.dynamic === false) {
                         flag = (command as DrawCommand).getPipeLineStructure();
-                        if (this.RC[renderPassName.depth][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
-                            this.RC[renderPassName.depth][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
+                        if (this.RC[E_renderPassName.depth][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
+                            this.RC[E_renderPassName.depth][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
                         } else {                                                                               //没有map
-                            this.RC[renderPassName.depth][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
+                            this.RC[E_renderPassName.depth][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
                         }
                     }
                     else {
-                        this.RC[renderPassName.depth][_UUID!].dynmaicOrder.push(command);
+                        this.RC[E_renderPassName.depth][_UUID!].dynmaicOrder.push(command);
                     }
                 }
                 else {
-                    this.RC[renderPassName.depth][_UUID!].dynmaicOrder.push(command);
+                    this.RC[E_renderPassName.depth][_UUID!].dynmaicOrder.push(command);
                 }
                 break;
-            case renderPassName.defer:
-                this.RC[renderPassName.defer].push(command);
+            case E_renderPassName.defer:
+                this.RC[E_renderPassName.defer].push(command);
                 break;
-            case renderPassName.transparent:
-                this.RC[renderPassName.transparent][_UUID!].push(command);
+            case E_renderPassName.transparent:
+                this.RC[E_renderPassName.transparent][_UUID!].push(command);
                 break;
 
 
-            case renderPassName.spriteTransparent:
-                this.RC[renderPassName.spriteTransparent][_UUID!].push(command);
+            case E_renderPassName.spriteTransparent:
+                this.RC[E_renderPassName.spriteTransparent][_UUID!].push(command);
                 break;
-            case renderPassName.MSAA:
-                this.RC[renderPassName.MSAA].push(command);
+            case E_renderPassName.MSAA:
+                this.RC[E_renderPassName.MSAA].push(command);
                 break;
-            case renderPassName.toneMapping:
-                this.RC[renderPassName.toneMapping].push(command);
+            case E_renderPassName.toneMapping:
+                this.RC[E_renderPassName.toneMapping].push(command);
                 break;
-            case renderPassName.postprocess:
-                this.RC[renderPassName.postprocess].push(command);
+            case E_renderPassName.postprocess:
+                this.RC[E_renderPassName.postprocess].push(command);
                 break;
-            case renderPassName.stage1:
-                this.RC[renderPassName.stage1].push(command);
+            case E_renderPassName.stage1:
+                this.RC[E_renderPassName.stage1].push(command);
                 break;
-            case renderPassName.stage2:
-                this.RC[renderPassName.stage2].push(command);
+            case E_renderPassName.stage2:
+                this.RC[E_renderPassName.stage2].push(command);
                 break;
-            case renderPassName.ui:
-                this.RC[renderPassName.ui].push(command);
+            case E_renderPassName.ui:
+                this.RC[E_renderPassName.ui].push(command);
                 break;
-            case renderPassName.output:
-                this.RC[renderPassName.output].push(command);
+            case E_renderPassName.output:
+                this.RC[E_renderPassName.output].push(command);
                 break;
 
 
@@ -641,35 +641,35 @@ export class RenderManager {
             this.doCommand(onePass);
         }
         //不透明shadowmap
-        this.renderTimelineDC(this.RC[renderPassName.shadowmapOpacity]);
+        this.renderTimelineDC(this.RC[E_renderPassName.shadowmapOpacity]);
         //透明shadowmap
-        this.renderTimelineDC(this.RC[renderPassName.shadowmapTransparent]);
+        this.renderTimelineDC(this.RC[E_renderPassName.shadowmapTransparent]);
         //defer render Of depth
-        this.renderForwaredDC(this.RC[renderPassName.depth]);
+        this.renderForwaredDC(this.RC[E_renderPassName.depth]);
         //不透明enity
-        this.renderForwaredDC(this.RC[renderPassName.forward]);
+        this.renderForwaredDC(this.RC[E_renderPassName.forward]);
         //defer render
-        this.doCommand(this.RC[renderPassName.defer]);
+        this.doCommand(this.RC[E_renderPassName.defer]);
         //透明enity
-        await this.renderTransParentDC(this.RC[renderPassName.transparent]);
+        await this.renderTransParentDC(this.RC[E_renderPassName.transparent]);
         //sprite
-        this.renderForwaredDC(this.RC[renderPassName.sprite]);
+        this.renderForwaredDC(this.RC[E_renderPassName.sprite]);
         //透明sprite
-        this.renderTimelineDC(this.RC[renderPassName.spriteTransparent]);
+        this.renderTimelineDC(this.RC[E_renderPassName.spriteTransparent]);
         //MSAA
-        this.doCommand(this.RC[renderPassName.MSAA]);
+        this.doCommand(this.RC[E_renderPassName.MSAA]);
         //toneMapping
-        this.doCommand(this.RC[renderPassName.toneMapping]);
+        this.doCommand(this.RC[E_renderPassName.toneMapping]);
         //pp
-        this.doCommand(this.RC[renderPassName.postprocess]);
+        this.doCommand(this.RC[E_renderPassName.postprocess]);
         //stage1
-        this.doCommand(this.RC[renderPassName.stage1]);
+        this.doCommand(this.RC[E_renderPassName.stage1]);
         //stage2
-        this.doCommand(this.RC[renderPassName.stage2]);
+        this.doCommand(this.RC[E_renderPassName.stage2]);
         //ui
-        this.doCommand(this.RC[renderPassName.ui]);
+        this.doCommand(this.RC[E_renderPassName.ui]);
         //output
-        this.doCommand(this.RC[renderPassName.output]);
+        this.doCommand(this.RC[E_renderPassName.output]);
     }
     doCommand(list: commmandType[]) {
         let submitCommand = [];
@@ -789,7 +789,7 @@ export class RenderManager {
     }
 
     //像素级别多层渲染排序
-    // this.renderTPOLD(this.RC[renderPassName.transparent]);
+    // this.renderTPOLD(this.RC[E_renderPassName.transparent]);
     // async renderTPOLD(list: I_renderDrawOfDistancesLine) {
     //     //像素级别多层渲染排序
     //     /**

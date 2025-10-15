@@ -5,7 +5,7 @@ import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera
 import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
 import { initScene } from "../../../src/we/core/scene/fn";
-import { renderPassName } from "../../../src/we/core/scene/renderManager";
+import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
 import { Scene } from "../../../src/we/core/scene/scene";
 import { RootManager } from "../../../src/we/core/scene/rootManager";
 import { RootOfGPU } from "../../../src/we/core/organization/root";
@@ -190,7 +190,7 @@ let oneCall: userDefineEventCall = {
   call: (scope: Scene) => {
     // scope.renderManager.clean();
     root1.updateMatrixWorld();
-    scope.renderManager.push(dc, renderPassName.forward, camera.UUID);
+    scope.renderManager.push(dc, E_renderPassName.forward, camera.UUID);
     // dc.submit()
   },
   name: "",
