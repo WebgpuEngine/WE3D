@@ -21,6 +21,8 @@ export interface run_commandAndPipeline {
 /**
  * 渲染通道
  * 备注：这个也是渲染的通道的执行的时间线顺序
+ * 1、depth,forwar,transparent,sprite,spriteTransparent,defer这些都是world stage的。world starge 隐式=stage0;
+ * 2、world stage 是按照camera（一个或多个）进行渲染的。也可以理解为：每个camera都有一个world stage。
  */
 export enum renderPassName {
     compute = "compute",
@@ -29,6 +31,7 @@ export enum renderPassName {
     renderTarget = "renderTarget",
     shadowmapOpacity = "shadowmapOpacity",
     shadowmapTransparent = "shadowmapTransparent",
+
     /**
      * 延迟渲染的深度渲染通道
      * 1、单像素深度渲染，用于延迟渲染的深度测试（后续使用forward进行正常渲染，单像素模式）
@@ -38,35 +41,55 @@ export enum renderPassName {
     depth = "depth",
     forward = "forward",
     /**
-     * 延迟通道
-     * 1、光照处理
-     * 2、阴影处理
-     * 
+     * 延迟通道，统一处理光照与阴影
      */
     defer = "defer",
     transparent = "transparent",
-    transparentPixcel = "transparentPixcel",
+    /**
+     * 不参与world stage深度测试的，不透明2D精灵通道。（参与深度测试的sprite在正常的forward中）
+     * 1、不透明sprite，只为在world其他实体之上的sprite
+     * 2、这个通道内，不透明的sprite按照depth绘制（开启depthTest，写入depth）
+     * 3、这个通道sprite不具有光照与阴影（至少目前）
+     */
     sprite = "sprite",
-    // spriteTop = "spriteTop",
+    /**
+     * 不参与world stage深度测试的，透明2D精灵通道。（参与深度测试的sprite在正常的transparent通道中）
+     * 1、不透明sprite，只为在world其他实体之上的sprite
+     * 2、这个通道内，不透明的sprite按照transparent通道的绘规则绘制（开启depthTest，不写入depth）
+     * 3、这个通道sprite不具有光照与阴影（至少目前）
+     */
     spriteTransparent = "spriteTransparent",
-    // spriteTransparentTop = "spriteTransparentTop",
+    /**
+     * MSAA通道，用于MSAA抗锯齿。
+     */
     MSAA = "MSAA",
+    /**
+     * 色调映射通道，用于色调映射。
+     */
     toneMapping = "toneMapping",
+    /**
+     * 后处理通道。
+     * 后处理不包括在此之后的绘制的。
+     */
     postprocess = "postprocess",
     /**
-     * UI通道,用于UI的绘制。
+     * 其他stage通道,用于UI的绘制。
      * UI 与 stage 的关系
      * 1、这个可以预留的2bit的stage（ID：0-3）。（具体数据在shader/enity/mesh/replace_output.vs.wgsl 中，如果stage数量不够，后期按需调整）
      *      A、stage=0，是world；
-     *      B、stage=1，给UI；
-     *      C、stage=2，辅助viewport（比如：三维导航等。三维导航也可以通过其他方式，比如：最后在NDC的空间内绘制一个三维导航器，同时写入深度，写入ID，关闭深度测试）；
-     *      D、stage=3，object control （这个可以预留，用于对象的控制，比如选中，拖动，缩放等），快速判断是否需要控制对象
+     *      B、stage=2，object control （这个可以预留，用于对象的控制，比如选中，拖动，缩放等），快速判断是否需要控制对象
+     *      C、stage=3，辅助viewport（比如：三维导航等。三维导航也可以通过其他方式，比如：最后在NDC的空间内绘制一个三维导航器，同时写入深度，写入ID，关闭深度测试）；
+     *      D、stage=3，给UI通道；
      * 2、UI的通道与其他工作一样
      * 3、合并UI与world，采用render模式；UI在前，world在后；UI覆盖world，透明的进行Blend
      */
+    stage1 = "stage2",
+    stage2 = "stage3",
+    /**
+     * UI(最后绘制，在NDC空间，直接绘制，不进行深度测试).
+     * UI隐式=stage3
+     */
     ui = "ui",
-    stage2 = "stage2",
-    stage3 = "stage3",
     /**
      * output通道，
      * 考虑方向：
@@ -115,7 +138,7 @@ export class RenderManager {
     scene: Scene;
     device: GPUDevice;
     /**
-     * 渲染命令:
+     * 渲染命令(按照工作顺序):
      * 1、有内容和时间两条线；
      * 2、pipeline合批，只合并有内容线的，不合并有时间线的（简单情况下无法保障顺序，如果保障了顺序，JS效率是否合算需要再议）；
      * 3、目前明确只有内容线的：depth、forward、transparency、shadowmapOpacity,shadowmapTransparent，即都是和渲染相关的命令；
@@ -129,14 +152,15 @@ export class RenderManager {
         [renderPassName.shadowmapTransparent]: I_renderDrawOfTimeline,
         [renderPassName.depth]: I_renderDrawCommand,
         [renderPassName.forward]: I_renderDrawCommand,
+        [renderPassName.defer]: commmandType[],
         [renderPassName.transparent]: I_renderDrawOfDistancesLine,
-        /**
-         * 透明通道的pixcel级别的绘制命令队列，
-         */
-        // [renderPassName.transparentPixcel]: I_renderDrawOfDistancesLine,
         [renderPassName.sprite]: I_renderDrawCommand,
         [renderPassName.spriteTransparent]: I_renderDrawOfTimeline,
+        [renderPassName.MSAA]: commmandType[],
+        [renderPassName.toneMapping]: commmandType[],
         [renderPassName.postprocess]: commmandType[],
+        [renderPassName.stage1]: commmandType[],
+        [renderPassName.stage2]: commmandType[],
         [renderPassName.ui]: commmandType[],
         [renderPassName.output]: commmandType[],
     } = {
@@ -148,71 +172,47 @@ export class RenderManager {
             [renderPassName.shadowmapTransparent]: {},
             [renderPassName.depth]: {},
             [renderPassName.forward]: {},
+            [renderPassName.defer]: [],
             [renderPassName.transparent]: {},
             // [renderPassName.transparentPixcel]: {},
             [renderPassName.sprite]: {},
             [renderPassName.spriteTransparent]: {},
+            [renderPassName.MSAA]: [],
+            [renderPassName.toneMapping]: [],
             [renderPassName.postprocess]: [],
+            [renderPassName.stage1]: [],
+            [renderPassName.stage2]: [],
             [renderPassName.ui]: [],
             [renderPassName.output]: [],
         };
-
-    // renderCompute: commmandType[] = [];
-    // renderTexutre: commmandType[] = [];
-    // renderMaterial: commmandType[] = [];
-    // renderRenderTarget: commmandType[] = [];
-
-    // renderShadowMapOpacityCommand: I_renderDrawOfTimeline = {};
-    // /**
-    //  * 1、透明物体阴影具有时间顺序，dpeth 需要对比，并复制更新到另外的一个depth texture 中
-    //  * 2、color则是按照比例进行blend，即光的衰减，alpha为光的衰减值的百分比（需要多层衰减光强度）
-    //  *      光强度=上一次光强度(从原始强度开始)*距离衰减*alpha
-    //  *      所以colorattachment需要float线性空间格式
-    //  */
-    // renderShadowMapTransparentCommand: I_renderDrawOfTimeline = {};
-
-    // renderCameraDeferDepthCommand: I_renderDrawCommand = {};
-    // renderCameraForwardCommand: I_renderDrawCommand = {};
-
-    // //透明enity，具有时间线
-    // renderCameraTransParentCommand: I_renderDrawOfTimeline = {};
-    // //透明物体合并通道
-    // renderCameraTransparentPixcelCommand: I_renderDrawOfTimeline = {};
-
-    // renderSpriteCommand: I_renderDrawCommand = {};
-    // //sprite透明，具有时间线
-    // renderSpriteTransparentCommand: I_renderDrawOfTimeline = {};
-
-    // // renderSpriteTopCommand: I_renderDrawCommand = {};
-    // // //sprite透明，具有时间线
-    // // renderSpriteTransparentTopCommand: I_renderDrawOfTimeline = {};
-
-    // renderPostProcessCommand: commmandType[] = [];
-    // renderUICommand: commmandType[] = [];
-    // renderOutputCommand: commmandType[] = [];
-
-
-
+    /**
+     * 前四个连续的渲染通道，为了render时，省些代码
+     */
     listCommandType: any[] = [
         this.RC[renderPassName.compute],
         this.RC[renderPassName.texture],
         this.RC[renderPassName.material],
         this.RC[renderPassName.renderTarget],
     ]
-
-    DCG: DrawCommandGenerator;
-
-
+    /**
+     * TTP早期测试使用
+     */
+    // DCG: DrawCommandGenerator;
+    /**
+     * RPD的loadOp计数器
+     */
     cameraRendered: {
         [name: string]: number
     } = {};
     constructor(scene: Scene) {
         this.scene = scene;
         this.device = scene.device;
-        this.DCG = new DrawCommandGenerator({ scene });
+        //TTP早期测试使用
+        // this.DCG = new DrawCommandGenerator({ scene });
     }
     /**
-     * 初始化相机的渲染通道,初始化包括：depth,forward,transparent,
+     * 初始化相机的渲染通道(通道内不是单一commmandType[]情况的)
+     * 初始化包括：depth,forward,transparent,
      * @param UUID 
      */
     initRenderCommandForCamera(UUID: string) {
@@ -282,6 +282,7 @@ export class RenderManager {
             cameraCommand.pipelineOrder.clear();
             cameraCommand.dynmaicOrder = [];
         }
+        this.RC[renderPassName.defer] = [];
         for (let UUID in this.RC[renderPassName.transparent]) {
             this.RC[renderPassName.transparent][UUID as renderPassName] = [];
         }
@@ -294,7 +295,11 @@ export class RenderManager {
         for (let UUID in this.RC[renderPassName.spriteTransparent]) {
             this.RC[renderPassName.spriteTransparent][UUID as renderPassName] = [];
         }
+        this.RC[renderPassName.MSAA] = [];
+        this.RC[renderPassName.toneMapping] = [];
         this.RC[renderPassName.postprocess] = [];
+        this.RC[renderPassName.stage1] = [];
+        this.RC[renderPassName.stage2] = [];
         this.RC[renderPassName.ui] = [];
         this.RC[renderPassName.output] = [];
     }
@@ -329,15 +334,8 @@ export class RenderManager {
             case renderPassName.renderTarget:
                 this.RC[renderPassName.renderTarget].push(command);
                 break;
-            case renderPassName.postprocess:
-                this.RC[renderPassName.postprocess].push(command);
-                break;
-            case renderPassName.ui:
-                this.RC[renderPassName.ui].push(command);
-                break;
             case renderPassName.shadowmapOpacity:
                 this.RC[renderPassName.shadowmapOpacity][_UUID!].push(command);
-
                 break;
             case renderPassName.shadowmapTransparent:
                 this.RC[renderPassName.shadowmapTransparent][_UUID!].push(command);
@@ -361,27 +359,6 @@ export class RenderManager {
                     this.RC[renderPassName.forward][_UUID!].dynmaicOrder.push(command);
                 }
                 break;
-            case renderPassName.depth:
-                if (command instanceof DrawCommand) {
-                    if (command.dynamic === false) {
-                        flag = (command as DrawCommand).getPipeLineStructure();
-                        if (this.RC[renderPassName.depth][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
-                            this.RC[renderPassName.depth][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
-                        } else {                                                                               //没有map
-                            this.RC[renderPassName.depth][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
-                        }
-                    }
-                    else {
-                        this.RC[renderPassName.depth][_UUID!].dynmaicOrder.push(command);
-                    }
-                }
-                else {
-                    this.RC[renderPassName.depth][_UUID!].dynmaicOrder.push(command);
-                }
-                break;
-            case renderPassName.transparent:
-                this.RC[renderPassName.transparent][_UUID!].push(command);
-                break;
             case renderPassName.sprite:
                 if (command instanceof DrawCommand) {
                     if (command.dynamic === false) {
@@ -400,10 +377,57 @@ export class RenderManager {
                     this.RC[renderPassName.sprite][_UUID!].dynmaicOrder.push(command);
                 }
                 break;
+            case renderPassName.depth:
+                if (command instanceof DrawCommand) {
+                    if (command.dynamic === false) {
+                        flag = (command as DrawCommand).getPipeLineStructure();
+                        if (this.RC[renderPassName.depth][_UUID!].pipelineOrder.has(flag)) {                            //是否有map
+                            this.RC[renderPassName.depth][_UUID!].pipelineOrder.get(flag)?.push(command);               //push command
+                        } else {                                                                               //没有map
+                            this.RC[renderPassName.depth][_UUID!].pipelineOrder.set(flag, [command]);                   //set map
+                        }
+                    }
+                    else {
+                        this.RC[renderPassName.depth][_UUID!].dynmaicOrder.push(command);
+                    }
+                }
+                else {
+                    this.RC[renderPassName.depth][_UUID!].dynmaicOrder.push(command);
+                }
+                break;
+            case renderPassName.defer:
+                this.RC[renderPassName.defer].push(command);
+                break;
+            case renderPassName.transparent:
+                this.RC[renderPassName.transparent][_UUID!].push(command);
+                break;
+
 
             case renderPassName.spriteTransparent:
                 this.RC[renderPassName.spriteTransparent][_UUID!].push(command);
                 break;
+            case renderPassName.MSAA:
+                this.RC[renderPassName.MSAA].push(command);
+                break;
+            case renderPassName.toneMapping:
+                this.RC[renderPassName.toneMapping].push(command);
+                break;
+            case renderPassName.postprocess:
+                this.RC[renderPassName.postprocess].push(command);
+                break;
+            case renderPassName.stage1:
+                this.RC[renderPassName.stage1].push(command);
+                break;
+            case renderPassName.stage2:
+                this.RC[renderPassName.stage2].push(command);
+                break;
+            case renderPassName.ui:
+                this.RC[renderPassName.ui].push(command);
+                break;
+            case renderPassName.output:
+                this.RC[renderPassName.output].push(command);
+                break;
+
 
 
             default:
@@ -601,57 +625,55 @@ export class RenderManager {
     }
     /**
      * 渲染
-     * 1、根据渲染通道分类
+     * 1、按照渲染属性进行
      * 2、DC根据pipeline分类
      * 3、其他渲染通道直接提交commandBuffer数组
      * 4、阴影通道之间具有时间线
      */
     async render() {
-        for (let onePass of this.listCommandType) {
-            let submitCommand: GPUCommandBuffer[] = [];
-            for (let perCommand of onePass) {
-                submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
-            }
-            this.device.queue.submit(submitCommand);
-        }
 
+        for (let onePass of this.listCommandType) {
+            // let submitCommand: GPUCommandBuffer[] = [];
+            // for (let perCommand of onePass) {
+            //     submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
+            // }
+            // this.device.queue.submit(submitCommand);
+            this.doCommand(onePass);
+        }
         //不透明shadowmap
         this.renderTimelineDC(this.RC[renderPassName.shadowmapOpacity]);
-
         //透明shadowmap
         this.renderTimelineDC(this.RC[renderPassName.shadowmapTransparent]);
-
         //defer render Of depth
         this.renderForwaredDC(this.RC[renderPassName.depth]);
         //不透明enity
         this.renderForwaredDC(this.RC[renderPassName.forward]);
-        ////透明enity
-        // this.renderTimelineDC(this.renderCameraTransParentCommand);
+        //defer render
+        this.doCommand(this.RC[renderPassName.defer]);
+        //透明enity
         await this.renderTransParentDC(this.RC[renderPassName.transparent]);
-
-        //像素级别多层渲染排序
-        // this.renderTPOLD(this.RC[renderPassName.transparent]);
-
         //sprite
         this.renderForwaredDC(this.RC[renderPassName.sprite]);
         //透明sprite
         this.renderTimelineDC(this.RC[renderPassName.spriteTransparent]);
-
-
-        let submitCommand: GPUCommandBuffer[] = [];
+        //MSAA
+        this.doCommand(this.RC[renderPassName.MSAA]);
+        //toneMapping
+        this.doCommand(this.RC[renderPassName.toneMapping]);
         //pp
-        for (let perCommand of this.RC[renderPassName.postprocess]) {
-            submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
-        }
+        this.doCommand(this.RC[renderPassName.postprocess]);
+        //stage1
+        this.doCommand(this.RC[renderPassName.stage1]);
+        //stage2
+        this.doCommand(this.RC[renderPassName.stage2]);
         //ui
-        for (let perCommand of this.RC[renderPassName.ui]) {
-            submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
-        }
-        if (submitCommand.length > 0)
-            this.device.queue.submit(submitCommand);
+        this.doCommand(this.RC[renderPassName.ui]);
         //output
-        submitCommand = [];
-        for (let perCommand of this.RC[renderPassName.output]) {
+        this.doCommand(this.RC[renderPassName.output]);
+    }
+    doCommand(list: commmandType[]) {
+        let submitCommand = [];
+        for (let perCommand of list) {
             submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
         }
         if (submitCommand.length > 0)
@@ -766,6 +788,8 @@ export class RenderManager {
         return countOfUUID;
     }
 
+    //像素级别多层渲染排序
+    // this.renderTPOLD(this.RC[renderPassName.transparent]);
     // async renderTPOLD(list: I_renderDrawOfDistancesLine) {
     //     //像素级别多层渲染排序
     //     /**

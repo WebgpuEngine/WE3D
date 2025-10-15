@@ -193,16 +193,16 @@ export class Scene {
         cleanValue: number,
         depthCompare: GPUCompareFunction,
     } =
-         {
-                isReversedZ: true,
-                cleanValue: 0,
-                depthCompare: 'greater',
-            }
-        // {
-        //     isReversedZ: false,
-        //     cleanValue: 1,
-        //     depthCompare: 'less',
-        // }
+        {
+            isReversedZ: true,
+            cleanValue: 0,
+            depthCompare: 'greater',
+        }
+    // {
+    //     isReversedZ: false,
+    //     cleanValue: 1,
+    //     depthCompare: 'less',
+    // }
 
 
     //////////////////////////////////////////////////////////
@@ -452,7 +452,7 @@ export class Scene {
      * @param height 高度
      */
     reSize(width: number, height: number) {
-        console.log("Scene reSize()",this.clock.last);
+        console.log("Scene reSize()", this.clock.last);
         if (width != this.surface.size.width || height != this.surface.size.height) {
             this.surface.size.width = width;
             this.surface.size.height = height;
@@ -598,6 +598,7 @@ export class Scene {
         //lights(shadowmap) manager update
         this.lightsManager.update(this.clock);
 
+        //push DC of MSAA,ToneMapping,Defer to render manager
         this.cameraManager.update(this.clock);
 
         //entiy push DC to render manager,
@@ -640,7 +641,7 @@ export class Scene {
                 await scope.onBeforeRender();
                 await scope.render();
                 await scope.onAfterRender();
-                await scope.renderToneMapping();
+                // await scope.renderToneMappingAndMSAA();//test 
                 await scope.pickup();
                 await scope.postProcess();
                 await scope.showGBuffersVisualize();
@@ -670,10 +671,11 @@ export class Scene {
      * 1、for 每个相机渲染GBuffer到最终目标
      * 2、渲染色调映射
      */
-    async renderToneMapping() {
-        this.cameraManager.renderCameraGBufferToFinalTexture();
+    async renderToneMappingAndMSAA() {
+        // this.cameraManager.renderCameraGBufferToFinalTexture();
         this.cameraManager.renderToneMapping();
     }
+
 
     async pickup() { }
     async postProcess() { }

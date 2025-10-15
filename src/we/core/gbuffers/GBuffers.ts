@@ -85,7 +85,7 @@ export class GBuffers {
      * @param id ：GBuffer的id
      * @param input ：GBuffer的初始化参数
      */
-    initGBuffer(id: string, input: IV_GBuffer) {
+    async initGBuffer(id: string, input: IV_GBuffer) {
         let MSAA = input.MSAA;
         if (this.GBuffer[id]) {
             console.warn("GBuffer id:" + id + " already exist");
@@ -157,7 +157,7 @@ export class GBuffers {
                     {
                         view: toneMappingTexture.createView(),
                         // clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
-                        loadOp: 'load',
+                        loadOp: 'clear',
                         storeOp: "store"
                     }
                 ],
@@ -281,9 +281,9 @@ export class GBuffers {
      * @param id ：GBuffer的id
      * @param input ：GBuffer的初始化参数
      */
-    reInitGBuffer(id: string, input: IV_GBuffer) {
+    async reInitGBuffer(id: string, input: IV_GBuffer) {
         this.removeGBuffer(id);
-        this.initGBuffer(id, input);
+        await this.initGBuffer(id, input);
     }
     getRPDByID(id: string): GPURenderPassDescriptor {
         return this.GBuffer[id].forward.RPD;

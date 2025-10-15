@@ -236,8 +236,8 @@ export class InputManager extends ECSManager<BaseInputControl> {
                     }
             }
         }
-        event.preventDefault();
-        event.stopPropagation();
+        // event.preventDefault();
+        // event.stopPropagation();
     }
     keyUp(scope: InputManager, event: KeyboardEvent) {
         for (let i in scope.registerEventList[E_InputEvent.keyup]) {
@@ -250,8 +250,8 @@ export class InputManager extends ECSManager<BaseInputControl> {
                     }
             }
         }
-        event.preventDefault();
-        event.stopPropagation();
+        // event.preventDefault();
+        // event.stopPropagation();
     }
     pointerDown(scope: InputManager, event: PointerEvent) {
         for (let i in scope.registerEventList[E_InputEvent.pointerdown]) {

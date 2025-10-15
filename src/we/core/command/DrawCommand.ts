@@ -72,7 +72,7 @@ export class DrawCommand {
     /**
      * 不使用“auto”布局，需要手动创建布局。(不使用auto布局，可以bindgroup0可以共享）
      */
-    pipelineLayout: GPUPipelineLayout | "auto" = "auto";
+    // pipelineLayout: GPUPipelineLayout | "auto" = "auto";
     renderPassDescriptor: () => GPURenderPassDescriptor;// GPURenderPassDescriptor;
 
     vertexBuffers: GPUBuffer[] = [];
@@ -121,6 +121,7 @@ export class DrawCommand {
         if (input.uniform) this.bindGroups = input.uniform;
         this.drawMode = input.drawMode;
         this.renderPassDescriptor = input.renderPassDescriptor;
+        // console.log(this.renderPassDescriptor());
         if (input.dynamicUniform) this.dynamic = true;
         if (input.IDS) this.IDS = input.IDS;
         // this.resourcesGPU = input.scene.resourcesGPU;
@@ -138,6 +139,7 @@ export class DrawCommand {
      */
     uniformBufferList: any[] = [];
     destroy() {
+        console.warn("DrawCommand destroy:", this.label);
         // if (this.resourcesGPU) {
         //     for (let i of this.mapList) {
         //         if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
@@ -161,7 +163,7 @@ export class DrawCommand {
         this.pipeline = {} as GPURenderPipeline;
         // this.scene = null;
         this.inputValues = {} as IV_DrawCommand;
-        this.pipelineLayout = {} as GPUPipelineLayout;
+        // this.pipelineLayout = {} as GPUPipelineLayout;
         this.renderPassDescriptor = {} as () => GPURenderPassDescriptor;
         this.vertexBuffers = [];
         this.indexBuffer = {} as GPUBuffer;
