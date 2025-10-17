@@ -216,7 +216,7 @@ export abstract class BaseMaterial extends RootOfGPU {
      * @param startBinding 
      * @returns I_materialBundleOutput
      */
-    abstract getBundleOfForward(startBinding: number): I_materialBundleOutput;
+    abstract getOpacity_Forward(startBinding: number): I_materialBundleOutput;
     /**
      * MSAA 材质输出shader模板
      * @param startBinding 
@@ -224,8 +224,8 @@ export abstract class BaseMaterial extends RootOfGPU {
      *  1、MSAA：只输出color和depth
      *  2、inforForward:输出其他GBuffer信息
      */
-    abstract getBundleOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA;
-    abstract getBundleOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+    abstract getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA;
+    abstract getOpacity_MSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
     /**
      * MSAA的延迟渲染 输出的shader模板
      * @param startBinding 
@@ -233,15 +233,15 @@ export abstract class BaseMaterial extends RootOfGPU {
      *  1、MSAA：只输出color和depth
      *  2、inforForward:输出其他GBuffer信息（需要按照延迟渲染的约定进行）
      */
-    abstract getBundleOfDeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA;
-    abstract getBundleOfDeferColorOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+    abstract getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA;
+    abstract getOpacity_DeferColorOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
 
     /**
      * 延迟渲染的shader模板输出
      * @param startBinding 
      * @returns I_materialBundleOutput  不包含光影的GBuffer，但GBuffer的输出中需要按照延迟渲染的约定进行。
      */
-    abstract getBundleOfDeferColor(startBinding: number): I_materialBundleOutput;
+    abstract getOpacity_DeferColor(startBinding: number): I_materialBundleOutput;
 
     /**
      * 透明材质bundle
@@ -263,7 +263,7 @@ export abstract class BaseMaterial extends RootOfGPU {
      * TTP为像素级别的排序
      * TTPF为像素级别的排序后的输出
      */
-    getBundleOfTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): {
+    getTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): {
         TT: I_materialBundleOutput,
         TO?: I_materialBundleOutput,
         TTP: I_materialBundleOutput,

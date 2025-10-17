@@ -49,7 +49,7 @@ export class WireFrameMaterial extends BaseMaterial {
         // console.log(this._state);
     }
 
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
             return this.getOpaqueCodeFS(startBinding);
     }
     /**

@@ -350,10 +350,10 @@ export class Mesh extends BaseEntity {
         // let uniformsMaterial
         // if (wireFrame === false) {
         //     //material 部分：uniform 和 shader模板输出
-        //     uniformsMaterial = this._material.getBundleOfForward( bindingNumber);
+        //     uniformsMaterial = this._material.getOpacity_Forward( bindingNumber);
         // }
         // else {
-        //     uniformsMaterial = this._materialWireframe.getBundleOfForward( bindingNumber);
+        //     uniformsMaterial = this._materialWireframe.getOpacity_Forward( bindingNumber);
         // }
         // if (uniformsMaterial) {
         //     uniform1.push(...uniformsMaterial.uniformGroup);
@@ -580,14 +580,14 @@ export class Mesh extends BaseEntity {
                         uniformsMaterialMSAA = this._material.getFS_TO_DeferColorOfMSAA(bundle.bindingNumber);
                     }
                     else
-                        uniformsMaterialMSAA = this._material.getBundleOfDeferColorOfMSAA(bundle.bindingNumber);
+                        uniformsMaterialMSAA = this._material.getOpacity_DeferColorOfMSAA(bundle.bindingNumber);
                 }
                 else {
                     if (isTO === true) {
                         uniformsMaterialMSAA = this._material.getFS_TO_MSAA(bundle.bindingNumber);
                     }
                     else
-                        uniformsMaterialMSAA = this._material.getBundleOfMSAA(bundle.bindingNumber);
+                        uniformsMaterialMSAA = this._material.getOpacity_MSAA(bundle.bindingNumber);
                 }
                 //MSAA,材质的shader 模板输出，
                 if (uniformsMaterialMSAA) {
@@ -608,14 +608,14 @@ export class Mesh extends BaseEntity {
                         uniformsMaterialInfo = this._material.getFS_TO_DeferColorOfMSAA_Info(bundle.bindingNumber);
                     }
                     else
-                        uniformsMaterialInfo = this._material.getBundleOfDeferColorOfMSAA_Info(bundle.bindingNumber);
+                        uniformsMaterialInfo = this._material.getOpacity_DeferColorOfMSAA_Info(bundle.bindingNumber);
                 }
                 else {
                     if (isTO === true) {
                         uniformsMaterialInfo = this._material.getFS_TO_MSAA_Info(bundle.bindingNumber);
                     }
                     else
-                        uniformsMaterialInfo = this._material.getBundleOfMSAA_Info(bundle.bindingNumber);
+                        uniformsMaterialInfo = this._material.getOpacity_MSAA_Info(bundle.bindingNumber);
                 }
 
 
@@ -640,7 +640,7 @@ export class Mesh extends BaseEntity {
                     uniformsMaterial = this._material.getFS_TO_DeferColor(bundle.bindingNumber);
                 }
                 else
-                    uniformsMaterial = this._material.getBundleOfDeferColor(bundle.bindingNumber);
+                    uniformsMaterial = this._material.getOpacity_DeferColor(bundle.bindingNumber);
             }
             else {
                 if (isTO === true) {
@@ -650,7 +650,7 @@ export class Mesh extends BaseEntity {
                     uniformsMaterial = TO;
                 }
                 else
-                    uniformsMaterial = this._material.getBundleOfForward(bundle.bindingNumber);
+                    uniformsMaterial = this._material.getOpacity_Forward(bundle.bindingNumber);
             }
             // //材质的shader 模板输出，
             {
@@ -675,7 +675,7 @@ export class Mesh extends BaseEntity {
         //wireframe 前向渲染
         if (this._wireframe.enable) {
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshWireframeVS);
-            let uniformsMaterial = this._materialWireframe.getBundleOfForward(bundle.bindingNumber);
+            let uniformsMaterial = this._materialWireframe.getOpacity_Forward(bundle.bindingNumber);
             if (uniformsMaterial) {
                 bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
@@ -696,7 +696,7 @@ export class Mesh extends BaseEntity {
             //材质的shader 模板输出，
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
             //获取TTTT，然后分别判断并执行
-            let uniformsMaterialTOTT = this._material.getBundleOfTTTT(camera, bundle.bindingNumber);
+            let uniformsMaterialTOTT = this._material.getTTTT(camera, bundle.bindingNumber);
             //TO
             if (uniformsMaterialTOTT.TO) {
                 // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
@@ -822,7 +822,7 @@ export class Mesh extends BaseEntity {
         //wireframe 前向渲染,暂时不考虑wireframe 透明渲染
         if (this._wireframe.enable) {
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshWireframeVS);
-            let uniformsMaterial = this._materialWireframe.getBundleOfForward(bundle.bindingNumber);
+            let uniformsMaterial = this._materialWireframe.getOpacity_Forward(bundle.bindingNumber);
             if (uniformsMaterial) {
                 bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;

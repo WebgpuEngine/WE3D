@@ -91,10 +91,10 @@ export class OneColoeCube extends Mesh {
         let uniformsMaterial
         if (wireFrame === false) {
             //material 部分：uniform 和 shader模板输出
-            uniformsMaterial = this._material.getBundleOfForward(bindingNumber);
+            uniformsMaterial = this._material.getOpacity_Forward(bindingNumber);
         }
         else {
-            uniformsMaterial = this._materialWireframe.getBundleOfForward(bindingNumber);
+            uniformsMaterial = this._materialWireframe.getOpacity_Forward(bindingNumber);
         }
         if (uniformsMaterial) {
             uniform1.push(...uniformsMaterial.uniformGroup);

@@ -34,7 +34,7 @@ export class VertexColorMaterial extends BaseMaterial {
     _destroy(): void {
         throw new Error("Method not implemented.");
     }
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
         let template = SHT_materialColorFS_mergeToVS;
 
         let uniform1: T_uniformGroup = [];

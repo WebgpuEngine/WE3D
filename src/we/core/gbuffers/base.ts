@@ -248,7 +248,7 @@ export interface I_GBufferBundle {
  * @param camera ：相机
  * @returns I_GBufferBundle
  */
-export function getBundleOfGBufferOfUniformOfDefer(binding: number, scene: Scene, camera: BaseCamera): I_GBufferBundle {
+export function getOpacity_GBufferOfUniformOfDefer(binding: number, scene: Scene, camera: BaseCamera): I_GBufferBundle {
     let bundle: I_GBufferBundle = {
         binding: binding,
         groupAndBindingString: "",

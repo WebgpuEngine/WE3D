@@ -108,7 +108,7 @@ export class PBRMaterial extends BaseMaterial {
             }
         }
     }
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -309,7 +309,7 @@ export class PBRMaterial extends BaseMaterial {
             binding: binding,
             owner: this,
         }
-        console.log("PBRMaterial getBundleOfForward()",this.scene.clock.last);
+        console.log("PBRMaterial getOpacity_Forward()",this.scene.clock.last);
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
     }
 

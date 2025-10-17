@@ -205,7 +205,7 @@ export class TextureMaterial extends BaseMaterial {
      * @param startBinding 起始binding
      * @returns 前向渲染的bundle
      */
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -347,7 +347,7 @@ export class TextureMaterial extends BaseMaterial {
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: bindingNumber };
     }
     getFS_TO(_startBinding: number): I_materialBundleOutput {
-        return this.getBundleOfForward(_startBinding);
+        return this.getOpacity_Forward(_startBinding);
     }
     formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
         let template: I_ShaderTemplate;

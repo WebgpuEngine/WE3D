@@ -267,7 +267,7 @@ export class Points extends BaseEntity {
                 };
             }
         }
-        // let uniformsMaterial = this._material.getBundleOfForward(bindingNumber);
+        // let uniformsMaterial = this._material.getOpacity_Forward(bindingNumber);
 
         // if (uniformsMaterial) {
         //     uniform1.push(...uniformsMaterial.uniformGroup);
@@ -456,7 +456,7 @@ export class Points extends BaseEntity {
 
         //mesh 前向渲染
         let bundle = this.getUniformAndShaderTemplateFinal(SHT_PointVS);
-        let uniformsMaterial = this._material.getBundleOfForward(bundle.bindingNumber);
+        let uniformsMaterial = this._material.getOpacity_Forward(bundle.bindingNumber);
         if (uniformsMaterial) {
             bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
             bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;

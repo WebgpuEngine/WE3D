@@ -72,7 +72,7 @@ export class CubeTextureMaterial extends TextureMaterial {
             });
         }
     }
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -136,7 +136,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         binding++;
 
         // if (this.getTransparent()) {
-        //     let bundle = getBundleOfGBufferOfUniformOfDefer(binding, this.scene, camera);
+        //     let bundle = getOpacity_GBufferOfUniformOfDefer(binding, this.scene, camera);
         //     uniform1.push(...bundle.uniformGroup);
         //     groupAndBindingString += bundle.groupAndBindingString;
         //     binding = bundle.binding;

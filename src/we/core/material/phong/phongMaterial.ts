@@ -1,7 +1,7 @@
 import { E_lifeState, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_uniformBufferPart, T_uniformGroup } from "../../command/base";
-import { getBundleOfGBufferOfUniformOfDefer } from "../../gbuffers/base";
+import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialPhongFS_mergeToVS } from "../../shadermanagemnet/material/phongMaterial";
@@ -34,7 +34,7 @@ export class PhongMaterial extends BaseMaterial {
   setTO(): void {
     // throw new Error("Method not implemented.");
   }
-  getBundleOfTOTT(startBinding: number): { TT: I_materialBundleOutput; TO?: I_materialBundleOutput; } {
+  getOpacity_TOTT(startBinding: number): { TT: I_materialBundleOutput; TO?: I_materialBundleOutput; } {
     throw new Error("Method not implemented.");
   }
   declare inputValues: IV_PhongMaterial;
@@ -91,7 +91,7 @@ export class PhongMaterial extends BaseMaterial {
     }
     this._state = E_lifeState.finished;
   }
-  getBundleOfForward(startBinding: number): I_materialBundleOutput {
+  getOpacity_Forward(startBinding: number): I_materialBundleOutput {
     let template: I_ShaderTemplate;
     let groupAndBindingString: string = "";
     let binding: number = startBinding;
@@ -191,7 +191,7 @@ export class PhongMaterial extends BaseMaterial {
     }
 
     // if (this.getTransparent()) {
-    //   let bundle = getBundleOfGBufferOfUniformOfDefer(binding, this.scene, camera);
+    //   let bundle = getOpacity_GBufferOfUniformOfDefer(binding, this.scene, camera);
     //   uniform1.push(...bundle.uniformGroup);
     //   groupAndBindingString += bundle.groupAndBindingString;
     //   binding = bundle.binding;

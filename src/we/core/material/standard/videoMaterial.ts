@@ -7,7 +7,7 @@ import { T_uniformEntries, T_uniformGroup } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialTextureFS_mergeToVS, SHT_materialTextureTransparentFS_mergeToVS } from "../../shadermanagemnet/material/textureMaterial";
-import { getBundleOfGBufferOfUniformOfDefer } from "../../gbuffers/base";
+import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { IV_OptionVideoTexture, T_modelOfVideo, T_VIdeoSourceType, VideoTexture } from "../../texture/videoTexture";
 import { SHT_materialVideoTextureFS_mergeToVS } from "../../shadermanagemnet/material/videoMaterial";
 import { BaseCamera } from "../../camera/baseCamera";
@@ -99,7 +99,7 @@ export class VideoMaterial extends BaseMaterial {
     getTOFS(_startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
@@ -185,7 +185,7 @@ export class VideoMaterial extends BaseMaterial {
         binding++;
 
         // if (this.getTransparent()) {
-        //     let bundle = getBundleOfGBufferOfUniformOfDefer(binding, this.scene, camera);
+        //     let bundle = getOpacity_GBufferOfUniformOfDefer(binding, this.scene, camera);
         //     uniform1.push(...bundle.uniformGroup);
         //     groupAndBindingString += bundle.groupAndBindingString;
         //     binding = bundle.binding;

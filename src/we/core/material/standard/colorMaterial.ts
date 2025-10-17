@@ -86,7 +86,7 @@ export class ColorMaterial extends BaseMaterial {
         this.hasOpaqueOfTransparent = false;
     }
 
-    getBundleOfForward(startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
         return this.getOpaqueCodeFS(startBinding);
     }
     /**

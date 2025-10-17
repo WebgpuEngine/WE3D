@@ -21,7 +21,7 @@ export class ShadowMapMaterial extends BaseMaterial {
     }
 
 
-    getBundleOfForward( startBinding: number): I_materialBundleOutput {
+    getOpacity_Forward( startBinding: number): I_materialBundleOutput {
         if (this.getTransparent()) {
             return this.getTransparentCodeFS(startBinding);
         }
