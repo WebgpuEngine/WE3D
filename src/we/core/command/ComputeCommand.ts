@@ -1,118 +1,121 @@
-// import { BaseCommand, uniformBufferAll, baseOptionOfCommand, } from './baseCommand';
+import { Scene } from "../scene/scene";
+import { I_DrawCommandIDs, IV_BaseCommand, T_uniformGroup } from "./base";
+import { I_DynamicUniformOfDrawCommand } from "./DrawCommand";
 
-import { BaseCommand } from "./baseCommand";
-import { computeOptionOfCommand, uniformBufferAll } from "./commandDefine";
-
-
-
-
-
-export class ComputeCommand extends BaseCommand {
-
-    declare input: computeOptionOfCommand;
-
-    mapBuffer!: uniformBufferAll;
-
-
-    /***pipeline 句柄 */
-    declare pipeline: GPUComputePipeline;
+export interface IV_ComputeCommand extends IV_BaseCommand {
+    scene: Scene,
+    /**
+     * 一、 已经创建pipeline，直接使用
+     * 问题：
+     *  1、所有权：可能会产生GC问题
+     *  2、如果isOwner=true，即获得所有权，可以进行新建等，GC会自动销毁（没有其他使用者的情况）
+     * 
+     * 二、传入相关参数，创建pipeline
+     */
 
 
-    constructor(options: computeOptionOfCommand) {
-        super(options);
-        this.unifromBuffer = [];
-        if (options.layout) {
-            this.pipelineLayout = options.layout;
+    pipeline: GPUComputePipeline |
+    {
+        shader?: {
+            shaderCode: String,
+            entryPoint: string,
+        },
+        /**
+         * 1、auto：自动创建pipelineLayout
+         * 2、GPUPipelineLayout：已经创建pipelineLayout，在pipeline创建中使用
+         * 3、GPUBindGroupLayout[]：每个bindGroupLayouts的数据，需要创建GPUPipelineLayout，然后再在pipeline创建中使用
+         */
+        pipelineLayout: "auto" | GPUPipelineLayout | GPUBindGroupLayout[]
+    },
+    /**
+     * 绑定的uniform buffer
+     * 1、GPUBindGroup[]：直接绑定的uniform buffer
+     * 2、T_uniformGroup[]：需要根据T_uniformGroup创建GPUBindGroup，然后再绑定。
+     *    A、如果时静态的数据，直接创建GPUBindGroup，然后绑定。
+     *    B、如果时动态的数据，需要在update中更新数据，然后再创建GPUBindGroup，然后绑定。
+     */
+    uniform?: GPUBindGroup[] | T_uniformGroup[],
+    /**
+     * ID组
+     */
+    IDS?: I_DrawCommandIDs,
+    /**
+     * 数组 ,长度3
+     */
+    dispatchCount: [number, number, number],
+
+    isOowner?: boolean,
+}
+
+
+export class ComputeCommand {
+
+    inputValues: IV_ComputeCommand;
+
+    dynamic: boolean = false;
+    scene!: Scene;
+    label!: string;
+    rawUniform!: boolean;
+    device!: GPUDevice;
+
+    pipeline!: GPUComputePipeline;
+    bindGroups: GPUBindGroup[] = [];
+    _isDestroy: boolean = false;
+    /**
+     * ID组
+     */
+    IDS: I_DrawCommandIDs = {
+        UUID: "",
+        ID: 0,
+        renderID: 0,
+    }
+
+    constructor(input: IV_ComputeCommand) {
+        this.inputValues = input;
+        this.label = input.label;
+        this.device = input.device;
+        this.scene = input.scene;
+        if ("shader" in input.pipeline) {
+            this.pipeline = this.createPipeline(input);
+        } else {
+            this.pipeline = input.pipeline as GPUComputePipeline;
         }
-        else {
-            this.pipelineLayout = "auto";
-        }
-        if (options.label) {
-            this.label = options.label;
-        }
-        else {
-            this.label = "";
-        }
-        this.pipeline = this.createPipeline();
-        // this.uniformSystem = this.scene.getuniformSystem();
-        this.uniformGroups = this.createUniformGroups();//在pipeline 之后
+        if (input.uniform) this.bindGroups = input.uniform;
 
-        this._isDestroy = false;
+
         this.init();
     }
     init() {
         // throw new Error('Method not implemented.');
     }
     destroy() {
-        let unifromGroupSource = this.input.uniforms;
-        for (let perGroup of unifromGroupSource) {
-            for (let perOne of perGroup.entries) {
-                if ("size" in perOne) {
-                    this.unifromBuffer[perGroup.layout][perOne.binding].destroy();
-                }
-            }
-        }
-        this.isDestroy = true;
+        this._isDestroy = true;
     }
-
-    /**
- * 创建pipeline，并创建vertexBuffer；
- *  并将buffer push 到this.verticesBuffer中;
- *  传入的GPUBuffer 不push
- * @returns GPURenderPipeline
- */
-    createPipeline() {
-        let label = this.input.label;
-        let device = this.device;
-
-
-        let descriptor: GPUComputePipelineDescriptor = {
-            label: label,
-            layout: this.pipelineLayout,
-            compute: {
-                module: device.createShaderModule({
-                    code: this.input.compute.code
-                }),
-                entryPoint: this.input.compute.entryPoint
-            },
-        };
-
-        const pipeline = device.createComputePipeline(descriptor);
+    createPipeline(value: IV_ComputeCommand): GPUComputePipeline {
+        let pipeline = this.device.createComputePipeline({
+            layout: "auto",
+            ...value.pipeline,
+        });
         return pipeline;
     }
+
     update(): GPUCommandBuffer {
         const device = this.device;
-        // this.scene.updateUnifrombufferForPerShader();//更新ystem的uniform ，MVP，camera，lights等
-        if (this.rawUniform) {//RAW
-
-        }
-        else {//system uniform 
-            //创建
-            if (this.uniformGroups[0] == undefined) {
-                this.uniformGroups[0] = this.parent.createSystemUnifromGroupForPerShader(this.pipeline);//更新ystem的uniform ，MVP，camera，lights等
-            }
-
-        }
-        this.updateUniformBuffer();
-
 
         // Encode commands to do the computation
-        const encoder = device.createCommandEncoder({ label: 'compute builtin encoder' });
-        const passEncoder = encoder.beginComputePass({ label: 'compute builtin pass' });
+        const encoder = device.createCommandEncoder({ label: 'compute  encoder' + this.label });
+        const passEncoder = encoder.beginComputePass({ label: 'compute  pass' + this.label });
         passEncoder.setPipeline(this.pipeline);
 
-        for (let i in this.uniformGroups) {
-            let perGroup = this.uniformGroups[i]
+        for (let i in this.bindGroups) {
+            let perGroup = this.bindGroups[i]
             passEncoder.setBindGroup(parseInt(i), perGroup); //每次绑定group，buffer已经在GPU memory 中
         }
         // let x = 1, y = 1, z = 1;
-        let [x = 1, y = 1, z = 1] = [...this.input.dispatchCount];
+        let [x = 1, y = 1, z = 1] = [...this.inputValues.dispatchCount];
         passEncoder.dispatchWorkgroups(x, y, z);
         // passEncoder.dispatchWorkgroups(...this.input.dispatchCount);
-        passEncoder.end();
-        if (this.input.map) {
-            await this.input.map!(this, encoder)
-        }
+
         // Finish encoding and submit the commands
         const commandBuffer = encoder.finish();
         return commandBuffer;

@@ -467,7 +467,7 @@ export class Scene {
                 this.finalTarget.depth.destroy();
             }
             this.finalTarget.color = this.device.createTexture({
-                label: "finalTarget.color",
+                label: "scene finalTarget.color",
                 size: [width, height],
                 format: this.colorFormatOfCanvas,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
@@ -475,7 +475,7 @@ export class Scene {
             });
             if (this.finalTarget.NDC === true)
                 this.finalTarget.depth = this.device.createTexture({
-                    label: "finalTarget.depth",
+                    label: "scene finalTarget.depth",
                     size: [width, height],
                     format: this.depthMode.depthDefaultFormat,
                     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
@@ -950,11 +950,12 @@ export class Scene {
             //////////////////////////////////////////////////
             //bind group zero 
             let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+                label: "system bind group layout 0",
                 entries: entriesGroupLayout
             }
             bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
-
             let bindGroupDescriptor: GPUBindGroupDescriptor = {
+                label: "system bind group 0",
                 layout: bindGroupLayout,
                 entries: entriesGroup
             }

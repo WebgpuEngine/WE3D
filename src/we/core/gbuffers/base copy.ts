@@ -39,19 +39,6 @@ export interface I_GBufferName {
     [name: string]: I_GBufferStruct
 }
 
-/**MSAA GBuffer*/
-export var V_MsaaGBufferNames: I_GBufferName = {
-    [E_GBufferNames.depth]: {
-        "format": "depth32float",
-        "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-    [E_GBufferNames.color]: {
-        "format": V_weLinearFormat,
-        "label": "GBuffer color :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
-}
 /**
  * 预定义的forward GBuffer变量
  * 注意：这个顺序需要与shader中的“st_gbuffer.fs.wgsl”的约定顺序一致。（depth 除外）
@@ -102,6 +89,7 @@ export var V_ForwardGBufferNames: I_GBufferName = {
     //     "label": "GBuffer Z :",
     //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     // },
+
 }
 /**
  * 预定义的transparent GBuffer变量
@@ -178,16 +166,6 @@ export interface I_GBufferGroup {
             /** 每个camera的forward GBuffer存储位置 */
             GBuffer: I_GBuffer,
         },
-        MSAA?:{
-            /** 每个camera最终的GBuffer的渲染描述 */
-            RPD: GPURenderPassDescriptor,
-            /**
-             * 每个camera最终的GBuffer的颜色附件描述
-             */
-            colorAttachmentTargets: GPUColorTargetState[],
-            /** 每个camera的forward GBuffer存储位置 */
-            GBuffer: I_GBuffer,
-        }
         deferDepth?: {
             /** 每个camera最终的GBuffer的深度附件描述 */
             RPD: GPURenderPassDescriptor,
@@ -195,7 +173,18 @@ export interface I_GBufferGroup {
             GBuffer: GPUTexture,
         },
         finalRender: {
-
+            /**
+             * 最终的颜色纹理,必须
+             * MSAA时，新建
+             * 非MSAA时，使用forward的GBuffer的color
+             */
+            finalLinearColor: GPUTexture,
+            /**
+             * 最终的id纹理,必须
+             * MSAA时，新建
+             * 非MSAA时，使用forward的GBuffer的color
+             */
+            id: GPUTexture,
             /**
              * ToneMapping的输出纹理,必须
              */
@@ -208,7 +197,30 @@ export interface I_GBufferGroup {
              * ToneMapping的渲染描述,必须
              */
             rpdToneMapping: GPURenderPassDescriptor,
+
+            /**
+             * MSAA的resolve目标纹理,可选（MSAA开启时，需要）
+             */
+            resolveTargetOfMSAA?: GPUTexture,
+            /**
+             * MSAA的渲染描述,可选（MSAA开启时，需要）
+             */
+            rpdMSAA?: GPURenderPassDescriptor,
+            /**
+             * MSAA的颜色附件描述,可选（MSAA开启时，需要）
+             */
+            msaaColorAttachmentTargets: GPUColorTargetState[],
+
         }
+        // transparent?: {
+        //     RPD: GPURenderPassDescriptor,
+        //     colorAttachmentTargets: GPUColorTargetState[],
+        //     /**每个camera的透明渲染的GBuffer 
+        //      * colorAttacheMent:1个输出不透明color，3个color存储，3个depth存储，
+        //      * depthAttachment:1个深度附件
+        //      * */
+        //     transparentGBuffer: I_GBuffer,
+        // },
     }
 }
 export interface I_TransparentGBufferGroup {

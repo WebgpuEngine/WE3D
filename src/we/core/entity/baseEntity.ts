@@ -48,6 +48,13 @@ export abstract class BaseEntity extends RootOfGPU {
     /**     剔除模式    默认=back      */
     _cullMode: GPUCullMode = "back";
 
+    /**MSAA */
+    MSAA: boolean = false;
+    /**
+     * 这里指的是颜色前向，光影延迟
+     */
+    deferColor!: boolean;
+
     ///////////////////////////////////////////////////////////////////
     //空间属性
     boundingBox!: boundingBox;//initDCC中赋值
@@ -86,10 +93,8 @@ export abstract class BaseEntity extends RootOfGPU {
      */
     cameraDC: {
         [name: string]: {
-            // deferDepth: DrawCommand[],
-            // forward: DrawCommand[],
-            // transparent: DrawCommand[],
             [E_renderPassName.depth]: DrawCommand[],
+            [E_renderPassName.MSAA]: DrawCommand[],
             [E_renderPassName.forward]: DrawCommand[],
             [E_renderPassName.transparent]: DrawCommand[],
         }
@@ -193,6 +198,8 @@ export abstract class BaseEntity extends RootOfGPU {
      * @param values
      */
     async init(scene: Scene, parent: RootOfGPU, renderID: number): Promise<number> {
+        this.MSAA = scene.MSAA;
+        this.deferColor = scene.deferRender.deferRenderColor;
         this.structUnifomrBuffer = new ArrayBuffer(this.getSizeOfUniformArrayBuffer());//4 * 4 * this.numInstances * 4 + this._entityIdSizeForWGSL * 4
         this.matrixWorldBuffer = new Float32Array(this.structUnifomrBuffer, 0, 4 * 4 * this.instance.numInstances);
         this.entity_id = new Uint32Array(this.structUnifomrBuffer, 4 * 4 * this.instance.numInstances * 4, 1);
@@ -554,7 +561,7 @@ export abstract class BaseEntity extends RootOfGPU {
      */
     uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
     uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
-    unifromTTPF!:I_uniformBufferPart;
+    unifromTTPF!: I_uniformBufferPart;
     /**
      * 设置透明材质的TTPF的uniform
      * @param layer  对应RGBA四层

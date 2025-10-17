@@ -151,7 +151,7 @@ export interface I_materialBundleOutput {
     uniformGroup: T_uniformGroup,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
     singleShaderTemplateFinal: I_singleShaderTemplate_Final,
 }
-
+export interface I_BundleOfMaterialForMSAA { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
 /**
  * 材质的TT部分中使用的uniform参数的bundle
  * 1、GPUBindGroupEntry[],这个会隐式产生每个entry对应的GPUBindGroupLayoutEntry到resourcesGPU中

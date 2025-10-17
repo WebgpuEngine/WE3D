@@ -4,7 +4,7 @@ import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } fr
 import { T_vsAttribute, V_DC } from "../../command/DrawCommandGenerator";
 import { BaseGeometry } from "../../geometry/baseGeometry";
 import { mergeLightUUID } from "../../light/lightsManager";
-import { I_TransparentOptionOfMaterial } from "../../material/base";
+import { I_BundleOfMaterialForMSAA, I_materialBundleOutput, I_TransparentOptionOfMaterial } from "../../material/base";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { WireFrameMaterial } from "../../material/standard/wireFrameMaterial";
 import { E_renderPassName } from "../../scene/renderManager";
@@ -98,9 +98,11 @@ export class Mesh extends BaseEntity {
         indexes: [],
     };
 
+
     constructor(input: IV_MeshEntity) {
         super(input);
         this.inputValues = input;
+
 
         if (input.attributes.geometry) {
             this._geometry = input.attributes.geometry;
@@ -551,23 +553,124 @@ export class Mesh extends BaseEntity {
         return valueDC;
     }
     /**
+     * 生成opacity DC，并push到对应队列
+     * 
+     * 1、支持的类型：
+     *      A、不透明 
+     *      B、TO
+     * 
+     * 2、生成类型
+     *      A、MSAA+infor
+     *      B、MSAA defer+info
+     *      C、defer
+     *      D、forward
+     * @param UUID camera UUID or light merge UUID
+     * @param isTO 是否是透明物体
+     * @param TO 透明物体的uniform和shader模板
+     */
+    generateOpacityDC(UUID: string, isTO: boolean = false, TO?: I_materialBundleOutput) {
+        let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+
+        if (this.MSAA === true) {   //输出两个DC（MSAA 和 info forward）
+            let uniformsMaterialMSAA: I_BundleOfMaterialForMSAA;
+            let uniformsMaterialInfo: I_BundleOfMaterialForMSAA;
+            {//MSAA 部分
+                if (this.deferColor) {
+                    if (isTO === true) {
+                        uniformsMaterialMSAA = this._material.getFS_TO_DeferColorOfMSAA(bundle.bindingNumber);
+                    }
+                    else
+                        uniformsMaterialMSAA = this._material.getBundleOfDeferColorOfMSAA(bundle.bindingNumber);
+                }
+                else {
+                    if (isTO === true) {
+                        uniformsMaterialMSAA = this._material.getFS_TO_MSAA(bundle.bindingNumber);
+                    }
+                    else
+                        uniformsMaterialMSAA = this._material.getBundleOfMSAA(bundle.bindingNumber);
+                }
+                //MSAA,材质的shader 模板输出，
+                if (uniformsMaterialMSAA) {
+                    bundle.uniformGroups[0].push(...uniformsMaterialMSAA.MSAA.uniformGroup);
+                    bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.MSAA.singleShaderTemplateFinal;
+                }
+                else {
+                    throw new Error("Mesh generateOpacityDC: MSAA is true, but no MSAA material");
+                }
+                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                let dc = this.DCG.generateDrawCommand(valueDC);
+                this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
+
+            }
+            {//info,材质的shader 模板输出，
+                if (this.deferColor) {
+                    if (isTO === true) {
+                        uniformsMaterialInfo = this._material.getFS_TO_DeferColorOfMSAA_Info(bundle.bindingNumber);
+                    }
+                    else
+                        uniformsMaterialInfo = this._material.getBundleOfDeferColorOfMSAA_Info(bundle.bindingNumber);
+                }
+                else {
+                    if (isTO === true) {
+                        uniformsMaterialInfo = this._material.getFS_TO_MSAA_Info(bundle.bindingNumber);
+                    }
+                    else
+                        uniformsMaterialInfo = this._material.getBundleOfMSAA_Info(bundle.bindingNumber);
+                }
+
+
+                if (uniformsMaterialInfo) {
+                    bundle.uniformGroups[0].push(...uniformsMaterialInfo.inforForward.uniformGroup);
+                    bundle.shaderTemplateFinal.material = uniformsMaterialInfo.inforForward.singleShaderTemplateFinal;
+                }
+                else {
+                    throw new Error("Mesh generateOpacityDC: MSAA is true, but no info material");
+                }
+                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                let dc = this.DCG.generateDrawCommand(valueDC);
+                this.cameraDC[UUID][E_renderPassName.forward].push(dc);
+            }
+        }
+        else {//正常的前向渲染输出,只输出一个DC（defer 或  forward）
+            //mesh VS 模板输出
+            // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+            let uniformsMaterial: I_materialBundleOutput;
+            if (this.deferColor) {
+                if (isTO === true) {
+                    uniformsMaterial = this._material.getFS_TO_DeferColor(bundle.bindingNumber);
+                }
+                else
+                    uniformsMaterial = this._material.getBundleOfDeferColor(bundle.bindingNumber);
+            }
+            else {
+                if (isTO === true) {
+                    if (TO == undefined) {
+                        throw new Error("Mesh generateOpacityDC: TO is undefined");
+                    }
+                    uniformsMaterial = TO;
+                }
+                else
+                    uniformsMaterial = this._material.getBundleOfForward(bundle.bindingNumber);
+            }
+            // //材质的shader 模板输出，
+            {
+                bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
+                bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
+                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                let dc = this.DCG.generateDrawCommand(valueDC);
+                this.cameraDC[UUID][E_renderPassName.forward].push(dc);
+            }
+        }
+    }
+    /**
      * 为每个camera创建前向渲染的DrawCommand
      * @param camera 
      */
     createForwardDC(camera: BaseCamera): void {
         let UUID = camera.UUID;
         if (this._wireframe.wireFrameOnly === false) {//非wireframe 才创建前向渲染的DrawCommand
-            //mesh VS 模板输出
-            let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
-            //材质的shader 模板输出，
-            let uniformsMaterial = this._material.getBundleOfForward(bundle.bindingNumber);
-            if (uniformsMaterial) {
-                bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
-                bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
-            }
-            let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-            let dc = this.DCG.generateDrawCommand(valueDC);
-            this.cameraDC[UUID][E_renderPassName.forward].push(dc);
+            // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+            this.generateOpacityDC(UUID);
         }
         //wireframe 前向渲染
         if (this._wireframe.enable) {
@@ -592,15 +695,17 @@ export class Mesh extends BaseEntity {
             //mesh VS 模板输出
             //材质的shader 模板输出，
             let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+            //获取TTTT，然后分别判断并执行
             let uniformsMaterialTOTT = this._material.getBundleOfTTTT(camera, bundle.bindingNumber);
             //TO
             if (uniformsMaterialTOTT.TO) {
-                let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
-                bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TO.uniformGroup);
-                bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TO.singleShaderTemplateFinal;
-                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-                let dc = this.DCG.generateDrawCommand(valueDC);
-                this.cameraDC[UUID][E_renderPassName.forward].push(dc);
+                // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
+                // bundle.uniformGroups[0].push(...uniformsMaterialTOTT.TO.uniformGroup);
+                // bundle.shaderTemplateFinal.material = uniformsMaterialTOTT.TO.singleShaderTemplateFinal;
+                // let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                // let dc = this.DCG.generateDrawCommand(valueDC);
+                // this.cameraDC[UUID][E_renderPassName.forward].push(dc);
+                this.generateOpacityDC(UUID, true, uniformsMaterialTOTT.TO);
             }
             let dcTT;
             //TT

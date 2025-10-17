@@ -209,7 +209,6 @@ export class CameraManager extends ECSManager<BaseCamera> {
             CATs: this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets,
             RPD: this.GBufferManager.GBuffer[UUID].forward.RPD
         };
-
     }
     getCamearDepthOfGBufferByUUID(UUID: string): GPUTexture {
         // let camera = this.getCameraByUUID(UUID);
@@ -218,12 +217,24 @@ export class CameraManager extends ECSManager<BaseCamera> {
     getColorAttachmentTargetsByUUID(UUID: string): GPUColorTargetState[] {
         // let camera = this.getCameraByUUID(UUID);
         return this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets;
-
+    }
+    getColorAttachmentTargetsMSAA(UUID: string): GPUColorTargetState[] {
+        if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
+            return this.GBufferManager.GBuffer[UUID].MSAA.colorAttachmentTargets;
+        }
+        else
+            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
+    }
+    getMsaaRPDByUUID(UUID: string): GPURenderPassDescriptor {
+        if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
+            return this.GBufferManager.GBuffer[UUID].MSAA!.RPD;
+        }
+        else
+            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
     }
     getRPDByUUID(UUID: string): GPURenderPassDescriptor {
         // let camera = this.getCameraByUUID(UUID);
         return this.GBufferManager.GBuffer[UUID].forward.RPD;
-
     }
     getRPDOfDefferDepthByUUID(UUID: string): GPURenderPassDescriptor | false {
         if (this.scene.deferRender.enable === false) {
@@ -231,6 +242,13 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
         // let camera = this.getCameraByUUID(UUID);
         return this.GBufferManager.GBuffer[UUID].deferDepth?.RPD!;
+    }
+    getMsaaGBufferTextureByUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
+        if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
+            return this.GBufferManager.GBuffer[UUID].MSAA!.GBuffer[GBufferName];
+        }
+        else
+            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
     }
     getGBufferTextureByUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
         // let camera = this.getCameraByUUID(UUID);
@@ -594,7 +612,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
     /**
      * 最终的线性颜色纹理,动态获取
      */
-    finalLinearColorTexture!: () => GPUTextureView;
+    // finalLinearColorTexture!: () => GPUTextureView;
 
     /**
      * 合并MSAA渲染目标的DC，用于可能存在多个camera(需要for 多个RPD，也需要多个texture)
@@ -614,164 +632,160 @@ export class CameraManager extends ECSManager<BaseCamera> {
         // this.RPD_ToneMapping = undefined;
     }
 
-    createDrawCommandOfRenderFinalMSAA(UUID: string) {
-        if (this.cameraDrawCommandOfFinalStep[UUID] == undefined)
-            this.cameraDrawCommandOfFinalStep[UUID] = {};
-        if (this.cameraDrawCommandOfFinalStep[UUID].MSAA != undefined && this.cameraDrawCommandOfFinalStep[UUID].MSAA.IsDestroy != false)
-            this.cameraDrawCommandOfFinalStep[UUID].MSAA.destroy();
+    /**
+     * 
+     * @param UUID camera的UUID
+     */
+    resolveMSAA(UUID: string) {
+        if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
+            const commandEncoder = this.device.createCommandEncoder();
+            // 启动 resolve 渲染通道：仅配置附件，不绑定管线、不绘制
+            const resolvePass = commandEncoder.beginRenderPass({
+                // 颜色 resolve：输入 MSAA 颜色，输出到单样本颜色
+                colorAttachments: [{
+                    view: this.getMsaaGBufferTextureByUUID(UUID, E_GBufferNames.color).createView(), // 输入：MSAA 颜色纹理视图
+                    resolveTarget: this.getGBufferTextureByUUID(UUID, E_GBufferNames.color).createView(), // 输出：resolve 目标（单样本）
+                    loadOp: "load", // 读取已有的 MSAA 样本数据
+                    storeOp: "discard" // 解析后可丢弃 MSAA 样本（若后续不再使用）
+                }],
+            });
+            // 无需调用 draw()！GPU 自动执行 resolve 操作
+            resolvePass.end(); // 结束通道，触发 resolve 数据写入
+            // 提交命令，完成 resolve
+            this.device.queue.submit([commandEncoder.finish()]);
+            {
+                let computeCode = `
+                        // 绑定组布局:输入MSAA深度纹理,输出单样本深度纹理
+                        @group(0) @binding(0) var msaaDepth: texture_depth_multisampled_2d;
+                        @group(0) @binding(1) var outputDepth: texture_storage_2d<depth32float, write>;
 
-        // let rpd = () => { return this.getRPD_MSAA_ForFinalTarget(UUID); }
-        let shader = `   
-            struct ST_FinalGBuffer{
-            @location(0) color : vec4f,
-            @location(1) id : u32,
-            }
-            @vertex fn vs() -> @builtin(position)  vec4f {
-                    return vec4f(0.0, 0.0, 0.0,  0.0);
-            }
-            @fragment fn fs(@builtin(position) pos: vec4f ) -> ST_FinalGBuffer{
-                var gbuffer: ST_FinalGBuffer;
-                gbuffer.color = vec4f(0.0, 0.0, 0.0, 0.0);
-                gbuffer.id = 0;
-                return gbuffer;
-            }`;
-        let moduleVS = this.device.createShaderModule({
-            label: "OnePointToTT",
-            code: shader,
-        });
-        let descriptor: GPURenderPipelineDescriptor = {
-            label: "RenderFinal MSAA Pipeline ",
-            vertex: {
-                module: moduleVS,
-                entryPoint: "vs",
-            },
-            fragment: {
-                module: moduleVS,
-                entryPoint: "fs",
-                targets: this.getCATs_MSAA_ForFinalTarget(UUID),
+                        // 工作组大小:16x16(可根据GPU性能调整)
+                        @compute @workgroup_size(16, 16)                        
+                        fn resolveDepth(@builtin(global_invocation_id) globalId: vec3u) {
+                            // 计算当前像素坐标（确保不超出纹理范围）
+                            let pixelCoord = vec2i(globalId.xy);
+                            if (pixelCoord.x >= textureDimensions(msaaDepth).x || 
+                                pixelCoord.y >= textureDimensions(msaaDepth).y) {
+                                return;
+                            }
 
-            },
-            layout: "auto",
-            primitive: {
-                topology: "point-list",
-            },
+                            // 读取所有MSAA样本,取最小值(可改为平均、最大等逻辑)
+                            var targetDepth = 0.0;//1.0; // 初始化为最大深度值(透视投影中通常为1.0),reverseZ为true时取最大值
+                            for (var i: u32 = 0; i < 4; i++) { // 遍历4个样本
+                                let sampleDepth = textureLoad(msaaDepth, pixelCoord, i);
+                                // if (sampleDepth < targetDepth) { // 取最小值,正向Z
+                                if (sampleDepth > targetDepth) { // 取最大值,reverseZ为true时取最大
+                                targetDepth = sampleDepth;
+                                }
+                            }
+
+                            // 写入解析后的单样本深度纹理
+                            textureStore(outputDepth, pixelCoord, targetDepth);
+                        }`;
+                // 3. 创建计算管线
+                const resolvePipeline = this.device.createComputePipeline({
+                    layout: "auto",
+                    compute: {
+                        module: this.device.createShaderModule({
+                            code: computeCode
+                        }),
+                        entryPoint: "resolveDepth"
+                    }
+                });
+
+                // 4. 创建绑定组（关联MSAA深度纹理和输出纹理）
+                const bindGroup = this.device.createBindGroup({
+                    layout: resolvePipeline.getBindGroupLayout(0),
+                    entries: [
+                        { binding: 0, resource: this.getMsaaGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView() },
+                        { binding: 1, resource: this.getGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView() }
+                    ]
+                });
+
+                // 5. 执行计算着色器，完成深度解析
+                let size = this.scene.surface.size;
+                const commandEncoder = this.device.createCommandEncoder();
+                const computePass = commandEncoder.beginComputePass();
+                computePass.setPipeline(resolvePipeline);
+                computePass.setBindGroup(0, bindGroup);
+                // 调度工作组：覆盖整个纹理尺寸（向上取整）
+                computePass.dispatchWorkgroups(
+                    Math.ceil(size.width / 16),
+                    Math.ceil(size.height / 16)
+                );
+                computePass.end();
+
+                // 提交命令
+                this.device.queue.submit([commandEncoder.finish()]);
+            }
         }
-        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-        let valuesDC: IV_DrawCommand = {
-            scene: this.scene,
-            pipeline: pipeline,
-            renderPassDescriptor: this.RPD_MSAA,
-            drawMode: {
-                vertexCount: 1
-            },
-            device: this.device,
-            label: "RenderFinal MSAA DC ",
-        }
-        this.cameraDrawCommandOfFinalStep[UUID].MSAA = new DrawCommand(valuesDC);
+        else
+            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
     }
-    old_createDrawCommandOfToneMapping(UUID: string): DrawCommand {
-        // let rpd = () => { return this.getRPD_ToneMapping_ForFinalTarget(UUID); }
-        // const colorSpaceCode = colorSpace
-        // let returnColor = "return vec4f( testACES(),1);";
+    // createDrawCommandOfMSAA(UUID: string) {
+    //     if (this.cameraDrawCommandOfFinalStep[UUID] == undefined)
+    //         this.cameraDrawCommandOfFinalStep[UUID] = {};
+    //     if (this.cameraDrawCommandOfFinalStep[UUID].MSAA != undefined && this.cameraDrawCommandOfFinalStep[UUID].MSAA.IsDestroy != false)
+    //         this.cameraDrawCommandOfFinalStep[UUID].MSAA.destroy();
 
-        let returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
-        if (this.scene.colorSpaceAndLinearSpace.colorSpace == "srgb")
-            returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
-        let shader = `   
-            ${colorSpace}            
-            @group(0) @binding(0) var u_ColorTexture : texture_2d<f32>;
-            @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
-                let pos = array(
-                        vec2f( -1.0,  -1.0),  // bottom left
-                        vec2f( 1.0,  -1.0),  // top left
-                        vec2f( -1.0,  1.0),  // top right
-                        vec2f( 1.0,  1.0),  // bottom right
-                        );
-                return vec4f(pos[vertexIndex], 0.0, 1.0);
-            }
-            @fragment fn fs(@builtin(position) pos: vec4f ) -> @location(0) vec4f{
-                let color=textureLoad(u_ColorTexture, vec2i(floor(pos.xy) ) ,0);
-                ${returnColor}
-            }`;
-        let moduleVS = this.device.createShaderModule({
-            label: "ToneMapping",
-            code: shader,
-        });
+    //     // let rpd = () => { return this.getRPD_MSAA_ForFinalTarget(UUID); }
+    //     let shader = `   
+    //         struct ST_ResolveColorDepth{
+    //             @builtin(frag_depth) depth : f32,
+    //             @location(0) color : vec4f,
+    //         }
+    //         @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
+    //             let pos = array(
+    //                     vec2f( -1.0,  -1.0),  // bottom left
+    //                     vec2f( 1.0,  -1.0),  // top left
+    //                     vec2f( -1.0,  1.0),  // top right
+    //                     vec2f( 1.0,  1.0),  // bottom right
+    //                     );
+    //             return vec4f(pos[vertexIndex], 0.0, 1.0);
+    //         }
+    //         @fragment fn fs(@builtin(position) pos: vec4f ) -> ST_ResolveColorDepth{
+    //             var gbuffer: ST_ResolveColorDepth;
+    //             gbuffer.color = vec4f(0.0, 0.0, 0.0, 0.0);
+    //             gbuffer.id = 0;
+    //             return gbuffer;
+    //         }`;
+    //     let moduleVS = this.device.createShaderModule({
+    //         label: "OnePointToTT",
+    //         code: shader,
+    //     });
+    //     let descriptor: GPURenderPipelineDescriptor = {
+    //         label: "RenderFinal MSAA Pipeline ",
+    //         vertex: {
+    //             module: moduleVS,
+    //             entryPoint: "vs",
+    //         },
+    //         fragment: {
+    //             module: moduleVS,
+    //             entryPoint: "fs",
+    //             targets: this.getColorAttachmentTargetsMSAA(UUID),
 
-        // ToneMapping 绑定的uniform 00 是颜色纹理
-        let uniform00_ColorTexture: I_dynamicTextureEntryForView = {
-            label: "ToneMapping uniform color texture0",
-            binding: 0,
-            getResource: this.finalLinearColorTexture,
-        };
-        //bindgroup layout 0 的描述
-        let bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor =
-        {
-            label: "ToneMapping BindGroupLayout",
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    texture: {
-                        sampleType: "float",
-                        viewDimension: "2d",
-                        // multisampled: false,
-                    },
-                }
-            ]
-        };
-        //bindgroup layout 0 
-        let bindGroupLayout0: GPUBindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor0);
+    //         },
+    //         layout: "auto",
+    //         primitive: {
+    //             topology: "point-list",
+    //         },
+    //     }
+    //     let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
+    //     let valuesDC: IV_DrawCommand = {
+    //         scene: this.scene,
+    //         pipeline: pipeline,
+    //         //这时RPD的loadOp已经时load，已经绘制过MSAA。（除非没有不透明entity绘制，如果没有，也就无所谓clear或load了）
+    //         //此DC的执行在renderManager的MSAA通道之后（按照camera执行）
+    //         renderPassDescriptor: () => this.getMsaaRPDByUUID(UUID),
+    //         drawMode: {
+    //             vertexCount: 1
+    //         },
+    //         device: this.device,
+    //         label: "RenderFinal MSAA DC ",
+    //     }
+    //     this.cameraDrawCommandOfFinalStep[UUID].MSAA = new DrawCommand(valuesDC);
+    // }
 
-        //pipeline layout 描述
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: "ToneMapping PipelineLayout",
-            bindGroupLayouts: [bindGroupLayout0],
-        };
-        //pipeline layout 
-        let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-
-        //pipeline 描述
-        let descriptor: GPURenderPipelineDescriptor = {
-            label: "RenderFinal ToneMapping Pipeline: " + UUID,
-            vertex: {
-                module: moduleVS,
-                entryPoint: "vs",
-            },
-            fragment: {
-                module: moduleVS,
-                entryPoint: "fs",
-                targets: this.getCATs_ToneMapping_ForFinalTarget(UUID),
-
-            },
-            layout: pipelineLayout,
-            primitive: {
-                topology: "triangle-strip",
-            },
-        }
-        //pipeline 
-        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-
-        //
-        let uniforIDTexture: I_DynamicUniformOfDrawCommand = {
-            bindGroupLayout: [bindGroupLayout0],
-            bindGroupsUniform: [[uniform00_ColorTexture]],
-            layoutNumber: 0
-        };
-
-        let valuesDC: IV_DrawCommand = {
-            scene: this.scene,
-            pipeline: pipeline,
-            renderPassDescriptor: this.RPD_ToneMapping,
-            drawMode: {
-                vertexCount: 4
-            },
-            device: this.device,
-            label: "RenderFinal ToneMapping: " + UUID,
-            dynamicUniform: uniforIDTexture,
-        }
-        return new DrawCommand(valuesDC);
-    }
     createDrawCommandOfToneMapping(UUID: string) {
         if (this.cameraDrawCommandOfFinalStep[UUID] == undefined)
             this.cameraDrawCommandOfFinalStep[UUID] = {};
@@ -807,7 +821,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
         let uniform00_ColorTexture: GPUBindGroupEntry = {
             // label: "ToneMapping uniform color texture0",
             binding: 0,
-            resource: this.GBufferManager.GBuffer[UUID].finalRender.finalLinearColor.createView(),
+            // resource: this.GBufferManager.GBuffer[UUID].finalRender.finalLinearColor.createView(),
+            resource: this.GBufferManager.GBuffer[UUID].forward.GBuffer[E_GBufferNames.color].createView(),
         };
         //bindgroup layout 0 的描述
         let bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor =
@@ -890,62 +905,61 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
         this.cameraDrawCommandOfFinalStep[UUID].toneMapping = new DrawCommand(valuesDC);
     }
-    /**
-     * 渲染相机GBuffer到最终目标纹理
-     * 1、MSAA，将GBuffer渲染到MSAA渲染目标纹理
-     * 2、非MSAA，copy GBuffer渲染到最终目标纹理
-     * @param camera 相机
-     */
-    renderCameraGBufferToFinalTexture() {
-        for (let perOne of this.list) {
-            let UUID = perOne.UUID;
-            if (this.MSAA) {//20251011,未测试
-                this.RPD_MSAA = () => this.getRPD_MSAA_ForFinalTarget(UUID);
-                if (this.DC_renderFinal_MSAA == undefined || this.DC_renderFinal_MSAA.IsDestroy === true)
-                    this.DC_renderFinal_MSAA = this.createDrawCommandOfRenderFinalMSAA(UUID);
-                this.DC_renderFinal_MSAA.submit();
-            }
-            else {//非MSAA，id和color是指向GBuffer的，不需要从copy
-                // copyTextureToTexture(
-                //     this.device,
-                //     this.cameraManager.getGBufferTextureByUUID(camera.UUID, E_GBufferNames.color),
-                //     this.finalTarget.colorB!,
-                //     {
-                //         width: this.surface.size.width,
-                //         height: this.surface.size.height,
-                //     }
-                // );
-            }
-        }
-    }
-    /**
-     * ToneMapping
-     */
-    renderToneMapping() {
-        for (let perOne of this.list) {
-            let UUID = perOne.UUID;
-            // this.finalLinearColorTexture = () => this.GBufferManager.GBuffer[UUID].finalRender.finalLinearColor.createView();
-            // this.RPD_ToneMapping = () => this.getRPD_ToneMapping_ForFinalTarget(UUID);
-            // if (this.DC_renderFinal_ToneMapping == undefined || this.DC_renderFinal_ToneMapping.IsDestroy === true)
-            //     this.DC_renderFinal_ToneMapping = this.createDrawCommandOfToneMapping(UUID);
-            // this.DC_renderFinal_ToneMapping.submit();
+    // /**
+    //  * 渲染相机GBuffer到最终目标纹理
+    //  * 1、MSAA，将GBuffer渲染到MSAA渲染目标纹理
+    //  * 2、非MSAA，copy GBuffer渲染到最终目标纹理
+    //  * @param camera 相机
+    //  */
+    // renderCameraGBufferToFinalTexture() {
+    //     for (let perOne of this.list) {
+    //         let UUID = perOne.UUID;
+    //         if (this.MSAA) {//20251011,未测试
+    //             this.RPD_MSAA = () => this.getRPD_MSAA_ForFinalTarget(UUID);
+    //             if (this.DC_renderFinal_MSAA == undefined || this.DC_renderFinal_MSAA.IsDestroy === true)
+    //                 this.DC_renderFinal_MSAA = this.createDrawCommandOfRenderFinalMSAA(UUID);
+    //             this.DC_renderFinal_MSAA.submit();
+    //         }
+    //         else {//非MSAA，id和color是指向GBuffer的，不需要从copy
+    //             // copyTextureToTexture(
+    //             //     this.device,
+    //             //     this.cameraManager.getGBufferTextureByUUID(camera.UUID, E_GBufferNames.color),
+    //             //     this.finalTarget.colorB!,
+    //             //     {
+    //             //         width: this.surface.size.width,
+    //             //         height: this.surface.size.height,
+    //             //     }
+    //             // );
+    //         }
+    //     }
+    // }
+    // /**
+    //  * ToneMapping
+    //  */
+    // renderToneMapping() {
+    //     for (let perOne of this.list) {
+    //         let UUID = perOne.UUID;
+    //         // this.finalLinearColorTexture = () => this.GBufferManager.GBuffer[UUID].finalRender.finalLinearColor.createView();
+    //         // this.RPD_ToneMapping = () => this.getRPD_ToneMapping_ForFinalTarget(UUID);
+    //         // if (this.DC_renderFinal_ToneMapping == undefined || this.DC_renderFinal_ToneMapping.IsDestroy === true)
+    //         //     this.DC_renderFinal_ToneMapping = this.createDrawCommandOfToneMapping(UUID);
+    //         // this.DC_renderFinal_ToneMapping.submit();
 
-            if (this.cameraDrawCommandOfFinalStep[UUID].toneMapping)
-                this.cameraDrawCommandOfFinalStep[UUID].toneMapping!.submit();
-        }
-    }
-    /**
- * 获取渲染描述符，用于将GBuffer渲染到最终目标纹理
- * 渲染Attachment：color、id
- * @param UUID 相机UUID
- * @returns 渲染描述符
- */
-    getRPD_MSAA_ForFinalTarget(UUID: string): GPURenderPassDescriptor {
-        let rpd = this.GBufferManager.GBuffer[UUID].finalRender.rpdMSAA;
-        if (rpd == undefined)
-            throw new Error("getRPD_MSAA_ForFinalTarget: rpd is undefined");
-        return rpd;
-    }
+    //         if (this.cameraDrawCommandOfFinalStep[UUID].toneMapping)
+    //             this.cameraDrawCommandOfFinalStep[UUID].toneMapping!.submit();
+    //     }
+    // }
+    // /**
+    // * 获取渲染描述符，用于将GBuffer渲染到最终目标纹理
+    // * 渲染Attachment：color、id
+    // * @param UUID 相机UUID
+    // * @returns 渲染描述符
+    // */
+    // getRPD_MSAA(UUID: string): GPURenderPassDescriptor {
+    //     if (this.MSAA === false || this.GBufferManager.GBuffer[UUID].MSAA == undefined)
+    //         throw new Error("getRPD_MSAA: rpd is undefined");
+    //     return this.GBufferManager.GBuffer[UUID].MSAA.RPD;;
+    // }
     /**
      * 获取最终目标纹理渲染描述符。
      * 由于onResize 的事件存在，texture会变化，
@@ -955,9 +969,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
     getRPD_ToneMapping_ForFinalTarget(UUID: string): GPURenderPassDescriptor {
         return this.GBufferManager.GBuffer[UUID].finalRender.rpdToneMapping;
     }
-    getCATs_MSAA_ForFinalTarget(UUID: string): GPUColorTargetState[] {
-        return this.GBufferManager.GBuffer[UUID].finalRender.msaaColorAttachmentTargets;
-    }
+    // getCATs_MSAA_ForFinalTarget(UUID: string): GPUColorTargetState[] {
+    //     return this.GBufferManager.GBuffer[UUID].finalRender.msaaColorAttachmentTargets;
+    // }
     getCATs_ToneMapping_ForFinalTarget(UUID: string): GPUColorTargetState[] {
         return this.GBufferManager.GBuffer[UUID].finalRender.toneMappingColorAttachmentTargets;
     }
