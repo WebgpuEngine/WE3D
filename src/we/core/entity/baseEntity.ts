@@ -370,6 +370,7 @@ export abstract class BaseEntity extends RootOfGPU {
                         [E_renderPassName.forward]: [],
                         [E_renderPassName.depth]: [],
                         [E_renderPassName.transparent]: [],
+                        [E_renderPassName.MSAA]: [],
                     }
                 }
                 if (this.transparent === true) {

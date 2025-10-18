@@ -1,10 +1,11 @@
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateReplace, WGSL_replace_gbuffer_output, WGSL_st_Guffer, WGSL_st_transparentbuffer } from "../base"
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateReplace, WGSL_replace_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer, WGSL_st_transparentbuffer } from "../base"
 import { SHT_replaceTT_FSOutput, SHT_TT, TTPF_FS } from "./TT";
 
 ////////////////////////////////////////////////////////////////////////////////
 //material
 import textureFSWGSL from "../../shader/material/texture/texture.fs.wgsl?raw";
 var textureFS = textureFSWGSL.toString();
+/** 纹理材质, 不透明, shader 模板*/
 export var SHT_materialTextureFS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "TextureMaterial",
@@ -34,6 +35,68 @@ export var SHT_materialTextureFS_mergeToVS: I_ShaderTemplate = {
 
     }
 }
+/** 纹理材质, 不透明, shader 模板*/
+export var SHT_materialTextureFS_MSAA_mergeToVS: I_ShaderTemplate = {
+    material: {
+        owner: "TextureMaterial",
+        add: [
+            {
+                name: "fsOnput",
+                code: WGSL_st_MSAA_Guffer,
+            },
+            {
+                name: "fs",
+                code: textureFS,
+            },
+        ],
+        replace: [
+            {
+                name: "colorFS.output content",
+                replace: "$fsOutput",           //
+                replaceType: E_shaderTemplateReplaceType.replaceCode,
+                replaceCode: WGSL_replace_gbuffer_output
+            },
+            {
+                name: "alpha",
+                replace: "$materialColorRule",                      //alpha 的判断规则，alpha==0，alpha>alphaTest ,opacity <1.0
+                replaceType: E_shaderTemplateReplaceType.value,     //output.color = vec4f(red, green, blue, alpha);
+            }
+        ],
+
+    }
+}
+/** 纹理材质, 不透明, shader 模板*/
+export var SHT_materialTextureFS_MSAAinfo_mergeToVS: I_ShaderTemplate = {
+    material: {
+        owner: "TextureMaterial",
+        add: [
+            {
+                name: "fsOnput",
+                code: WGSL_st_MSAAinfo_Guffer,
+            },
+            {
+                name: "fs",
+                code: textureFS,
+            },
+        ],
+        replace: [
+            {
+                name: "colorFS.output content",
+                replace: "$fsOutput",           //
+                replaceType: E_shaderTemplateReplaceType.replaceCode,
+                replaceCode: WGSL_replace_gbuffer_output
+            },
+            {
+                name: "alpha",
+                replace: "$materialColorRule",                      //alpha 的判断规则，alpha==0，alpha>alphaTest ,opacity <1.0
+                replaceType: E_shaderTemplateReplaceType.value,     //output.color = vec4f(red, green, blue, alpha);
+            }
+        ],
+
+    }
+}
+
+
 var replaceAlpha_TT_TTP_TTPF: I_shaderTemplateReplace = {
     name: "alpha",
     replace: "$materialColorRule",                      //alpha 的判断规则，alpha==0，alpha <= alphaTest ,opacity <1.0

@@ -5,7 +5,7 @@
  */
 
 import type { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
 import { DrawCommand, IV_DrawCommand, I_viewport } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
@@ -158,7 +158,8 @@ export interface V_DC {
          * camera可以不设置ID，使用default camera
          */
         UUID?: string,
-        type: E_renderForDC//"camera" | "light"
+        type: E_renderForDC,//"camera" | "light"
+        MSAA?: T_rpdInfomationOfMSAA,
     },
     /**
      * 渲染pass的描述符，
@@ -645,15 +646,23 @@ export class DrawCommandGenerator {
             if (values.render.fragment.targets) {
                 targets = values.render.fragment.targets;//使用传入参数
             }
-            else if (values.system && values.render.fragment.targets == undefined) {//获取默认camera
+            else if (values.system && values.render.fragment.targets == undefined) {//获取camera CATs
                 let UUID = this.checkUUID(values);
                 if (UUID) {
-                    targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
+                    if (this.MSAA) {
+                        if (values.system.MSAA != undefined)
+                            targets = this.scene.getColorAttachmentTargets(UUID, values.system.type, values.system.MSAA);
+                        else
+                            throw new Error("MSAA渲染,需要在system中指定MSAA");
+                    }
+                    else
+                        targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
                 }
                 else
                     // console.error("获取UUID失败");
                     this.errorUUID();
             }
+            //透明处理,alpha blend
             if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
                 for (let i = 0; i < values.transparent.blend.length; i++) {
                     targets[i].blend = values.transparent.blend[i];
@@ -698,21 +707,32 @@ export class DrawCommandGenerator {
         //3.4、GPURenderPipelineDescriptor.其他部分
         if (fragment) descriptor.fragment = fragment;
         if (values.render.primitive) descriptor.primitive = values.render.primitive;
-        if (this.MSAA) {
+        if (this.MSAA && values.system && values.system.MSAA == "MSAA") {
             descriptor.multisample = {
                 count: 4,
             }
         }
 
-
-        if (values.render.depthStencil !== false) {//TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        //TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        if (values.render.depthStencil !== false) {
             if (values.render.depthStencil) descriptor.depthStencil = values.render.depthStencil;
             else {
-                //透明渲染，使用透明模板
-                if (values.transparent)
+                if (values.transparent)//透明渲染，使用透明模板
                     descriptor.depthStencil = this.scene.depthMode.depthStencilTT;
-                else
-                    descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                else {
+                    if (this.MSAA) {
+                        if (values.system && values.system.MSAA == "MSAAinfo") {//MSAAinfo 渲染，使用深度模板(开启测试，不写入) 
+                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAAinfo;
+                        }
+                        else {//MSAA 渲染，使用深度模板(开启测试，写入) 
+                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;
+                        }
+                    }
+                    else 
+                        {//非MSAA渲染，使用深度模板(开启测试，写入) 
+                        descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                    }
+                }
             }
         }
 
@@ -753,7 +773,14 @@ export class DrawCommandGenerator {
             else if (values.system && values.renderPassDescriptor == undefined) {
                 let UUID = this.checkUUID(values);
                 if (UUID) {
-                    renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type);
+                    if (this.MSAA) {
+                        if (values.system.MSAA != undefined)
+                            renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type, values.system.MSAA);
+                        else
+                            throw new Error("MSAA渲染,需要在system中指定MSAA");
+                    }
+                    else
+                        renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type);
                 }
                 else {
                     this.errorUUID();// throw new Error("获取UUID失败");
@@ -778,7 +805,7 @@ export class DrawCommandGenerator {
             renderPassDescriptor,
             // dynamic: values.dynamic || false,
         }
-        
+
         if (values.IDS) {
             commandOption.IDS = values.IDS;
         }

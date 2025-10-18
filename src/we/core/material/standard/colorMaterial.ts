@@ -5,8 +5,8 @@ import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialColor_TTP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS, SHT_materialColor_TTPF_FS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { IV_BaseMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType } from "../base";
+import { SHT_materialColor_TTP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS, SHT_materialColor_TTPF_FS_mergeToVS, SHT_materialColorFS_MSAA_mergeToVS, SHT_materialColorFS_MSAA_info_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
+import { IV_BaseMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType, I_BundleOfMaterialForMSAA } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface I_ColorMaterial extends IV_BaseMaterial {
@@ -14,6 +14,7 @@ export interface I_ColorMaterial extends IV_BaseMaterial {
 }
 
 export class ColorMaterial extends BaseMaterial {
+
 
     declare inputValues: I_ColorMaterial;
     color: weColor4 = [1, 1, 1, 1];
@@ -87,22 +88,19 @@ export class ColorMaterial extends BaseMaterial {
     }
 
     getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-        return this.getOpaqueCodeFS(startBinding);
+        return this.getOpaqueCodeFS(SHT_materialColorFS_mergeToVS, startBinding);
     }
     /**
-     *  不透明材质的code
+     *  不透明材质的Oqa
      * @param _startBinding 
      * @returns 
      */
-    getOpaqueCodeFS(_startBinding: number): I_materialBundleOutput {
-        let template = SHT_materialColorFS_mergeToVS;
-
+    getOpaqueCodeFS(template: I_ShaderTemplate, _startBinding: number): I_materialBundleOutput {
+        // let template = SHT_materialColorFS_mergeToVS;
         let uniform1: T_uniformGroup = [];
         let code: string = "";
         let replaceValue: string = ` output.color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         // let replaceValue: string = ` output.color = vec4f(fsInput.uv.xy,1,1); \n`;
-
-
         for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
             code += perOne.code;
         }
@@ -122,6 +120,45 @@ export class ColorMaterial extends BaseMaterial {
         }
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: _startBinding };
     }
+    getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        let MSAA: I_materialBundleOutput;
+        let inforForward: I_materialBundleOutput;
+        {
+            MSAA = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_mergeToVS, startBinding);
+        }
+        {
+            // inforForward = this.getOpaqueCodeFS(SHT_materialColorFS_mergeToVS, startBinding);
+            inforForward = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_info_mergeToVS, startBinding);
+        }
+        return { MSAA, inforForward };
+    }
+    //color 不需要
+    getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    //color 不需要
+    getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    //color 不需要
+    getFS_TO(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+        // return this.getOpaqueCodeFS(SHT_materialColorFS_mergeToVS, startBinding);
+    }
+    //color 不需要
+    getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    //color 不需要
+    getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    //color 不需要
+    getFS_TO_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+
+
     getFS_TT(_renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
         let template = SHT_materialColor_TT_FS_mergeToVS;
 
@@ -237,10 +274,7 @@ export class ColorMaterial extends BaseMaterial {
         };
         return this.unifromEntryBundle_Common;
     }
-
-    getFS_TO(_startBinding: number): I_materialBundleOutput {
-        return this.getOpaqueCodeFS(_startBinding);
-    }
+    
     _destroy(): void {
         // throw new Error("Method not implemented.");
     }

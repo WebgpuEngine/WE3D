@@ -2,7 +2,7 @@ import { V_lightNumber, limitsOfWE, E_renderForDC, V_weLinearFormat, V_shadowMap
 import { copyTextureToTexture } from "../base/coreFunction";
 import { BaseCamera } from "../camera/baseCamera";
 import { CameraManager } from "../camera/cameraManager";
-import { I_bindGroupAndGroupLayout, T_uniformGroup } from "../command/base";
+import { I_bindGroupAndGroupLayout, T_rpdInfomationOfMSAA, T_uniformGroup } from "../command/base";
 import { DrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { CamreaControl } from "../control/cameracCntrol";
 import { EntityManager } from "../entity/entityManager";
@@ -157,17 +157,29 @@ export class Scene {
         depthClearValueOfReveredZ: number,//= 0.0
         /**depthStencil 模板参数 */
         depthStencil: GPUDepthStencilState,
-        depthStencilTT: GPUDepthStencilState
+        depthStencilTT: GPUDepthStencilState,
+        depthStencilMSAA: GPUDepthStencilState,
+        depthStencilMSAAinfo: GPUDepthStencilState,
     } = {
             depthDefaultFormat: "depth32float",
             depthClearValueOfZ: 1.0,
             depthClearValueOfReveredZ: 0.0,
             depthStencil: {
                 depthWriteEnabled: true,
-                depthCompare: 'greater',
+                depthCompare: 'greater',//reverseZZ
                 format: "depth32float",
             },
             depthStencilTT: {
+                depthWriteEnabled: false,
+                depthCompare: 'greater',
+                format: "depth32float",
+            },
+            depthStencilMSAA: {
+                depthWriteEnabled: true,
+                depthCompare: 'greater',
+                format: "depth32float",
+            },
+            depthStencilMSAAinfo: {
                 depthWriteEnabled: false,
                 depthCompare: 'greater',
                 format: "depth32float",
@@ -212,9 +224,7 @@ export class Scene {
     Box3s: boundingBox[] = [];
     ////////////////////////////////////////////////////////////////////////////////
     /**抗锯齿 */
-    AA: AA = {
-        type: "MSAA",
-    };
+    AA: AA = {};
     /**是否使用MSAA */
     MSAA: boolean = false;
     ////////////////////////////////////////////////////////////////////////////////
@@ -272,7 +282,7 @@ export class Scene {
         //input赋值
         if (value.AA) {
             this.AA = value.AA;
-            if (value.AA.type == "MSAA") {
+            if (value.AA.MSAA && value.AA.MSAA.enable === true) {
                 this.MSAA = true;
             }
             else {
@@ -313,8 +323,17 @@ export class Scene {
             depthCompare: this.reversedZ.depthCompare,
             format: this.depthMode.depthDefaultFormat//'depth32float',
         };
-
         this.depthMode.depthStencilTT = {
+            depthWriteEnabled: false,
+            depthCompare: this.reversedZ.depthCompare,
+            format: this.depthMode.depthDefaultFormat//'depth32float',
+        };
+        this.depthMode.depthStencilMSAA = {
+            depthWriteEnabled: true,
+            depthCompare: this.reversedZ.depthCompare,
+            format: this.depthMode.depthDefaultFormat//'depth32float',
+        };
+        this.depthMode.depthStencilMSAAinfo = {
             depthWriteEnabled: false,
             depthCompare: this.reversedZ.depthCompare,
             format: this.depthMode.depthDefaultFormat//'depth32float',
@@ -366,17 +385,8 @@ export class Scene {
         this.context = this.canvas.getContext('webgpu') as GPUCanvasContext;
         this.presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
-        this.resourcesGPU = new ResourceManagerOfGPU();
-        this.resourcesGPU.device = device;
-        this.root = new RootManager(this);
-        await this.root.init(this)
-        this.renderManager = new RenderManager(this);
-        this.cameraManager = new CameraManager({ scene: this });
-        this.entityManager = new EntityManager(this);
-        this.textureManager = new TextureManager(this);
-        this.materialManager = new MaterialManager(this);
-        this.lightsManager = new LightsManager(this);
-        this.inputManager = new InputManager(this);
+
+
 
         const devicePixelRatio = window.devicePixelRatio;//设备像素比
         const width = this.canvas.clientWidth * devicePixelRatio;
@@ -384,6 +394,18 @@ export class Scene {
         this.canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
         this.canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
         this.reSize(this.canvas.clientWidth * devicePixelRatio, this.canvas.clientHeight * devicePixelRatio);
+
+        this.resourcesGPU = new ResourceManagerOfGPU();
+        this.resourcesGPU.device = device;
+        this.root = new RootManager(this);
+        await this.root.init(this);
+        this.renderManager = new RenderManager(this);
+        this.cameraManager = new CameraManager({ scene: this });
+        this.entityManager = new EntityManager(this);
+        this.textureManager = new TextureManager(this);
+        this.materialManager = new MaterialManager(this);
+        this.lightsManager = new LightsManager(this);
+        this.inputManager = new InputManager(this);
     }
 
 
@@ -667,14 +689,14 @@ export class Scene {
     async onAfterRender() {
         this.updateUserDefineEvent(eventOfScene.onAfterRender);
     }
-    /**
-     * 1、for 每个相机渲染GBuffer到最终目标
-     * 2、渲染色调映射
-     */
-    async renderToneMappingAndMSAA() {
-        // this.cameraManager.renderCameraGBufferToFinalTexture();
-        this.cameraManager.renderToneMapping();
-    }
+    // /**
+    //  * 1、for 每个相机渲染GBuffer到最终目标
+    //  * 2、渲染色调映射
+    //  */
+    // async renderToneMappingAndMSAA() {
+    //     // this.cameraManager.renderCameraGBufferToFinalTexture();
+    //     this.cameraManager.renderToneMapping();
+    // }
 
 
     async pickup() { }
@@ -800,9 +822,10 @@ export class Scene {
 
             }
             else {
-
                 let camera = this.cameraManager.getCameraByUUID(UUID);
                 if (camera) {
+                    /////////////////////////////////
+                    //保留，Map操作
                     // if (this.resourcesGPU.systemGroup0ByID.has(UUID)) {
                     //     bindGroup = this.resourcesGPU.systemGroup0ByID.get(UUID)!;
                     //     if(!bindGroup){
@@ -929,7 +952,7 @@ export class Scene {
                         entriesGroupLayout.push(shadowMapSamplerayout);
                         entriesGroup.push(shadowMapSampler);
                         // //////////////////////////////////////////////////
-                        // //bind group zero 
+                        // //bind group zero  保留，Map操作
                         // let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
                         //     entries: entriesGroupLayout
                         // }
@@ -971,13 +994,25 @@ export class Scene {
      * @param kind 
      * @returns GPURenderPassDescriptor
      */
-    getRenderPassDescriptor(UUID: string, kind: E_renderForDC): GPURenderPassDescriptor {
+    getRenderPassDescriptor(UUID: string, kind: E_renderForDC, _MSAA?: T_rpdInfomationOfMSAA): GPURenderPassDescriptor {
         if (kind == E_renderForDC.camera) {
-            let rdp = this.cameraManager.getRPDByUUID(UUID);
-            if (rdp)
-                return rdp;
-            else
-                throw new Error("获取RPD失败");
+            if (this.MSAA) {
+                if (_MSAA == undefined)
+                    throw new Error("MSAA渲染,需要在system中指定MSAA");
+                else {
+                    if (_MSAA == "MSAA")
+                        return this.cameraManager.getRPD_MSAA_ByUUID(UUID);
+                    else
+                        return this.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
+                }
+            }
+            else {
+                let rdp = this.cameraManager.getRPDByUUID(UUID);
+                if (rdp)
+                    return rdp;
+                else
+                    throw new Error("获取RPD失败");
+            }
         }
         else {
             let rdp = this.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
@@ -993,13 +1028,26 @@ export class Scene {
      * @param kind 
      * @returns GPUColorTargetState[]
      */
-    getColorAttachmentTargets(UUID: string, kind: E_renderForDC): GPUColorTargetState[] {
+    getColorAttachmentTargets(UUID: string, kind: E_renderForDC, _MSAA?: T_rpdInfomationOfMSAA): GPUColorTargetState[] {
         if (kind == E_renderForDC.camera) {
-            let CATs = this.cameraManager.getColorAttachmentTargetsByUUID(UUID)
-            if (CATs)
-                return CATs;
-            else
-                throw new Error("获取ColorAttachmentTargets失败");
+            if (this.MSAA) {
+                if (_MSAA == undefined)
+                    throw new Error("MSAA渲染,需要在system中指定MSAA");
+                else {
+                    if (_MSAA == "MSAA")
+                        return this.cameraManager.getColorAttachmentTargetsMSAA(UUID);
+                    else {
+                        return this.cameraManager.getColorAttachmentTargetsMSAAinfo(UUID);
+                    }
+                }
+            }
+            else {
+                let CATs = this.cameraManager.getColorAttachmentTargetsByUUID(UUID)
+                if (CATs)
+                    return CATs;
+                else
+                    throw new Error("获取ColorAttachmentTargets失败");
+            }
         }
         else {//depth没有GPUColorTargetState，不会产生此调用；透明的有GPUColorTargetState
             let CATs = this.lightsManager.getColorAttachmentTargetsByMergeID(UUID)

@@ -60,7 +60,7 @@ export var V_ForwardGBufferNames: I_GBufferName = {
     [E_GBufferNames.depth]: {
         "format": "depth32float",
         "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING 
     },
     [E_GBufferNames.color]: {
         "format": V_weLinearFormat,
@@ -77,14 +77,14 @@ export var V_ForwardGBufferNames: I_GBufferName = {
         "label": "GBuffer normal :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    [E_GBufferNames.worldPosition]: {
-        "format": "rgba32float",
-        "label": "GBuffer worldPosition :",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    },
     [E_GBufferNames.ru_ma_AO]: {
         "format": V_weLinearFormat,
         "label": "GBuffer ru_ma_AO :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    [E_GBufferNames.worldPosition]: {
+        "format": "rgba32float",
+        "label": "GBuffer worldPosition :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
     // [E_GBufferNames.X]: {
@@ -105,6 +105,8 @@ export var V_ForwardGBufferNames: I_GBufferName = {
 }
 /**
  * 预定义的transparent GBuffer变量
+ * 注意：这个顺序需要与shader中的“st_transgparentbuffer.fs.wgsl”的约定顺序一致。（depth 除外）
+ * 
  */
 export var V_TransparentGBufferNames: I_GBufferName = {
 
@@ -178,13 +180,16 @@ export interface I_GBufferGroup {
             /** 每个camera的forward GBuffer存储位置 */
             GBuffer: I_GBuffer,
         },
-        MSAA?:{
-            /** 每个camera最终的GBuffer的渲染描述 */
-            RPD: GPURenderPassDescriptor,
+        MSAA?: {
+            /** 每个camera MSAA GBuffer的渲染描述 */
+            RPD_MSAA: GPURenderPassDescriptor,
+            /** 每个camera MSAA info GBuffer的渲染描述 */
+            RPD_MSAAinfo: GPURenderPassDescriptor,
             /**
              * 每个camera最终的GBuffer的颜色附件描述
              */
-            colorAttachmentTargets: GPUColorTargetState[],
+            colorAttachmentTargetsMSAA: GPUColorTargetState[],
+            colorAttachmentTargetsMSAAinfo: GPUColorTargetState[],
             /** 每个camera的forward GBuffer存储位置 */
             GBuffer: I_GBuffer,
         }

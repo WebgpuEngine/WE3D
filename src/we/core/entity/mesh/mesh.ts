@@ -573,7 +573,6 @@ export class Mesh extends BaseEntity {
 
         if (this.MSAA === true) {   //输出两个DC（MSAA 和 info forward）
             let uniformsMaterialMSAA: I_BundleOfMaterialForMSAA;
-            let uniformsMaterialInfo: I_BundleOfMaterialForMSAA;
             {//MSAA 部分
                 if (this.deferColor) {
                     if (isTO === true) {
@@ -589,7 +588,8 @@ export class Mesh extends BaseEntity {
                     else
                         uniformsMaterialMSAA = this._material.getOpacity_MSAA(bundle.bindingNumber);
                 }
-                //MSAA,材质的shader 模板输出，
+            }
+            {         //MSAA,材质的shader 模板输出，
                 if (uniformsMaterialMSAA) {
                     bundle.uniformGroups[0].push(...uniformsMaterialMSAA.MSAA.uniformGroup);
                     bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.MSAA.singleShaderTemplateFinal;
@@ -598,35 +598,28 @@ export class Mesh extends BaseEntity {
                     throw new Error("Mesh generateOpacityDC: MSAA is true, but no MSAA material");
                 }
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                valueDC.system!.MSAA = "MSAA";
+                if (isTO === true)
+                    valueDC.label = "mesh TO MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                else
+                    valueDC.label = "mesh opacity MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 let dc = this.DCG.generateDrawCommand(valueDC);
                 this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
-
             }
-            {//info,材质的shader 模板输出，
-                if (this.deferColor) {
-                    if (isTO === true) {
-                        uniformsMaterialInfo = this._material.getFS_TO_DeferColorOfMSAA_Info(bundle.bindingNumber);
-                    }
-                    else
-                        uniformsMaterialInfo = this._material.getOpacity_DeferColorOfMSAA_Info(bundle.bindingNumber);
-                }
-                else {
-                    if (isTO === true) {
-                        uniformsMaterialInfo = this._material.getFS_TO_MSAA_Info(bundle.bindingNumber);
-                    }
-                    else
-                        uniformsMaterialInfo = this._material.getOpacity_MSAA_Info(bundle.bindingNumber);
-                }
-
-
-                if (uniformsMaterialInfo) {
-                    bundle.uniformGroups[0].push(...uniformsMaterialInfo.inforForward.uniformGroup);
-                    bundle.shaderTemplateFinal.material = uniformsMaterialInfo.inforForward.singleShaderTemplateFinal;
+            {       //info forward 部分
+                if (uniformsMaterialMSAA) {
+                    bundle.uniformGroups[0].push(...uniformsMaterialMSAA.inforForward.uniformGroup);
+                    bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.inforForward.singleShaderTemplateFinal;
                 }
                 else {
                     throw new Error("Mesh generateOpacityDC: MSAA is true, but no info material");
                 }
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+                valueDC.system!.MSAA = "MSAAinfo";
+                if (isTO === true)
+                    valueDC.label = "mesh TO MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                else
+                    valueDC.label = "mesh opacity MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 let dc = this.DCG.generateDrawCommand(valueDC);
                 this.cameraDC[UUID][E_renderPassName.forward].push(dc);
             }
@@ -658,6 +651,10 @@ export class Mesh extends BaseEntity {
                 bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
                 let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
                 let dc = this.DCG.generateDrawCommand(valueDC);
+                if (isTO === true)
+                    valueDC.label = "mesh defer TO forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                else
+                    valueDC.label = "mesh defer opacity forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 this.cameraDC[UUID][E_renderPassName.forward].push(dc);
             }
         }

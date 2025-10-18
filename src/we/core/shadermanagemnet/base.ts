@@ -105,6 +105,12 @@ export interface I_ShaderTemplate_Final {
 import st_GufferWGSL from "../shader/gbuffers/st_gbuffer.fs.wgsl?raw";
 export var WGSL_st_Guffer = st_GufferWGSL.toString();
 
+import st_MSAA_GufferWGSL from "../shader/gbuffers/st_MSAA_gbuffer.fs.wgsl?raw";
+export var WGSL_st_MSAA_Guffer = st_MSAA_GufferWGSL.toString();
+
+import st_MSAAinfo_GufferWGSL from "../shader/gbuffers/st_MSAAinfo_gbuffer.fs.wgsl?raw";
+export var WGSL_st_MSAAinfo_Guffer = st_MSAAinfo_GufferWGSL.toString();
+
 import st_transgparentbufferWGSL from "../shader/gbuffers/st_transgparentbuffer.fs.wgsl?raw";
 export var WGSL_st_transparentbuffer = st_transgparentbufferWGSL.toString();
 
@@ -114,8 +120,15 @@ export var WGSL_st_location = st_locationWGSL.toString();
 
 import st_outputWGSL from "../shader/entity/st_output.vs.wgsl?raw"
 export var WGSL_st_output = st_outputWGSL.toString();
+
 import replace_gbuffer_outputWGSL from "../shader/gbuffers/replace_gbuffer_output.fs.wgsl?raw";
 export var WGSL_replace_gbuffer_output = replace_gbuffer_outputWGSL.toString();
+
+import replace_MSAA_gbuffer_outputWGSL from "../shader/gbuffers/replace_MSAA_gbuffer_output.fs.wgsl?raw";
+export var WGSL_replace_MSAA_gbuffer_output = replace_MSAA_gbuffer_outputWGSL.toString();
+
+import replace_MSAAinfo_gbuffer_outputWGSL from "../shader/gbuffers/replace_MSAAinfo_gbuffer_output.fs.wgsl?raw";
+export var WGSL_replace_MSAAinfo_gbuffer_output = replace_MSAAinfo_gbuffer_outputWGSL.toString();
 
 
 

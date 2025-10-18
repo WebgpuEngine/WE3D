@@ -44,11 +44,13 @@ export declare interface IV_Scene {
 
 /**AA */
 export interface AA {
-    type: "MSAA" | "FXAA" | "TAA"
-    // MSAA?: {
-    //     /**目前只能是1or4*/
-    //     sampleCount: number
-    // },
+    FXAA?: {},
+    TAA?: {},
+    MSAA?: {
+        enable: boolean,
+        /**目前只能是1or4*/
+        // sampleCount: number
+    },
 }
 
 
@@ -152,7 +154,7 @@ export enum eventOfScene {
 /**用户自定义 update interface */
 export interface userDefineEventCall {
     /**不可以使用异步方式，会影响性能 */
-    call: (scope: Scene) =>void,
+    call: (scope: Scene) => void,
     name: string,
     state: boolean;
     event: eventOfScene

@@ -135,3 +135,8 @@ export interface I_DrawCommandIDs {
     ID: number,
     renderID: number,
 }
+
+
+///////////////////////////////////////////////////////////////////
+//MSAA
+export type T_rpdInfomationOfMSAA = "MSAA" | "MSAAinfo"

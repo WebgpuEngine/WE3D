@@ -140,8 +140,69 @@ export abstract class BaseMaterial extends RootOfGPU {
         return renderID;
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // TO TT TP
+    // Opacity 部分
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
+     * 涉及三个部分：
+     * 1、uniformGroups：uniform，一个组的内有多个binding 的uniform。
+     * 2、singleShaderTemplateFinal：shader模板输出，包括了shader代码和groupAndBindingString。
+     * 3、uniform layout 到ResourceGPU的Map操作
+     * @param startBinding 
+     * @returns I_materialBundleOutput
+     */
+    abstract getOpacity_Forward(startBinding: number): I_materialBundleOutput;
+    /**
+     * MSAA 材质输出shader模板
+     * @param startBinding 
+     * @returns { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
+     *  1、MSAA：只输出color和depth
+     *  2、inforForward:输出其他GBuffer信息
+     */
+    abstract getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA;
+    // abstract getOpacity_MSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+    /**
+     * MSAA的延迟渲染 输出的shader模板
+     * @param startBinding 
+     * @returns { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
+     *  1、MSAA：只输出color和depth
+     *  2、inforForward:输出其他GBuffer信息（需要按照延迟渲染的约定进行）
+     */
+    abstract getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA;
+    // abstract getOpacity_DeferColorOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+
+    /**
+     * 延迟渲染的shader模板输出
+     * @param startBinding 
+     * @returns I_materialBundleOutput  不包含光影的GBuffer，但GBuffer的输出中需要按照延迟渲染的约定进行。
+     */
+    abstract getOpacity_DeferColor(startBinding: number): I_materialBundleOutput;
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //TTTT 功能实现部分
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * 透明材质bundle
+     * 1、TO部分说明
+     *      A、TTTT只获取了TO的forward部分
+     *      B、TO_MSAA,TO_deferColor,TO_deferColorOfMSAA需要单独获取。
+     *      C、单独获取的意义：
+     *              (1)、纯透明：alpha的color材质，alpha的百分比透明（纹理等），全（半）透明的物理透明材质等，可能没有TO。
+     *                  所以，如果没有TO，就不进行其他的TO变种的获取，优化初始化性能
+     *             （2）、forward为标准的测试模板，必须有
+     * 2、TT时一定有的
+     * 
+     * 3、TTP和TTPF也一定有的，但不一定使用（需要看是否存在BVH判断的相交{AABB、OBB，真相交等}）
+     * 
+     * @param startBinding 透明材质的binding开始值
+     * @returns 透明材质的uniform和shader模板输出,
+     * TO为不透明材质的不透明部分；
+     * TT为透明材质的透明部分；
+     * TTP为像素级别的排序
+     * TTPF为像素级别的排序后的输出
+     */
     /**
      * 设置透明材质的不透明部分是否存在
      */
@@ -208,60 +269,21 @@ export abstract class BaseMaterial extends RootOfGPU {
         }
     }
     /**
-     * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
-     * 涉及三个部分：
-     * 1、uniformGroups：uniform，一个组的内有多个binding 的uniform。
-     * 2、singleShaderTemplateFinal：shader模板输出，包括了shader代码和groupAndBindingString。
-     * 3、uniform layout 到ResourceGPU的Map操作
-     * @param startBinding 
-     * @returns I_materialBundleOutput
-     */
-    abstract getOpacity_Forward(startBinding: number): I_materialBundleOutput;
-    /**
-     * MSAA 材质输出shader模板
-     * @param startBinding 
-     * @returns { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
-     *  1、MSAA：只输出color和depth
-     *  2、inforForward:输出其他GBuffer信息
-     */
-    abstract getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA;
-    abstract getOpacity_MSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
-    /**
-     * MSAA的延迟渲染 输出的shader模板
-     * @param startBinding 
-     * @returns { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
-     *  1、MSAA：只输出color和depth
-     *  2、inforForward:输出其他GBuffer信息（需要按照延迟渲染的约定进行）
-     */
-    abstract getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA;
-    abstract getOpacity_DeferColorOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
-
-    /**
-     * 延迟渲染的shader模板输出
-     * @param startBinding 
-     * @returns I_materialBundleOutput  不包含光影的GBuffer，但GBuffer的输出中需要按照延迟渲染的约定进行。
-     */
-    abstract getOpacity_DeferColor(startBinding: number): I_materialBundleOutput;
-
-    /**
-     * 透明材质bundle
-     * 1、TO部分说明
-     *      A、TTTT只获取了TO的forward部分
-     *      B、TO_MSAA,TO_deferColor,TO_deferColorOfMSAA需要单独获取。
-     *      C、单独获取的意义：
-     *              (1)、纯透明：alpha的color材质，alpha的百分比透明（纹理等），全（半）透明的物理透明材质等，可能没有TO。
-     *                  所以，如果没有TO，就不进行其他的TO变种的获取，优化初始化性能
-     *             （2）、forward为标准的测试模板，必须有
-     * 2、TT时一定有的
-     * 
-     * 3、TTP和TTPF也一定有的，但不一定使用（需要看是否存在BVH判断的相交{AABB、OBB，真相交等}）
-     * 
-     * @param startBinding 透明材质的binding开始值
-     * @returns 透明材质的uniform和shader模板输出,
+     * 获取透明材质的uniform和shader模板输出,
      * TO为不透明材质的不透明部分；
      * TT为透明材质的透明部分；
      * TTP为像素级别的排序
      * TTPF为像素级别的排序后的输出
+     * 
+     * @param renderObject  BaseCamera | I_ShadowMapValueOfDC
+     * @param startBinding number
+     * @returns   
+     * {
+     *     TT: I_materialBundleOutput,
+     *     TO?: I_materialBundleOutput,
+     *     TTP: I_materialBundleOutput,
+     *     TTPF: I_materialBundleOutput
+     * }
      */
     getTTTT(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): {
         TT: I_materialBundleOutput,
@@ -296,30 +318,44 @@ export abstract class BaseMaterial extends RootOfGPU {
      * @param _startBinding binding开始值
      */
     abstract getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput;
+
     /**
      * 透明材质的不透明code （ transparent  opaque ）
      * @param _startBinding binding开始值
      * @returns 
      */
     abstract getFS_TO(_startBinding: number): I_materialBundleOutput;
+
     /**
-     * MSAA 材质输出shader模板
+     * MSAA 材质（第一遍）输出shader模板
      * @param startBinding 
      * @returns { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
      *  1、MSAA：只输出color和depth
      *  2、inforForward:输出其他GBuffer信息
      */
     abstract getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA;
-    abstract getFS_TO_MSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+
     /**
-     * MSAA的延迟渲染 输出的shader模板
+     * MSAA info(第二遍) 输出
+     * @param startBinding 
+     */
+    // abstract getFS_TO_MSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+
+    /**
+     * MSAA（第一遍）的延迟渲染 输出的shader模板
      * @param startBinding 
      * @returns { MSAA: I_materialBundleOutput, inforForward: I_materialBundleOutput }
      *  1、MSAA：只输出color和depth
      *  2、inforForward:输出其他GBuffer信息（需要按照延迟渲染的约定进行）
      */
     abstract getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA;
-    abstract getFS_TO_DeferColorOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+
+    /**
+     * MSAA的info(第二遍) 延迟渲染 输出
+     * @param startBinding 
+     */
+    // abstract getFS_TO_DeferColorOfMSAA_Info(startBinding: number): I_BundleOfMaterialForMSAA;
+
     /**
      * 延迟渲染的shader模板输出
      * @param startBinding 
@@ -483,7 +519,7 @@ export abstract class BaseMaterial extends RootOfGPU {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 透明信息
+    // 透明相关信息部分
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     /**获取透明材质的初始化参数
      * @returns I_TransparentOptionOfMaterial | boolean 透明材质的初始化参数，或者false表示不是透明材质

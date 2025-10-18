@@ -1,5 +1,5 @@
 import { E_renderForDC, V_weLinearFormat } from "../base/coreDefine";
-import { commmandType, I_PipelineStructure } from "../command/base";
+import { commmandType, I_PipelineStructure, T_rpdInfomationOfMSAA } from "../command/base";
 import { DrawCommand } from "../command/DrawCommand";
 import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
 import { Mesh } from "../entity/mesh/mesh";
@@ -238,17 +238,26 @@ export class RenderManager {
      * @param UUID 
      */
     initRenderCommandForCamera(UUID: string) {
+        if (!this.RC[E_renderPassName.depth][UUID]) {
+            this.RC[E_renderPassName.depth][UUID] = {
+                pipelineOrder: new Map(),
+                dynmaicOrder: [],
+            };
+        }
+        if (!this.RC[E_renderPassName.MSAA][UUID]) {
+            this.RC[E_renderPassName.MSAA][UUID] = {
+                pipelineOrder: new Map(),
+                dynmaicOrder: [],
+            };
+        }
         if (!this.RC[E_renderPassName.forward][UUID]) {
             this.RC[E_renderPassName.forward][UUID] = {
                 pipelineOrder: new Map(),
                 dynmaicOrder: [],
             };
         }
-        if (!this.RC[E_renderPassName.depth][UUID]) {
-            this.RC[E_renderPassName.depth][UUID] = {
-                pipelineOrder: new Map(),
-                dynmaicOrder: [],
-            };
+        if (!this.RC[E_renderPassName.defer][UUID]) {
+            this.RC[E_renderPassName.defer][UUID] = [];
         }
         if (!this.RC[E_renderPassName.transparent][UUID]) {
             this.RC[E_renderPassName.transparent][UUID] = [];
@@ -294,16 +303,22 @@ export class RenderManager {
         for (let UUID in this.RC[E_renderPassName.shadowmapTransparent]) {
             this.RC[E_renderPassName.shadowmapTransparent][UUID as E_renderPassName] = [];
         }
-        for (let UUID in this.RC[E_renderPassName.forward]) {
-            let cameraCommand = this.RC[E_renderPassName.forward][UUID as E_renderPassName];
-            cameraCommand.pipelineOrder.clear();
-            cameraCommand.dynmaicOrder = [];
-        }
         for (let UUID in this.RC[E_renderPassName.depth]) {
             let cameraCommand = this.RC[E_renderPassName.depth][UUID as E_renderPassName];
             cameraCommand.pipelineOrder.clear();
             cameraCommand.dynmaicOrder = [];
         }
+        for (let UUID in this.RC[E_renderPassName.MSAA]) {
+            let cameraCommand = this.RC[E_renderPassName.MSAA][UUID as E_renderPassName];
+            cameraCommand.pipelineOrder.clear();
+            cameraCommand.dynmaicOrder = [];
+        }
+        for (let UUID in this.RC[E_renderPassName.forward]) {
+            let cameraCommand = this.RC[E_renderPassName.forward][UUID as E_renderPassName];
+            cameraCommand.pipelineOrder.clear();
+            cameraCommand.dynmaicOrder = [];
+        }
+
         this.RC[E_renderPassName.defer] = {};
         for (let UUID in this.RC[E_renderPassName.transparent]) {
             this.RC[E_renderPassName.transparent][UUID as E_renderPassName] = [];
@@ -317,7 +332,6 @@ export class RenderManager {
         for (let UUID in this.RC[E_renderPassName.spriteTransparent]) {
             this.RC[E_renderPassName.spriteTransparent][UUID as E_renderPassName] = [];
         }
-        this.RC[E_renderPassName.MSAA] = {};
         this.RC[E_renderPassName.toneMapping] = [];
         this.RC[E_renderPassName.postprocess] = [];
         this.RC[E_renderPassName.stage1] = [];
@@ -663,22 +677,27 @@ export class RenderManager {
                 this.device.queue.submit(submitCommand);                                                    //submit commandBuffer数组
         }
     }
-    renderForwaredDC(commands: I_renderDrawCommand, MSAA: boolean = false) {
+    renderForwaredDC(commands: I_renderDrawCommand, MSAA?: T_rpdInfomationOfMSAA) {
         // let cameraRendered: {
         //     [name: string]: number
         // } = {};
         for (let UUID in commands) {
             let perOne = commands[UUID];
             let flagUUID = UUID;        //标记UUID，MSAA时UUID 会和forward的UUID在计数器中冲突
-            if (MSAA === true) flagUUID = "MSAA_" + UUID;
+            if (MSAA != undefined) flagUUID = MSAA + UUID;
             //pipeline passEncoder 部分
             let submitCommand: GPUCommandBuffer[] = [];                                         //commandBuffer数组
 
             // forward render by pipeline
             for (const [key2, value] of perOne.pipelineOrder.entries()) {
                 //camera pipeline submit count  and rpd loadOP chang part 
-                if (MSAA === true) {
-                    this.cameraRendered[flagUUID] = this.autoChangeMsaaRPD_loadOP(UUID, this.cameraRendered[flagUUID]);
+                if (MSAA != undefined) {
+                    if (MSAA == "MSAA")
+                        this.cameraRendered[flagUUID] = this.autoChangeMSAA_RPD_loadOP(UUID, this.cameraRendered[flagUUID]);
+                    else {
+                        this.cameraRendered[flagUUID] = this.autoChangeMSAAinfo_RPD_loadOP(UUID, this.cameraRendered[flagUUID]);
+                        // this.cameraRendered[flagUUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[flagUUID]);
+                    }
                 }
                 else {
                     this.cameraRendered[flagUUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[flagUUID]);
@@ -701,7 +720,7 @@ export class RenderManager {
             //submit part
             if (submitCommand.length > 0) {
                 this.device.queue.submit(submitCommand);                                                    //submit commandBuffer数组
-                if (MSAA === true) {
+                if (MSAA == "MSAA") {
                     this.scene.cameraManager.resolveMSAA(UUID);
                 }
             }
@@ -737,9 +756,12 @@ export class RenderManager {
         this.renderForwaredDC(this.RC[E_renderPassName.depth]);
         //MSAA,未开启MS
         // this.doCommand(this.RC[E_renderPassName.MSAA]);
-        this.renderForwaredDC(this.RC[E_renderPassName.MSAA], true);
+        this.renderForwaredDC(this.RC[E_renderPassName.MSAA], "MSAA");
         //不透明enity
-        this.renderForwaredDC(this.RC[E_renderPassName.forward]);
+        if (this.scene.MSAA === true)
+            this.renderForwaredDC(this.RC[E_renderPassName.forward], "MSAAinfo");
+        else
+            this.renderForwaredDC(this.RC[E_renderPassName.forward]);
         //defer render
         this.renderTimelineDC(this.RC[E_renderPassName.defer]);
         //透明enity
@@ -842,20 +864,38 @@ export class RenderManager {
      * @param countOfUUID 相机或灯光的渲染次数
      * @returns 相机或灯光的渲染次数
      */
-    autoChangeMsaaRPD_loadOP(UUID: string, countOfUUID: number): number {
-        let kind: E_renderForDC = E_renderForDC.camera;
-        if (UUID.indexOf("__") != -1) {
-            kind = E_renderForDC.light;
-        }
-        let rpd = this.scene.cameraManager.getMsaaRPDByUUID(UUID);
+    autoChangeMSAA_RPD_loadOP(UUID: string, countOfUUID: number): number {
+
+        let rpd = this.scene.cameraManager.getRPD_MSAA_ByUUID(UUID);
 
         if (countOfUUID == undefined) {//没有记录，增加UUID记录
             countOfUUID = 0;
             for (let perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "clear";
-                rpd.depthStencilAttachment!.depthLoadOp = "clear";
             }
+            rpd.depthStencilAttachment!.depthLoadOp = "clear";
+        }
+        else if (countOfUUID == 1) {// forward render
+            for (let perColorAttachment of rpd.colorAttachments) {
+                if (perColorAttachment)
+                    perColorAttachment.loadOp = "load";                 //forward render loadOp="load"   
+            }
+            rpd.depthStencilAttachment!.depthLoadOp = "load";
+        }
+        return countOfUUID;
+    }
+    autoChangeMSAAinfo_RPD_loadOP(UUID: string, countOfUUID: number): number {
+
+        let rpd = this.scene.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
+
+        if (countOfUUID == undefined) {//没有记录，增加UUID记录
+            countOfUUID = 0;
+            for (let perColorAttachment of rpd.colorAttachments) {
+                if (perColorAttachment)
+                    perColorAttachment.loadOp = "clear";
+            }
+            rpd.depthStencilAttachment!.depthLoadOp = "clear";
         }
         else if (countOfUUID == 1) {// forward render
             for (let perColorAttachment of rpd.colorAttachments) {

@@ -5,10 +5,7 @@ fn fs(fsInput: VertexShaderOutput) -> ST_GBuffer {
     var output: ST_GBuffer;
     $fsOutput
     $fsOutputColor    
-    if(output.color.a<1.0)
-    {
-        discard;
-    }
+    $fsIfAlpha
     return output;
 }
 //end : color.fs.wgsl
