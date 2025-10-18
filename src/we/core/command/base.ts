@@ -11,6 +11,8 @@ export interface IV_BaseCommand {
     device: GPUDevice,
     /** label */
     label: string,
+    /** 是否是owner，默认=true */
+    isOwner?: boolean,
 }
 /**
  * 目前未使用，后期更改，20250909

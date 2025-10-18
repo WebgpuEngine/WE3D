@@ -1,5 +1,6 @@
 import { copyTextureToTexture } from "../base/coreFunction";
 import { I_dynamicTextureEntryForView } from "../command/base";
+import { ComputeCommand, IV_ComputeCommand } from "../command/ComputeCommand";
 import { DrawCommand, I_DynamicUniformOfDrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
 import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
@@ -57,6 +58,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 3、每次compute完毕，copy到camera的depth
      */
     computeOutputTextureForDepth!: GPUTexture;
+    testTexture!: GPUTexture;
 
     constructor(input: IV_CameraManager) {
         super(input.scene);
@@ -68,8 +70,15 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 label: "Compute output r32float for common " + new Date().getTime(),
                 size: [this.scene.surface.size.width, this.scene.surface.size.height],
                 format: "r32float",
-                usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+                usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
             });
+
+        this.testTexture = this.device.createTexture({
+            label: "Test texture " + new Date().getTime(),
+            size: [this.scene.surface.size.width, this.scene.surface.size.height],
+            format: "rgba16float",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
+        });
     }
     /**
      * 增加摄像机
@@ -77,10 +86,11 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 2、初始化GBuffer
      * 3、如果没有默认相机，则设置为默认相机
      * 4、初始化TTP相关GBuffer
-     * 5、初始化MSAA DrawCommand
-     * 6、初始化toneMapping DrawCommand
-     * 7、初始化defer DrawCommand
-     * 8、zindexList增加UUID(未实现)
+     * 5、初始化MSAA depth compute shader
+     * 6、初始化MSAA depth compy DrawCommand
+     * 7、初始化toneMapping DrawCommand
+     * 8、初始化defer DrawCommand
+     * 、zindexList增加UUID(未实现)
      * @param camera 相机
      */
     add(camera: BaseCamera) {
@@ -116,13 +126,19 @@ export class CameraManager extends ECSManager<BaseCamera> {
         //4、初始化TTP相关GBuffer
         this.GBufferManager.reInitCommonTransparentGBuffer();
         this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
-        //5、初始化MSAA DrawCommand
-        // this.DCG.initMSAADrawCommand(camera.UUID);
-        //6、初始化toneMapping DrawCommand
+
+        //5、初始化MSAA depth compute Command
+        //6、初始化MSAA depth copy DrawCommand
+        this.cameraMSAA_DepthStep[camera.UUID] = {
+            RCC: this.createRCC_ForMsaaResolveToGBufferDepth(camera.UUID),
+            CC: this.createComputeDepth(camera.UUID),
+        };
+
+        //7、初始化toneMapping DrawCommand
         this.createDrawCommandOfToneMapping(camera.UUID);
-        //7、初始化defer DrawCommand
+        //8、初始化defer DrawCommand
         // this.DCG.initDeferDrawCommand(camera.UUID);
-        //8、zindexList增加UUID(未实现)
+        //9、zindexList增加UUID(未实现)
         this.zindexList.push(camera.UUID);
     }
     /**
@@ -193,7 +209,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
             label: "Compute output r32float for common " + new Date().getTime(),
             size: [this.scene.surface.size.width, this.scene.surface.size.height],
             format: "r32float",
-            usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+            usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
         });
 
         // 重新创建GBuffer
@@ -216,7 +232,17 @@ export class CameraManager extends ECSManager<BaseCamera> {
             }
             await this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
 
-            //清除并重建 MSAA,ToneMapping,DeferRender 的DrawCommand
+            // 5、初始化MSAA depth compute Command
+            //6、初始化MSAA depth copy DrawCommand
+            if (this.cameraMSAA_DepthStep[camera.UUID]) {
+                this.cameraMSAA_DepthStep[camera.UUID].RCC.destroy();
+                this.cameraMSAA_DepthStep[camera.UUID].CC.destroy();
+            }
+            this.cameraMSAA_DepthStep[camera.UUID] = {
+                RCC: this.createRCC_ForMsaaResolveToGBufferDepth(camera.UUID),
+                CC: this.createComputeDepth(camera.UUID),
+            };
+
             //初始化toneMapping DrawCommand
             this.createDrawCommandOfToneMapping(camera.UUID);
             //初始化defer DrawCommand
@@ -681,6 +707,15 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
     } = {};
     /**
+     * 相机的MSAA渲染深度步骤的DrawCommand和ComputeCommand
+     */
+    cameraMSAA_DepthStep: {
+        [UUID: string]: {
+            RCC: DrawCommand,
+            CC: ComputeCommand,
+        },
+    } = {};
+    /**
      * 合并MSAA渲染目标的RPD，用于可能存在多个camera，所以使用函数返回
      * 每次调用时，都返回一个新的RPD，在renderCameraGBufferToFinalTexture（）中更新
      */
@@ -716,7 +751,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     resolveMSAA(UUID: string) {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
-            {
+            {//resolve MSAA color
                 const commandEncoder = this.device.createCommandEncoder();
                 // 启动 resolve 渲染通道：仅配置附件，不绑定管线、不绘制
                 const resolvePass = commandEncoder.beginRenderPass({
@@ -733,96 +768,171 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 // 提交命令，完成 resolve
                 this.device.queue.submit([commandEncoder.finish()]);
             }
-            // {
-            //     let computeCode = `
-            //             // 绑定组布局:输入MSAA深度纹理,输出单样本深度纹理
-            //             @group(0) @binding(0) var msaaDepth: texture_depth_multisampled_2d;
-            //             @group(0) @binding(1) var outputDepth: texture_storage_2d<r32float, write>;
-
-            //             // 工作组大小:16x16(可根据GPU性能调整)
-            //             @compute @workgroup_size(16, 16)                        
-            //             fn resolveDepth(@builtin(global_invocation_id) globalId: vec3u) {
-            //                 // 计算当前像素坐标（确保不超出纹理范围）
-            //                 let pixelCoord = vec2i(globalId.xy);
-            //                 if (u32(pixelCoord.x) >= textureDimensions(msaaDepth).x || 
-            //                     u32(pixelCoord.y )>= textureDimensions(msaaDepth).y) {
-            //                     return;
-            //                 }
-
-            //                 // 读取所有MSAA样本,取最小值(可改为平均、最大等逻辑)
-            //                 var targetDepth = 0.0;//1.0; // 初始化为最大深度值(透视投影中通常为1.0),reverseZ为true时取最大值
-            //                 for (var i: u32 = 0; i < 4; i++) { // 遍历4个样本
-            //                     let sampleDepth = textureLoad(msaaDepth, pixelCoord, i);
-            //                     // if (sampleDepth < targetDepth) { // 取最小值,正向Z
-            //                     if (sampleDepth > targetDepth) { // 取最大值,reverseZ为true时取最大
-            //                     targetDepth = sampleDepth;
-            //                     }
-            //                 }
-
-            //                 // 写入解析后的单样本深度纹理
-            //                 textureStore(outputDepth, pixelCoord, vec4f(targetDepth,0,0,1));
-            //             }`;
-            //     // 3. 创建计算管线
-            //     const resolvePipeline = this.device.createComputePipeline({
-            //         layout: "auto",
-            //         compute: {
-            //             module: this.device.createShaderModule({
-            //                 code: computeCode
-            //             }),
-            //             entryPoint: "resolveDepth"
-            //         }
-            //     });
-
-            //     // 4. 创建绑定组（关联MSAA深度纹理和输出纹理）
-            //     const bindGroup = this.device.createBindGroup({
-            //         layout: resolvePipeline.getBindGroupLayout(0),
-            //         entries: [
-            //             { binding: 0, resource: this.getMsaaGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView() },
-            //             { binding: 1, resource: this.computeOutputTextureForDepth.createView() }
-            //         ]
-            //     });
-
-            //     // 5. 执行计算着色器，完成深度解析
-            //     let size = this.scene.surface.size;
-            //     const commandEncoder = this.device.createCommandEncoder();
-            //     const computePass = commandEncoder.beginComputePass();
-            //     computePass.setPipeline(resolvePipeline);
-            //     computePass.setBindGroup(0, bindGroup);
-            //     // 调度工作组：覆盖整个纹理尺寸（向上取整）
-            //     computePass.dispatchWorkgroups(
-            //         Math.ceil(size.width / 16),
-            //         Math.ceil(size.height / 16)
-            //     );
-            //     computePass.end();
-
-            //     // 提交命令
-            //     this.device.queue.submit([commandEncoder.finish()]);
-
-            //     //copy 
-            //     // copyTextureToTexture(this.device,this.computeOutputTextureForDepth,this.getCamearDepthOfGBufferByUUID(UUID),size);
-            // }
+            {//resolve depth
+                this.cameraMSAA_DepthStep[UUID].CC.submit();
+                this.cameraMSAA_DepthStep[UUID].RCC.submit();
+            }
         }
         else
             throw new Error("MSAA 未定义或MSAA GBuffer不存在");
     }
+    createComputeDepth(UUID: string): ComputeCommand {
+        let computeCode = `
+                        // 绑定组布局:输入MSAA深度纹理,输出单样本深度纹理
+                        @group(0) @binding(0) var msaaDepth: texture_depth_multisampled_2d;
+                        @group(0) @binding(1) var outputDepth: texture_storage_2d<r32float, write>;
+
+                        // 工作组大小:16x16(可根据GPU性能调整)
+                        @compute @workgroup_size(16, 16)                        
+                        fn resolveDepth(@builtin(global_invocation_id) globalId: vec3u) {
+                            // 计算当前像素坐标（确保不超出纹理范围）
+                            let pixelCoord = vec2i(globalId.xy);
+                            if (u32(pixelCoord.x) >= textureDimensions(msaaDepth).x || 
+                                u32(pixelCoord.y )>= textureDimensions(msaaDepth).y) {
+                                return;
+                            }
+
+                            // 读取所有MSAA样本,取最小值(可改为平均、最大等逻辑)
+                            var targetDepth = 0.0;//1.0; // 初始化为最大深度值(透视投影中通常为1.0),reverseZ为true时取最大值
+                            for (var i: u32 = 0; i < 4; i++) { // 遍历4个样本
+                                let sampleDepth = textureLoad(msaaDepth, pixelCoord, i);
+                                // if (sampleDepth < targetDepth) { // 取最小值,正向Z
+                                if (sampleDepth > targetDepth) { // 取最大值,reverseZ为true时取最大
+                                targetDepth = sampleDepth;
+                                }
+                            }
+
+                            // 写入解析后的单样本深度纹理
+                            textureStore(outputDepth, pixelCoord, vec4f(targetDepth,0,0,1));
+                        }`;
+        // 3. 创建计算管线（自动布局），可以map cache的，不变的，todo：20251018
+        const resolvePipeline = this.device.createComputePipeline({
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeCode
+                }),
+                entryPoint: "resolveDepth"
+            }
+        });
+
+        // 4. 创建绑定组（关联MSAA深度纹理和输出纹理）
+        const bindGroup = this.device.createBindGroup({
+            layout: resolvePipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: this.getMsaaGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView() },
+                { binding: 1, resource: this.computeOutputTextureForDepth.createView() }
+            ]
+        });
+
+        // 5. 创建CC
+        let size = this.scene.surface.size;
+        const dispatchCount: [number, number, number] = [
+            Math.ceil(size.width / 16),
+            Math.ceil(size.height / 16),
+            1
+        ];
+        let computeValues: IV_ComputeCommand = {
+            dispatchCount: dispatchCount,
+            scene: this.scene,
+            pipeline: resolvePipeline,
+            device: this.device,
+            label: "resolve Depth " + UUID,
+            uniform: [bindGroup],
+        }
+        let CC = new ComputeCommand(computeValues);
+        return CC;
+    }
+    // createComputeDepth(UUID: string): ComputeCommand {
+    //     let computeCode = `
+    //                     // 绑定组布局:输入MSAA深度纹理,输出单样本深度纹理
+    //                     @group(0) @binding(0) var msaaDepth: texture_depth_multisampled_2d;
+    //                     @group(0) @binding(1) var outputDepth: texture_storage_2d<r32float, write>;
+
+    //                     // 工作组大小:16x16(可根据GPU性能调整)
+    //                     @compute @workgroup_size(16, 16)                        
+    //                     fn resolveDepth(@builtin(global_invocation_id) globalId: vec3u) {
+    //                         // 计算当前像素坐标（确保不超出纹理范围）
+    //                         let pixelCoord = vec2i(globalId.xy);
+    //                         if (u32(pixelCoord.x) >= textureDimensions(msaaDepth).x || 
+    //                             u32(pixelCoord.y )>= textureDimensions(msaaDepth).y) {
+    //                             return;
+    //                         }
+
+    //                         // 读取所有MSAA样本,取最小值(可改为平均、最大等逻辑)
+    //                         var targetDepth = 0.0;//1.0; // 初始化为最大深度值(透视投影中通常为1.0),reverseZ为true时取最大值
+    //                         for (var i: u32 = 0; i < 4; i++) { // 遍历4个样本
+    //                             let sampleDepth = textureLoad(msaaDepth, pixelCoord, i);
+    //                             // if (sampleDepth < targetDepth) { // 取最小值,正向Z
+    //                             if (sampleDepth > targetDepth) { // 取最大值,reverseZ为true时取最大
+    //                             targetDepth = sampleDepth;
+    //                             }
+    //                         }
+
+    //                         // 写入解析后的单样本深度纹理
+    //                         textureStore(outputDepth, pixelCoord, vec4f(targetDepth,0,0,1));
+    //                     }`;
+    //     // 3. 创建计算管线
+    //     const resolvePipeline = this.device.createComputePipeline({
+    //         layout: "auto",
+    //         compute: {
+    //             module: this.device.createShaderModule({
+    //                 code: computeCode
+    //             }),
+    //             entryPoint: "resolveDepth"
+    //         }
+    //     });
+
+    //     // 4. 创建绑定组（关联MSAA深度纹理和输出纹理）
+    //     const bindGroup = this.device.createBindGroup({
+    //         layout: resolvePipeline.getBindGroupLayout(0),
+    //         entries: [
+    //             { binding: 0, resource: this.getMsaaGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView() },
+    //             { binding: 1, resource: this.computeOutputTextureForDepth.createView() }
+    //         ]
+    //     });
+
+    //     // 5. 执行计算着色器，完成深度解析
+    //     let size = this.scene.surface.size;
+    //     const commandEncoder = this.device.createCommandEncoder();
+    //     const computePass = commandEncoder.beginComputePass();
+    //     computePass.setPipeline(resolvePipeline);
+    //     computePass.setBindGroup(0, bindGroup);
+    //     // 调度工作组：覆盖整个纹理尺寸（向上取整）
+    //     computePass.dispatchWorkgroups(
+    //         Math.ceil(size.width / 16),
+    //         Math.ceil(size.height / 16)
+    //     );
+    //     computePass.end();
+
+    //     // 提交命令
+    //     // this.device.queue.submit([commandEncoder.finish()]);
+    //     this.device.queue.submit([commandEncoder.finish()]);
+    // }
     /**
      * 创建渲染命令，将MSAA解析后的深度纹理复制到GBuffer的深度纹理中
      * RCC:RenderCopyCommand
      * @param UUID 
      */
-    createRCC_ForMsaaResolveToGBufferDepth(UUID: string) {
-        if (this.cameraDrawCommandOfFinalStep[UUID] == undefined)
-            this.cameraDrawCommandOfFinalStep[UUID] = {};
-        if (this.cameraDrawCommandOfFinalStep[UUID].toneMapping != undefined && this.cameraDrawCommandOfFinalStep[UUID].toneMapping.IsDestroy != false) {
-            this.cameraDrawCommandOfFinalStep[UUID].toneMapping.destroy();
-        }
+    createRCC_ForMsaaResolveToGBufferDepth(UUID: string): DrawCommand {
 
-        let returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
-        if (this.scene.colorSpaceAndLinearSpace.colorSpace == "srgb")
-            returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
+        // let shader = `   
+        //     @group(0) @binding(0) var u_DepthTexture : texture_2d<f32>;
+        //     @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
+        //         let pos = array(
+        //                 vec2f( -1.0,  -1.0),  // bottom left
+        //                 vec2f( 1.0,  -1.0),  // top left
+        //                 vec2f( -1.0,  1.0),  // top right
+        //                 vec2f( 1.0,  1.0),  // bottom right
+        //                 );
+        //         return vec4f(pos[vertexIndex], 0.0, 1.0);
+        //     }
+        //     @fragment fn fs(@builtin(position) pos: vec4f ) -> @location(0) vec4f{
+        //         let depth=textureLoad(u_DepthTexture, vec2i(floor(pos.xy) ) ,0).r;
+        //         return vec4f(depth*500.,1,0,1);
+        //     }`;
         let shader = `   
-            ${colorSpace}            
-            @group(0) @binding(0) var u_ColorTexture : texture_2d<f32>;
+            @group(0) @binding(0) var u_DepthTexture : texture_2d<f32>;
             @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
                 let pos = array(
                         vec2f( -1.0,  -1.0),  // bottom left
@@ -832,59 +942,18 @@ export class CameraManager extends ECSManager<BaseCamera> {
                         );
                 return vec4f(pos[vertexIndex], 0.0, 1.0);
             }
-            @fragment fn fs(@builtin(position) pos: vec4f ) -> @location(0) vec4f{
-                let color=textureLoad(u_ColorTexture, vec2i(floor(pos.xy) ) ,0);
-                ${returnColor}
+            @fragment fn fs(@builtin(position) pos: vec4f ) -> @builtin(frag_depth)  f32{
+                let depth=textureLoad(u_DepthTexture, vec2i(floor(pos.xy) ) ,0).r;
+                return depth;
             }`;
         let moduleVS = this.device.createShaderModule({
-            label: "ToneMapping",
+            label: "RCC " + UUID + " Depth Copy",
             code: shader,
         });
 
-        // ToneMapping 绑定的uniform 00 是颜色纹理
-        let uniform00_ColorTexture: GPUBindGroupEntry = {
-            // label: "ToneMapping uniform color texture0",
-            binding: 0,
-            // resource: this.GBufferManager.GBuffer[UUID].finalRender.finalLinearColor.createView(),
-            resource: this.GBufferManager.GBuffer[UUID].forward.GBuffer[E_GBufferNames.color].createView(),
-        };
-        //bindgroup layout 0 的描述
-        let bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor =
-        {
-            label: "ToneMapping BindGroupLayout" + UUID,
-            entries: [
-                {//00
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    texture: {
-                        sampleType: "float",
-                        viewDimension: "2d",
-                        // multisampled: false,
-                    },
-                }
-            ]
-        };
-        //bindgroup layout 0 
-        let bindGroupLayout0: GPUBindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor0);
-
-        let bindGroupDesc0: GPUBindGroupDescriptor = {
-            label: "ToneMapping BindGroup" + UUID,
-            layout: bindGroupLayout0,
-            entries: [uniform00_ColorTexture],
-        };
-        let bindGroup0: GPUBindGroup = this.device.createBindGroup(bindGroupDesc0);
-
-        //pipeline layout 描述
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: "ToneMapping PipelineLayout" + UUID,
-            bindGroupLayouts: [bindGroupLayout0],
-        };
-        //pipeline layout 
-        let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-
         //pipeline 描述
         let descriptor: GPURenderPipelineDescriptor = {
-            label: "RenderFinal ToneMapping Pipeline: " + UUID,
+            label: "RCC pipeline: " + UUID,
             vertex: {
                 module: moduleVS,
                 entryPoint: "vs",
@@ -892,42 +961,58 @@ export class CameraManager extends ECSManager<BaseCamera> {
             fragment: {
                 module: moduleVS,
                 entryPoint: "fs",
-                targets: this.getCATs_ToneMapping_ForFinalTarget(UUID),
-
+                // targets: [{ format: "rgba16float" }],
+                targets: [],
             },
-            layout: pipelineLayout,
+            layout: "auto",
             primitive: {
                 topology: "triangle-strip",
             },
+            depthStencil: this.scene.depthMode.depthStencil,
         }
         //pipeline 
         let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-
-        let renderPassDescriptor = () => {
-            // console.log("=======================", UUID);
-            return this.getRPD_ToneMapping_ForFinalTarget(UUID)
+        let bindGroupDesc0: GPUBindGroupDescriptor = {
+            label: "RCC BindGroup 0" + UUID,
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: this.computeOutputTextureForDepth.createView() },
+            ],
         };
+        let bindGroup0: GPUBindGroup = this.device.createBindGroup(bindGroupDesc0);
+        // let rpd: GPURenderPassDescriptor = {
+        //     colorAttachments: [
+        //         {
+        //             // view: this.testTexture.createView({ label: UUID + " RCC depth" }),
+        //             view: this.getGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView({ label: UUID + " RCC depth" }),
 
-        //
-        let uniforIDTexture: I_DynamicUniformOfDrawCommand = {
-            bindGroupLayout: [bindGroupLayout0],
-            bindGroupsUniform: [[uniform00_ColorTexture]],
-            layoutNumber: 0
-        };
-
+        //             clearValue: [0, 1, 0, 0],
+        //             loadOp: 'clear',
+        //             storeOp: 'store',
+        //         }
+        //     ],
+        // }
+        let rpd: GPURenderPassDescriptor = {
+            colorAttachments: [],
+            depthStencilAttachment: {
+                view: this.getGBufferTextureByUUID(UUID, E_GBufferNames.depth).createView({ label: UUID + " RCC depth" }),
+                depthClearValue: 0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+            },
+        }
         let valuesDC: IV_DrawCommand = {
             scene: this.scene,
             pipeline: pipeline,
             uniform: [bindGroup0],
-            renderPassDescriptor,
+            renderPassDescriptor: () => { return rpd; },
             drawMode: {
                 vertexCount: 4
             },
             device: this.device,
-            label: "RenderFinal ToneMapping: " + UUID,
-            // dynamicUniform: uniforIDTexture,
+            label: "RCC: " + UUID,
         }
-        this.cameraDrawCommandOfFinalStep[UUID].toneMapping = new DrawCommand(valuesDC);
+        return new DrawCommand(valuesDC);
     }
 
     createDrawCommandOfToneMapping(UUID: string) {

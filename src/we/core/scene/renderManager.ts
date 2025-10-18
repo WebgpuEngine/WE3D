@@ -493,7 +493,7 @@ export class RenderManager {
      * timelineDC,只有渲染DC
      * @param list 渲染列表
      */
-    renderTimelineDC(list: I_renderDrawOfTimeline) {
+    async renderTimelineDC(list: I_renderDrawOfTimeline) {
         for (let i in list) {
             let submitCommand: GPUCommandBuffer[] = [];
             let perOne = list[i];
@@ -505,8 +505,8 @@ export class RenderManager {
             for (let perCommand of perOne) {
 
                 this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
-
-                submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
+                let commandBuffer = await perCommand.update();
+                submitCommand.push(commandBuffer);//webGPU的commandBuffer时一次性的
                 this.cameraRendered[UUID]++;//更改camera forward loadOP计数器
             }
             if (submitCommand.length > 0)
@@ -643,41 +643,41 @@ export class RenderManager {
             }
         }
     }
-    oldrenderForwaredDC(commands: I_renderDrawCommand) {
-        // let cameraRendered: {
-        //     [name: string]: number
-        // } = {};
-        for (let UUID in commands) {
-            let perOne = commands[UUID];
-            //pipeline passEncoder 部分
-            let submitCommand: GPUCommandBuffer[] = [];                                         //commandBuffer数组
+    // oldrenderForwaredDC(commands: I_renderDrawCommand) {
+    //     // let cameraRendered: {
+    //     //     [name: string]: number
+    //     // } = {};
+    //     for (let UUID in commands) {
+    //         let perOne = commands[UUID];
+    //         //pipeline passEncoder 部分
+    //         let submitCommand: GPUCommandBuffer[] = [];                                         //commandBuffer数组
 
-            // forward render by pipeline
-            for (const [key2, value] of perOne.pipelineOrder.entries()) {
-                //camera pipeline submit count  and rpd loadOP chang part 
-                this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
+    //         // forward render by pipeline
+    //         for (const [key2, value] of perOne.pipelineOrder.entries()) {
+    //             //camera pipeline submit count  and rpd loadOP chang part 
+    //             this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
 
-                let { passEncoder, commandEncoder } = (value[0] as DrawCommand).doEncoderStart();//获取encoder
-                for (let i = 0; i < value.length; i++) {
-                    (value[i] as DrawCommand).doEncoder(passEncoder);                           //绘制命令
-                }
-                let commandBuffer = (value[0] as DrawCommand).dotEncoderEnd(passEncoder, commandEncoder);//结束encoder
-                submitCommand.push(commandBuffer);
-                this.cameraRendered[UUID]++;//更改camera forward loadOP计数器
-                //push commandBuffer
-            }
-            for (let perDyn of perOne.dynmaicOrder) {
-                //camera pipeline submit count  and rpd loadOP chang part 
-                this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
-                this.cameraRendered[UUID]++;//更改camera forward loadOP计数器
-                submitCommand.push(perDyn.update());//webGPU的commandBuffer时一次性的
-            }
-            //submit part
-            if (submitCommand.length > 0)
-                this.device.queue.submit(submitCommand);                                                    //submit commandBuffer数组
-        }
-    }
-    renderForwaredDC(commands: I_renderDrawCommand, MSAA?: T_rpdInfomationOfMSAA) {
+    //             let { passEncoder, commandEncoder } = (value[0] as DrawCommand).doEncoderStart();//获取encoder
+    //             for (let i = 0; i < value.length; i++) {
+    //                 (value[i] as DrawCommand).doEncoder(passEncoder);                           //绘制命令
+    //             }
+    //             let commandBuffer = (value[0] as DrawCommand).dotEncoderEnd(passEncoder, commandEncoder);//结束encoder
+    //             submitCommand.push(commandBuffer);
+    //             this.cameraRendered[UUID]++;//更改camera forward loadOP计数器
+    //             //push commandBuffer
+    //         }
+    //         for (let perDyn of perOne.dynmaicOrder) {
+    //             //camera pipeline submit count  and rpd loadOP chang part 
+    //             this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);
+    //             this.cameraRendered[UUID]++;//更改camera forward loadOP计数器
+    //             submitCommand.push(perDyn.update());//webGPU的commandBuffer时一次性的
+    //         }
+    //         //submit part
+    //         if (submitCommand.length > 0)
+    //             this.device.queue.submit(submitCommand);                                                    //submit commandBuffer数组
+    //     }
+    // }
+    async renderForwaredDC(commands: I_renderDrawCommand, MSAA?: T_rpdInfomationOfMSAA) {
         // let cameraRendered: {
         //     [name: string]: number
         // } = {};
@@ -715,7 +715,8 @@ export class RenderManager {
                 //camera pipeline submit count  and rpd loadOP chang part 
                 this.cameraRendered[flagUUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[flagUUID]);
                 this.cameraRendered[flagUUID]++;//更改camera forward loadOP计数器
-                submitCommand.push(perDyn.update());//webGPU的commandBuffer时一次性的
+                let commandBuffer = await perDyn.update();
+                submitCommand.push(commandBuffer);//webGPU的commandBuffer时一次性的
             }
             //submit part
             if (submitCommand.length > 0) {
@@ -763,33 +764,35 @@ export class RenderManager {
         else
             this.renderForwaredDC(this.RC[E_renderPassName.forward]);
         //defer render
-        this.renderTimelineDC(this.RC[E_renderPassName.defer]);
+        await this.renderTimelineDC(this.RC[E_renderPassName.defer]);
         //透明enity
         await this.renderTransParentDC(this.RC[E_renderPassName.transparent]);
         //sprite
-        this.renderForwaredDC(this.RC[E_renderPassName.sprite]);
+        await this.renderForwaredDC(this.RC[E_renderPassName.sprite]);
         //透明sprite
-        this.renderTimelineDC(this.RC[E_renderPassName.spriteTransparent]);
+        await this.renderTimelineDC(this.RC[E_renderPassName.spriteTransparent]);
 
         //toneMapping
-        this.doCommand(this.RC[E_renderPassName.toneMapping]);
+        await this.doCommand(this.RC[E_renderPassName.toneMapping]);
         //pp
-        this.doCommand(this.RC[E_renderPassName.postprocess]);
+        await this.doCommand(this.RC[E_renderPassName.postprocess]);
         //stage1
-        this.doCommand(this.RC[E_renderPassName.stage1]);
+        await this.doCommand(this.RC[E_renderPassName.stage1]);
         //stage2
-        this.doCommand(this.RC[E_renderPassName.stage2]);
+        await this.doCommand(this.RC[E_renderPassName.stage2]);
         //ui
-        this.doCommand(this.RC[E_renderPassName.ui]);
+        await this.doCommand(this.RC[E_renderPassName.ui]);
         //output
-        this.doCommand(this.RC[E_renderPassName.output]);
+        await this.doCommand(this.RC[E_renderPassName.output]);
     }
-    doCommand(list: commmandType[]) {
+    async doCommand(list: commmandType[]) {
         let submitCommand = [];
         for (let perCommand of list) {
-            submitCommand.push(perCommand.update());//webGPU的commandBuffer时一次性的
+            let commandBuffer = await perCommand.update();
+            submitCommand.push(commandBuffer);//webGPU的commandBuffer时一次性的
         }
         if (submitCommand.length > 0)
+
             this.device.queue.submit(submitCommand);
     }
 
@@ -895,7 +898,7 @@ export class RenderManager {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "clear";
             }
-            rpd.depthStencilAttachment!.depthLoadOp = "clear";
+            rpd.depthStencilAttachment!.depthLoadOp = "load";
         }
         else if (countOfUUID == 1) {// forward render
             for (let perColorAttachment of rpd.colorAttachments) {

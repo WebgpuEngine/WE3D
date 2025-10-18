@@ -181,7 +181,7 @@ export class Scene {
             },
             depthStencilMSAAinfo: {
                 depthWriteEnabled: false,
-                depthCompare: 'greater',
+                depthCompare: 'greater-equal',
                 format: "depth32float",
             },
         };
@@ -314,7 +314,7 @@ export class Scene {
             this.reversedZ = {
                 isReversedZ: value.reversedZ,
                 cleanValue: value.reversedZ ? this.depthMode.depthClearValueOfReveredZ : this.depthMode.depthClearValueOfZ,
-                depthCompare: value.reversedZ ? 'greater-equal' : 'less-equal',
+                depthCompare: value.reversedZ ?"greater-equal" : 'less-equal',
             }
         }
         //深度模板的默认设置

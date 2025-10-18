@@ -57,11 +57,16 @@ export interface IV_DrawCommand extends IV_BaseCommand {
      */
     IDS?: I_DrawCommandIDs,
     transparentType?: E_TransparentType,
+
 }
 
 export class DrawCommand {
+    _isDestroy: boolean = false;
 
-    transparentType: E_TransparentType|undefined;
+    inputValues: IV_DrawCommand;
+    isOwner: boolean = true;
+
+    transparentType: E_TransparentType | undefined;
     dynamic: boolean = false;
     scene!: Scene;
     label!: string;
@@ -85,9 +90,7 @@ export class DrawCommand {
 
     drawMode: I_drawMode | I_drawModeIndexed
 
-    _isDestroy: boolean = false;
 
-    inputValues: IV_DrawCommand;
 
     /**
      * 缓存的pipeline结构，用于标识DC在renderManaager中优化渲染使用
@@ -113,6 +116,8 @@ export class DrawCommand {
     constructor(input: IV_DrawCommand) {
         this.inputValues = input;
         this.label = input.label;
+        if (input.isOwner !== undefined)
+            this.isOwner = input.isOwner
         this.device = input.device;
         this.scene = input.scene;
         this.pipeline = input.pipeline;
@@ -139,6 +144,9 @@ export class DrawCommand {
      */
     uniformBufferList: any[] = [];
     destroy() {
+        if (this.isOwner ===true){
+            
+        }
         console.warn("DrawCommand destroy:", this.label);
         // if (this.resourcesGPU) {
         //     for (let i of this.mapList) {
@@ -175,13 +183,13 @@ export class DrawCommand {
             ID: 0,
             renderID: 0,
         }
-        this._isDestroy=true;
+        this._isDestroy = true;
     }
-    get IsDestroy(){
+    get IsDestroy() {
         return this._isDestroy;
     }
-    set IsDestroy(v:boolean){
-        this._isDestroy=v;
+    set IsDestroy(v: boolean) {
+        this._isDestroy = v;
     }
     /**
      * 完整的绘制命令编码
