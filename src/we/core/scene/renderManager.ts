@@ -898,7 +898,11 @@ export class RenderManager {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "clear";
             }
-            rpd.depthStencilAttachment!.depthLoadOp = "load";
+            /**
+             * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
+             * 将load改为clear
+             */
+            rpd.depthStencilAttachment!.depthLoadOp = "clear";
         }
         else if (countOfUUID == 1) {// forward render
             for (let perColorAttachment of rpd.colorAttachments) {

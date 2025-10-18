@@ -65,20 +65,24 @@ export class CameraManager extends ECSManager<BaseCamera> {
         this.MSAA = this.scene.MSAA;
         this.GBufferManager = new GBuffers(this, this.scene.device);
         this.DCG = new DrawCommandGenerator({ scene: this.scene });
-        if (this.scene.surface.size.width > 0 && this.scene.surface.size.height > 0)
-            this.computeOutputTextureForDepth = this.device.createTexture({
-                label: "Compute output r32float for common " + new Date().getTime(),
-                size: [this.scene.surface.size.width, this.scene.surface.size.height],
-                format: "r32float",
-                usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
-            });
+        /**
+         * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
+         * 将false改为true
+         */
+        // if (this.scene.surface.size.width > 0 && this.scene.surface.size.height > 0)
+        //     this.computeOutputTextureForDepth = this.device.createTexture({
+        //         label: "Compute output r32float for common " + new Date().getTime(),
+        //         size: [this.scene.surface.size.width, this.scene.surface.size.height],
+        //         format: "r32float",
+        //         usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
+        //     });
 
-        this.testTexture = this.device.createTexture({
-            label: "Test texture " + new Date().getTime(),
-            size: [this.scene.surface.size.width, this.scene.surface.size.height],
-            format: "rgba16float",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
-        });
+        // this.testTexture = this.device.createTexture({
+        //     label: "Test texture " + new Date().getTime(),
+        //     size: [this.scene.surface.size.width, this.scene.surface.size.height],
+        //     format: "rgba16float",
+        //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
+        // });
     }
     /**
      * 增加摄像机
@@ -127,12 +131,17 @@ export class CameraManager extends ECSManager<BaseCamera> {
         this.GBufferManager.reInitCommonTransparentGBuffer();
         this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
 
-        //5、初始化MSAA depth compute Command
-        //6、初始化MSAA depth copy DrawCommand
-        this.cameraMSAA_DepthStep[camera.UUID] = {
-            RCC: this.createRCC_ForMsaaResolveToGBufferDepth(camera.UUID),
-            CC: this.createComputeDepth(camera.UUID),
-        };
+        /**
+         * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
+         * 将false改为true
+         */
+        // //5、初始化MSAA depth compute Command
+        // //6、初始化MSAA depth copy DrawCommand
+        // if (this.MSAA === true)
+        //     this.cameraMSAA_DepthStep[camera.UUID] = {
+        //         RCC: this.createRCC_ForMsaaResolveToGBufferDepth(camera.UUID),
+        //         CC: this.createComputeDepth(camera.UUID),
+        //     };
 
         //7、初始化toneMapping DrawCommand
         this.createDrawCommandOfToneMapping(camera.UUID);
@@ -232,16 +241,22 @@ export class CameraManager extends ECSManager<BaseCamera> {
             }
             await this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
 
+            /**
+             * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
+             * 将false改为true
+             */
             // 5、初始化MSAA depth compute Command
             //6、初始化MSAA depth copy DrawCommand
-            if (this.cameraMSAA_DepthStep[camera.UUID]) {
-                this.cameraMSAA_DepthStep[camera.UUID].RCC.destroy();
-                this.cameraMSAA_DepthStep[camera.UUID].CC.destroy();
-            }
-            this.cameraMSAA_DepthStep[camera.UUID] = {
-                RCC: this.createRCC_ForMsaaResolveToGBufferDepth(camera.UUID),
-                CC: this.createComputeDepth(camera.UUID),
-            };
+            // if (this.MSAA === true) {
+            //     if (this.cameraMSAA_DepthStep[camera.UUID]) {
+            //         this.cameraMSAA_DepthStep[camera.UUID].RCC.destroy();
+            //         this.cameraMSAA_DepthStep[camera.UUID].CC.destroy();
+            //     }
+            //     this.cameraMSAA_DepthStep[camera.UUID] = {
+            //         RCC: this.createRCC_ForMsaaResolveToGBufferDepth(camera.UUID),
+            //         CC: this.createComputeDepth(camera.UUID),
+            //     };
+            // }
 
             //初始化toneMapping DrawCommand
             this.createDrawCommandOfToneMapping(camera.UUID);
@@ -746,9 +761,10 @@ export class CameraManager extends ECSManager<BaseCamera> {
     }
 
     /**
-     * 
-     * @param UUID camera的UUID
-     */
+    * MSAA resolve 数据color 和 depth
+    * 20251018 ：因为精度问题，放弃depth resolve。原因初步估计是精度损失，见备忘的excel            
+    * @param UUID camera的UUID
+    */
     resolveMSAA(UUID: string) {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
             {//resolve MSAA color
@@ -768,10 +784,14 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 // 提交命令，完成 resolve
                 this.device.queue.submit([commandEncoder.finish()]);
             }
-            {//resolve depth
-                this.cameraMSAA_DepthStep[UUID].CC.submit();
-                this.cameraMSAA_DepthStep[UUID].RCC.submit();
-            }
+            /**
+             * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
+             * 将false改为true
+             */
+            // {//resolve depth
+            //     this.cameraMSAA_DepthStep[UUID].CC.submit();
+            //     this.cameraMSAA_DepthStep[UUID].RCC.submit();
+            // }
         }
         else
             throw new Error("MSAA 未定义或MSAA GBuffer不存在");
@@ -797,7 +817,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
                             for (var i: u32 = 0; i < 4; i++) { // 遍历4个样本
                                 let sampleDepth = textureLoad(msaaDepth, pixelCoord, i);
                                 // if (sampleDepth < targetDepth) { // 取最小值,正向Z
-                                if (sampleDepth > targetDepth) { // 取最大值,reverseZ为true时取最大
+                                if (sampleDepth >= targetDepth) { // 取最大值,reverseZ为true时取最大
                                 targetDepth = sampleDepth;
                                 }
                             }
@@ -932,7 +952,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
         //         return vec4f(depth*500.,1,0,1);
         //     }`;
         let shader = `   
-            @group(0) @binding(0) var u_DepthTexture : texture_2d<f32>;
+            // @group(0) @binding(0) var u_DepthTexture : texture_2d<f32>;
+            @group(0) @binding(0) var u_DepthTexture : texture_storage_2d<r32float, read>;
             @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
                 let pos = array(
                         vec2f( -1.0,  -1.0),  // bottom left
@@ -943,7 +964,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 return vec4f(pos[vertexIndex], 0.0, 1.0);
             }
             @fragment fn fs(@builtin(position) pos: vec4f ) -> @builtin(frag_depth)  f32{
-                let depth=textureLoad(u_DepthTexture, vec2i(floor(pos.xy) ) ,0).r;
+                // let depth=textureLoad(u_DepthTexture, vec2i(floor(pos.xy),0 )).r;
+                let depth=textureLoad(u_DepthTexture, vec2i(floor(pos.xy) )).r;
                 return depth;
             }`;
         let moduleVS = this.device.createShaderModule({

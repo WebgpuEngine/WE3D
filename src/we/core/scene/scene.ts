@@ -334,7 +334,11 @@ export class Scene {
             format: this.depthMode.depthDefaultFormat//'depth32float',
         };
         this.depthMode.depthStencilMSAAinfo = {
-            depthWriteEnabled: false,
+            /**
+             * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
+             * 将false改为true
+             */
+            depthWriteEnabled: true,
             depthCompare: this.reversedZ.depthCompare,
             format: this.depthMode.depthDefaultFormat//'depth32float',
         };

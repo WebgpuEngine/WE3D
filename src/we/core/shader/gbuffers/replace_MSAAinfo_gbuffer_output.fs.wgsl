@@ -1,6 +1,6 @@
 //start : replace_infor_gbuffer.output.fs.wgsl 
 //***GBuffer数量与内容需要人工保持正确性
-    // output.depth = fsInput.position.z;
+    output.depth = fsInput.position.z;
     // output.color = vec4f(fsInput.color,1);
     // output.id = fsInput.entityID;
     // output.normal = vec4f(fsInput.normal, 1);
