@@ -121,15 +121,8 @@ export class ColorMaterial extends BaseMaterial {
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: _startBinding };
     }
     getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
-        let MSAA: I_materialBundleOutput;
-        let inforForward: I_materialBundleOutput;
-        {
-            MSAA = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_mergeToVS, startBinding);
-        }
-        {
-            // inforForward = this.getOpaqueCodeFS(SHT_materialColorFS_mergeToVS, startBinding);
-            inforForward = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_info_mergeToVS, startBinding);
-        }
+        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_mergeToVS, startBinding);
+        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_info_mergeToVS, startBinding);
         return { MSAA, inforForward };
     }
     //color 不需要
@@ -274,7 +267,7 @@ export class ColorMaterial extends BaseMaterial {
         };
         return this.unifromEntryBundle_Common;
     }
-    
+
     _destroy(): void {
         // throw new Error("Method not implemented.");
     }

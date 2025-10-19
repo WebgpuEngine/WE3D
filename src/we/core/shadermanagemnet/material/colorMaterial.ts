@@ -41,8 +41,7 @@ export var SHT_materialColorFS_mergeToVS: I_ShaderTemplate = {
     }
 }
 
-// import colorFS_MSAA_WGSL from "../../shader/material/color/colorMSAA.fs.wgsl?raw";
-// var colorFS_MSAA = colorFS_MSAA_WGSL.toString();
+
 /** 颜色材质, 不透明, 合并到VS中 */
 export var SHT_materialColorFS_MSAA_mergeToVS: I_ShaderTemplate = {
     material: {
@@ -78,8 +77,6 @@ export var SHT_materialColorFS_MSAA_mergeToVS: I_ShaderTemplate = {
         ],
     }
 }
-// import colorFS_MSAA_Info_WGSL from "../../shader/material/color/colorMSAA_Info.fs.wgsl?raw";
-// var colorFS_MSAA_Info = colorFS_MSAA_Info_WGSL.toString();
 /** 颜色材质, 不透明, 合并到VS中 */
 export var SHT_materialColorFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
     material: {
@@ -111,7 +108,7 @@ export var SHT_materialColorFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
                 name: "if alpha",
                 replace: "$fsIfAlpha",           //判断alpha
                 replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: "",
+                replaceCode: "",                                      //  MSAA infor 不输出 color
             }
         ],
     }

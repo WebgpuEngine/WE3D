@@ -1,11 +1,12 @@
 
 import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
+import {  IV_Scene } from "../../../src/we/core/scene/base";
 import { initScene } from "../../../src/we/core/scene/fn";
 import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
 import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
 import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
 import { TextureMaterial } from "../../../src/we/core/material/standard/textureMaterial";
+import { CubeTextureMaterial } from "../../../src/we/core/material/standard/cubeTextureMaterial";
 
 declare global {
   interface Window {
@@ -16,7 +17,8 @@ declare global {
 let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.],
-  AA: {
+  // reversedZ:true,
+    AA: {
     MSAA: {
       enable: true
     }
@@ -34,9 +36,9 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.01,
   far: 100,
-  position: [0, 0, 3],
+  position: [3, 3, 3],
   lookAt: [0, 0, 0],
-  controlType: "arcball",
+  controlType:"arcball",
 });
 await scene.add(camera);
 
@@ -50,9 +52,11 @@ let colorMaterial = new ColorMaterial({
   color: [0, 0.5, 0.5, 1]
 });
 
-let textureMaterial = new TextureMaterial({
+let textureMaterial = new CubeTextureMaterial({
   textures: {
-    color: "/examples/resource/images/img/we3D.png",
+    /** 立方体贴图 JPG 格式*/
+    // cube: "/examples/resource/cubeIMG/cubemap/test",
+    cube: "/examples/resource/cubeIMG/skycube1/skybox",
   },
 });
 
@@ -61,11 +65,12 @@ let inputMesh: IV_MeshEntity = {
     geometry: boxGeometry,
   },
   material: textureMaterial,
-  // wireFrame: {
-  //   color: [1, 1, 1, 1],
-  //   enable: true,
-  //   // wireFrameOnly: true,
-  // }
+    wireFrame: {
+    color: [1, 1, 1, 1],
+    enable: true,
+    // wireFrameOnly: true,
+  },
+  position: [1, 1, 1],
 }
 let mesh = new Mesh(inputMesh);
 console.log(mesh);

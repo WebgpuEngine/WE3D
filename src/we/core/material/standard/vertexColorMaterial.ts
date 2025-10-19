@@ -3,9 +3,9 @@ import { BaseCamera } from "../../camera/baseCamera";
 import { T_uniformGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
-import { E_shaderTemplateReplaceType, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
+import { SHT_materialColorFS_mergeToVS, SHT_materialColorFS_MSAA_info_mergeToVS, SHT_materialColorFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
+import { I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface IV_VertexColorMaterial extends IV_BaseMaterial {
@@ -13,15 +13,7 @@ export interface IV_VertexColorMaterial extends IV_BaseMaterial {
 }
 
 export class VertexColorMaterial extends BaseMaterial {
-    setTO(): void {
-       this.hasOpaqueOfTransparent=false;
-    }
-    getTTFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
-    getTOFS(_startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
+
 
     declare inputValues: IV_BaseMaterial;
     constructor(input?: IV_VertexColorMaterial) {
@@ -34,8 +26,17 @@ export class VertexColorMaterial extends BaseMaterial {
     _destroy(): void {
         throw new Error("Method not implemented.");
     }
+    async readyForGPU(): Promise<any> {
+        this._state = E_lifeState.finished;
+    }
+    setTO(): void {
+        this.hasOpaqueOfTransparent = false;
+    }
     getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-        let template = SHT_materialColorFS_mergeToVS;
+        return this.getOpaqueCodeFS(SHT_materialColorFS_mergeToVS, startBinding);
+    }
+    getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
+        // let template = SHT_materialColorFS_mergeToVS;
 
         let uniform1: T_uniformGroup = [];
         let code: string = "";
@@ -59,15 +60,54 @@ export class VertexColorMaterial extends BaseMaterial {
         }
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: startBinding };
     }
+    getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_mergeToVS, startBinding);
+        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_info_mergeToVS, startBinding);
+        return { MSAA, inforForward };
+    }
+    getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+        throw new Error("Method not implemented.");
+    }
+    getTTFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
     getTransparent(): boolean {
         return false;
     }
     getBlend(): GPUBlendState | undefined {
         return undefined;
     }
-    async readyForGPU(): Promise<any> {
-        this._state = E_lifeState.finished;
-    }
+
     updateSelf(clock: Clock): void {
         // throw new Error("Method not implemented.");
     }

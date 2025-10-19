@@ -12,8 +12,7 @@ export class OneColoeCube extends Mesh {
 
 
     /**
-     * 缩放比例
-     * @param scale 
+     * oneColorCube 的位置颜色时在VS shader 输出是处理的
      */
     constructor(_input?: IV_MeshEntity) {
         let cube = {

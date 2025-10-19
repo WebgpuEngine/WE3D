@@ -143,6 +143,26 @@ export abstract class BaseMaterial extends RootOfGPU {
     // Opacity 部分
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
+     * 通过SHT获取不透明的FSbundle代码
+     * 注意事项：
+     * 1、SHT需要兼容所有的使用者，尽量参数化
+     * 2、shader需要更复杂的适配，可读性下降
+     * 3、如果有不能兼容或特殊的功能，按需使用定制的其他function实现）
+     * 使用者：
+     * 1、 getOpacity_Forward()
+     * 2、getOpacity_MSAA
+     * 3、getOpacity_DeferColorOfMSAA
+     * 4、getOpacity_DeferColor
+     * 5、getFS_TO
+     * 6、getFS_TO_MSAA
+     * 7、getFS_TO_DeferColorOfMSAA
+     * 8、getFS_TO_DeferColor
+     * @param template  I_ShaderTemplate
+     * @param startBinding number
+     * @returns I_materialBundleOutput
+     */
+    abstract getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput ;
+    /**
      * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
      * 涉及三个部分：
      * 1、uniformGroups：uniform，一个组的内有多个binding 的uniform。
@@ -152,6 +172,8 @@ export abstract class BaseMaterial extends RootOfGPU {
      * @returns I_materialBundleOutput
      */
     abstract getOpacity_Forward(startBinding: number): I_materialBundleOutput;
+
+
     /**
      * MSAA 材质输出shader模板
      * @param startBinding 

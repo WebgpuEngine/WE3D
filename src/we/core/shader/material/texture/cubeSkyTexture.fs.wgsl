@@ -4,8 +4,8 @@ fn fs(fsInput: VertexShaderOutput) -> ST_GBuffer {
     initSystemOfFS();
     var output: ST_GBuffer;
     $fsOutput
-    var cubemapVec =  fsInput.cubeVecUV;
-    output.color = textureSample(u_cubeTexture, u_Sampler, cubemapVec);
+    var cubemapVec =  normalize(fsInput.worldPosition - defaultCameraPosition);
+    $fsOutputColor
     return output;
 }
 //end : texture.fs.wgsl

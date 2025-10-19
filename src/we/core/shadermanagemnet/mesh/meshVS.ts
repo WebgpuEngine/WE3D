@@ -10,6 +10,7 @@ var st_entity = st_entityWGSL.toString();
 import replace_meshoutputWGSL from "../../shader/entity/mesh/replace_output.vs.wgsl?raw"
 var replace_meshoutput = replace_meshoutputWGSL.toString();
 
+/** Mesh SHT */
 export var SHT_MeshVS: I_ShaderTemplate = {
     scene: SHT_ScenOfCamera,
     entity: {
@@ -54,6 +55,7 @@ export var SHT_MeshVS: I_ShaderTemplate = {
     },
 };
 
+/**Mesh shadow map SHT */
 export var SHT_MeshShadowMapVS: I_ShaderTemplate = {
    
     entity: {
@@ -98,9 +100,12 @@ export var SHT_MeshShadowMapVS: I_ShaderTemplate = {
             }],
     },
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import wireFrameWGSL from "../../shader/entity/mesh/wireframe.vs.wgsl?raw"
 var wireFrameMain = wireFrameWGSL.toString();
-
+/**Mesh wireframe SHT */
 export var SHT_MeshWireframeVS: I_ShaderTemplate = {
     scene: SHT_ScenOfCamera,
     entity: {
@@ -143,7 +148,7 @@ export var SHT_MeshWireframeVS: I_ShaderTemplate = {
             }],
     },
 };
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 import lineMainWGSL from "../../shader/entity/line/main.vs.wgsl?raw";
 var lineMain = lineMainWGSL.toString();
 export var SHT_LineVS: I_ShaderTemplate = {
@@ -190,6 +195,7 @@ export var SHT_LineVS: I_ShaderTemplate = {
 
     },
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export var SHT_PointVS: I_ShaderTemplate = {
     scene: SHT_ScenOfCamera,
     entity: {
@@ -280,7 +286,7 @@ export var SHT_PointEmuSpriteVS: I_ShaderTemplate = {
 
     },
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 import oneCubeColorWGSL from "../../shader/entity/mesh/oneColorCube.vs.wgsl?raw"
 var oneCubeColor = oneCubeColorWGSL.toString();
 
