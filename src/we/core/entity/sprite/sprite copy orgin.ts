@@ -10,27 +10,21 @@ import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";
 import { SHT_PointEmuSpriteVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityBundleMaterial, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
+import { I_optionBaseEntity } from "../base";
 import { BaseEntity } from "../baseEntity";
-import { EntityBundleMaterial } from "../entityBundleMaterial";
 
 
-export interface IV_Sprite extends I_EntityBundleMaterial {
+export interface IV_Sprite extends I_optionBaseEntity {
     width: number;
     height: number;
     material: BaseMaterial, //| BaseMaterial[], 
     onTop?: boolean,
 }
 
-export class Sprite extends EntityBundleMaterial {
-    /**
-     * 20251021 todo ,sprite 会有透明的
-     */
-    updateUniformLayerOfTTPF(): void {
-        throw new Error("Method not implemented.");
-    }
+export class Sprite extends BaseEntity {
     top: boolean = false;
     declare inputValues: IV_Sprite
+    _material!: BaseMaterial;
     sprite = {
         vertices: [-0.5, 0.5, 0, 0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0],
         uv: [0, 1, 1, 1, 0, 0, 1, 0],
@@ -41,7 +35,6 @@ export class Sprite extends EntityBundleMaterial {
     constructor(input: IV_Sprite) {
         super(input);
         this.inputValues = input;
-        this._type = "Sprite";
         if (input.onTop && input.onTop === true) this.top = true;
         if (input.material) {
             this._material = input.material;
@@ -53,43 +46,22 @@ export class Sprite extends EntityBundleMaterial {
             this.sprite.vertices[i] *= this.inputValues.width;
             this.sprite.vertices[i + 1] *= this.inputValues.height;
         }
-        this.attributes.vertices.set("position", this.sprite.vertices);
-        this.attributes.vertices.set("uv", this.sprite.uv);
-        this.attributes.vertices.set("normal", this.sprite.normal);
-            this.attributes.indexes = this.sprite.indexes;
-
+        this.vertices.set("position", this.sprite.vertices);
+        this.vertices.set("uv", this.sprite.uv);
+        this.vertices.set("normal", this.sprite.normal);
     }
-    _destroy() {
+    destroy() {
         throw new Error("Method not implemented.");
     }
-    /**三段式初始化的第三段
-     * 覆写 Root的function,因为材料类需要GPUDevice */
-    async readyForGPU() {
-        await this._material.init(this.scene, this);
-        if (this._material.getTransparent() === true) {
-            this._cullMode = "none";
-        }
-    }
-    // async readyForGPU(): Promise<any> {
-    //     await this._material.init(this.scene, this);
-    //     // if (this._material.getTransparent() === true) {
-    //     //     this._cullMode = "none";
-    //     // }
-    // }
+
     createDeferDepthDC(camera: BaseCamera): void {
         throw new Error("Method not implemented.");
     }
-
     createForwardDC(camera: BaseCamera): void {
-        let UUID = camera.UUID;
-        this.generateOpacityDC(UUID, SHT_PointEmuSpriteVS);
-
-    }
-    oldcreateForwardDC(camera: BaseCamera): void {
         let UUID = camera.UUID;
 
         //mesh 前向渲染
-        let bundle = this.oldgetUniformAndShaderTemplateFinal();
+        let bundle = this.getUniformAndShaderTemplateFinal();
         let drawMode: I_drawMode | I_drawModeIndexed;
 
         let drawModeMesh: I_drawMode = {
@@ -143,28 +115,57 @@ export class Sprite extends EntityBundleMaterial {
     createTransparent(camera: BaseCamera): void {
         throw new Error("Method not implemented.");
     }
-    createShadowMapDC(input: I_ShadowMapValueOfDC): void {
+    createShadowMapDC(light: BaseLight): void {
         throw new Error("Method not implemented.");
     }
-    createShadowMapTransparentDC(input: I_ShadowMapValueOfDC): void {
+    createShadowMapTransparentDC(light: BaseLight): void {
         throw new Error("Method not implemented.");
     }
 
-
+    async readyForGPU(): Promise<any> {
+        await this._material.init(this.scene, this);
+        // if (this._material.getTransparent() === true) {
+        //     this._cullMode = "none";
+        // }
+    }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
     loadJSON(json: any): void {
         throw new Error("Method not implemented.");
     }
-
-
-    // /**
-    //  * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
-    //  * @param startBinding 
-    //  * @returns uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
-    //  */
-    oldgetUniformAndShaderTemplateFinal(startBinding: number = 0, wireFrame: boolean = false): { uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final } {
+    checkStatus(): boolean {
+        let readyForMaterial: boolean;
+        //完成状态，正常情况
+        if (this._material.getReady() == E_lifeState.finished) {
+            readyForMaterial = true;
+        }
+        //更新状态，需要重新初始化
+        else if (this._material.getReady() == E_lifeState.updated) {
+            readyForMaterial = true;
+        }
+        else {
+            readyForMaterial = false;
+        }
+        return readyForMaterial;
+    }
+    generateBoxAndSphere(): void {
+        if (this.checkStatus()) {
+            this.boundingBox = this.generateBox(this.sprite.vertices); this.boundingSphere = this.generateSphere(this.boundingBox);
+        }
+    }
+    getBlend(): GPUBlendState | undefined {
+        return this._material.getBlend();
+    }
+    getTransparent(): boolean {
+        return this._material.getTransparent();
+    }
+    /**
+     * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
+     * @param startBinding 
+     * @returns uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
+     */
+    getUniformAndShaderTemplateFinal(startBinding: number = 0, wireFrame: boolean = false): { uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final } {
         //uniform 部分
         let bindingNumber = startBinding;
         let uniform1: T_uniformGroup = [];
@@ -215,35 +216,35 @@ export class Sprite extends EntityBundleMaterial {
     }
 
 
-    // /**
-    //  * 格式化shader代码
-    //  * @param template 
-    //  * @returns string
-    //  */
-    // formatShaderCode(template: I_singleShaderTemplate, wireFrame: boolean = false): string {
-    //     let code: string = "";
-    //     for (let perOne of template.add as I_shaderTemplateAdd[]) {
-    //         code += perOne.code;
-    //     }
-    //     for (let perOne of template.replace as I_shaderTemplateReplace[]) {
-    //         if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
-    //             if (perOne.name == "userCodeVS") {
-    //                 if (wireFrame === false) {  //wireframe 不使用用户自定义代码,此时是wireFrame =false
-    //                     let userCodeVS = this.getUserCodeVS();
-    //                     code = code.replace(perOne.replace, userCodeVS);
-    //                 }
-    //                 else {
-    //                     code = code.replace(perOne.replace, "");
-    //                 }
-    //             }
-    //             else {
-    //                 code = code.replace(perOne.replace, perOne.replaceCode as string);
-    //             }
-    //         }
-    //         else if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
-    //             code = code.replace(perOne.replace, this.instance.numInstances.toString());
-    //         }
-    //     }
-    //     return code;
-    // }
+    /**
+     * 格式化shader代码
+     * @param template 
+     * @returns string
+     */
+    formatShaderCode(template: I_singleShaderTemplate, wireFrame: boolean = false): string {
+        let code: string = "";
+        for (let perOne of template.add as I_shaderTemplateAdd[]) {
+            code += perOne.code;
+        }
+        for (let perOne of template.replace as I_shaderTemplateReplace[]) {
+            if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
+                if (perOne.name == "userCodeVS") {
+                    if (wireFrame === false) {  //wireframe 不使用用户自定义代码,此时是wireFrame =false
+                        let userCodeVS = this.getUserCodeVS();
+                        code = code.replace(perOne.replace, userCodeVS);
+                    }
+                    else {
+                        code = code.replace(perOne.replace, "");
+                    }
+                }
+                else {
+                    code = code.replace(perOne.replace, perOne.replaceCode as string);
+                }
+            }
+            else if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
+                code = code.replace(perOne.replace, this.instance.numInstances.toString());
+            }
+        }
+        return code;
+    }
 }

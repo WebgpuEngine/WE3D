@@ -41,7 +41,7 @@ export class Sprite extends EntityBundleMaterial {
     constructor(input: IV_Sprite) {
         super(input);
         this.inputValues = input;
-        this._type = "Sprite";
+        this._type="Sprite";
         if (input.onTop && input.onTop === true) this.top = true;
         if (input.material) {
             this._material = input.material;
@@ -56,8 +56,6 @@ export class Sprite extends EntityBundleMaterial {
         this.attributes.vertices.set("position", this.sprite.vertices);
         this.attributes.vertices.set("uv", this.sprite.uv);
         this.attributes.vertices.set("normal", this.sprite.normal);
-            this.attributes.indexes = this.sprite.indexes;
-
     }
     _destroy() {
         throw new Error("Method not implemented.");
@@ -80,12 +78,12 @@ export class Sprite extends EntityBundleMaterial {
         throw new Error("Method not implemented.");
     }
 
-    createForwardDC(camera: BaseCamera): void {
-        let UUID = camera.UUID;
-        this.generateOpacityDC(UUID, SHT_PointEmuSpriteVS);
+    // createForwardDC(camera: BaseCamera): void {
+    //     let UUID = camera.UUID;
+    //     this.generateOpacityDC(UUID, SHT_PointEmuSpriteVS);
 
-    }
-    oldcreateForwardDC(camera: BaseCamera): void {
+    // }
+    createForwardDC(camera: BaseCamera): void {
         let UUID = camera.UUID;
 
         //mesh 前向渲染

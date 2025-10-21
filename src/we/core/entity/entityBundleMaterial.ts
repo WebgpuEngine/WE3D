@@ -76,14 +76,26 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             let position: number[] = [];
             if (this.attributes.vertices.has("position")) {
                 position = this.attributes.vertices.get("position") as number[];
+                if (position.length) {
+                    this.boundingBox = this.generateBox(position);
+                    this.boundingSphere = this.generateSphere(this.boundingBox);
+                }
+                else {
+                    console.warn("Mesh generateBoxAndSphere: position is empty");
+                }
             }
-            if (position.length) {
-                this.boundingBox = this.generateBox(position);
-                this.boundingSphere = this.generateSphere(this.boundingBox);
-            }
-            else {
-                console.warn("Mesh generateBoxAndSphere: position is empty");
-            }
+            // else if (this.inputValues.position) {
+            //     this.boundingBox = this.generateBox(this.inputValues.position);
+            //     this.boundingSphere = this.generateSphere(this.boundingBox);
+            // }
+            // else {
+            //     this.boundingBox = {
+            //         min: [0, 0, 0],
+            //         max: [0, 0, 0]
+            //     };
+           //     this.boundingSphere = this.generateSphere(this.boundingBox);
+            // }
+
         }
     }
     getBoundingBoxMaxSize(): number {
@@ -187,8 +199,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @returns IV_DrawCommand
      */
     // abstract generateInputValueOfDC(renderType: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly?: boolean ): I_EntityBundleOfUniformAndShaderTemplateFinal
-    generateInputValueOfDC(renderType: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false,scope?:EntityBundleMaterial): V_DC {
-        if(scope == undefined) scope=this;
+    generateInputValueOfDC(renderType: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: EntityBundleMaterial): V_DC {
+        if (scope == undefined) scope = this;
         let drawMode: I_drawMode | I_drawModeIndexed;
         if (scope.inputValues.drawMode != undefined) {
             drawMode = scope.inputValues.drawMode;
@@ -293,16 +305,16 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @param TO 透明物体的uniform和shader模板
      * @param specialMaterial 指定的材质，比如：线框（WireFrameMaterial），用于生成线框的MSAA
      */
-    generateOpacityDC(UUID: string, SHT_VS: I_ShaderTemplate, TO?: I_materialBundleOutput, specialMaterial?: BaseMaterial, specialInitValueOfDC?: (renderType: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean ) => V_DC) {
+    generateOpacityDC(UUID: string, SHT_VS: I_ShaderTemplate, TO?: I_materialBundleOutput, specialMaterial?: BaseMaterial, specialInitValueOfDC?: (renderType: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean) => V_DC) {
         let bundle = this.getUniformAndShaderTemplateFinal(SHT_VS);
 
         let material = this._material;
         if (specialMaterial != undefined)
             material = specialMaterial;
-        let getV_DC =  this.generateInputValueOfDC;//(E_renderForDC.camera, UUID, bundle);
-        if(specialInitValueOfDC != undefined)
+        let getV_DC = this.generateInputValueOfDC;//(E_renderForDC.camera, UUID, bundle);
+        if (specialInitValueOfDC != undefined)
             getV_DC = specialInitValueOfDC;
-        
+
         if (this.MSAA === true) {   //输出两个DC（MSAA 和 info forward）
             let uniformsMaterialMSAA: I_BundleOfMaterialForMSAA;
             {//MSAA 部分
@@ -329,7 +341,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 else {
                     throw new Error(this._type + " generateOpacityDC: MSAA is true, but no MSAA material");
                 }
-                let valueDC =getV_DC(E_renderForDC.camera, UUID, bundle,false,this);
+                let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle, false, this);
                 valueDC.system!.MSAA = "MSAA";
                 if (TO !== undefined)
                     valueDC.label = this._type + " TO MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
@@ -346,7 +358,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 else {
                     throw new Error(this._type + " generateOpacityDC: MSAA is true, but no info material");
                 }
-                let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle,false,this);
+                let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle, false, this);
                 valueDC.system!.MSAA = "MSAAinfo";
                 if (TO !== undefined)
                     valueDC.label = this._type + " TO MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
@@ -381,7 +393,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             {
                 bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
                 bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
-                let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle,false,this);
+                let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle, false, this);
                 let drawFor = " forward ";
                 if (this.deferColor) drawFor = " defer "
                 if (TO !== undefined)
