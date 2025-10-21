@@ -1,17 +1,16 @@
-import {  E_lifeState, weColor4 } from "../../base/coreDefine";
+import { E_lifeState, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import {T_uniformGroup } from "../../command/base";
+import { T_uniformGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
-import { E_shaderTemplateReplaceType,  I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_WireFrameFS_mergeToVS } from "../../shadermanagemnet/material/wireFrameMaterial";
-import { I_materialBundleOutput } from "../base";
-import { BaseMaterial } from "../baseMaterial";
-import { I_ColorMaterial } from "./colorMaterial";
+import { E_shaderTemplateReplaceType, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
+import { SHT_WireFrameFS_mergeToVS, SHT_WireFrameFS_MSAA_mergeToVS, SHT_WireFrameFS_MSAAinfo_mergeToVS } from "../../shadermanagemnet/material/wireFrameMaterial";
+import { I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../base";
+import { ColorMaterial, I_ColorMaterial } from "./colorMaterial";
 
 
 
-export class WireFrameMaterial extends BaseMaterial {
+export class WireFrameMaterial extends ColorMaterial {
     getTTFS(_startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
@@ -19,7 +18,7 @@ export class WireFrameMaterial extends BaseMaterial {
         throw new Error("Method not implemented.");
     }
     setTO(): void {
-        this.hasOpaqueOfTransparent=false;
+        this.hasOpaqueOfTransparent = false;
     }
 
     getTOFS(_startBinding: number): I_materialBundleOutput {
@@ -43,6 +42,12 @@ export class WireFrameMaterial extends BaseMaterial {
         this.green = input.color[1];
         this.blue = input.color[2];
         this.alpha = input.color[3];
+
+        if (this._transparent || this.alpha < 1.0) {
+            this._transparent = undefined;
+            this.alpha = 1.0;
+            console.warn("wire frame 不支持透明");
+        }
     }
     async readyForGPU(): Promise<any> {
         this._state = E_lifeState.finished;
@@ -50,58 +55,15 @@ export class WireFrameMaterial extends BaseMaterial {
     }
 
     getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-            return this.getOpaqueCodeFS(startBinding);
+        return this.getOpaqueCodeFS(SHT_WireFrameFS_mergeToVS, startBinding);
     }
-    /**
-     *  不透明材质的code
-     * @param _startBinding 
-     * @returns 
-     */
-    getOpaqueCodeFS(_startBinding: number): I_materialBundleOutput {
-        let template = SHT_WireFrameFS_mergeToVS;
-
-        let uniform1: T_uniformGroup = [];
-        let code: string = "";
-        let color: string = ` output.color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
-
-        for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
-            code += perOne.code;
-        }
-        for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
-            if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
-                code = code.replace(perOne.replace, perOne.replaceCode as string);
-            }
-            if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
-                code = code.replace(perOne.replace, color);
-            }
-        }
-        let outputFormat: I_singleShaderTemplate_Final = {
-            templateString: code,
-            groupAndBindingString: "",
-            owner: this,
-        }
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
+    getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_WireFrameFS_MSAA_mergeToVS, startBinding);
+        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_WireFrameFS_MSAAinfo_mergeToVS, startBinding);
+        return { MSAA, inforForward };
     }
 
 
-    /**
-     * todo 透明材质的code
-     * @param _startBinding 
-     * @returns 
-     */
-    getTransparentCodeFS(_startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
-    destroy() {
-        throw new Error("Method not implemented.");
-    }
-
-    getBlend(): GPUBlendState | undefined {
-        return this._transparent?.blend;
-    }
-    updateSelf(clock: Clock): void {
-        // throw new Error("Method not implemented.");
-    }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
@@ -109,6 +71,6 @@ export class WireFrameMaterial extends BaseMaterial {
         throw new Error("Method not implemented.");
     }
     getTransparent(): boolean {
-            return false;
+        return false;
     }
 }

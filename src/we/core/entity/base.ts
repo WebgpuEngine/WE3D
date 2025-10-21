@@ -3,9 +3,11 @@ import { I_Update, E_renderForDC } from "../base/coreDefine";
 import { Scene } from "../scene/scene";
 import { Rotation, RotationArray } from "../math/baseDefine";
 import { T_vsAttribute, vsAttribute, vsAttributeMerge } from "../command/DrawCommandGenerator";
-import { T_uniformGroup } from "../command/base";
+import { I_drawMode, I_drawModeIndexed, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate_Final } from "../shadermanagemnet/base";
 import { BaseLight } from "../light/baseLight";
+import { BaseMaterial } from "../material/baseMaterial";
+import { BaseGeometry } from "../geometry/baseGeometry";
 
 
 export interface meshConstantsVS {
@@ -129,10 +131,31 @@ export interface I_optionBaseEntity extends I_Update {
     dynamicMesh?: boolean,
 
     /**实例化数量，默认为当前entity，无其他实例化 */
-    instance?: I_entityInstance
-
+    instance?: I_entityInstance,
     /**自定义shader代码，包括VS和FS */
     shaderCode?: string,
+}
+
+export interface I_EntityBundleMaterial extends I_optionBaseEntity {
+    /** 顶点属性 和几何体二选一*/
+    attributes: {
+        /**几何体 */
+        geometry?: BaseGeometry,
+        /** 顶点数据 */
+        data?: {
+            vertices: {
+                [name: string]: T_vsAttribute;
+            },
+            indexes?: number[],
+            vertexStepMode?: GPUVertexStepMode,
+        },
+    }
+    /** 图元状态 */
+    primitive?: GPUPrimitiveState,
+    /**绘制方式 */
+    drawMode?: I_drawMode | I_drawModeIndexed,
+    /**材质 */
+    material?: BaseMaterial, //| BaseMaterial[],  
 }
 
 /**

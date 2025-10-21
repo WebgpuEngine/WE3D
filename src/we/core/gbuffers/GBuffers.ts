@@ -136,7 +136,7 @@ export class GBuffers {
                             storeOp: 'store',
                         });
                     }
-                    else {
+                    else if (key == E_GBufferNames.color) {
                         colorAttachments.push({
                             view: texture.createView({ label: id + " " + key }),
                             clearValue: this.getBackgroudColor(premultipliedAlpha, backgroudColor),
@@ -144,11 +144,18 @@ export class GBuffers {
                             storeOp: 'store',
                         });
                     }
-                    if (key != E_GBufferNames.color) 
-                    {
+                    else {
+                        colorAttachments.push({
+                            view: texture.createView({ label: id + " " + key }),
+                            clearValue: [0, 0, 0, 0],
+                            loadOp: 'clear',
+                            storeOp: 'store',
+                        });
+                    }
+                    if (key != E_GBufferNames.color) {
                         RPD_MSAAinfo_colorAttachments.push({
                             view: texture.createView({ label: id + " MSAA info " + key }),
-                            clearValue: this.getBackgroudColor(premultipliedAlpha, backgroudColor),
+                            clearValue: [0,0,0,0],
                             loadOp: 'clear',
                             storeOp: 'store',
                         });
@@ -225,6 +232,7 @@ export class GBuffers {
                 if (key != "depth") {
                     colorAttachments.push({
                         view: texture.createView({ label: id + " MSAA " + key }),
+                        clearValue: this.getBackgroudColor(premultipliedAlpha, backgroudColor),
                         loadOp: 'clear',//非depth ，clear 
                         storeOp: 'store',
                     });

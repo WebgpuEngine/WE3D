@@ -215,16 +215,7 @@ export class Sprite extends BaseEntity {
         return { uniformGroups, shaderTemplateFinal };
     }
 
-    /**
-     * 获取用户自定义的shader代码
-     * @returns string
-     */
-    getUserCodeVS(): string {
-        if (this.input.shaderCode) {
-            return this.input.shaderCode;
-        }
-        return "";
-    }
+
     /**
      * 格式化shader代码
      * @param template 

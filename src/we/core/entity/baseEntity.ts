@@ -34,6 +34,9 @@ export abstract class BaseEntity extends RootOfGPU {
     /**for shader */
     stage_id!: Uint32Array;
 
+    /** 实体类型 */
+    _type!:string;
+
     /**entiy 的ID（u32）等其他数据占位，这个需要与wgsl shader中同步更改 */
     _entityIdSizeForWGSL = 4;//以u32（f32）计算
     ////////////////////////////////////////////////////////////////////
@@ -342,7 +345,7 @@ export abstract class BaseEntity extends RootOfGPU {
             let perCameraDC = this.cameraDC[i];
             // perCameraDC.transparent = [];
         }
-        this.upgradeCameras();
+        // this.upgradeCameras();
     }
     /**更新(创建)关于cameras的DCCC commands
      * 
@@ -561,7 +564,13 @@ export abstract class BaseEntity extends RootOfGPU {
      * 透明材质的TTPF的uniform layer 
      */
     uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
+    /**
+     * TTPF使用的uniform的ArrayBuffer
+     */
     uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
+    /**TTPF 是使用的 uniform: 主要是目的是更新entity所在的TTP的层数（0-3） 
+     * I_uniformBufferPart结构使用在createTransparent（）中的TTPF代码部分
+    */
     unifromTTPF!: I_uniformBufferPart;
     /**
      * 设置透明材质的TTPF的uniform
@@ -574,6 +583,10 @@ export abstract class BaseEntity extends RootOfGPU {
         this.updateUniformLayerOfTTPF();
         // console.log(view)
     }
+
+    /**
+     * 
+     */
     abstract updateUniformLayerOfTTPF(): void
 
 }

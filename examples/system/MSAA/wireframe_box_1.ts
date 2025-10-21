@@ -1,12 +1,16 @@
-
+import { vec3 } from "wgpu-matrix";
+import { E_renderForDC } from "../../../src/we/core/base/coreDefine";
+import { OrthographicCamera } from "../../../src/we/core/camera/orthographicCamera";
 import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
 import { initScene } from "../../../src/we/core/scene/fn";
+import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
+import { Scene } from "../../../src/we/core/scene/scene";
+import { ArcballCameraControl } from "../../../src/we/core/control/arcballCameraControl";
 import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
 import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
 import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { TextureMaterial } from "../../../src/we/core/material/standard/textureMaterial";
-import { CubeTextureMaterial } from "../../../src/we/core/material/standard/cubeTextureMaterial";
 
 declare global {
   interface Window {
@@ -16,8 +20,7 @@ declare global {
 }
 let input: IV_Scene = {
   canvas: "render",
-  backgroudColor: [0, 0., 0., 0.],
-  // reversedZ:true,
+  backgroudColor: [0, 0., 0.1, 0.91],
   AA: {
     MSAA: {
       enable: true
@@ -29,6 +32,8 @@ let scene = await initScene({
 });
 window.scene = scene;
 
+
+
 let radius = 2;
 let Y = 0;
 let camera = new PerspectiveCamera({
@@ -36,8 +41,14 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.01,
   far: 100,
-  position: [3, 3, 3],
+  position: [0, 0, 3],
   lookAt: [0, 0, 0],
+  // update: (scope: any) => {
+  //   const now = Date.now() / 1000;
+  //   // console.log(scope.lookAt);
+  //   scope.Position = vec3.fromValues(Math.sin(now) * radius,Y, Math.cos(now) * radius);
+  //   // console.log(scope.position);
+  // },
   controlType: "arcball",
 });
 await scene.add(camera);
@@ -45,32 +56,23 @@ await scene.add(camera);
 
 
 
-
 let boxGeometry = new BoxGeometry();
 
-
-
-let textureMaterial = new CubeTextureMaterial({
-  textures: {
-    /** 立方体贴图 JPG 格式*/
-    // cube: "/examples/resource/cubeIMG/cubemap/test",
-    cube: "/examples/resource/cubeIMG/skycube1/skybox",
-  },
+let colorMaterial = new ColorMaterial({
+  color: [1, 0, 1, 1]
 });
 
 let inputMesh: IV_MeshEntity = {
   attributes: {
     geometry: boxGeometry,
   },
-  material: textureMaterial,
+  material: colorMaterial,
   wireFrame: {
     color: [1, 1, 1, 1],
     enable: true,
     // wireFrameOnly: true,
-  },
-  position: [1, 1, 1],
+  }
 }
 let mesh = new Mesh(inputMesh);
-console.log(mesh);
 await scene.add(mesh);
 

@@ -1,4 +1,4 @@
-//start : st_gbuffer.fs.wgsl   
+//start : st_MSAAinfo_gbuffer.fs.wgsl   
 struct ST_GBuffer{
     @builtin(frag_depth) depth : f32,
     // @location(0) color : vec4f,
@@ -11,4 +11,4 @@ struct ST_GBuffer{
     @location(2) ru_ma_AO : vec4f,
     @location(3) worldPosition : vec4f,
 }
-//end : st_gbuffer.fs.wgsl
+//end : st_MSAAinfo_gbuffer.fs.wgsl

@@ -226,7 +226,12 @@ export class DrawCommandGenerator {
             }
         }
     }
-
+    /**
+     * 更新uniform 数据的GPUBuffer
+     * 1、立即更新模式。（与每帧的update相同，但可以一帧按需更新多次）
+     * 2、TTPF需要使用
+     * @param perEntry I_uniformBufferPart
+     */
     updateUniformOfGPUBuffer(perEntry: I_uniformBufferPart) {
         if (this.resources.has(perEntry, "uniformBuffer")) {
             let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");

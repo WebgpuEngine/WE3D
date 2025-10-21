@@ -18,7 +18,7 @@ import { BaseCamera } from "../../camera/baseCamera";
 import { IV_TextureMaterial, TextureMaterial } from "./textureMaterial";
 import { CubeTexture } from "../../texture/cubeTexxture";
 import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../base";
-import { SHT_materialCubePositionTextureFS_mergeToVS, SHT_materialCubeSkyTextureFS_mergeToVS } from "../../shadermanagemnet/material/cubeTextureMaterial";
+import { SHT_materialCubePositionTextureFS_mergeToVS, SHT_materialCubePositionTextureFS_MSAA_mergeToVS, SHT_materialCubePositionTextureFS_MSAAinfo_mergeToVS, SHT_materialCubeSkyTextureFS_mergeToVS, SHT_materialCubeSkyTextureFS_MSAA_mergeToVS, SHT_materialCubeSkyTextureFS_MSAAinfo_mergeToVS } from "../../shadermanagemnet/material/cubeTextureMaterial";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { SHT_materialTextureFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/textureMaterial";
 import { SHT_materialColorFS_MSAA_info_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
@@ -138,11 +138,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         binding++;
 
         ////////////////shader 模板格式化部分
-        if (this.cubeType == "sky") {
-            template = SHT_materialCubeSkyTextureFS_mergeToVS;
-        }
-        else
-            template = SHT_materialCubePositionTextureFS_mergeToVS;
+    
         // template = SHT_materialCubeTextureFS_mergeToVS;
         for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
             code += perOne.code;
@@ -171,11 +167,18 @@ export class CubeTextureMaterial extends TextureMaterial {
         return this.getOpaqueCodeFS(template, startBinding);
     }
     getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
-        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialTextureFS_MSAA_mergeToVS, startBinding);
-        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_info_mergeToVS, startBinding);
-        return { MSAA, inforForward };
+        if (this.cubeType == "sky") {
+            let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialCubeSkyTextureFS_MSAA_mergeToVS, startBinding);
+            let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialCubeSkyTextureFS_MSAAinfo_mergeToVS, startBinding);
+            return { MSAA, inforForward };
+        }
+        else {
+            let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialCubePositionTextureFS_MSAA_mergeToVS, startBinding);
+            let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialCubePositionTextureFS_MSAAinfo_mergeToVS, startBinding);
+            return { MSAA, inforForward };
+        }
     }
-    
+
     updateSelf(clock: Clock): void {
     }
     saveJSON() {

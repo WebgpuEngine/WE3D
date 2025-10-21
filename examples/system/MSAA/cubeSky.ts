@@ -35,7 +35,7 @@ let camera = new PerspectiveCamera({
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
   near: 0.01,
-  far: 100,
+  far: 500,
   position: [3, 3, 3],
   lookAt: [0, 0, 0],
   controlType: "arcball",
@@ -56,6 +56,7 @@ let textureMaterial = new CubeTextureMaterial({
     // cube: "/examples/resource/cubeIMG/cubemap/test",
     cube: "/examples/resource/cubeIMG/skycube1/skybox",
   },
+  cubeType:"sky"
 });
 
 let inputMesh: IV_MeshEntity = {
@@ -68,7 +69,11 @@ let inputMesh: IV_MeshEntity = {
     enable: true,
     // wireFrameOnly: true,
   },
-  position: [1, 1, 1],
+  primitive: {
+    cullMode: "none"
+  },
+  // position: [0, 0, 3],
+  scale: [400, 400, 400],
 }
 let mesh = new Mesh(inputMesh);
 console.log(mesh);

@@ -1,4 +1,4 @@
-//start : texture.fs.wgsl
+//start : cubeLocationtexture.fs.wgsl
 @fragment 
 fn fs(fsInput: VertexShaderOutput) -> ST_GBuffer {    
     initSystemOfFS();
@@ -8,4 +8,4 @@ fn fs(fsInput: VertexShaderOutput) -> ST_GBuffer {
     $fsOutputColor
     return output;
 }
-//end : texture.fs.wgsl
+//end : cubeLocationtexture.fs.wgsl
