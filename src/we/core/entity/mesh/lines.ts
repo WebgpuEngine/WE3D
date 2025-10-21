@@ -1,13 +1,7 @@
-import { E_lifeState, E_renderForDC } from "../../base/coreDefine";
+import {  E_renderForDC } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
-import { T_vsAttribute, V_DC } from "../../command/DrawCommandGenerator";
-import { BaseGeometry } from "../../geometry/baseGeometry";
-import { BaseMaterial } from "../../material/baseMaterial";
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_LineVS, SHT_MeshVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityAttributes, I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
-import { BaseEntity } from "../baseEntity";
+import {  SHT_MeshVS } from "../../shadermanagemnet/mesh/meshVS";
+import {  I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal,  I_ShadowMapValueOfDC } from "../base";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 
 
@@ -80,10 +74,11 @@ export class Lines extends EntityBundleMaterial {
         throw new Error("Method not implemented.");
     }
 
-    generateInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false) {
-        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly);
-        valueDC.render.primitive!.topology = this.lineMode;
-        if (this.lineMode == "line-strip") {
+    generateInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Lines) {
+        if (scope == undefined) scope = this;
+        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly, scope);
+        valueDC.render.primitive!.topology = scope.lineMode;
+        if (scope.lineMode == "line-strip") {
             valueDC.render.primitive!.stripIndexFormat = "uint32"
         }
         return valueDC;

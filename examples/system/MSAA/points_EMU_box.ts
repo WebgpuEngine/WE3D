@@ -19,6 +19,11 @@ let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.95],
   reversedZ: true,
+  AA: {
+    MSAA: {
+      enable: true
+    }
+  },  
 };
 let scene = await initScene({
   initConfig: input,
@@ -32,7 +37,7 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.01,
   far: 100,
-  position: [6, 0, 6],
+  position: [0, 0, 6],
   lookAt: [0, 0, 0],
   controlType: "arcball",
 });
@@ -58,23 +63,18 @@ let inputMesh: IV_PointsEntity = {
           1, 0, 0,
           0, 1, 0,
         ],
-        // scale: [
-        //   0.1, 0.1, 0.1,
-        //   0.1, 0.1, 0.1,
-        //   0.1, 0.1, 0.1,
-        //   0.1, 0.1, 0.1,
-        // ],
+        scale: [
+          0.1, 0.1, 0.1,
+          0.1, 0.1, 0.1,
+          0.1, 0.1, 0.1,
+          0.1, 0.1, 0.1,
+        ],
       },
     },
   },
-  size: 0.6,
-  color: [1, 0.5, 0.5],
-  emulate: "sprite",
-
-
-
-  cullmode: "none"
-
+  size: 2,
+  color: [0, 0.5, 0.5],
+  emulate: "cube",
 }
 let mesh = new Points(inputMesh);
 console.log(mesh);
@@ -85,7 +85,7 @@ await scene.add(mesh);
 
 
 let colorMaterial = new ColorMaterial({
-  color: [1, 1, 1, 1]
+  color: [1, 0, 0, 1]
 });
 let position = [
   0.5,

@@ -70,6 +70,8 @@ let inputMesh: IV_PointsEntity = {
   size: 1,
   color: [0, 0.5, 0.5],
   emulate: "square",
+  cullmode: "none"
+
 }
 let mesh = new Points(inputMesh);
 console.log(mesh);

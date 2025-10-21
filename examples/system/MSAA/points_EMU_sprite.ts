@@ -19,6 +19,11 @@ let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.95],
   reversedZ: true,
+  AA: {
+    MSAA: {
+      enable: true
+    }
+  },  
 };
 let scene = await initScene({
   initConfig: input,

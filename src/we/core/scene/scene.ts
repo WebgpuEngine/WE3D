@@ -272,11 +272,12 @@ export class Scene {
         //初始化
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //默认值初始化
+        if (value.modeNDC && value.modeNDC === true)
+            this.finalTarget.NDC = true;
         this.clock = new Clock();
         this._inputValue = value;
         // this.deferRenderDepth = false;//为了测试方便,后期更改为:true,20241128
         // this.deferRenderColor = false;//为了测试方便,后期更改为:true,20241128
-
         this._maxlightNumber = V_lightNumber;
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //input赋值
@@ -314,7 +315,7 @@ export class Scene {
             this.reversedZ = {
                 isReversedZ: value.reversedZ,
                 cleanValue: value.reversedZ ? this.depthMode.depthClearValueOfReveredZ : this.depthMode.depthClearValueOfZ,
-                depthCompare: value.reversedZ ?"greater-equal" : 'less-equal',
+                depthCompare: value.reversedZ ? "greater-equal" : 'less-equal',
             }
         }
         //深度模板的默认设置

@@ -39,6 +39,7 @@ export declare interface IV_Scene {
     surface?: optionSurface,
     /** 是否进行实时渲染*/
     realTimeRender?: boolean,
+    modeNDC?: boolean,
 }
 
 

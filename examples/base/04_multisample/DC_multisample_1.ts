@@ -8,14 +8,15 @@ declare global {
     DC: any
   }
 }
-let input: IV_Scene = {
-  canvas: "render",
-  AA: {
-    type: "MSAA"
-  },
-  reversedZ:false,
+let input: IV_Scene = { canvas: "render", reversedZ: false ,modeNDC:true}
+// let input: IV_Scene = {
+//   canvas: "render",
+//   AA: {
+//     type: "MSAA"
+//   },
+//   reversedZ:false,
 
-}
+// }
 let scene = new Scene(input);
 await scene._init();
 

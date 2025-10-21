@@ -1,13 +1,10 @@
-import { weColor3, E_lifeState, E_renderForDC } from "../../base/coreDefine";
+import { weColor3, E_renderForDC } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
 import { V_DC } from "../../command/DrawCommandGenerator";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { ColorMaterial } from "../../material/standard/colorMaterial";
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";
 import { SHT_PointEmuSpriteVS, SHT_PointVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityAttributes, I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_ShadowMapValueOfDC } from "../base";
-import { BaseEntity } from "../baseEntity";
+import { I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_ShadowMapValueOfDC } from "../base";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 
 
@@ -269,182 +266,71 @@ export class Points extends EntityBundleMaterial {
     //     }
     //     return code;
     // }
-    generateInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false) {
-        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly);
+    generateInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope: Points): V_DC {
+        if (scope == undefined) scope = this;
+        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly, scope);
         valueDC.render.primitive = {
             topology: "point-list"
         }
         return valueDC;
-        // let primitive: GPUPrimitiveState;
-        // let drawMode: I_drawMode | I_drawModeIndexed;
-
-        // let drawModeMesh: I_drawMode = {
-        //     vertexCount: 0,
-        //     firstInstance: 0,
-        //     instanceCount: 1,
-        // };
-        // let drawModeIndexMesh: I_drawModeIndexed = {
-        //     indexCount: 0,//this.attributes.indexes.length,
-        //     instanceCount: 1,
-        //     firstIndex: 0,
-        //     baseVertex: 0,
-        //     firstInstance: 0,
-        // }
-
-        // primitive = {
-        //     topology: "point-list",
-        // };
-        // if (this.attributes.indexes && this.attributes.indexes.length > 0) {
-        //     drawModeIndexMesh.indexCount = this.attributes.indexes.length;
-        //     drawModeIndexMesh.instanceCount = this.instance.numInstances;
-        //     drawMode = drawModeIndexMesh;
-        // }
-        // else {
-        //     if (this.attributes.vertices.has("position")) {
-        //         let pos = this.attributes.vertices.get("position")!;
-        //         if ("data" in pos) {
-        //             drawModeMesh.vertexCount = pos.count;
-        //         }
-        //         else {
-        //             drawModeMesh.vertexCount = pos.length / 3;
-        //         }
-        //     }
-        //     drawModeMesh.instanceCount = this.instance.numInstances;
-        //     drawMode = drawModeMesh;
-        // }
-        // let valueDC: V_DC = {
-        //     label: "DrawCommand mesh :" + this.Name + " for  " + type + ": " + UUID,
-        //     data: {
-        //         vertices: this.attributes.vertices,
-        //         vertexStepMode: this.attributes.vertexStepMode,
-        //         indexes: this.attributes.indexes,
-        //         uniforms: bundle.uniformGroups,
-        //     },
-        //     render: {
-        //         vertex: {
-        //             code: bundle.shaderTemplateFinal, entryPoint: "vs",
-        //         },
-        //         fragment: {
-        //             entryPoint: "fs",
-
-        //         },
-        //         primitive,
-        //         drawMode,
-        //     },
-        //     system: {
-        //         UUID,
-        //         type: E_renderForDC.camera
-        //     },
-        //     IDS: {
-        //         UUID: this.UUID,
-        //         ID: this.ID,
-        //         renderID: this.renderID,
-        //     }
-        // };
-        // if (vsOnly)
-        //     delete valueDC.render.fragment;
-        // return valueDC;
     }
-    generateEmuInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false) {
-        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly);
+    generateEmuInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Points): V_DC {
+        if (scope == undefined) scope = this;
+        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly, scope);
         valueDC.render.primitive = {
             topology: "triangle-list",
-            cullMode: this._cullMode
+            cullMode: scope._cullMode
         }
         return valueDC;
-        // let primitive: GPUPrimitiveState;
-        // let drawMode: I_drawMode | I_drawModeIndexed;
-
-        // let drawModeMesh: I_drawMode = {
-        //     vertexCount: 0,
-        //     firstInstance: 0,
-        //     instanceCount: 1,
-        // };
-        // let drawModeIndexMesh: I_drawModeIndexed = {
-        //     indexCount: 0,//this.attributes.indexes.length,
-        //     instanceCount: 1,
-        //     firstIndex: 0,
-        //     baseVertex: 0,
-        //     firstInstance: 0,
-        // }
-
-        // primitive = {
-        //     topology: "triangle-list",
-        // };
-        // if (this.attributes.indexes.length) {
-        //     drawModeIndexMesh.indexCount = this.attributes.indexes.length;
-        //     drawModeIndexMesh.instanceCount = this.instance.numInstances;
-        //     drawMode = drawModeIndexMesh;
-        // }
-        // else {
-        //     drawModeMesh.vertexCount = (this.attributes.vertices.get("position") as number[]).length;
-        //     drawModeMesh.instanceCount = this.instance.numInstances;
-        //     drawMode = drawModeMesh;
-        // }
-        // let valueDC: V_DC = {
-        //     label: "points emulate:" + this.Name + " for " + type + ":" + UUID,
-        //     data: {
-        //         vertices: this.attributes.vertices,
-        //         vertexStepMode: this.attributes.vertexStepMode,
-        //         indexes: this.attributes.indexes,
-        //         uniforms: bundle.uniformGroups,
-        //     },
-        //     render: {
-        //         vertex: {
-        //             code: bundle.shaderTemplateFinal, entryPoint: "vs",
-        //         },
-        //         fragment: {
-        //             entryPoint: "fs",
-        //         },
-        //         primitive,
-        //         drawMode,
-        //     },
-        //     system: {
-        //         UUID,
-        //         type: E_renderForDC.camera
-        //     },
-        //     IDS: {
-        //         UUID: this.UUID,
-        //         ID: this.ID,
-        //         renderID: this.renderID,
-        //     }
-        // };
-        // if (vsOnly)
-        //     delete valueDC.render.fragment;
-        // return valueDC;
     }
 
     /**
      * 为每个camera创建前向渲染的DrawCommand
+     * emulate points 是以instance方式绘制
      * @param camera 
      */
     createForwardDC(camera: BaseCamera): void {
         let UUID = camera.UUID;
-
-        //mesh 前向渲染
-        let bundle;
-        if (this.emulate == "sprite") {
-            bundle = this.getUniformAndShaderTemplateFinal(SHT_PointEmuSpriteVS);
-        }
-        else {
-            bundle = this.getUniformAndShaderTemplateFinal(SHT_PointVS);
-        }
-        let uniformsMaterial = this._material.getOpacity_Forward(bundle.bindingNumber);
-        if (uniformsMaterial) {
-            bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
-            bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
-        }
         if (this.emulate == "none") {
-            let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-            let dc = this.DCG.generateDrawCommand(valueDC);
-            this.cameraDC[UUID].forward.push(dc);
+            this.generateOpacityDC(UUID, SHT_PointVS);
         }
         else {
-            let valueDC = this.generateEmuInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-            let dc = this.DCG.generateDrawCommand(valueDC);
-            this.cameraDC[UUID].forward.push(dc);
+            if (this.emulate == "sprite") {
+                this.generateOpacityDC(UUID, SHT_PointEmuSpriteVS, undefined, undefined, this.generateEmuInputValueOfDC);
+
+            }
+            else {
+                this.generateOpacityDC(UUID, SHT_PointVS, undefined, undefined, this.generateEmuInputValueOfDC);
+            }
         }
     }
+    // createForwardDC(camera: BaseCamera): void {
+    //     let UUID = camera.UUID;
+
+    //     //mesh 前向渲染
+    //     let bundle;
+    //     if (this.emulate == "sprite") {
+    //         bundle = this.getUniformAndShaderTemplateFinal(SHT_PointEmuSpriteVS);
+    //     }
+    //     else {
+    //         bundle = this.getUniformAndShaderTemplateFinal(SHT_PointVS);
+    //     }
+    //     let uniformsMaterial = this._material.getOpacity_Forward(bundle.bindingNumber);
+    //     if (uniformsMaterial) {
+    //         bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
+    //         bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
+    //     }
+    //     if (this.emulate == "none") {
+    //         let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+    //         let dc = this.DCG.generateDrawCommand(valueDC);
+    //         this.cameraDC[UUID].forward.push(dc);
+    //     }
+    //     else {
+    //         let valueDC = this.generateEmuInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+    //         let dc = this.DCG.generateDrawCommand(valueDC);
+    //         this.cameraDC[UUID].forward.push(dc);
+    //     }
+    // }
     createDeferDepthDC(camera: BaseCamera): void {
         throw new Error("Method not implemented.");
     }

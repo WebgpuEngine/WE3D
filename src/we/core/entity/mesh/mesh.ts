@@ -221,7 +221,8 @@ export class Mesh extends EntityBundleMaterial {
      * @param bundle 实体的uniform和shader模板
      * @returns IV_DrawCommand
      */
-    generateWireFrameInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal): V_DC {
+    generateWireFrameInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Mesh): V_DC {
+       if (scope == undefined) scope = this;
         let drawMode: I_drawModeIndexed = {
             indexCount: 0,
             instanceCount: 1,
@@ -229,19 +230,19 @@ export class Mesh extends EntityBundleMaterial {
             baseVertex: 0,
             firstInstance: 0,
         }
-        if (this._wireframe.indexes) {
-            drawMode.indexCount = this._wireframe.indexCount;
-            drawMode.instanceCount = this.instance.numInstances;
+        if (scope._wireframe.indexes) {
+            drawMode.indexCount = scope._wireframe.indexCount;
+            drawMode.instanceCount = scope.instance.numInstances;
         }
         else {
             throw new Error("Mesh constructor: wireFrame must have geometry or attribute data");
         }
         let valueDC: V_DC = {
-            label: "wireframe :" + this.Name + " for  " + type + ": " + UUID,
+            label: "wireframe :" + scope.Name + " for  " + type + ": " + UUID,
             data: {
-                vertices: this.attributes.vertices,
-                vertexStepMode: this.attributes.vertexStepMode,
-                indexes: this._wireframe.indexes,
+                vertices: scope.attributes.vertices,
+                vertexStepMode: scope.attributes.vertexStepMode,
+                indexes: scope._wireframe.indexes,
                 uniforms: bundle.uniformGroups,
             },
             render: {
@@ -253,7 +254,7 @@ export class Mesh extends EntityBundleMaterial {
                 fragment: {
                     entryPoint: "fs",
                     constants: {
-                        offsetOfWireframeVale: this._wireframe.offset,
+                        offsetOfWireframeVale: scope._wireframe.offset,
                     }
                 },
                 drawMode,
@@ -266,114 +267,21 @@ export class Mesh extends EntityBundleMaterial {
                 type//: E_renderForDC.camera
             },
             IDS: {
-                UUID: this.UUID,
-                ID: this.ID,
-                renderID: this.renderID,
+                UUID: scope.UUID,
+                ID: scope.ID,
+                renderID: scope.renderID,
             }
         }
         return valueDC;
     }
-    generateInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false) {
-        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly);
+    generateInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Mesh) {
+        if (scope == undefined) scope = this;
+        let valueDC = super.generateInputValueOfDC(type, UUID, bundle, vsOnly, scope);
         // valueDC.render.primitive!.cullMode = this._cullMode;
         return valueDC;
     }
 
-    generateWireFrameOpacityDC(UUID: string, SHT_VS: I_ShaderTemplate, TO?: I_materialBundleOutput, specialMaterial?: BaseMaterial) {
-        let bundle = this.getUniformAndShaderTemplateFinal(SHT_VS);
 
-        let material = this._material;
-        if (specialMaterial != undefined)
-            material = specialMaterial;
-
-        if (this.MSAA === true) {   //输出两个DC（MSAA 和 info forward）
-            let uniformsMaterialMSAA: I_BundleOfMaterialForMSAA;
-            {//MSAA 部分
-                if (this.deferColor) {
-                    if (TO !== undefined) {
-                        uniformsMaterialMSAA = material.getFS_TO_DeferColorOfMSAA(bundle.bindingNumber);
-                    }
-                    else
-                        uniformsMaterialMSAA = material.getOpacity_DeferColorOfMSAA(bundle.bindingNumber);
-                }
-                else {
-                    if (TO !== undefined) {
-                        uniformsMaterialMSAA = material.getFS_TO_MSAA(bundle.bindingNumber);
-                    }
-                    else
-                        uniformsMaterialMSAA = material.getOpacity_MSAA(bundle.bindingNumber);
-                }
-            }
-            {         //MSAA,材质的shader 模板输出，
-                if (uniformsMaterialMSAA) {
-                    bundle.uniformGroups[0].push(...uniformsMaterialMSAA.MSAA.uniformGroup);
-                    bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.MSAA.singleShaderTemplateFinal;
-                }
-                else {
-                    throw new Error("wire frame generateOpacityDC: MSAA is true, but no MSAA material");
-                }
-                let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-                valueDC.system!.MSAA = "MSAA";
-                if (TO !== undefined)
-                    valueDC.label = "wire frame TO MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
-                else
-                    valueDC.label = "wire frame opacity MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
-                let dc = this.DCG.generateDrawCommand(valueDC);
-                this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
-            }
-            {       //info forward 部分
-                if (uniformsMaterialMSAA) {
-                    bundle.uniformGroups[0].push(...uniformsMaterialMSAA.inforForward.uniformGroup);
-                    bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.inforForward.singleShaderTemplateFinal;
-                }
-                else {
-                    throw new Error("wire frame generateOpacityDC: MSAA is true, but no info material");
-                }
-                let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-                valueDC.system!.MSAA = "MSAAinfo";
-                if (TO !== undefined)
-                    valueDC.label =  "wire frame TO MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
-                else
-                    valueDC.label =  "wire frame opacity MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
-                let dc = this.DCG.generateDrawCommand(valueDC);
-                this.cameraDC[UUID][E_renderPassName.forward].push(dc);
-            }
-        }
-        else {//正常的前向渲染输出,只输出一个DC（defer 或  forward）
-            //mesh VS 模板输出
-            // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshVS);
-            let uniformsMaterial: I_materialBundleOutput;
-            if (this.deferColor) {
-                if (TO !== undefined) {
-                    uniformsMaterial = material.getFS_TO_DeferColor(bundle.bindingNumber);
-                }
-                else
-                    uniformsMaterial = material.getOpacity_DeferColor(bundle.bindingNumber);
-            }
-            else {
-                if (TO !== undefined) {
-                    if (TO == undefined) {
-                        throw new Error("Mesh generateOpacityDC: TO is undefined");
-                    }
-                    uniformsMaterial = TO;
-                }
-                else
-                    uniformsMaterial = material.getOpacity_Forward(bundle.bindingNumber);
-            }
-            // //材质的shader 模板输出，
-            {
-                bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
-                bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
-                let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-                let dc = this.DCG.generateDrawCommand(valueDC);
-                if (TO !== undefined)
-                    valueDC.label = this._type + " defer TO forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
-                else
-                    valueDC.label = this._type + " defer opacity forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
-                this.cameraDC[UUID][E_renderPassName.forward].push(dc);
-            }
-        }
-    }
     /**
      * 为每个camera创建前向渲染的DrawCommand
      * @param camera 
@@ -386,16 +294,17 @@ export class Mesh extends EntityBundleMaterial {
         }
         //wireframe 前向渲染
         if (this._wireframe.enable) {
-            // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshWireframeVS);
-            // let uniformsMaterial = this._materialWireframe.getOpacity_Forward(bundle.bindingNumber);
-            // if (uniformsMaterial) {
-            //     bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
-            //     bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
-            // }
-            // let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
-            // let dc = this.DCG.generateDrawCommand(valueDC);
-            // this.cameraDC[UUID][E_renderPassName.forward].push(dc);
-            this.generateWireFrameOpacityDC(UUID, SHT_MeshWireframeVS, undefined, this._materialWireframe);
+            // // let bundle = this.getUniformAndShaderTemplateFinal(SHT_MeshWireframeVS);
+            // // let uniformsMaterial = this._materialWireframe.getOpacity_Forward(bundle.bindingNumber);
+            // // if (uniformsMaterial) {
+            // //     bundle.uniformGroups[0].push(...uniformsMaterial.uniformGroup);
+            // //     bundle.shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
+            // // }
+            // // let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, UUID, bundle);
+            // // let dc = this.DCG.generateDrawCommand(valueDC);
+            // // this.cameraDC[UUID][E_renderPassName.forward].push(dc);
+            // this.generateWireFrameOpacityDC(UUID, SHT_MeshWireframeVS, undefined, this._materialWireframe);
+            this.generateOpacityDC(UUID, SHT_MeshWireframeVS, undefined, this._materialWireframe,this.generateWireFrameInputValueOfDC);
         }
     }
 

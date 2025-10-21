@@ -10,10 +10,13 @@ declare global {
 }
 let input: IV_Scene = {
   canvas: "render",
+  reversedZ: false,
+  modeNDC: true,
   AA: {
-    type: "MSAA"
-  },
-reversedZ:false,
+    MSAA: {
+      enable: true
+    }
+  }
 }
 let scene = new Scene(input);
 await scene._init();
@@ -92,9 +95,9 @@ const oneTriangleVertexArray = [
   0.5, -0.5, 0,
 ];
 const oneTriangleColorArray = [
-  1, 0, 0, 
-  0, 1, 0, 
-  0, 0, 1, ];
+  1, 0, 0,
+  0, 1, 0,
+  0, 0, 1,];
 const oneTriangleIndexArray = [
   0, 1, 2,
 ];
@@ -176,10 +179,9 @@ const observer = new ResizeObserver(entries => {
 
         // depthStencil: undefined
       },
-      // system: {
-      //   id: 0,
-      //   type: "camera"
-      // },
+      system: {
+        MSAA: "MSAA"
+      },
     }
 
     // render();

@@ -733,8 +733,7 @@ export class DrawCommandGenerator {
                             descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;
                         }
                     }
-                    else 
-                        {//非MSAA渲染，使用深度模板(开启测试，写入) 
+                    else {//非MSAA渲染，使用深度模板(开启测试，写入) 
                         descriptor.depthStencil = this.scene.depthMode.depthStencil;
                     }
                 }
@@ -773,6 +772,11 @@ export class DrawCommandGenerator {
             //2、如果有rpd函数。
             else if (values.renderPassDescriptor != undefined && typeof values.renderPassDescriptor == "function") {
                 renderPassDescriptor = values.renderPassDescriptor();
+            }
+            //2.5 增加一个MSAA 的NDC
+            else if (this.scene.finalTarget.NDC == true) {
+                if (values.system?.MSAA)
+                    renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
             }
             //3、如果没有rpd描述，且有system。
             else if (values.system && values.renderPassDescriptor == undefined) {

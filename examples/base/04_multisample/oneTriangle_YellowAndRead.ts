@@ -1,4 +1,5 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformBufferPart, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { I_uniformBufferPart } from "../../../src/we/core/command/base";
+import { DrawCommandGenerator, IV_DrawCommandGenerator, V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -8,13 +9,23 @@ declare global {
     DC: any
   }
 }
+// let input: IV_Scene = {
+//   canvas: "render",
+//   AA: {
+//     type: "MSAA"
+//   },
+//   reversedZ:false,
+
+// }
 let input: IV_Scene = {
   canvas: "render",
+  reversedZ: false,
+  modeNDC: true,
   AA: {
-    type: "MSAA"
-  },
-  reversedZ:false,
-
+    MSAA: {
+      enable: true
+    }
+  }
 }
 let scene = new Scene(input);
 await scene._init();
@@ -126,7 +137,7 @@ const observer = new ResizeObserver(entries => {
         size: [canvas.width, canvas.height],
         format: scene.colorFormatOfCanvas,
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-        sampleCount: scene.MSAA ? 4 : 1,
+        sampleCount: 4,
 
       });
 
@@ -176,10 +187,9 @@ const observer = new ResizeObserver(entries => {
 
         // depthStencil: undefined
       },
-      // system: {
-      //   id: 0,
-      //   type: "camera"
-      // },
+      system: {
+        MSAA:"MSAA"
+      },
     }
 
     //====================================================
