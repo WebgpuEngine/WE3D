@@ -6,10 +6,10 @@ import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialPBRFS_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
+import { SHT_materialPBRFS_mergeToVS, SHT_materialPBRFS_MSAA_info_mergeToVS, SHT_materialPBRFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
 import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_TextureType, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -32,15 +32,7 @@ enum E_ThisTexturesType {
 type T_ThisTexturesType = Texture | weVec3 | number;
 
 export class PBRMaterial extends BaseMaterial {
-    getTTFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
-    getTOFS(_startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
-    }
-    setTO(): void {
-        // throw new Error("Method not implemented.");
-    }
+
     declare inputValues: IV_PBRMaterial;
     declare textures: {
         [name: string]: T_ThisTexturesType
@@ -109,7 +101,11 @@ export class PBRMaterial extends BaseMaterial {
         }
     }
     getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-        let template: I_ShaderTemplate;
+        return this.getOpaqueCodeFS(SHT_materialPBRFS_mergeToVS, startBinding);
+
+    }
+    getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
+        // let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
         let uniform1: T_uniformGroup = [];
@@ -219,7 +215,7 @@ export class PBRMaterial extends BaseMaterial {
         }
         // }
         ////////////////shader 模板格式化部分
-        template = SHT_materialPBRFS_mergeToVS;
+        // template = SHT_materialPBRFS_mergeToVS;
         //add 
         for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
             code += perOne.code;
@@ -309,10 +305,53 @@ export class PBRMaterial extends BaseMaterial {
             binding: binding,
             owner: this,
         }
-        console.log("PBRMaterial getOpacity_Forward()",this.scene.clock.last);
+        console.log("PBRMaterial getOpacity_Forward()", this.scene.clock.last);
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
     }
-
+    getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPBRFS_MSAA_mergeToVS, startBinding);
+        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPBRFS_MSAA_info_mergeToVS, startBinding);
+        return { MSAA, inforForward };
+    }
+    getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+        throw new Error("Method not implemented.");
+    }
+    getTTFS(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getTOFS(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    setTO(): void {
+        // throw new Error("Method not implemented.");
+    }
     updateSelf(clock: Clock): void {
     }
     saveJSON() {

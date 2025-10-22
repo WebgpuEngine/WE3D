@@ -1,13 +1,14 @@
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-import { IV_PointsEntity, Points } from "../../../src/we/core/entity/mesh/points";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
+import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
+import { IV_Scene } from "../../../../src/we/core/scene/base";
+import { initScene } from "../../../../src/we/core/scene/fn";
+import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
+import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
+import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
+import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
+import { IV_PointsEntity, Points } from "../../../../src/we/core/entity/mesh/points";
+import { IV_LinesEntity, Lines } from "../../../../src/we/core/entity/mesh/lines";
+import { IV_Sprite, Sprite } from "../../../../src/we/core/entity/sprite/sprite";
 
 declare global {
   interface Window {
@@ -23,7 +24,7 @@ let input: IV_Scene = {
     MSAA: {
       enable: true
     }
-  },  
+  },    
 };
 let scene = await initScene({
   initConfig: input,
@@ -37,14 +38,16 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.01,
   far: 100,
-  position: [6, 0, 6],
+  position: [0, 0, 6],
   lookAt: [0, 0, 0],
   controlType: "arcball",
 });
 await scene.add(camera);
 
 
-
+let colorSpriteMaterial = new ColorMaterial({
+  color: [0, 0.5, 0.5, 1]
+});
 
 
 let geometry = new SphereGeometry();
@@ -53,35 +56,13 @@ let geometry = new SphereGeometry();
 //   color: [0, 0.5, 0.5, 1]
 // });
 
-let inputMesh: IV_PointsEntity = {
-  attributes: {
-    data: {
-      vertices: {
-        position: [
-          0, 0, 0,
-          2, 2, 0,
-          1, 0, 0,
-          0, 1, 0,
-        ],
-        // scale: [
-        //   0.1, 0.1, 0.1,
-        //   0.1, 0.1, 0.1,
-        //   0.1, 0.1, 0.1,
-        //   0.1, 0.1, 0.1,
-        // ],
-      },
-    },
-  },
-  size: 0.6,
-  color: [1, 0.5, 0.5],
-  emulate: "sprite",
-
-
-
-  cullmode: "none"
-
+let inputMesh: IV_Sprite = {
+  width: 2,
+  height: 2,
+  material: colorSpriteMaterial,
+  position: [-1, 0, 0],
 }
-let mesh = new Points(inputMesh);
+let mesh = new Sprite(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
 

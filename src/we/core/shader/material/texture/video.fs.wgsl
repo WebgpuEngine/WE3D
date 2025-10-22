@@ -9,7 +9,7 @@ fn fs(fsInput: VertexShaderOutput) -> ST_GBuffer {
     $materialColor
 
     //输出的color
-    output.color = materialColor;
+    $fsOutputColor
 
     return output;
 }

@@ -1,8 +1,8 @@
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { OneColoeCube } from "../../../src/we/core/entity/mesh/oneColorCube";
+import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
+import { IV_Scene } from "../../../../src/we/core/scene/base";
+import { initScene } from "../../../../src/we/core/scene/fn";
+import { OneColoeCube } from "../../../../src/we/core/entity/mesh/oneColorCube";
 
 declare global {
   interface Window {

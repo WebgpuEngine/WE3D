@@ -1,12 +1,12 @@
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { TextureMaterial } from "../../../src/we/core/material/standard/textureMaterial";
-import { CubeTextureMaterial } from "../../../src/we/core/material/standard/cubeTextureMaterial";
+import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
+import { IV_Scene } from "../../../../src/we/core/scene/base";
+import { initScene } from "../../../../src/we/core/scene/fn";
+import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
+import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
+import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
+import { TextureMaterial } from "../../../../src/we/core/material/standard/textureMaterial";
+import { CubeTextureMaterial } from "../../../../src/we/core/material/standard/cubeTextureMaterial";
 
 declare global {
   interface Window {
@@ -35,7 +35,7 @@ let camera = new PerspectiveCamera({
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
   near: 0.01,
-  far: 500,
+  far: 100,
   position: [3, 3, 3],
   lookAt: [0, 0, 0],
   controlType: "arcball",
@@ -56,7 +56,6 @@ let textureMaterial = new CubeTextureMaterial({
     // cube: "/examples/resource/cubeIMG/cubemap/test",
     cube: "/examples/resource/cubeIMG/skycube1/skybox",
   },
-  cubeType:"sky"
 });
 
 let inputMesh: IV_MeshEntity = {
@@ -69,11 +68,7 @@ let inputMesh: IV_MeshEntity = {
     enable: true,
     // wireFrameOnly: true,
   },
-  primitive: {
-    cullMode: "none"
-  },
-  // position: [0, 0, 3],
-  scale: [400, 400, 400],
+  position: [1, 1, 1],
 }
 let mesh = new Mesh(inputMesh);
 console.log(mesh);

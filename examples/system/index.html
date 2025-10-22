@@ -19,22 +19,34 @@
 
         <span>camera</span>
         <ul>
-
-            <li><a href="./01_camera/otrho_1.html">camera:GBuffer;cameras管理器;正交相机: systemMVP:group0 binding0 在shader
-                    RAW</a></li>
-            <li><a href="./01_camera/PerspectiveCamera_1.html">透视相机: systemMVP:group0 binding0; shader raw</a></li>
-            <li><a href="./01_camera/PerspectiveCamera_child.html">透视相机: camera wolrd position; camera model
-                    matrix(world);一个无输出的父节点(world matrix,更新)</a></li>
-            <li><a href="./01_camera/reservedZ.html">透视相机: reversedZ</a></li>
-            <li><a href="./01_camera/viewport_1.html">camera:viewport</a></li>
-            <li><a href="./01_camera/backgroudColor_1.html">camera:预乘与透明,独立于canvas</a></li>
-            <li><a href="./01_camera/backgroudColor_2.html">camera:预乘与透明,独立于canvas,viewport;
-                    <br>!!!注意：还是底色的范围还是全屏的，如果要实现viewport范围的底色，预计是在输出管理器的copy实现（不透明的）</a></li>
-            <li><a href="./01_camera/arcballCTL.html">arcball 控制器</a></li>
-            <li><a href="./01_camera/arcballControl_lookat.html">arcball 控制器:lookat 不在原点</a></li>
-            <li><a href="./01_camera/arcballCTL_clild.html">arcball 控制器:子节点；update循环没有跑起来，延迟</a></li>
-            <li><a href="./01_camera/wasdControl_1.html">wasd控制器</a></li>
-            <li><a href="">透视相机:变焦</a></li>
+            <span>正交相机</span>
+            <ul>
+                <li><a href="./01_camera/otrho_1.html">camera:GBuffer;cameras管理器;正交相机: systemMVP:group0 binding0 在shader
+                        RAW</a></li>
+            </ul>
+            <span>透视相机</span>
+            <ul>
+                <li><a href="./01_camera/PerspectiveCamera_1.html">透视相机: systemMVP:group0 binding0; shader raw</a></li>
+            </ul>
+            <span>基础功能</span>
+            <ul>
+                <li><a href="./01_camera/PerspectiveCamera_child.html">透视相机: camera wolrd position; camera model
+                        matrix(world);一个无输出的父节点(world matrix,更新)</a></li>
+                <li><a href="./01_camera/reservedZ.html">透视相机: reversedZ</a></li>
+                <li><a href="./01_camera/viewport_1.html">camera:viewport</a></li>
+                <li><a href="./01_camera/backgroudColor_1.html">camera:预乘与透明,独立于canvas</a></li>
+                <li><a href="./01_camera/backgroudColor_2.html">camera:预乘与透明,独立于canvas,viewport;
+                        <br>!!!注意：还是底色的范围还是全屏的，如果要实现viewport范围的底色，预计是在输出管理器的copy实现（不透明的）</a></li>
+            </ul>
+            <span>控制器</span>
+            <ul>
+                <li><a href="./01_camera/arcballCTL.html">arcball 控制器</a></li>
+                <li><a href="./01_camera/arcballControl_lookat.html">arcball 控制器:lookat 不在原点</a></li>
+                <li><a href="./01_camera/arcballCTL_clild.html">arcball 控制器:子节点；update循环没有跑起来，延迟</a></li>
+                <li><a href="./01_camera/wasdControl_1.html">wasd控制器</a></li>
+                <li><a href="">todo:orbit轨道控制器</a></li>
+            </ul>
+            <li><a href="">todo :透视相机:变焦</a></li>
         </ul>
 
         <span>geometry </span>
@@ -58,25 +70,36 @@
 
         <span>实体</span>
         <ul>
-            <li><a href="./entity/root_manager_triangl.html">root + entity manager: triangle </a></li>
-            <li><a href="./entity/root_manager_box.html">root + entity manager: box </a></li>
-            <li><a href="./entity/root_manager_boxGeometry.html">root + entity manager: box geometry</a></li>
-            <br>
-            <li><a href="./entity/wireframe_box_only.html">mesh: box only wireframe</a></li>
-            <li><a href="./entity/wireframe_box_1.html">mesh: box + wireframe</a></li>
-            <li><a href="./entity/mesh_instance_1.html">mesh:box instance 简单,位置不同</a></li>
-            <li><a href="./entity/points_array_sphere.html">point: 属性数组 </a></li>
-            <li><a href="./entity/points_EMU_square.html">point: 模拟 方块</a></li>
-            <li><a href="./entity/points_EMU_circular.html">point: 模拟 圆</a></li>
-            <li><a href="./entity/points_EMU_box.html">point: 模拟 方盒</a></li>
-            <li><a href="./entity/points_EMU_sphere.html">point: 模拟 球</a></li>
-            <li><a href="./entity/points_EMU_sprite.html">point: 模拟 精灵</a></li>
-            <li><a href="">point: 模拟 方块+纹理(滞后)</a></li>
-            <li><a href="./entity/line_array_1.html">line: 属性数组</a></li>
-            <li><a href="./entity/line_list_1.html">line: line-list 模式</a></li>
-            <li><a href="./entity/line_strip_1.html">line: line-strip 模式</a></li>
-            <li><a href="./entity/sprite_color_1.html">sprite: 颜色</a></li>
-            <li><a href="./entity/oneColorCube.html"> one color cube</a></li>
+            <span>基础实体</span>
+            <ul>
+                <li><a href="./entity/root_manager_triangl.html">root + entity manager: triangle </a></li>
+                <li><a href="./entity/root_manager_box.html">root + entity manager: box </a></li>
+                <li><a href="./entity/root_manager_boxGeometry.html">root + entity manager: box geometry</a></li>
+            </ul>
+            <span>线框实体</span>
+            <ul>
+                <li><a href="./entity/wireframe_box_only.html">mesh: box only wireframe</a></li>
+                <li><a href="./entity/wireframe_box_1.html">mesh: box + wireframe</a></li>
+                <li><a href="./entity/mesh_instance_1.html">mesh:box instance 简单,位置不同</a></li>
+            </ul>
+            <span>点实体</span>
+            <ul>
+                <li><a href="./entity/points_array_sphere.html">point: 属性数组 </a></li>
+                <li><a href="./entity/points_EMU_square.html">point: 模拟 方块</a></li>
+                <li><a href="./entity/points_EMU_circular.html">point: 模拟 圆</a></li>
+                <li><a href="./entity/points_EMU_box.html">point: 模拟 方盒</a></li>
+                <li><a href="./entity/points_EMU_sphere.html">point: 模拟 球</a></li>
+                <li><a href="./entity/points_EMU_sprite.html">point: 模拟 精灵</a></li>
+                <li><a href="">point: 模拟 方块+纹理(滞后)</a></li>
+            </ul>
+            <span>线实体</span>
+            <ul>
+                <li><a href="./entity/line_array_1.html">line: 属性数组</a></li>
+                <li><a href="./entity/line_list_1.html">line: line-list 模式</a></li>
+                <li><a href="./entity/line_strip_1.html">line: line-strip 模式</a></li>
+                <li><a href="./entity/sprite_color_1.html">sprite: 颜色</a></li>
+                <li><a href="./entity/oneColorCube.html"> one color cube</a></li>
+            </ul>
         </ul>
 
         <span>shader 模板</span>
@@ -90,47 +113,58 @@
             <li><a href="./material/basecolor/vertexColor.html">顶点着色材质</a></li>
             <li><a href="./material/baseTexture/texture_1.html">基础 texture</a></li>
             <li><a href="./material/baseTexture/cubeTexture_1.html">cube texture</a></li>
-            <li><a href="">sRGB</a></li>
-            <li><a href="">线性</a></li>
-            <li><a href="">深度</a></li>
-            <li><a href="">单通道</a></li>
-            <li><a href="">压缩纹理</a></li>
-            <li><a href="">压缩纹理</a></li>
-            <li><a href="">压缩纹理</a></li>
+
             <li><a href="./material/video/video_1_videoElement.html">video 标签</a></li>
             <li><a href="./material/video/video_2_url.html">video url</a></li>
             <li><a href="./material/video/video_3_url_External.html">video url: External</a></li>
-            <li><a href="">video videoFrame</a></li>
-            <li><a href="">video 视频流</a></li>
-            <li><a href="">layout 测试</a></li>
-            <li><a href="">HDR</a></li>
-            <li><a href="">EXR</a></li>
+            <span>todo </span>
+            <ul>
+                <li><a href="">sRGB</a></li>
+                <li><a href="">线性</a></li>
+                <li><a href="">深度</a></li>
+                <li><a href="">单通道</a></li>
+                <li><a href="">压缩纹理</a></li>
+                <li><a href="">压缩纹理</a></li>
+                <li><a href="">压缩纹理</a></li>
+                <li><a href="">video videoFrame</a></li>
+                <li><a href="">video 视频流</a></li>
+                <li><a href="">layout 测试</a></li>
+                <li><a href="">HDR</a></li>
+                <li><a href="">EXR</a></li>
+            </ul>
         </ul>
 
         <span>材质</span>
         <ul>
-            <li><a href="./material/basecolor/sphere.html">基础颜色材质</a></li>
-            <li><a href="./material/basecolor/vertexColor.html">vertex color</a></li>
-            <li><a href="./material/basecolor/vertexColor.html">顶点着色材质</a></li>
-            <li><a href="./material/baseTexture/texture_1.html">基础 texture</a></li>
-            <li><a href="./material/baseTexture/texture_2_sphere.html">基础 sphere texture</a></li>
-            <li><a href="./material/baseTexture/cubeTexture_1.html">cube texture</a></li>
-            <li><a href="./material/baseTexture/cubeTexture_sky.html">cube texture: sky</a></li>
-            <br>
-            <li><a href="./material/BlinnPhong/phong_sphere_1.html">BulinnPhong color</a></li>
-            <li><a href="./material/BlinnPhong/specular_1.html">BulinnPhong specular texture</a></li>
-            <li><a href="./material/BlinnPhong/normal_1.html">BulinnPhong normal texture</a></li>
-            <li><a href="./material/BlinnPhong/wall_texture.html">方块砖墙:纹理</a></li>
-            <li><a href="./material/BlinnPhong/wall_normaltexture.html">方块砖墙:法线纹理</a></li>
-            <li><a href="./material/BlinnPhong/wall_parallax.html">方块砖墙:视差</a></li>
-            <li><a href="./material/BlinnPhong/wall_parallax_occlusion.html">方块砖墙:视差+遮挡</a></li>
-            <li><a href="./material/BlinnPhong/parallax_1.html">BulinnPhong 视差</a></li>
-            <li><a href="./material/BlinnPhong/wood_parallax_occlusion.html">BulinnPhong 视差 校正: 木头</a></li>
-            <br>
-            <li><a href="./material/PBR/pbr_1.html">PBR 黄金球 </a></li>
-            <li><a href="./material/PBR/pbr_list.html">PBR 列表 塑料球</a></li>
-            <li><a href="./material/PBR/pbr_list_iron.html">PBR 列表 铁球</a></li>
-            <li><a href="./material/PBR/pbr_rust.html">PBR 列表 铁锈球</a></li>
+            <span>基础颜色材质</span>
+            <ul>
+                <li><a href="./material/basecolor/sphere.html">基础颜色材质</a></li>
+                <li><a href="./material/basecolor/vertexColor.html">vertex color</a></li>
+                <li><a href="./material/basecolor/vertexColor.html">顶点着色材质</a></li>
+                <li><a href="./material/baseTexture/texture_1.html">基础 texture</a></li>
+                <li><a href="./material/baseTexture/texture_2_sphere.html">基础 sphere texture</a></li>
+                <li><a href="./material/baseTexture/cubeTexture_1.html">cube texture</a></li>
+                <li><a href="./material/baseTexture/cubeTexture_sky.html">cube texture: sky</a></li>
+            </ul>
+            <span>BlinnPhong 材质</span>
+            <ul>
+                <li><a href="./material/BlinnPhong/phong_sphere_1.html">BulinnPhong color</a></li>
+                <li><a href="./material/BlinnPhong/specular_1.html">BulinnPhong specular texture</a></li>
+                <li><a href="./material/BlinnPhong/normal_1.html">BulinnPhong normal texture</a></li>
+                <li><a href="./material/BlinnPhong/wall_texture.html">方块砖墙:纹理</a></li>
+                <li><a href="./material/BlinnPhong/wall_normaltexture.html">方块砖墙:法线纹理</a></li>
+                <li><a href="./material/BlinnPhong/wall_parallax.html">方块砖墙:视差</a></li>
+                <li><a href="./material/BlinnPhong/wall_parallax_occlusion.html">方块砖墙:视差+遮挡</a></li>
+                <li><a href="./material/BlinnPhong/parallax_1.html">BulinnPhong 视差</a></li>
+                <li><a href="./material/BlinnPhong/wood_parallax_occlusion.html">BulinnPhong 视差 校正: 木头</a></li>
+            </ul>
+            <span>PBR standerd 材质</span>
+            <ul>
+                <li><a href="./material/PBR/pbr_1.html">PBR 黄金球 </a></li>
+                <li><a href="./material/PBR/pbr_list.html">PBR 列表 塑料球</a></li>
+                <li><a href="./material/PBR/pbr_list_iron.html">PBR 列表 铁球</a></li>
+                <li><a href="./material/PBR/pbr_rust.html">PBR 列表 铁锈球</a></li>
+            </ul>
         </ul>
 
         <span>blend</span>
@@ -139,21 +173,28 @@
         </ul>
         <span>alpha透明材质</span>
         <ul>
-            <li><a href="./material/transportAlpha/baseColor_1.html">基础颜色材质,不透明</a></li>
-            <li><a href="./material/transportAlpha/alpha_distance_1.html">基础颜色材质,距离+一个不透明+一个alpha透明</a></li>
-            <li><a href="./material/transportAlpha/alpha_distance_2.html">基础颜色材质,距离+一个不透明+两个alpha透明</a></li>
-            <li><a href="./material/transportAlpha/alpha_1.html">基础颜色材质，像素级别,1个alpha透明,1个不透明</a></li>
-            <li><a href="./material/transportAlpha/alpha_2Xalpha.html">基础颜色，材质像素级别,3个alpha透明</a></li>
-            <li><a href="./material/transportAlpha/opacityPercent_1.html">基础颜色材质，像素级别,1个百分比透明,1个不透明</a></li>
-            <br>
-            <li><a href="./material/transportAlpha/img_distance_alpha_1.html">图像材质,距离+一个不透明+一个alpha透明
-                    （这个实际是不透明。 没有设置alphaTest，图像本身alpha=0.0的将透明（diacard） ）</a></li>
-            <li><a href="./material/transportAlpha/img_distance_test_1.html">图像材质,距离+一个不透明+一个alphaTest透明(0.5)</a></li>
-            <li><a href="./material/transportAlpha/img_distance_opacity_1.html">图像材质,距离+一个不透明+一个百分比透明</a></li>
-            <li><a href="./material/transportAlpha/img_pixcel_alpha_1.html">图像材质,像素级别,一个不透明+一个alpha透明
-                    （这个实际是不透明。 没有设置alphaTest，图像本身alpha=0.0的将透明（diacard） ）</a></li>
-            <li><a href="./material/transportAlpha/img_pixcel_test_1.html">图像材质,像素级别,一个不透明+一个alphaTest透明(0.5)</a></li>
-            <li><a href="./material/transportAlpha/img_pixcel_opacity_1.html">图像材质,像素级别,一个不透明+一个百分比透明</a></li>
+            <span>基础颜色材质</span>
+            <ul>
+                <li><a href="./material/transportAlpha/baseColor_1.html">基础颜色材质,不透明</a></li>
+                <li><a href="./material/transportAlpha/alpha_distance_1.html">基础颜色材质,距离+一个不透明+一个alpha透明</a></li>
+                <li><a href="./material/transportAlpha/alpha_distance_2.html">基础颜色材质,距离+一个不透明+两个alpha透明</a></li>
+                <li><a href="./material/transportAlpha/alpha_1.html">基础颜色材质，像素级别,1个alpha透明,1个不透明</a></li>
+                <li><a href="./material/transportAlpha/alpha_2Xalpha.html">基础颜色，材质像素级别,3个alpha透明</a></li>
+                <li><a href="./material/transportAlpha/opacityPercent_1.html">基础颜色材质，像素级别,1个百分比透明,1个不透明</a></li>
+            </ul>
+            <span>图像材质</span>
+            <ul>
+                <li><a href="./material/transportAlpha/img_distance_alpha_1.html">图像材质,距离+一个不透明+一个alpha透明
+                        （这个实际是不透明。 没有设置alphaTest，图像本身alpha=0.0的将透明（diacard） ）</a></li>
+                <li><a href="./material/transportAlpha/img_distance_test_1.html">图像材质,距离+一个不透明+一个alphaTest透明(0.5)</a>
+                </li>
+                <li><a href="./material/transportAlpha/img_distance_opacity_1.html">图像材质,距离+一个不透明+一个百分比透明</a></li>
+                <li><a href="./material/transportAlpha/img_pixcel_alpha_1.html">图像材质,像素级别,一个不透明+一个alpha透明
+                        （这个实际是不透明。 没有设置alphaTest，图像本身alpha=0.0的将透明（diacard） ）</a></li>
+                <li><a href="./material/transportAlpha/img_pixcel_test_1.html">图像材质,像素级别,一个不透明+一个alphaTest透明(0.5)</a>
+                </li>
+                <li><a href="./material/transportAlpha/img_pixcel_opacity_1.html">图像材质,像素级别,一个不透明+一个百分比透明</a></li>
+            </ul>
         </ul>
 
         <span>物理透明</span>
@@ -165,24 +206,6 @@
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-        
-        <span>MSAA</span>
-        <ul>
-            <li><a href="./MSAA/baseColor_1.html">MSAA  color plane*2 </a></li>
-            <li><a href="./MSAA/texture_1.html">MSAA  texture box</a></li>
-            <li><a href="./MSAA/oneColorCube.html">MSAA  oneColorCube</a></li>
-            <li><a href="./MSAA/cubeTexture_1.html">MSAA cube</a></li>
-            <li><a href="./MSAA/cubeSky.html">MSAA cubeSky</a></li>
-            <li><a href="./MSAA/wireframe_box_1.html">MSAA wireframe</a></li>
-            <li><a href="./MSAA/line_array_1.html">MSAA lines</a></li>
-            <li><a href="./MSAA/points_array_sphere.html">MSAA points_array_sphere</a></li>
-            <li><a href="./MSAA/points_EMU_square.html">MSAA points_EMU_square</a></li>
-            <li><a href="./MSAA/points_EMU_circular.html">MSAA points_EMU_circular</a></li>
-            <li><a href="./MSAA/points_EMU_sprite.html">MSAA points_EMU_sprite</a></li>
-            <li><a href="./MSAA/points_EMU_box.html">MSAA points_EMU_box</a></li>
-            <li><a href="./MSAA/points_EMU_sphere.html">MSAA points_EMU_sphere</a></li>
-            <li><a href="./MSAA/sprite_color_1.html">MSAA Sprite color</a></li>
-        </ul>
 
         <span>光源</span>
         <ul>
@@ -190,32 +213,111 @@
             <li><a href="./lights/DirectionalLight_1.html">方向光</a></li>
             <li><a href="./lights/PointLight.html">点光源</a></li>
             <li><a href="./lights/SpotLight.html">spot</a></li>
-            <li><a href="">面积光</a></li>
+            <li><a href="">todo :面积光</a></li>
         </ul>
 
         <span>阴影</span>
         <ul>
-            <li><a href="./shadowmap/Opacity/dirlight_sphere.html">不透明球阴影,方向光,Phong 材质</a></li>
-            <li><a href="./shadowmap/Opacity/dirlight_box.html">不透明方块阴影,方向光,Phong 材质</a></li>
-            <li><a href="./shadowmap/Opacity/dirlight_two.html">两个动态方向光</a></li>
-            <li><a href="./shadowmap/Opacity/point_oneEntity_1.html">点光源阴影</a></li>
-            <li><a href="./shadowmap/Opacity/pointLight_1.html">动态点光源阴影</a></li>
-            <li><a href="./shadowmap/Opacity/spot_1.html">spot 光源阴影 方向参数</a></li>
-            <li><a href="./shadowmap/Opacity/spot_2.html">spot 光源阴影 lookAt参数</a></li>
-            <br>
-            <li><a href="./shadowmap/Opacity/PBR_dirlight_1.html">不透明球阴影,方向光,PBR 材质 </a></li>
-            <li><a href="./shadowmap/Opacity/PBR_point_oneEntity_1.html">不透明球阴影,点光源,PBR 材质 </a></li>
-            <li><a href="./shadowmap/Opacity/PBR_spot_0.html">不透明球阴影,spot 光源,PBR 材质</a></li>
-            <li><a href="./shadowmap/Opacity/PBR_spot_1.html">不透明球阴影,spot 光源,PBR 材质</a></li>
-            <br>
+            <span>不透明阴影 phong</span>
+            <ul>
+                <li><a href="./shadowmap/Opacity/dirlight_sphere.html">不透明球阴影,方向光,Phong 材质</a></li>
+                <li><a href="./shadowmap/Opacity/dirlight_box.html">不透明方块阴影,方向光,Phong 材质</a></li>
+                <li><a href="./shadowmap/Opacity/dirlight_two.html">两个动态方向光</a></li>
+                <li><a href="./shadowmap/Opacity/point_oneEntity_1.html">点光源阴影</a></li>
+                <li><a href="./shadowmap/Opacity/pointLight_1.html">动态点光源阴影</a></li>
+                <li><a href="./shadowmap/Opacity/spot_1.html">spot 光源阴影 方向参数</a></li>
+                <li><a href="./shadowmap/Opacity/spot_2.html">spot 光源阴影 lookAt参数</a></li>
+            </ul>
+            <span>PBR standerd</span>
+            <ul>
+                <li><a href="./shadowmap/Opacity/PBR_dirlight_1.html">不透明球阴影,方向光,PBR 材质 </a></li>
+                <li><a href="./shadowmap/Opacity/PBR_point_oneEntity_1.html">不透明球阴影,点光源,PBR 材质 </a></li>
+                <li><a href="./shadowmap/Opacity/PBR_spot_0.html">不透明球阴影,spot 光源,PBR 材质</a></li>
+                <li><a href="./shadowmap/Opacity/PBR_spot_1.html">不透明球阴影,spot 光源,PBR 材质</a></li>
+            </ul>
 
-            <li><a href="">级联阴影</a></li>
+            <span> todo</span>
+            <ul>
+                <li><a href="">级联阴影</a></li>
 
-            <li><a href="">lightManager 透明阴影: depth ,color(几层？)</a></li>
-            <li><a href="">贴花阴影:只有depth(shadowmap,color=0,0,0,0)</a></li>
-            <li><a href="">贴花单层半透明阴影:有单独的depth和color(0.5,0,0,a=强度衰减系数)</a></li>
-            <li><a href="">贴花多(3)层半透明阴影:有单独的depth和color(混合后)(0.5,0,0,a=强度衰减系数)</a></li>
+                <li><a href="">lightManager 透明阴影: depth ,color(几层？)</a></li>
+                <li><a href="">贴花阴影:只有depth(shadowmap,color=0,0,0,0)</a></li>
+                <li><a href="">贴花单层半透明阴影:有单独的depth和color(0.5,0,0,a=强度衰减系数)</a></li>
+                <li><a href="">贴花多(3)层半透明阴影:有单独的depth和color(混合后)(0.5,0,0,a=强度衰减系数)</a></li>
+            </ul>
         </ul>
+
+
+        <span>MSAA</span>
+        <ul> <span>基础材质</span>
+            <ul>
+
+                <li><a href="./MSAA/baseMaterial/baseColor_1.html">MSAA color plane*2 </a></li>
+                <li><a href="./MSAA/baseMaterial/texture_1.html">MSAA texture box</a></li>
+                <li><a href="./MSAA/baseMaterial/oneColorCube.html">MSAA oneColorCube</a></li>
+                <li><a href="./MSAA/baseMaterial/cubeTexture_1.html">MSAA cube</a></li>
+                <li><a href="./MSAA/baseMaterial/cubeSky.html">MSAA cubeSky</a></li>
+                <li><a href="./MSAA/baseMaterial/video_2_url.html">MSAA video material</a></li>
+            </ul>
+            <span>entity 适配 </span>
+            <ul>
+                <li><a href="./MSAA/entity/wireframe_box_1.html">MSAA wireframe</a></li>
+                <li><a href="./MSAA/entity/line_array_1.html">MSAA lines</a></li>
+                <li><a href="./MSAA/entity/points_array_sphere.html">MSAA points_array_sphere</a></li>
+                <li><a href="./MSAA/entity/points_EMU_square.html">MSAA points_EMU_square</a></li>
+                <li><a href="./MSAA/entity/points_EMU_circular.html">MSAA points_EMU_circular</a></li>
+                <li><a href="./MSAA/entity/points_EMU_sprite.html">MSAA points_EMU_sprite</a></li>
+                <li><a href="./MSAA/entity/points_EMU_box.html">MSAA points_EMU_box</a></li>
+                <li><a href="./MSAA/entity/points_EMU_sphere.html">MSAA points_EMU_sphere</a></li>
+                <li><a href="./MSAA/entity/sprite_color_1.html">MSAA Sprite color</a></li>
+            </ul>
+            <span>phong </span>
+            <ul>
+                <li><a href="./MSAA/BlinnPhong/phong_sphere_1.html">BulinnPhong color</a></li>
+                <li><a href="./MSAA/BlinnPhong/specular_1.html">BulinnPhong specular texture</a></li>
+                <li><a href="./MSAA/BlinnPhong/normal_1.html">BulinnPhong normal texture</a></li>
+                <li><a href="./MSAA/BlinnPhong/wall_texture.html">方块砖墙:纹理</a></li>
+                <li><a href="./MSAA/BlinnPhong/wall_normaltexture.html">方块砖墙:法线纹理</a></li>
+                <li><a href="./MSAA/BlinnPhong/wall_parallax.html">方块砖墙:视差</a></li>
+                <li><a href="./MSAA/BlinnPhong/wall_parallax_occlusion.html">方块砖墙:视差+遮挡</a></li>
+                <li><a href="./MSAA/BlinnPhong/parallax_1.html">BulinnPhong 视差</a></li>
+                <li><a href="./MSAA/BlinnPhong/wood_parallax_occlusion.html">BulinnPhong 视差 校正: 木头</a></li>
+            </ul>
+            <span>PBR standerd </span>
+            <ul>
+                <li><a href="./MSAA/PBR/pbr_1.html">PBR 黄金球 </a></li>
+                <li><a href="./MSAA/PBR/pbr_rust.html">PBR 列表 铁锈球</a></li>
+            </ul>
+        </ul>
+
+        <span>延迟渲染</span>
+        <ul>
+            <span>PBR 延迟渲染</span>
+            <ul>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+            </ul>
+            <span>PBR 延迟渲染+MSAA</span>
+            <ul>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+            </ul>
+            <span>Phong 延迟渲染</span>
+            <ul>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+            </ul>
+            <span>Phong 延迟渲染+MSAA</span>
+            <ul>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+                <li><a href=""></a></li>
+            </ul>
+        </ul>
+
 
 
 
@@ -225,23 +327,17 @@
             <li><a href="">bure 3*3</a></li>
         </ul>
 
-        <span>延迟渲染</span>
-        <ul>
-            <li><a href=""></a></li>
-        </ul>
-        <span>BVH</span>
-        <ul>
-            <li><a href=""></a></li>
-        </ul>
+
+
 
         <span>简单数据模型</span>
         <ul>
             <li><a href=""></a></li>
         </ul>
-        <span>帧输出管理器</span>
-        <ul>
-            <li><a href="">输出管理器:copy,MSAA render,viewport,colorSpace编码,</a></li>
 
+        <span>输出管理器</span>
+        <ul>
+            <li>输出管理器:copy,MSAA render,viewport,colorSpace编码,完成,融入系统</li>
             <li><a href="">多相机:多个viewport</a></li>
             <li><a href="">camera:viewport Z值范围;</a></li>
             <li><a href="">多相机:默认相机切换,多控制器切换</a></li>
@@ -254,18 +350,17 @@
             <li><a href="">GBuffer 可视化</a></li>
         </ul>
 
-        <span>深入管理器</span>
+        <span>输入管理器</span>
         <ul>
-            <li><a href="">输入管理器：lisener，注册，激活（监听、独占、互斥）</a></li>
-            <li><a href="">相机控制器：注册、激活</a></li>
-            <li><a href="">orbit轨道控制器</a></li>
+            <li>输入管理器:监听,注册,(独占、广播)。完成,融入系统</li>
+            <li>相机控制器：注册、激活。完成,融入系统</li>
             <li><a href="">对象控制器：注册、激活；位移、旋转、缩放</a></li>
             <li><a href="">pickup:状态，注册、激活</a></li>
         </ul>
 
         <span>observer</span>
         <ul>
-            <li><a href="">resize</a></li>
+            <li>resize.完成,融入系统</li>
         </ul>
     </div>
 </body>

@@ -1,13 +1,14 @@
 import { E_lifeState, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_uniformBufferPart, T_uniformGroup } from "../../command/base";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialPhongFS_mergeToVS } from "../../shadermanagemnet/material/phongMaterial";
+import { SHT_materialPhongFS_mergeToVS, SHT_materialPhongFS_MSAA_info_mergeToVS, SHT_materialPhongFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/phongMaterial";
 import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_TextureType, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -31,12 +32,7 @@ export interface IV_PhongMaterial extends IV_BaseMaterial {
 }
 
 export class PhongMaterial extends BaseMaterial {
-  setTO(): void {
-    // throw new Error("Method not implemented.");
-  }
-  getOpacity_TOTT(startBinding: number): { TT: I_materialBundleOutput; TO?: I_materialBundleOutput; } {
-    throw new Error("Method not implemented.");
-  }
+
   declare inputValues: IV_PhongMaterial;
   declare textures: {
     [name: string]: Texture
@@ -78,8 +74,8 @@ export class PhongMaterial extends BaseMaterial {
         this.textures[key] = texture;
       }
       else if (texture) {
-        if(key != E_TextureType.color){
-          texture.format="rgba8unorm";
+        if (key != E_TextureType.color) {
+          texture.format = "rgba8unorm";
         }
         let textureInstace = new Texture(texture, this.device, this.scene);
         await textureInstace.init(this.scene);
@@ -92,7 +88,11 @@ export class PhongMaterial extends BaseMaterial {
     this._state = E_lifeState.finished;
   }
   getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-    let template: I_ShaderTemplate;
+    return this.getOpaqueCodeFS(SHT_materialPhongFS_mergeToVS, startBinding);
+
+  }
+  getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
+    // let template: I_ShaderTemplate;
     let groupAndBindingString: string = "";
     let binding: number = startBinding;
     let uniform1: T_uniformGroup = [];
@@ -200,7 +200,7 @@ export class PhongMaterial extends BaseMaterial {
     // else
     {
       ////////////////shader 模板格式化部分
-      template = SHT_materialPhongFS_mergeToVS;
+      // template = SHT_materialPhongFS_mergeToVS;
       for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
         code += perOne.code;
       }
@@ -282,10 +282,49 @@ export class PhongMaterial extends BaseMaterial {
       binding: binding,
       owner: this,
     }
-    return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat };
-
+    return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
   }
-
+  getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+    let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPhongFS_MSAA_mergeToVS, startBinding);
+    let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPhongFS_MSAA_info_mergeToVS, startBinding);
+    return { MSAA, inforForward };
+  }
+  getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+    throw new Error("Method not implemented.");
+  }
+  getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
+    throw new Error("Method not implemented.");
+  }
+  getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+    throw new Error("Method not implemented.");
+  }
+  getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+    throw new Error("Method not implemented.");
+  }
+  getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+    throw new Error("Method not implemented.");
+  }
+  getFS_TO(_startBinding: number): I_materialBundleOutput {
+    throw new Error("Method not implemented.");
+  }
+  getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+    throw new Error("Method not implemented.");
+  }
+  getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+    throw new Error("Method not implemented.");
+  }
+  getFS_TO_DeferColor(startBinding: number): I_materialBundleOutput {
+    throw new Error("Method not implemented.");
+  }
+  formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+    throw new Error("Method not implemented.");
+  }
+  setTO(): void {
+    // throw new Error("Method not implemented.");
+  }
+  getOpacity_TOTT(startBinding: number): { TT: I_materialBundleOutput; TO?: I_materialBundleOutput; } {
+    throw new Error("Method not implemented.");
+  }
 
   updateSelf(clock: Clock): void {
 

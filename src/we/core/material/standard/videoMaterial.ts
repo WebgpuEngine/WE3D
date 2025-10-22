@@ -1,7 +1,7 @@
 import { BaseMaterial, } from "../baseMaterial";
 import { Texture } from "../../texture/texture";
 import { T_textureSourceType } from "../../texture/base";
-import { E_TextureType, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { E_lifeState } from "../../base/coreDefine";
 import { T_uniformEntries, T_uniformGroup } from "../../command/base";
 import { Clock } from "../../scene/clock";
@@ -9,10 +9,11 @@ import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_s
 import { SHT_materialTextureFS_mergeToVS, SHT_materialTextureTransparentFS_mergeToVS } from "../../shadermanagemnet/material/textureMaterial";
 import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { IV_OptionVideoTexture, T_modelOfVideo, T_VIdeoSourceType, VideoTexture } from "../../texture/videoTexture";
-import { SHT_materialVideoTextureFS_mergeToVS } from "../../shadermanagemnet/material/videoMaterial";
+import { SHT_materialVideoTextureFS_mergeToVS, SHT_materialVideoTextureFS_MSAA_info_mergeToVS, SHT_materialVideoTextureFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/videoMaterial";
 import { BaseCamera } from "../../camera/baseCamera";
 import { BaseLight } from "../../light/baseLight";
 import { E_resourceKind } from "../../resources/resourcesGPU";
+import { I_ShadowMapValueOfDC } from "../../entity/base";
 
 
 /**
@@ -33,7 +34,6 @@ export interface IV_VideoMaterial extends IV_BaseMaterial {
 }
 
 export class VideoMaterial extends BaseMaterial {
-
 
 
     sampler!: GPUSampler;
@@ -61,7 +61,7 @@ export class VideoMaterial extends BaseMaterial {
         this.countOfTextures = Object.keys(input.textures).length;
         this._state = E_lifeState.unstart;
     }
-    destroy() {
+    _destroy(): void {
         for (let key in this.textures) {
             this.textures[key].destroy();
         }
@@ -93,14 +93,18 @@ export class VideoMaterial extends BaseMaterial {
     setTO(): void {
         this.hasOpaqueOfTransparent = false;
     }
-    getTTFS(renderObject:BaseCamera|BaseLight,_startBinding: number): I_materialBundleOutput {
+    getTTFS(renderObject: BaseCamera | BaseLight, _startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
     getTOFS(_startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
     getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-        let template: I_ShaderTemplate;
+        let template = SHT_materialVideoTextureFS_mergeToVS;
+        return this.getOpaqueCodeFS(template, startBinding);
+
+    }
+    getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
         let uniform1: T_uniformGroup = [];
@@ -194,7 +198,7 @@ export class VideoMaterial extends BaseMaterial {
         // else
         {
             ////////////////shader 模板格式化部分
-            template = SHT_materialVideoTextureFS_mergeToVS;
+            // template = SHT_materialVideoTextureFS_mergeToVS;
             for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
                 code += perOne.code;
             }
@@ -230,7 +234,42 @@ export class VideoMaterial extends BaseMaterial {
             outputFormat.dynamic = dynamic;
         }
 
-        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat ,bindingNumber:binding};
+        return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
+    }
+    getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialVideoTextureFS_MSAA_mergeToVS, startBinding);
+        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialVideoTextureFS_MSAA_info_mergeToVS, startBinding);
+        return { MSAA, inforForward };
+    }
+    getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO(_startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    getFS_TO_DeferColor(startBinding: number): I_materialBundleOutput {
+        throw new Error("Method not implemented.");
+    }
+    formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
+        throw new Error("Method not implemented.");
     }
 
     updateSelf(clock: Clock): void {

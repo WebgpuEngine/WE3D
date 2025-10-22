@@ -1,8 +1,8 @@
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
+import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
+import { IV_Scene } from "../../../../src/we/core/scene/base";
+import { initScene } from "../../../../src/we/core/scene/fn";
+import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
+import { IV_LinesEntity, Lines } from "../../../../src/we/core/entity/mesh/lines";
 
 
 declare global {
