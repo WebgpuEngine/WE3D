@@ -1,4 +1,4 @@
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_replace_MSAAinfo_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer, WGSL_st_transparentbuffer } from "../base"
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, SHT_replaceGBufferCommonValue, SHT_replaceGBufferFSOutput, SHT_replaceGBufferMSAA_FSOutput, SHT_replaceGBufferMSAAinfo_FSOutput, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_replace_MSAAinfo_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer, WGSL_st_transparentbuffer } from "../base"
 import { SHT_replaceTT_FSOutput, SHT_TT, TTPF_FS } from "./TT";
 ////////////////////////////////////////////////////////////////////////////////
 //material
@@ -20,12 +20,14 @@ export var SHT_materialColorFS_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_output
-            },
+            // {//使用SHT_replaceGBufferFSOutput代替
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_gbuffer_output
+            // },
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
                 name: "colorFS set color",
                 replace: "$fsOutputColor",           //
@@ -57,12 +59,14 @@ export var SHT_materialColorFS_MSAA_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAA_gbuffer_output
-            },
+            // {//SHT_replaceGBufferMSAA_FSOutput
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_MSAA_gbuffer_output
+            // },
+            SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
                 name: "colorFS set color",
                 replace: "$fsOutputColor",           //
@@ -92,12 +96,14 @@ export var SHT_materialColorFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
-            },
+            // {//SHT_replaceGBufferMSAAinfo_FSOutput
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
+            // },
+            SHT_replaceGBufferMSAAinfo_FSOutput,                                            // WGSL_replace_MSAAinfo_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
                 name: "colorFS set color",
                 replace: "$fsOutputColor",           //取消设置颜色
@@ -131,12 +137,15 @@ export var SHT_materialColor_TT_FS_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_output
-            },
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_gbuffer_output
+            // },
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
                 name: "colorFS set color",
                 replace: "$fsOutputColor",           //
@@ -184,7 +193,10 @@ export var SHT_materialColor_TTP_FS_mergeToVS: I_ShaderTemplate = {
 // // import colorTTPF_FSWGSL from "../../shader/material/color/colorTTPF.fs.wgsl?raw";
 // var TTPF_FS = colorTTPF_FSWGSL.toString();
 
-/** 颜色材质, 不透明, 合并到VS中 */
+/** 颜色材质, 不透明, 合并到VS中 
+ * 1、使用TTPF的shader，在其中使用材质的输出逻辑替换
+ * 2、basecolor的逻辑比较简单，只有一个color=vec4f()。其他的材质需要按需处理
+*/
 export var SHT_materialColor_TTPF_FS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "ColorMaterial",
@@ -235,6 +247,8 @@ export var SHT_materialOneCubeFS_mergeToVS: I_ShaderTemplate = {
                 replaceType: E_shaderTemplateReplaceType.replaceCode,
                 replaceCode: WGSL_replace_gbuffer_output
             },
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
+
             {
                 name: "colorFS set color",
                 replace: "$fsOutputColor",           //

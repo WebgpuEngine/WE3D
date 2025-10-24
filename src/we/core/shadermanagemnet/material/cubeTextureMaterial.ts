@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //material
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_replace_MSAAinfo_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer } from "../base"
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, SHT_replaceGBufferCommonValue, SHT_replaceGBufferFSOutput, SHT_replaceGBufferMSAA_FSOutput, SHT_replaceGBufferMSAAinfo_FSOutput, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_replace_MSAAinfo_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer } from "../base"
 
 
 import cubeSKyTextureFSWGSL from "../../shader/material/texture/cubeSkyTexture.fs.wgsl?raw";
@@ -20,12 +20,8 @@ export var SHT_materialCubeSkyTextureFS_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_output
-            },
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             //判断是否有output.color 输入(MSAA info 没有)
             {
                 name: "output.color",
@@ -50,12 +46,14 @@ export var SHT_materialCubeSkyTextureFS_MSAA_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAA_gbuffer_output
-            },
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_MSAA_gbuffer_output
+            // },
+            SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             //判断是否有output.color 输入(MSAA info 没有)
             {
                 name: "output.color",
@@ -80,12 +78,15 @@ export var SHT_materialCubeSkyTextureFS_MSAAinfo_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
-            },
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
+            // },
+            SHT_replaceGBufferMSAAinfo_FSOutput,                                            // WGSL_replace_MSAAinfo_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
+
             //判断是否有output.color 输入(MSAA info 没有)
             {
                 name: "output.color",
@@ -114,12 +115,14 @@ export var SHT_materialCubePositionTextureFS_mergeToVS: I_ShaderTemplate = {
 
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_output
-            },
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_gbuffer_output
+            // },
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分            
             //判断是否有output.color 输入(MSAA info 没有)
             {
                 name: "output.color",
@@ -146,12 +149,15 @@ export var SHT_materialCubePositionTextureFS_MSAA_mergeToVS: I_ShaderTemplate = 
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAA_gbuffer_output
-            },
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_MSAA_gbuffer_output
+            // },
+            SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
+
             //判断是否有output.color 输入(MSAA info 没有)
             {
                 name: "output.color",
@@ -176,12 +182,15 @@ export var SHT_materialCubePositionTextureFS_MSAAinfo_mergeToVS: I_ShaderTemplat
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
-            },
+            // {
+            //     name: "colorFS.output content",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
+            // },
+            SHT_replaceGBufferMSAAinfo_FSOutput,                                            // WGSL_replace_MSAAinfo_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
+
             //判断是否有output.color 输入(MSAA info 没有)
             {
                 name: "output.color",

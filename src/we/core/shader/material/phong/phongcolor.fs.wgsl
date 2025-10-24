@@ -10,14 +10,10 @@ struct st_bulin_phong {
 }
 
 @fragment fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
+    $gbufferCommonValues //初始化GBuffer的通用值
     initSystemOfFS();   
-    var uv = fsInput.uv;
-    var normal=fsInput.normal;
-    // $deferRender_Depth                                  //为空或进行深度判断（discar）
-    var materialColor =vec4f(1);
     $materialColor             //颜色或纹理颜色
     $normal                             //来自VS，还是来自texture
-
     let colorOfAmbient = PhongAmbientColor();
     var colorOfPhoneOfLights : array<vec3f, 2>;             //漫反射，高光反射
     colorOfPhoneOfLights[0]= vec3f(0.0);                    //漫反射：所有光源在pixel上的总和

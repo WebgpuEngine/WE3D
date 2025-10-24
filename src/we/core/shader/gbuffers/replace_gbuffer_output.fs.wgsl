@@ -4,10 +4,10 @@
     output.color = vec4f(fsInput.color,1);
     output.id = fsInput.entityID;
     output.normal = vec4f(fsInput.normal, 1);
-    output.RMAO = vec4f(1);
+    output.RMAO = vec4f(0);
 
     output.worldPosition = vec4f(fsInput.worldPosition,1);
-    output.albedo = vec4f(1);
+    output.albedo = vec4f(0);
 
     // output.X = fsInput.worldPosition.x;
     // output.Y = fsInput.worldPosition.y;

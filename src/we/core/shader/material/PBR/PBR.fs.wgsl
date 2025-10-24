@@ -8,12 +8,9 @@ struct PBRBaseUniform{
 }
 @fragment
 fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
+    $gbufferCommonValues //初始化GBuffer的通用值
     initSystemOfFS();   
     let F0 = vec3(0.04);
-    var albedo : vec3f; var metallic : f32; var roughness : f32; var ao : f32; var normal : vec3f; var materialColor : vec4f;   //基础参数
-    var emissive :f32=0;//自发光
-    var defer_4xU8InF16:f32 = 0.0;//延迟渲染的GBuffer输出，8位，每个位分别表示：接受阴影、阴影、其他、材质类型
-    // defer_4xU8InF16 = encodeLightAndShadowFromU8x4ToF16(0,0,0,2);//材质类型2=PBR
     //占位符,统一工作流在这里处理
     // $PBR_Uniform
     $PBR_albedo

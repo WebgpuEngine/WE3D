@@ -8,9 +8,10 @@ struct st_bulin_phong {
 }
 
 @fragment fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
+    $gbufferCommonValues //初始化GBuffer的通用值
+
     initSystemOfFS();   
-    var uv = fsInput.uv;
-    var normal=fsInput.normal;
+
     $normal                             //来自VS，还是来自texture
     var output: ST_GBuffer;
     $fsOutput

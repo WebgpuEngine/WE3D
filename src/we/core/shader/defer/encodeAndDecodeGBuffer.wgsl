@@ -95,18 +95,18 @@ fn F32ToU8(f32Value: f32) -> u32 {
 // 输出：编码到 rgba16float 的 f16
 fn encodeLightAndShadowFromU8x4ToF16(
     acceptShadow: u32,
-    shadow: u32,
-    materialKind: u32,
-    other: u32
+    shadowKind: u32, 
+    acceptlight: u32,
+    materialKind: u32,      
 ) -> f32 {  // 返回u32类型，但数值在u8范围内（0~255）
     // 1. 限制每个变量的范围，避免位溢出
     let a = clamp(acceptShadow, 0u, 1u);    // 1位：[0,1]
-    let s = clamp(shadow, 0u, 7u);          // 3位：[0,7]
-    let o = clamp(other, 0u, 1u);           // 1位：[0,1]
+    let s = clamp(shadowKind, 0u, 7u);          // 3位：[0,7]
+    let l = clamp(acceptlight, 0u, 1u);           // 1位：[0,1]
     let m = clamp(materialKind, 0u, 7u);    // 3位：[0,7]
     
     // 2. 按位打包（总8位，符合u8范围）
-    let packedU8= (a << 7u) | (s << 4u) | (o << 3u) | m;
+    let packedU8= (a << 7u) | (s << 4u) | (l << 3u) | m;
     // 3. 确保打包值在u8范围（[0,255]）
     let clamped = clamp(packedU8, 0u, 255u);
     // 4. 转换为float16可精确表示的浮点数（关键：直接用f32存储整数，避免小数误差）
@@ -118,16 +118,16 @@ fn encodeLightAndShadowFromU8x4ToF16(
 
 // light and shadow 参数解码为:f16 到 4xU8
 // 输入：从 rgba16float 采样的 f16（Alpha 通道存储编码值）
-// 输出：恢复的 4 个 u8 变量（acceptShadow, shadow, materialKind, other）
+// 输出：恢复的 4 个 u8 变量（acceptShadow, shadow, materialKind, acceptlight）
 fn decodeLightAndShadowFromF16ToU8x4(oneF16: f32) -> vec4u {
     let packed = clamp(u32(oneF16 * 255.0 + 0.5), 0u, 255u);
     // 1. 提取每个变量（先掩码再移位）
     let acceptShadow = (packed >> 7u) & 1u;    // 取第7位（1位）
-    let shadow = (packed >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
-    let other = (packed >> 3u) & 1u;           // 取第3位（1位）
+    let shadowKind = (packed >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
+    let acceptlight = (packed >> 3u) & 1u;           // 取第3位（1位）
     let materialKind = packed & 7u;            // 取第0~2位（3位，掩码0b111=7）
     
-    return vec4u(acceptShadow, shadow, materialKind, other);
+    return vec4u(acceptShadow, shadowKind,acceptlight, materialKind );
 }
 //////////////////////////////////////////////////////////////////////////////
 //rgba8unorm中u8中转格式的编解码
@@ -138,33 +138,33 @@ fn decodeLightAndShadowFromF16ToU8x4(oneF16: f32) -> vec4u {
 // 输出：编码到 rgba8unorm 的 f32（范围[0,1]，实际上是 [0,255]）
 fn encodeLightAndShadowFromU8x4ToF32(
     acceptShadow: u32,
-    shadow: u32,
-    materialKind: u32,
-    other: u32
+    shadowKind: u32, 
+    acceptlight: u32,
+    materialKind: u32,     
 ) -> f32 {  // 返回u32类型，但数值在u8范围内（0~255）
     // 1. 限制每个变量的范围，避免位溢出
     let a = clamp(acceptShadow, 0u, 1u);    // 1位：[0,1]
-    let s = clamp(shadow, 0u, 7u);          // 3位：[0,7]
-    let o = clamp(other, 0u, 1u);           // 1位：[0,1]
+    let s = clamp(shadowKind, 0u, 7u);          // 3位：[0,7]
+    let l = clamp(acceptlight, 0u, 1u);           // 1位：[0,1]
     let m = clamp(materialKind, 0u, 7u);    // 3位：[0,7]
     
     // 2. 按位打包（总8位，符合u8范围）
-    let packedU8= (a << 7u) | (s << 4u) | (o << 3u) | m;
+    let packedU8= (a << 7u) | (s << 4u) | (l << 3u) | m;
 
     return f32(packedU8)/255.0;
 }
 
 // light and shadow 参数从 f32 （范围[0,1]，实际上是 [0,255]）解码为 4 个 u8
 // 输入：从 rgba8unorm 采样的 f32（范围[0,1]，实际上是 [0,255]）
-// 输出：恢复的 4 个 u8 变量（acceptShadow, shadow, materialKind, other）
+// 输出：恢复的 4 个 u8 变量（acceptShadow, shadowKind,acceptlight, materialKind ）
 fn decodeLightAndShadowFromF32ToU8x4(packed: f32) -> vec4u {
      let packedU8 = clamp(u32(packed * 255.0 + 0.5), 0u, 255u);
     // 1. 提取每个变量（先掩码再移位）
     let acceptShadow = (packedU8 >> 7u) & 1u;    // 取第7位（1位）
-    let shadow = (packedU8 >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
-    let other = (packedU8 >> 3u) & 1u;           // 取第3位（1位）
+    let shadowKind = (packedU8 >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
+    let acceptlight = (packedU8 >> 3u) & 1u;           // 取第3位（1位）
     let materialKind = packedU8 & 7u;            // 取第0~2位（3位，掩码0b111=7）
-    return vec4u(acceptShadow, shadow, materialKind, other);
+    return vec4u(acceptShadow, shadowKind,acceptlight, materialKind );
 }
 
 // light and shadow 参数编码为 u32（范围[0,255]）,按照位操作
@@ -172,34 +172,34 @@ fn decodeLightAndShadowFromF32ToU8x4(packed: f32) -> vec4u {
 // 输出：编码到 rgba8unorm 的 u32（范围[0,255]）
 fn encodeLightAndShadowFromU8x4ToU8bit(
     acceptShadow: u32,
-    shadow: u32,
-    materialKind: u32,
-    other: u32
+    shadowKind: u32, 
+    acceptlight: u32,
+    materialKind: u32,    
 ) -> u32 {  // 返回u32类型，但数值在u8范围内（0~255）
     // 1. 限制每个变量的范围，避免位溢出
     let a = clamp(acceptShadow, 0u, 1u);    // 1位：[0,1]
-    let s = clamp(shadow, 0u, 7u);          // 3位：[0,7]
-    let o = clamp(other, 0u, 1u);           // 1位：[0,1]
+    let s = clamp(shadowKind, 0u, 7u);          // 3位：[0,7]
+    let l = clamp(acceptlight, 0u, 1u);           // 1位：[0,1]
     let m = clamp(materialKind, 0u, 7u);    // 3位：[0,7]
     // 2. 按位打包（总8位，符合u8范围）
-    let packedU8= (a << 7u) | (s << 4u) | (o << 3u) | m;
+    let packedU8= (a << 7u) | (s << 4u) | (l << 3u) | m;
     return packedU8;
 }
 
 // light and shadow 参数从 u32 （范围是 [0,255]）解码为 4 个 u8,按照位操作
 // 输入：从 rgba8unorm 采样的 u32（范围[0,255]）
-// 输出：恢复的 4 个 u8 变量（acceptShadow, shadow, materialKind, other）
+// 输出：恢复的 4 个 u8 变量（acceptShadow, shadowKind,acceptlight, materialKind ）
 fn decodeLightAndShadowFromU8bitToU8x4(packedU8: u32) -> vec4u {
     // 1. 提取每个变量（先掩码再移位）
     let acceptShadow = (packedU8 >> 7u) & 1u;    // 取第7位（1位）
-    let shadow = (packedU8 >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
-    let other = (packedU8 >> 3u) & 1u;           // 取第3位（1位）
+    let shadowKind = (packedU8 >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
+    let acceptlight = (packedU8 >> 3u) & 1u;           // 取第3位（1位）
     let materialKind = packedU8 & 7u;            // 取第0~2位（3位，掩码0b111=7）
-    return vec4u(acceptShadow, shadow, materialKind, other);
+    return vec4u(acceptShadow, shadowKind,acceptlight, materialKind );
 }
 
 //简版encode
-fn encodeLightAndShadowToF32(acceptShadow:u32,shadow:u32,materialKind:u32,other:u32)->f32{
-    let packedU32 = (acceptShadow << 7u) | (shadow << 4)| (other <<3) | materialKind  ;
+fn encodeLightAndShadowToF32(acceptShadow:u32,shadowKind:u32,materialKind:u32,acceptlight:u32)->f32{
+    let packedU32 = (acceptShadow << 7u) | (shadowKind << 4)| (acceptlight <<3) | materialKind  ;
     return f32(packedU32)/255.0;
 }

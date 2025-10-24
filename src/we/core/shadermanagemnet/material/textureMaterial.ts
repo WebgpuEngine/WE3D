@@ -1,4 +1,4 @@
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateReplace, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer, WGSL_st_transparentbuffer } from "../base"
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateReplace, SHT_replaceGBufferCommonValue, SHT_replaceGBufferFSOutput, SHT_replaceGBufferMSAA_FSOutput, SHT_replaceGBufferMSAAinfo_FSOutput, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer, WGSL_st_transparentbuffer } from "../base"
 import { SHT_replaceTT_FSOutput, SHT_TT, TTPF_FS } from "./TT";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,12 +20,8 @@ export var SHT_materialTextureFS_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_output
-            },
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             //根据alpha种类判断替换的规则（alpha，alphatest）。另外，这个的替换符是上面的项目（$opacityOrTransparent）提供的
             {
                 name: "alpha",
@@ -60,13 +56,9 @@ export var SHT_materialTextureFS_MSAA_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAA_gbuffer_output,          //MSAA gubuffer replace
+            SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
 
-            },
             //根据alpha种类判断替换的规则（alpha，alphatest）。另外，这个的替换符是上面的项目（$opacityOrTransparent）提供的
             {
                 name: "alpha",
@@ -100,13 +92,9 @@ export var SHT_materialTextureFS_MSAAinfo_mergeToVS: I_ShaderTemplate = {
             },
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAA_gbuffer_output,          //MSAA gubuffer replace
+            SHT_replaceGBufferMSAAinfo_FSOutput,                                            // WGSL_replace_MSAAinfo_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
 
-            },
             //根据alpha种类判断替换的规则（alpha，alphatest）。另外，这个的替换符是上面的项目（$opacityOrTransparent）提供的
             {
                 name: "alpha",
@@ -143,7 +131,6 @@ export var SHT_materialTexture_TT_FS_mergeToVS: I_ShaderTemplate = {
     material: {
         owner: "TextureMaterial",
         add: [
-
             {
                 name: "fsOnput",
                 code: WGSL_st_Guffer,
@@ -152,15 +139,18 @@ export var SHT_materialTexture_TT_FS_mergeToVS: I_ShaderTemplate = {
                 name: "fs",
                 code: textureTT_FS,
             },
-
         ],
         replace: [
-            {
-                name: "replace_gbuffer_output",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_output
-            },
+            // {
+            //     name: "replace_gbuffer_output",
+            //     replace: "$fsOutput",           //
+            //     replaceType: E_shaderTemplateReplaceType.replaceCode,
+            //     replaceCode: WGSL_replace_gbuffer_output
+            // },
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
+
             // //TT,TTP,TTPF相同的replace
             replaceAlpha_TT_TTP_TTPF,
             replaceOpacityPercent_TT_TTP_TTPF,

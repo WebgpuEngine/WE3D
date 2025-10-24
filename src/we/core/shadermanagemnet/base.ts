@@ -137,9 +137,9 @@ export var WGSL_replace_MSAAinfo_gbuffer_output = replace_MSAAinfo_gbuffer_outpu
 
 
 ///////////////////////////////////////////////////////////////////////////
-//base var
-//ref values
+//scene 和DCG 通用部分
 
+//场景相机的系统变量
 export var SHT_ScenOfCamera: I_singleShaderTemplate = {
     add: [{
         name: "system",
@@ -163,6 +163,7 @@ export var SHT_ScenOfCamera: I_singleShaderTemplate = {
         },
     ],
 };
+//ref DCG 反射location
 export var SHT_refDCG: I_singleShaderTemplate = {
     replace: [
         {
@@ -222,10 +223,13 @@ export var SHT_refDCG: I_singleShaderTemplate = {
     ]
 };
 
+//////////////////////////////////////////////////////////////////////////////////
+//GBuffer
 
 import deferDepthWGSL from "../shader/defer/replace_deferDepthCompare.fs.wgsl?raw";
 var deferDepthFS = deferDepthWGSL.toString();
 
+//defer渲染的深度比较,未使用，但有导入引用
 export var SHT_replaceDefer: I_shaderTemplateReplace = {
     name: "replaceDefer",
     description: "根据scene.deferRender.deferRenderDepth 判断行为",
@@ -235,18 +239,44 @@ export var SHT_replaceDefer: I_shaderTemplateReplace = {
     varOfJSCheck: [
         { "true": deferDepthFS },
         { "false": "" }],
-
 }
 
+import WGSL_replace_gbuffer_commonValues from "../shader/gbuffers/commonGBufferValue.wgsl?raw";
+var replace_gbuffer_commonValues = WGSL_replace_gbuffer_commonValues.toString();
+
+//GBuffer的通用值替换项
+export var SHT_replaceGBufferCommonValue: I_shaderTemplateReplace =
+{
+    name: "common values",
+    replace: "$gbufferCommonValues",           //替换为WGSL_replace_gbuffer_output
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: replace_gbuffer_commonValues
+}
+
+//replace GBuffer的通用单项
 export var SHT_replaceGBufferFSOutput: I_shaderTemplateReplace =
 {
     name: "colorFS.output content",
-    replace: "$fsOutput",           //
+    replace: "$fsOutput",           //替换为WGSL_replace_gbuffer_output
     replaceType: E_shaderTemplateReplaceType.replaceCode,
     replaceCode: WGSL_replace_gbuffer_output
 }
 
-
+export var SHT_replaceGBufferMSAA_FSOutput: I_shaderTemplateReplace =
+{
+    name: "colorFS.output content",
+    replace: "$fsOutput",
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: WGSL_replace_MSAA_gbuffer_output
+}
+export var SHT_replaceGBufferMSAAinfo_FSOutput: I_shaderTemplateReplace =
+{
+    name: "colorFS.output content",
+    replace: "$fsOutput",
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
+}
+//////////////////////////////////////////////////////////////////////////////////
 //math
 import mathConstWGSL from "../shader/math/baseconst.wgsl?raw"
 var mathConst = mathConstWGSL.toString();
@@ -255,35 +285,36 @@ var mathTBN = mathTBNWGSL.toString();
 import mathRandomWGSL from "../shader/math/random.wgsl?raw"
 var mathRandom = mathRandomWGSL.toString();
 
-
+//math base const
 export var SHT_addMathBase: I_shaderTemplateAdd = {
     name: "mathBase",
     code: mathConst,
 }
+//math TBN
 export var SHT_addMathTBN: I_shaderTemplateAdd = {
     name: "mathTBN",
     code: mathTBN,
 }
+//math random
 export var SHT_addMathRandom: I_shaderTemplateAdd = {
     name: "mathRandom",
     code: mathRandom,
 }
-
+//////////////////////////////////////////////////////////////////////////////////
 //shadow map MVP
 import systemOfLightWGSL from "../shader/system/systemForLight.wgsl?raw"
 var systemOfLight = systemOfLightWGSL.toString();
 
-
+//shadow map 系统变量
 export var SHT_addSystemOfLight: I_shaderTemplateAdd = {
     name: "systemOfLight",
     code: systemOfLight,
 }
 
-//PCSS
 //shadow map 
 import shadowmapPCSSWGSL from "../shader/shadowmap/fn_pcss.wgsl?raw"
 var shadowmapPCSS = shadowmapPCSSWGSL.toString();
-
+//阴影可见度计算的函数相关的代码单项
 export var SHT_addPCSS: I_shaderTemplateAdd = {
     name: "pcss",
     code: shadowmapPCSS,
