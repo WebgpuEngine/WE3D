@@ -1,5 +1,5 @@
 
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, SHT_addMathBase, SHT_addMathRandom, SHT_addMathTBN, SHT_addPCSS, SHT_replaceDefer, SHT_replaceFSOutput, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_replace_MSAAinfo_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer } from "../base"
+import { E_shaderTemplateReplaceType, I_ShaderTemplate, SHT_addMathBase, SHT_addMathRandom, SHT_addMathTBN, SHT_addPCSS, SHT_replaceDefer, SHT_replaceGBufferFSOutput, WGSL_replace_gbuffer_output, WGSL_replace_MSAA_gbuffer_output, WGSL_replace_MSAAinfo_gbuffer_output, WGSL_st_Guffer, WGSL_st_MSAA_Guffer, WGSL_st_MSAAinfo_Guffer } from "../base"
 
 import phongMaterialWGSL from "../../shader/material/phong/phongcolor.fs.wgsl?raw"
 var phongFS = phongMaterialWGSL.toString();
@@ -28,7 +28,7 @@ export var SHT_materialPhongFS_mergeToVS: I_ShaderTemplate = {
             //     replaceType: E_shaderTemplateReplaceType.replaceCode,
             //     replaceCode: WGSL_replace_gbuffer_output
             // },
-            SHT_replaceFSOutput,                                            // WGSL_replace_gbuffer_output部分
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
             {
                 name: "materialColor",
                 replace: "$materialColor",           //

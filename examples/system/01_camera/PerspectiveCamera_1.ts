@@ -43,7 +43,7 @@ struct ST_GBuffer{
     @location(1) id : u32,
     @location(2) normal : vec4f,
     @location(3) worldPosition : vec4f,
-    @location(4) ru_ma_AO : vec4f,
+    @location(4) RMAO : vec4f,
 }
  struct OurVertexShaderOutput {
     @builtin(position) position: vec4f,
@@ -98,7 +98,7 @@ var<private> matrix_z_reversed : mat4x4f = mat4x4f(
           output.id = 0;
           output.normal = vec4f( 1);
           output.worldPosition = vec4f(1);
-          output.ru_ma_AO = vec4f(0,0,0, 1);
+          output.RMAO = vec4f(0,0,0, 1);
           
           return output;
 }

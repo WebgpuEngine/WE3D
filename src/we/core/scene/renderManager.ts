@@ -55,7 +55,7 @@ export enum E_renderPassName {
      *      1、无MSAA：正常输出
      *      2、有MSAA：
      *          A、需要在MSAA通道之后，进行resolve操作。（resolve操作在forward之前在MSAA的最后进行）
-     *          B、使用的DC是适配MSAA的DC（只有id,normal,position,albedo.ru_ma_AO等基础信息）
+     *          B、使用的DC是适配MSAA的DC（只有id,normal,position,albedo.RMAO等基础信息）
      * 二、forward
      *      1、无defer：正常输出
      *      2、有defer：这时enity使用的材质是只有进行颜色（颜色和纹理）处理的模式，光影由之后的defer处理。

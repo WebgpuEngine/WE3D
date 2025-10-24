@@ -100,42 +100,25 @@ export class PBRMaterial extends BaseMaterial {
             }
         }
     }
-    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
-        return this.getOpaqueCodeFS(SHT_materialPBRFS_mergeToVS, startBinding);
-
-    }
-    getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
-        // let template: I_ShaderTemplate;
-        let groupAndBindingString: string = "";
-        let binding: number = startBinding;
-        let uniform1: T_uniformGroup = [];
-        let code: string = "";
-        ///////////group binding
-        // if (this.inputValues.textures && Object.keys(this.inputValues.textures).length > 0) 
-        // {
-        ////group bindgin sampler 字符串
-        groupAndBindingString += ` @group(1) @binding(${binding}) var u_Sampler : sampler; \n `;
-        //uniform sampler
-        let uniformSampler: GPUBindGroupEntry = {
-            binding: binding,
-            resource: this.sampler,
-        };
-        //uniform sampler layout
-        let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
-            binding: binding,
-            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            sampler: {
-                type: this._samplerBindingType,
-            },
-        };
-        //添加到resourcesGPU的Map中
-        this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
-        this.mapList.push({ key: uniformSampler, type: "GPUBindGroupLayoutEntry" });
-        //push到uniform1队列
-        uniform1.push(uniformSampler);
-        //+1
-        binding++;
-
+    /**
+     * 获取当前材质是否绑定了纹理
+     * @returns {
+        flag_texture_albedo: boolean,
+        flag_texture_metallic: boolean,
+        flag_texture_roughness: boolean,
+        flag_texture_ao: boolean,
+        flag_texture_normal: boolean,
+        flag_texture_color: boolean,
+    }       
+     */
+    getFlagTexture(): {
+        flag_texture_albedo: boolean,
+        flag_texture_metallic: boolean,
+        flag_texture_roughness: boolean,
+        flag_texture_ao: boolean,
+        flag_texture_normal: boolean,
+        flag_texture_color: boolean,
+    } {
         let flag_texture_albedo = false;
         let flag_texture_metallic = false;
         let flag_texture_roughness = false;
@@ -187,116 +170,195 @@ export class PBRMaterial extends BaseMaterial {
                 else {
                     flag_texture_color = false;
                 }
-            if (this.textures[i] instanceof Texture && this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                //uniform texture
-                let uniformTexture: GPUBindGroupEntry = {
-                    binding: binding,
-                    resource: this.textures[i].texture.createView(),
-                };
-                //uniform texture layout
-                let uniformTextureLayout: GPUBindGroupLayoutEntry = {
-                    binding: binding,
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                    texture: this.textures[i].defaultTextureLayout(),
-                    // texture: {
-                    //     sampleType: "float",
-                    //     viewDimension: "2d",
-                    // },
-                };
-                //添加到resourcesGPU的Map中
-                this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
-                this.mapList.push({ key: uniformTexture, type: "GPUBindGroupLayoutEntry" });
-                //push到uniform1队列
-                uniform1.push(uniformTexture);
-
-                groupAndBindingString += `@group(1) @binding(${binding}) var u_${i}Texture: texture_2d<f32>;\n`;//u_${i}是texture的名字，指定的三种情况，texture，specularTexture，normalTexture
-                binding++;
-            }
         }
-        // }
-        ////////////////shader 模板格式化部分
-        // template = SHT_materialPBRFS_mergeToVS;
-        //add 
-        for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
-            code += perOne.code;
+        return {
+            flag_texture_albedo,
+            flag_texture_metallic,
+            flag_texture_roughness,
+            flag_texture_ao,
+            flag_texture_normal,
+            flag_texture_color,
         }
-        //replace
-        for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
-            if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
-                code = code.replace(perOne.replace, perOne.replaceCode as string);
-            }
-            else if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
-                let replactString = "";
-                switch (perOne.replace) {
-                    case "$PBR_albedo":
-                        if (flag_texture_albedo) {
-                            replactString = `albedo = textureSample(u_albedoTexture,u_Sampler,fsInput.uv.xy).rgb;`;//todo,检查以下是否需要解gamma 20250921
-                            // replactString = `albedo =pow( textureSample(u_albedoTexture,u_Sampler,fsInput.uv.xy).rgb,vec3f(2.2));`;//todo,检查以下是否需要解gamma 20250921
-                        }
-                        else {
-                            let albedo = this.textures[E_TextureType.albedo] as weVec3;
-                            replactString = ` albedo= vec3f(${albedo[0]},${albedo[1]},${albedo[2]});`;
-                        }
-                        break;
-                    case "$PBR_metallic":
-                        if (flag_texture_metallic) {
-                            replactString = `metallic = textureSample(u_metallicTexture,u_Sampler,fsInput.uv.xy).r;`;
-                        }
-                        else {
-                            let metallic = this.textures[E_TextureType.metallic] as number;
-                            replactString = ` metallic= f32(${metallic});`;
-                        }
-                        break;
-                    case "$PBR_roughness":
-                        if (flag_texture_roughness) {
-                            replactString = `roughness = textureSample(u_roughnessTexture,u_Sampler,fsInput.uv.xy).r;`;
-                        }
-                        else {
-                            let roughness = this.textures[E_TextureType.roughness] as number;
-                            replactString = ` roughness= f32(${roughness});`;
-                        }
-                        break;
-                    case "$PBR_ao":
-                        if (this.textures[E_TextureType.ao]) {
-                            if (flag_texture_ao) {
-                                replactString = `roughness = textureSample(u_roughnessTexture,u_Sampler,fsInput.uv.xy).r; `;
-                            }
-                            else {
-                                let ao = this.textures[E_TextureType.ao] as number;
-                                replactString = ` ao= f32(${ao});`;
-                            }
-                        }
-                        else {
-                            replactString = ` ao= f32(1.0);`;
-                        }
+    }
+    /**
+     * 通用部分的uniform绑定
+     * @param startBinding 
+     * @returns 
+     */
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+        if (this.unifromEntryBundle_Common != undefined) {
+            return this.unifromEntryBundle_Common;
+        }
+        else {
+            let groupAndBindingString: string = "";
+            let binding: number = startBinding;
+            let uniform1: T_uniformGroup = [];
+            let code: string = "";
+            ///////////group binding
+            ////group bindgin sampler 字符串
+            groupAndBindingString += ` @group(1) @binding(${binding}) var u_Sampler : sampler; \n `;
+            //uniform sampler
+            let uniformSampler: GPUBindGroupEntry = {
+                binding: binding,
+                resource: this.sampler,
+            };
+            //uniform sampler layout
+            let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
+                binding: binding,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                sampler: {
+                    type: this._samplerBindingType,
+                },
+            };
+            //添加到resourcesGPU的Map中
+            this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
+            this.mapList.push({ key: uniformSampler, type: "GPUBindGroupLayoutEntry" });
+            //push到uniform1队列
+            uniform1.push(uniformSampler);
+            //+1
+            binding++;
+            //循环绑定纹理
+            for (let i in this.textures) {
+                if (this.textures[i] instanceof Texture && this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+                    //uniform texture
+                    let uniformTexture: GPUBindGroupEntry = {
+                        binding: binding,
+                        resource: this.textures[i].texture.createView(),
+                    };
+                    //uniform texture layout
+                    let uniformTextureLayout: GPUBindGroupLayoutEntry = {
+                        binding: binding,
+                        visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                        texture: this.textures[i].defaultTextureLayout(),
+                        // texture: {
+                        //     sampleType: "float",
+                        //     viewDimension: "2d",
+                        // },
+                    };
+                    //添加到resourcesGPU的Map中
+                    this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
+                    this.mapList.push({ key: uniformTexture, type: "GPUBindGroupLayoutEntry" });
+                    //push到uniform1队列
+                    uniform1.push(uniformTexture);
 
-                        break;
-                    case "$PBR_normal":
-                        if (flag_texture_normal) {
-                            replactString = `normal = textureSample(u_normalTexture,u_Sampler,fsInput.uv.xy).rgb;
-                             normal= getNormalFromMap( fsInput.normal ,normal,fsInput.worldPosition,fsInput.uv);`;
-                        }
-
-                        else {
-                            replactString = `normal = normalize(fsInput.normal);`;
-                        }
-                        break;
-                    case "$PBR_color":
-                        if (this.textures[E_TextureType.color]) {
-                            if (flag_texture_color) {
-                                replactString = `materialColor = textureSample(u_colorTexture,u_Sampler,fsInput.uv.xy);`;
-                            }
-                            else {
-                                let color = this.textures[E_TextureType.color] as weVec3;
-                                replactString = ` materialColor= vec4f(${color[0]},${color[1]},${color[2]},1);`;
-                            }
-                        }
-                        else {
-                            replactString = ` materialColor= vec4f(1.0,1.0,1.0,1.0);`;
-                        }
-                        break;
+                    groupAndBindingString += `@group(1) @binding(${binding}) var u_${i}Texture: texture_2d<f32>;\n`;//u_${i}是texture的名字，指定的三种情况，texture，specularTexture，normalTexture
+                    binding++;
                 }
-                code = code.replaceAll(perOne.replace, replactString);
+            }
+            this.unifromEntryBundle_Common = {
+                bindingNumber: binding,
+                groupAndBindingString: groupAndBindingString,
+                entry: uniform1,
+            };
+            return this.unifromEntryBundle_Common;
+        }
+    }
+    /**
+     * 
+     * @param template 着色器模板
+     * @param startBinding 绑定的起始位置
+     * @returns I_materialBundleOutput
+     */
+    getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
+        let groupAndBindingString: string = "";
+        let binding: number = startBinding;
+        let uniform1: T_uniformGroup = [];
+        let code: string = "";
+
+        {//获取固定uniform序列
+            let uniformBundle = this.getUniformEntryBundleOfCommon(startBinding);
+            uniform1.push(...uniformBundle.entry);
+            binding = uniformBundle.bindingNumber;
+            groupAndBindingString += uniformBundle.groupAndBindingString;
+        }
+        { ////////////////shader 模板格式化部分
+            let flags = this.getFlagTexture();
+            let flag_texture_albedo = flags.flag_texture_albedo;
+            let flag_texture_metallic = flags.flag_texture_metallic;
+            let flag_texture_roughness = flags.flag_texture_roughness;
+            let flag_texture_ao = flags.flag_texture_ao;
+            let flag_texture_normal = flags.flag_texture_normal;
+            let flag_texture_color = flags.flag_texture_color;
+            //add 
+            for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
+                code += perOne.code;
+            }
+            //replace
+            for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
+                if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
+                    code = code.replace(perOne.replace, perOne.replaceCode as string);
+                }
+                else if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
+                    let replactString = "";
+                    switch (perOne.replace) {
+                        case "$PBR_albedo":
+                            if (flag_texture_albedo) {
+                                replactString = `albedo = textureSample(u_albedoTexture,u_Sampler,fsInput.uv.xy).rgb;`;//todo,检查以下是否需要解gamma 20250921
+                                // replactString = `albedo =pow( textureSample(u_albedoTexture,u_Sampler,fsInput.uv.xy).rgb,vec3f(2.2));`;//todo,检查以下是否需要解gamma 20250921
+                            }
+                            else {
+                                let albedo = this.textures[E_TextureType.albedo] as weVec3;
+                                replactString = ` albedo= vec3f(${albedo[0]},${albedo[1]},${albedo[2]});`;
+                            }
+                            break;
+                        case "$PBR_metallic":
+                            if (flag_texture_metallic) {
+                                replactString = `metallic = textureSample(u_metallicTexture,u_Sampler,fsInput.uv.xy).r;`;
+                            }
+                            else {
+                                let metallic = this.textures[E_TextureType.metallic] as number;
+                                replactString = ` metallic= f32(${metallic});`;
+                            }
+                            break;
+                        case "$PBR_roughness":
+                            if (flag_texture_roughness) {
+                                replactString = `roughness = textureSample(u_roughnessTexture,u_Sampler,fsInput.uv.xy).r;`;
+                            }
+                            else {
+                                let roughness = this.textures[E_TextureType.roughness] as number;
+                                replactString = ` roughness= f32(${roughness});`;
+                            }
+                            break;
+                        case "$PBR_ao":
+                            if (this.textures[E_TextureType.ao]) {
+                                if (flag_texture_ao) {
+                                    replactString = `roughness = textureSample(u_roughnessTexture,u_Sampler,fsInput.uv.xy).r; `;
+                                }
+                                else {
+                                    let ao = this.textures[E_TextureType.ao] as number;
+                                    replactString = ` ao= f32(${ao});`;
+                                }
+                            }
+                            else {
+                                replactString = ` ao= f32(1.0);`;
+                            }
+                            break;
+                        case "$PBR_normal":
+                            if (flag_texture_normal) {
+                                replactString = `normal = textureSample(u_normalTexture,u_Sampler,fsInput.uv.xy).rgb;
+                             normal= getNormalFromMap( fsInput.normal ,normal,fsInput.worldPosition,fsInput.uv);`;
+                            }
+                            else {
+                                replactString = `normal = normalize(fsInput.normal);`;
+                            }
+                            break;
+                        case "$PBR_color":
+                            if (this.textures[E_TextureType.color]) {
+                                if (flag_texture_color) {
+                                    replactString = `materialColor = textureSample(u_colorTexture,u_Sampler,fsInput.uv.xy);`;
+                                }
+                                else {
+                                    let color = this.textures[E_TextureType.color] as weVec3;
+                                    replactString = ` materialColor= vec4f(${color[0]},${color[1]},${color[2]},1);`;
+                                }
+                            }
+                            else {
+                                replactString = ` materialColor= vec4f(1.0,1.0,1.0,1.0);`;
+                            }
+                            break;
+                    }
+                    code = code.replaceAll(perOne.replace, replactString);
+                }
             }
         }
         let outputFormat: I_singleShaderTemplate_Final = {
@@ -305,8 +367,10 @@ export class PBRMaterial extends BaseMaterial {
             binding: binding,
             owner: this,
         }
-        console.log("PBRMaterial getOpacity_Forward()", this.scene.clock.last);
         return { uniformGroup: uniform1, singleShaderTemplateFinal: outputFormat, bindingNumber: binding };
+    }
+    getOpacity_Forward(startBinding: number): I_materialBundleOutput {
+        return this.getOpaqueCodeFS(SHT_materialPBRFS_mergeToVS, startBinding);
     }
     getOpacity_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
         let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPBRFS_MSAA_mergeToVS, startBinding);
@@ -319,27 +383,52 @@ export class PBRMaterial extends BaseMaterial {
     getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
-    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
-        throw new Error("Method not implemented.");
-    }
+
+    /**
+     * PBR的透明，目前只考虑alpha透明，不考虑物理透明。
+     * @param renderObject 
+     * @param _startBinding 
+     */
     getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
     getFS_TTPF(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
+    /**
+     * todo,20251022,Blend部分未配置
+     * 透明PBR的不透明部分。与不透明基本相同，只是需要判断透明情况（alpha透明，不考虑物理透明），不透明部分为1.0（按照alpha 或alpha test进行）。
+     * @param _startBinding number
+     * @return I_materialBundleOutput
+     */
     getFS_TO(_startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
-    getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
-        throw new Error("Method not implemented.");
-    }
-    getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
-        throw new Error("Method not implemented.");
-    }
+    /**
+     * 延迟渲染的不透明部分。与不透明基本相同。更简单没有光影。
+     * @param startBinding 
+     * @return I_materialBundleOutput
+     */
     getFS_TO_DeferColor(startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
+    /**
+     * 与不透明的MSAA基本相同，在shader（SHT）中增加alpha test判断。
+     * @param startBinding number 
+     * @return I_BundleOfMaterialForMSAA
+     */
+    getFS_TO_MSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+    /**
+     * 延迟渲染的不透明部分的MSAA。与不透明的MSAA基本相同，只是在shader（SHT）中增加alpha test判断。
+     * @param startBinding number 
+     * @return I_BundleOfMaterialForMSAA
+     */
+    getFS_TO_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
+        throw new Error("Method not implemented.");
+    }
+
     formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): string {
         throw new Error("Method not implemented.");
     }

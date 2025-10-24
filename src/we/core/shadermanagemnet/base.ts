@@ -85,7 +85,10 @@ export interface I_ShaderTemplate {
     // material?: I_singleShaderTemplateWithOwner,
     // DCG?: I_singleShaderTemplateWithOwner,
 }
-
+/**
+ * shader模板的单个内容
+ * 比如：scene，entity，material这些组成部分
+ */
 export interface I_singleShaderTemplate_Final {
     templateString: string,
     groupAndBindingString: string,
@@ -235,7 +238,7 @@ export var SHT_replaceDefer: I_shaderTemplateReplace = {
 
 }
 
-export var SHT_replaceFSOutput: I_shaderTemplateReplace =
+export var SHT_replaceGBufferFSOutput: I_shaderTemplateReplace =
 {
     name: "colorFS.output content",
     replace: "$fsOutput",           //

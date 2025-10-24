@@ -29,10 +29,11 @@ export enum E_GBufferNames {
     id = "id",
     normal = "normal",
     worldPosition = "worldPosition",
-    X = "X",
-    Y = "Y",
-    Z = "Z",
-    ru_ma_AO = "ru_ma_AO",
+    // X = "X",
+    // Y = "Y",
+    // Z = "Z",
+    RMAO = "RMAO",
+    albedo = "albedo",
 }
 /**GBuffer的组成描述的集合（最终的集合） */
 export interface I_GBufferName {
@@ -60,7 +61,7 @@ export var V_ForwardGBufferNames: I_GBufferName = {
     [E_GBufferNames.depth]: {
         "format": "depth32float",
         "label": "GBuffer depth attachment:",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING 
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
     [E_GBufferNames.color]: {
         "format": V_weLinearFormat,
@@ -73,18 +74,23 @@ export var V_ForwardGBufferNames: I_GBufferName = {
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
     [E_GBufferNames.normal]: {
-        "format": "rgba8unorm",
+        "format": "rgba16float",
         "label": "GBuffer normal :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
-    [E_GBufferNames.ru_ma_AO]: {
-        "format": V_weLinearFormat,
-        "label": "GBuffer ru_ma_AO :",
+    [E_GBufferNames.RMAO]: {
+        "format": "rgba16float",
+        "label": "GBuffer RMAO :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
     [E_GBufferNames.worldPosition]: {
         "format": "rgba32float",
         "label": "GBuffer worldPosition :",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    },
+    [E_GBufferNames.albedo]: {
+        "format": "rgba16float",
+        "label": "GBuffer albedo :",
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
     },
     // [E_GBufferNames.X]: {
@@ -277,7 +283,7 @@ export function getOpacity_GBufferOfUniformOfDefer(binding: number, scene: Scene
             case "id":
                 sampleType = "uint";
                 break;
-            case "ru_ma_AO":
+            case "RMAO":
                 sampleType = "float";
                 break;
             case "normal":
