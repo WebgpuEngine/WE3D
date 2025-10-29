@@ -18,11 +18,11 @@ fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
     $PBR_roughness
     $PBR_ao
     $PBR_normal
-
+    //defer 
+    $encodeLightAndShadow
     var output : ST_GBuffer;
     $fsOutput                         //占位符
- 
-    return output;
+     return output;
 }
 
 //PBRMSAAinfo.fs.wgsl   ,end

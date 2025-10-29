@@ -14,16 +14,19 @@ export class ResourceManagerOfGPU {
     indexes: Map<any, GPUBuffer> = new Map();//GPUBuffer默认使用uint32的格式。
     /**单个uniform的ArrayBuffer 对应的GPUBuffer 资源管理器 */
     uniformBuffer: Map<any, GPUBuffer> = new Map();
+
     /////////////////////////////////////////////////////////////////////////////////////////
     // 单个（每个binding）uniform-->GPUBindGroupLayoutEntry
     /**一个bind group 内的对应的layout */
     entriesToEntriesLayout: Map<T_uniformEntries, GPUBindGroupLayoutEntry> = new Map();
+
     /////////////////////////////////////////////////////////////////////////////////////////
     // uniform[]-->BindGroup-->BindGroupLayout
     /**uniformGrpu 对应的 BindGrouop */
     uniformGroupToBindGroup: Map<T_uniformGroup, GPUBindGroup> = new Map();
     /** bindGroup 对应的layout */
     bindGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map();
+
     /////////////////////////////////////////////////////////////////////////////////////////
     //透明渲染相关
     cameraToEntryOfDepthTT: Map<string, T_uniformEntries> = new Map();
@@ -50,10 +53,12 @@ export class ResourceManagerOfGPU {
     systemGroup0ByID: Map<string, GPUBindGroup> = new Map();
     /**systemGroup0 对应的 GPUBindGroupLayout */
     systemGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map();
+    
     cleanSystemUniform() {
         this.systemGroup0ByID.clear();
         this.systemGroupToGroupLayout.clear();
     }
+
     /////////////////////////////////////////////////////////////////////////////////////////
     //shadowmap
     /**shadowmap（light 的mergeUUID） 对应的 GPUBindGroup */
@@ -72,10 +77,15 @@ export class ResourceManagerOfGPU {
     /**string 可以是sampler的名称等，比如通用的 linear,nearest ,也可以是定制的，linear-mipmap*/
     samplerOfString: Map<string | GPUSamplerDescriptor, GPUSampler> = new Map();
     samplerToBindGroupLayoutEntry: Map<GPUSampler, GPUSamplerBindingLayout> = new Map();
+
     //////////////////////////////////////////////////////////////////////////////////////////
     // 透明渲染
     TT2TTP:Map<DrawCommand,DrawCommand> = new Map();
     TT2TTPF:Map<DrawCommand,DrawCommand> = new Map();
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //shaderModule
+    shaderModuleOfString: Map<string, GPUShaderModule> = new Map();
 
     has(key: any, _kind?: string) {
         if (_kind) {

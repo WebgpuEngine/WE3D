@@ -207,7 +207,7 @@ export class PhongMaterial extends BaseMaterial {
       for (let perOne of template.material!.replace as I_shaderTemplateReplace[]) {
         let replaceString = "";
         if (perOne.replaceType == E_shaderTemplateReplaceType.replaceCode) {
-          code = code.replace(perOne.replace, perOne.replaceCode as string);
+          code = code.replaceAll(perOne.replace, perOne.replaceCode as string);
         }
         else if (perOne.replaceType == E_shaderTemplateReplaceType.value) {
           switch (perOne.replace) {
@@ -261,8 +261,8 @@ export class PhongMaterial extends BaseMaterial {
               let specular = "";
               if (flag_spec) {
                 replaceString = `
-                let specc= textureSample(u_specularTexture, u_Sampler,  uv).rgb ;
-                specularColor  = light_atten_coff * u_bulinphong.metalness *specc*    spec * lightColor;\n`;//spec是高光系数，然后乘以高光纹理，产生高光差异
+                inSpecularColor= textureSample(u_specularTexture, u_Sampler,  uv).rgb ;`
+                // specularColor  = light_atten_coff * u_bulinphong.metalness *specc*    spec * lightColor;\n`;//spec是高光系数，然后乘以高光纹理，产生高光差异
               }
               else {
                 replaceString = "  ";

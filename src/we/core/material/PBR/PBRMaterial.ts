@@ -6,7 +6,7 @@ import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialPBRFS_mergeToVS, SHT_materialPBRFS_MSAA_info_mergeToVS, SHT_materialPBRFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
+import { SHT_materialPBRFS_defer_mergeToVS, SHT_materialPBRFS_defer_MSAA_mergeToVS, SHT_materialPBRFS_mergeToVS, SHT_materialPBRFS_MSAA_info_mergeToVS, SHT_materialPBRFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
 import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
 import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
@@ -344,16 +344,17 @@ export class PBRMaterial extends BaseMaterial {
                             break;
                         case "$PBR_color":
                             if (this.textures[E_TextureType.color]) {
-                                if (flag_texture_color) {
+                                if (flag_texture_color) {//有颜色纹理
                                     replactString = `materialColor = textureSample(u_colorTexture,u_Sampler,fsInput.uv.xy);`;
                                 }
-                                else {
+                                else {//有颜色设定
                                     let color = this.textures[E_TextureType.color] as weVec3;
                                     replactString = ` materialColor= vec4f(${color[0]},${color[1]},${color[2]},1);`;
                                 }
                             }
-                            else {
-                                replactString = ` materialColor= vec4f(1.0,1.0,1.0,1.0);`;
+                            else {//没有颜色纹理时同时没有设定颜色，
+                                // replactString =`materialColor=vec4f(albedo ,1);`;//使用albedo作为颜色,颜色双倍加深
+                                replactString =` materialColor= vec4f(1.0,1.0,1.0,1.0);`;//需要使用白色作为基准数值
                             }
                             break;
                     }
@@ -378,10 +379,12 @@ export class PBRMaterial extends BaseMaterial {
         return { MSAA, inforForward };
     }
     getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
-        throw new Error("Method not implemented.");
+        let MSAA: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPBRFS_defer_MSAA_mergeToVS, startBinding);
+        let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialPBRFS_MSAA_info_mergeToVS, startBinding);
+        return { MSAA, inforForward };
     }
     getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
+        return this.getOpaqueCodeFS(SHT_materialPBRFS_defer_mergeToVS, startBinding);
     }
 
     /**

@@ -57,7 +57,6 @@ export interface IV_DrawCommand extends IV_BaseCommand {
      */
     IDS?: I_DrawCommandIDs,
     transparentType?: E_TransparentType,
-
 }
 
 export class DrawCommand {

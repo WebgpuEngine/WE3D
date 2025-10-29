@@ -136,6 +136,9 @@ fn processColorToSRGB(hdrLinearColor : vec3f) -> vec3f  {
     let displayColor = linearToSRGB(ldrLinear);    //转换到sRGB
     return displayColor;
 }
+fn copyColorToSRGB(hdrLinearColor : vec3f) -> vec3f  {
+    return hdrLinearColor;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // 验证矩阵正确性：检查白色转换是否准确（线性sRGB白色应转换为Display P3白色）

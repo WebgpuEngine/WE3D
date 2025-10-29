@@ -43,9 +43,9 @@ fn decodeF32ToRGBAu8(encoded: f32) -> vec4f {
 
 
 //////////////////////////////////////////////////////////////////////////////
-//rgba16float的f16中转格式的编解码 
+//rgba16float的f16中转格式的编解码   
 //////////////////////////////////////////////////////////////////////////////
-
+//f32x2->f16
 // 输入：从 RGB8unorm 采样的 vec3f（r/g 范围 [0.0,1.0]）(red,green只是表述形式，可任意u8,但一定是0~255)
 // 输出：编码到 rgba16float 的 f16
 fn encodeU8inF32x2ToF16(red: f32,green: f32) -> f32 {
@@ -54,7 +54,7 @@ fn encodeU8inF32x2ToF16(red: f32,green: f32) -> f32 {
     let g_u8 = clamp(u32(green * 255.0 + 0.5), 0u, 255u);
     return    encodeU8x2ToF16(r_u8,g_u8);
 }
-
+//u8x2->f16
 // 输入：从 U32(必须是u8,一定是0~255)
 // 输出：编码到 rgba16float 的 f16
 fn encodeU8x2ToF16(red: u32,green: u32) -> f32 {
@@ -65,7 +65,7 @@ fn encodeU8x2ToF16(red: u32,green: u32) -> f32 {
     let alpha = f32(combined);
     return  alpha;
 }
-
+//f16->u8x2
 // 输入：从 rgba16float 采样的 f16（范围[0,1]，实际上是 [0,65535]）
 // 输出：解码为 vec2u（每个通道 [0.0, 1.0]，对应 RGB8unorm 格式）
 fn decodeF16ToU8x2(data: f32) -> vec2u {
@@ -79,6 +79,23 @@ fn decodeF16ToU8x2(data: f32) -> vec2u {
     // 步骤3：转换回 [0.0,1.0] 范围（匹配 RGB8unorm 原始格式）
     return vec2u(r_u8, g_u8);
 }
+//f16->u8x2
+// 输入：从 rgba16float 采样的 f16（范围[0,1]，实际上是 [0,65535]）
+// 输出：解码为 vec2u（每个通道 [0.0, 1.0]，对应 RGB8unorm 格式）
+fn decodeF16ToF32x2(data: f32) -> vec2f {
+    // 步骤1:提取浮点数，转换回16位整数（四舍五入抵消精度误差）
+    let combined = clamp(u32(round(data)), 0u, 65535u);
+    
+    // 步骤2：拆分出 R（高8位）和 G（低8位）
+    let r_u8 = (combined >> 8u) & 0xFFu;  // 提取高8位
+    let g_u8 = combined & 0xFFu;          // 提取低8位
+    
+    // 步骤3：转换回 [0.0,1.0] 范围（匹配 RGB8unorm 原始格式）
+    return vec2f(f32(r_u8)/ 255.0, f32(g_u8)/ 255.0) ;
+}
+//////////////////////////////////////////////////////////////////////////////
+//u32 8bit <-> f32
+//////////////////////////////////////////////////////////////////////////////
 // 输入：从 U32(必须是u8,一定是0~255)
 // 输出：转换为 [0.0,1.0] 范围的 f32
 fn  U8ToF32(u8: u32) -> f32 {
@@ -90,6 +107,22 @@ fn F32ToU8(f32Value: f32) -> u32 {
     return clamp(u32(f32Value * 255.0 + 0.5), 0u, 255u);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//rgba16float的f16中转格式的编解码   emissive.b + 光影参数  ->f16
+//////////////////////////////////////////////////////////////////////////////
+
+// 输入：f32 emissiveB(必须是0~1),u32(必须是u8,一定是0~255)
+// 输出：编码到 rgba16float 的 f16
+fn encodeFromF32AndU8ToF16(emissiveB: f32,lightAndShadow: u32) -> f32 {
+    // 步骤1：将 R/G 从 [0.0,1.0] 转换为 [0,255] 的 u8
+    let height_8 = F32ToU8(emissiveB);
+    let low_8 = lightAndShadow;
+    return    encodeU8x2ToF16(height_8,low_8);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//light and shadow 参数编码
+//////////////////////////////////////////////////////////////////////////////
 //light and shadow 参数编码: 4xU8 到 f16
 // 输入：4个u8(每个u8必须是0~255)
 // 输出：编码到 rgba16float 的 f16
@@ -112,9 +145,9 @@ fn encodeLightAndShadowFromU8x4ToF16(
     // 4. 转换为float16可精确表示的浮点数（关键：直接用f32存储整数，避免小数误差）
     // 因为255 < 2048，float16可精确存储该范围的整数
     let result_f16 = f32(clamped);  // 注意：此处不除以255.0，直接存储整数
-    
     return result_f16;
 }
+
 
 // light and shadow 参数解码为:f16 到 4xU8
 // 输入：从 rgba16float 采样的 f16（Alpha 通道存储编码值）
@@ -134,6 +167,7 @@ fn decodeLightAndShadowFromF16ToU8x4(oneF16: f32) -> vec4u {
 //////////////////////////////////////////////////////////////////////////////
 
 // light and shadow 参数编码为 f32（范围[0,1]，实际上是 [0,255]）
+// u8x4 -> f32(8bit )
 // 输入：4个u8(每个u8必须是0~255)
 // 输出：编码到 rgba8unorm 的 f32（范围[0,1]，实际上是 [0,255]）
 fn encodeLightAndShadowFromU8x4ToF32(
@@ -147,27 +181,12 @@ fn encodeLightAndShadowFromU8x4ToF32(
     let s = clamp(shadowKind, 0u, 7u);          // 3位：[0,7]
     let l = clamp(acceptlight, 0u, 1u);           // 1位：[0,1]
     let m = clamp(materialKind, 0u, 7u);    // 3位：[0,7]
-    
     // 2. 按位打包（总8位，符合u8范围）
     let packedU8= (a << 7u) | (s << 4u) | (l << 3u) | m;
-
     return f32(packedU8)/255.0;
 }
-
-// light and shadow 参数从 f32 （范围[0,1]，实际上是 [0,255]）解码为 4 个 u8
-// 输入：从 rgba8unorm 采样的 f32（范围[0,1]，实际上是 [0,255]）
-// 输出：恢复的 4 个 u8 变量（acceptShadow, shadowKind,acceptlight, materialKind ）
-fn decodeLightAndShadowFromF32ToU8x4(packed: f32) -> vec4u {
-     let packedU8 = clamp(u32(packed * 255.0 + 0.5), 0u, 255u);
-    // 1. 提取每个变量（先掩码再移位）
-    let acceptShadow = (packedU8 >> 7u) & 1u;    // 取第7位（1位）
-    let shadowKind = (packedU8 >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
-    let acceptlight = (packedU8 >> 3u) & 1u;           // 取第3位（1位）
-    let materialKind = packedU8 & 7u;            // 取第0~2位（3位，掩码0b111=7）
-    return vec4u(acceptShadow, shadowKind,acceptlight, materialKind );
-}
-
 // light and shadow 参数编码为 u32（范围[0,255]）,按照位操作
+// 4*u8 -> u32(8bit )
 // 输入：4个u8(每个u8必须是0~255)
 // 输出：编码到 rgba8unorm 的 u32（范围[0,255]）
 fn encodeLightAndShadowFromU8x4ToU8bit(
@@ -186,7 +205,22 @@ fn encodeLightAndShadowFromU8x4ToU8bit(
     return packedU8;
 }
 
+// light and shadow 参数从 f32 （范围[0,1]，实际上是 [0,255]）解码为 4 个 u8
+// f32->vec4u( 4xU8)
+// 输入：从 rgba8unorm 采样的 f32（范围[0,1]，实际上是 [0,255]）
+// 输出：恢复的 4 个 u8 变量（acceptShadow, shadowKind,acceptlight, materialKind ）
+fn decodeLightAndShadowFromF32ToU8x4(packed: f32) -> vec4u {
+     let packedU8 = clamp(u32(packed * 255.0 + 0.5), 0u, 255u);
+    // 1. 提取每个变量（先掩码再移位）
+    let acceptShadow = (packedU8 >> 7u) & 1u;    // 取第7位（1位）
+    let shadowKind = (packedU8 >> 4u) & 7u;          // 取第4~6位（3位，掩码0b111=7）
+    let acceptlight = (packedU8 >> 3u) & 1u;           // 取第3位（1位）
+    let materialKind = packedU8 & 7u;            // 取第0~2位（3位，掩码0b111=7）
+    return vec4u(acceptShadow, shadowKind,acceptlight, materialKind );
+}
+
 // light and shadow 参数从 u32 （范围是 [0,255]）解码为 4 个 u8,按照位操作
+//  u32(8bit )->vec4u( 4xU8)
 // 输入：从 rgba8unorm 采样的 u32（范围[0,255]）
 // 输出：恢复的 4 个 u8 变量（acceptShadow, shadowKind,acceptlight, materialKind ）
 fn decodeLightAndShadowFromU8bitToU8x4(packedU8: u32) -> vec4u {

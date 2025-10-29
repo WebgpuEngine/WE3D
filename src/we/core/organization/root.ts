@@ -576,7 +576,6 @@ export abstract class RootOfGPU extends RootOfOrganization {
         }
         if (child.type == "Camera") {
             this.scene.cameraManager.add(child as BaseCamera);
-            this.scene.renderManager.initRenderCommandForCamera(child.UUID);
 
         }
         else if (child.type == "Light") {

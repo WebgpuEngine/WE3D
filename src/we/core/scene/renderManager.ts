@@ -319,7 +319,10 @@ export class RenderManager {
             cameraCommand.dynmaicOrder = [];
         }
 
-        this.RC[E_renderPassName.defer] = {};
+        for (let UUID in this.RC[E_renderPassName.defer]) {
+            this.RC[E_renderPassName.defer][UUID as E_renderPassName] = [];
+        }
+        
         for (let UUID in this.RC[E_renderPassName.transparent]) {
             this.RC[E_renderPassName.transparent][UUID as E_renderPassName] = [];
         }
@@ -727,6 +730,16 @@ export class RenderManager {
             }
         }
     }
+    async renderDeferDC(list: I_renderDrawOfTimeline) {
+        for (let i in list) {
+            let perOne = list[i];
+            for (let perCommand of perOne) {
+                await perCommand.submit();
+            }
+
+        }
+    }
+
     /**
      * 渲染
      * 1、按照渲染属性进行，按照各自通道的规则执行
@@ -764,7 +777,7 @@ export class RenderManager {
         else
             this.renderForwaredDC(this.RC[E_renderPassName.forward]);
         //defer render
-        await this.renderTimelineDC(this.RC[E_renderPassName.defer]);
+        await this.renderDeferDC(this.RC[E_renderPassName.defer]);
         //透明enity
         await this.renderTransParentDC(this.RC[E_renderPassName.transparent]);
         //sprite

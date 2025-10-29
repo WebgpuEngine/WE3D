@@ -1,6 +1,4 @@
-//system
-import systemOfCameraWGSL from "../shader/system/system.wgsl?raw"
-var systemOfCamera = systemOfCameraWGSL.toString();
+
 ///////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -90,11 +88,15 @@ export interface I_ShaderTemplate {
  * 比如：scene，entity，material这些组成部分
  */
 export interface I_singleShaderTemplate_Final {
+    /** shader模板的字符串 */
     templateString: string,
+    /** shader模板的绑定字符串 */
     groupAndBindingString: string,
-    owner: any,
+    /** shader模板的绑定当前(已用的)值 */
     binding?: number,
+    /** shader模板是否动态 */
     dynamic?: boolean,
+     owner: any,
 }
 /**
  * 最终的模板内容
@@ -102,9 +104,10 @@ export interface I_singleShaderTemplate_Final {
 export interface I_ShaderTemplate_Final {
     [name: string]: I_singleShaderTemplate_Final
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-//struct 定义
+//////////////////////////////////////////////////////////////////////////////////
+//GBuffer
 
+//struct 定义
 import st_GufferWGSL from "../shader/gbuffers/st_gbuffer.fs.wgsl?raw";
 export var WGSL_st_Guffer = st_GufferWGSL.toString();
 
@@ -133,102 +136,8 @@ export var WGSL_replace_MSAA_gbuffer_output = replace_MSAA_gbuffer_outputWGSL.to
 import replace_MSAAinfo_gbuffer_outputWGSL from "../shader/gbuffers/replace_MSAAinfo_gbuffer_output.fs.wgsl?raw";
 export var WGSL_replace_MSAAinfo_gbuffer_output = replace_MSAAinfo_gbuffer_outputWGSL.toString();
 
-
-
-
-///////////////////////////////////////////////////////////////////////////
-//scene 和DCG 通用部分
-
-//场景相机的系统变量
-export var SHT_ScenOfCamera: I_singleShaderTemplate = {
-    add: [{
-        name: "system",
-        code: systemOfCamera,
-    }],
-    replace: [
-        {
-            name: "lightNumber",
-            replace: "$lightNumber",
-            replaceType: E_shaderTemplateReplaceType.value,                        //replaceType=value,替换为程序的变量
-        },
-        {
-            name: "shadowMapNumber",
-            replace: "$lightNumberShadowNumber",
-            replaceType: E_shaderTemplateReplaceType.value,
-        },
-        {
-            name: "shadowDepthTextureSize",
-            replace: "override shadowDepthTextureSize : f32 = 1024.0;",
-            replaceType: E_shaderTemplateReplaceType.value,
-        },
-    ],
-};
-//ref DCG 反射location
-export var SHT_refDCG: I_singleShaderTemplate = {
-    replace: [
-        {
-            name: "refName",                    //创建的反射的其他location，使用entity的DCG的反射location
-            replace: "$st_location_ref",
-            replaceType: E_shaderTemplateReplaceType.value,
-            description: "创建location,使用entity的DCG的反射location到WGSL中",
-        },
-        {
-            name: "refName",
-            replace: "$position",
-            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
-            check: "position",
-            /**
-             * 检查是否有position属性
-             * 反射属性中没有，false，使用selectCode[0]
-             * 反射属性中有，true，使用selectCode[1]
-             */
-            selectCode: [
-                " let position= vec3f(0.0,0.0,0.0); \n ",
-                " let position = attributes.position; \n ",
-            ],
-
-        },
-        {
-            name: "refName",
-            replace: "$color",
-            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
-            check: "color",
-            selectCode: [
-                " let color= vec3f(0.0,0.0,0.0); \n ",
-                " let color = attributes.color; \n ",
-            ],
-        },
-        {
-            name: "refName",
-            replace: "$normal",
-            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
-            check: "normal",
-            selectCode: [
-                " let normal= vec3f(0.0,0.0,0.0); \n ",
-                " let normal = attributes.normal; \n ",
-
-            ],
-
-        },
-        {
-            name: "refName",
-            replace: "$uv",
-            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
-            check: "uv",
-            selectCode: [
-                " let uv= vec2f(0.0,0.0); \n ",
-                " let uv = attributes.uv; \n ",
-            ],
-        },
-    ]
-};
-
-//////////////////////////////////////////////////////////////////////////////////
-//GBuffer
-
 import deferDepthWGSL from "../shader/defer/replace_deferDepthCompare.fs.wgsl?raw";
 var deferDepthFS = deferDepthWGSL.toString();
-
 //defer渲染的深度比较,未使用，但有导入引用
 export var SHT_replaceDefer: I_shaderTemplateReplace = {
     name: "replaceDefer",
@@ -321,3 +230,104 @@ export var SHT_addPCSS: I_shaderTemplateAdd = {
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+//function 定义
+import encodeDecodeFunctionWGSL from "../shader/function/encodeAndDecode.wgsl?raw";
+var encodeDecodeFunction = encodeDecodeFunctionWGSL.toString();
+export var SHT_addEncodeDecodeFunction: I_shaderTemplateAdd = {
+    name: "encodeDecodeFunction",
+    code: encodeDecodeFunction,
+}
+///////////////////////////////////////////////////////////////////////////
+//scene 和DCG 通用部分
+
+//system
+import systemOfCameraWGSL from "../shader/system/system.wgsl?raw"
+var systemOfCamera = systemOfCameraWGSL.toString();
+//场景相机的系统变量
+export var SHT_ScenOfCamera: I_singleShaderTemplate = {
+    add: [
+        {
+            name: "system",
+            code: systemOfCamera,
+        },
+        SHT_addEncodeDecodeFunction,
+    ],
+    replace: [
+        {
+            name: "lightNumber",
+            replace: "$lightNumber",
+            replaceType: E_shaderTemplateReplaceType.value,                        //replaceType=value,替换为程序的变量
+        },
+        {
+            name: "shadowMapNumber",
+            replace: "$lightNumberShadowNumber",
+            replaceType: E_shaderTemplateReplaceType.value,
+        },
+        {
+            name: "shadowDepthTextureSize",
+            replace: "override shadowDepthTextureSize : f32 = 1024.0;",
+            replaceType: E_shaderTemplateReplaceType.value,
+        },
+
+    ],
+};
+//ref DCG 反射location
+export var SHT_refDCG: I_singleShaderTemplate = {
+    replace: [
+        {
+            name: "refName",                    //创建的反射的其他location，使用entity的DCG的反射location
+            replace: "$st_location_ref",
+            replaceType: E_shaderTemplateReplaceType.value,
+            description: "创建location,使用entity的DCG的反射location到WGSL中",
+        },
+        {
+            name: "refName",
+            replace: "$position",
+            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
+            check: "position",
+            /**
+             * 检查是否有position属性
+             * 反射属性中没有，false，使用selectCode[0]
+             * 反射属性中有，true，使用selectCode[1]
+             */
+            selectCode: [
+                " let position= vec3f(0.0,0.0,0.0); \n ",
+                " let position = attributes.position; \n ",
+            ],
+
+        },
+        {
+            name: "refName",
+            replace: "$color",
+            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
+            check: "color",
+            selectCode: [
+                " let color= vec3f(0.0,0.0,0.0); \n ",
+                " let color = attributes.color; \n ",
+            ],
+        },
+        {
+            name: "refName",
+            replace: "$normal",
+            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
+            check: "normal",
+            selectCode: [
+                " let normal= vec3f(0.0,0.0,0.0); \n ",
+                " let normal = attributes.normal; \n ",
+
+            ],
+
+        },
+        {
+            name: "refName",
+            replace: "$uv",
+            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
+            check: "uv",
+            selectCode: [
+                " let uv= vec2f(0.0,0.0); \n ",
+                " let uv = attributes.uv; \n ",
+            ],
+        },
+    ]
+};

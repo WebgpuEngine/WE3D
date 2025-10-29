@@ -12,8 +12,6 @@ import {
     SHT_replaceGBufferFSOutput,
     SHT_replaceGBufferMSAA_FSOutput,
     SHT_replaceGBufferMSAAinfo_FSOutput,
-    WGSL_replace_MSAA_gbuffer_output,
-    WGSL_replace_MSAAinfo_gbuffer_output,
     WGSL_st_Guffer,
     WGSL_st_MSAA_Guffer,
     WGSL_st_MSAAinfo_Guffer
@@ -21,12 +19,110 @@ import {
 
 import add_PBR_function_WGSL from "../../shader/material/PBR/PBRfunction.wgsl?raw"
 var WGSL_add_PBR_function = add_PBR_function_WGSL.toString();
-var SHT_add_PBR_function: I_shaderTemplateAdd =
+//PBR 的光影函数单项
+export var SHT_add_PBR_function: I_shaderTemplateAdd =
 {
     name: "PBR_function",
     code: WGSL_add_PBR_function
 }
+//PBR forward的光影Code内容单项
+var old_SHT_replace_PBR_mainColorCode: I_shaderTemplateReplace =
+{
+    name: "mainColorCode",
+    replace: "$mainColorCode",
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: `   
+    let F0 = vec3(0.04);
+    let wo = normalize(defaultCameraPosition - fsInput.worldPosition);
+    var Lo = vec3(0.0);
+    if(U_lights.lightNumber >0)
+    {
+        for (var i : u32 = 0; i < U_lights.lightNumber; i = i + 1)
+        {
+            let onelight = U_lights.lights[i ];  
 
+            let lightColor = U_lights.lights[i].color;
+            let lightPosition = U_lights.lights[i].position;
+            let lightIntensity = U_lights.lights[i].intensity;
+            var distance = 0.0;                         //方向光没有距离
+            var attenuation = lightIntensity;           //方向光没有衰减
+            var wi = U_lights.lights[i].direction;      //方向光
+            if(U_lights.lights[i].kind!=0)
+            {
+                wi = normalize(lightPosition - fsInput.worldPosition);
+                distance = length(lightPosition - fsInput.worldPosition);
+                attenuation = lightIntensity / (distance * distance);       //光衰减,这里光是平方,todo:需要考虑gamma校正
+            }
+            //计算光照强度
+            let cosTheta = max(dot(normal, wi), 0.0);
+            let radiance = lightColor * attenuation * cosTheta;         //光强
+            //计算 DFG
+            let halfVector = normalize(wi + wo);
+            let f0 = mix(F0, albedo, metallic);
+            let F = fresnelSchlick(max(dot(halfVector, wo), 0.0), f0);
+            let NDF = DistributionGGX(normal, halfVector, roughness);
+            let G = GeometrySmith(normal, wo, wi, roughness);
+            //计算Cook-Torrance BRDF:
+            let numerator = NDF * G * F;
+            let denominator = 4.0 * max(dot(normal, wo), 0.0) * max(dot(normal, wi), 0.0) + 0.0001;
+            let specular = numerator / denominator;
+            //kS is equal to Fresnel
+            let kS = F;
+            var kD = vec3(1.0) - kS;
+            kD *= 1.0 - metallic;
+            //scale light by NdotL   L=wi
+            let NdotL = max(dot(normal, wi), 0.0);
+            //add to outgoing radiance Lo
+            let diffuse = (kD * albedo / PI) * radiance * NdotL;//only diffuse light is currently implemented
+            //let ambient = getAmbientColor(albedo, ao);
+            var visibility = getVisibilityOflight(onelight,fsInput.worldPosition,normal); 
+            Lo += (diffuse + specular) * radiance* visibility;
+            // Lo += (diffuse + specular) * radiance;
+            //Lo=vec3f(metallic);          
+        }
+    }
+    let ambient = getAmbientColor(albedo, ao);
+    materialColor=vec4f(  materialColor.rgb*(ambient + Lo),1);`
+}
+var SHT_replace_PBR_mainColorCode: I_shaderTemplateReplace =
+{
+    name: "mainColorCode",
+    replace: "$mainColorCode",
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: `
+    materialColor = calcLightAndShadowOfPBR(
+        worldPosition,
+        normal,
+        albedo,
+        metallic,
+        roughness,
+        ao,
+        materialColor,
+        emissiveRGB,
+        emissiveIntensity
+        );
+    `
+}
+var SHT_replace_PBR_mainColorCode_null: I_shaderTemplateReplace =
+{
+    name: "mainColorCode",
+    replace: "$mainColorCode",
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: "",
+}
+//PBR forward的光影参数编码单项
+var SHT_replace_PBR_LightAndShadow_encode: I_shaderTemplateReplace =
+{
+    name: "encodeLightAndShadow",
+    replace: "$encodeLightAndShadow",
+    replaceType: E_shaderTemplateReplaceType.replaceCode,
+    replaceCode: `acceptShadow = 1;
+    shadowKind = 0;
+    acceptlight = 1;
+    materialKind = 1;
+    //延迟渲染的GBuffer输出,8位. 每个位分别表示;接受阴影、阴影、其他、材质类型
+    defer_4xU8InF16=encodeLightAndShadowFromU8x4ToU8bit(acceptShadow,shadowKind,acceptlight,materialKind);`
+}
 
 import PBRMaterialWGSL from "../../shader/material/PBR/PBR.fs.wgsl?raw"
 var PBRFS = PBRMaterialWGSL.toString();
@@ -36,7 +132,7 @@ var PBRFS = PBRMaterialWGSL.toString();
  */
 export var SHT_materialPBRFS_mergeToVS: I_ShaderTemplate = {
     material: {
-        owner: "PhongMaterial",
+        owner: "PBRMaterial",
         add: [
             {
                 name: "fsOnput",
@@ -53,13 +149,14 @@ export var SHT_materialPBRFS_mergeToVS: I_ShaderTemplate = {
             SHT_addPCSS,
         ],
         replace: [
-            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
-            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
-            // {
+            // {//进行uniform与纹理的材质统一化，todo
             //     name: "PBR_Uniform",
             //     replace: "$PBR_Uniform",
             //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
+            // },       
+            SHT_replace_PBR_mainColorCode,
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
+            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
                 name: "PBR_albedo",
                 replace: "$PBR_albedo",
@@ -90,14 +187,15 @@ export var SHT_materialPBRFS_mergeToVS: I_ShaderTemplate = {
                 replace: "$PBR_color",
                 replaceType: E_shaderTemplateReplaceType.value,
             },
-            //缺少alpha 透明处理
+            SHT_replace_PBR_LightAndShadow_encode,
+            //缺少alpha 透明处理，todo
         ],
     }
 }
 
 export var SHT_materialPBRFS_MSAA_mergeToVS: I_ShaderTemplate = {
     material: {
-        owner: "PhongMaterial",
+        owner: "PBRMaterial",
         add: [
             {
                 name: "fsOnput",
@@ -114,6 +212,7 @@ export var SHT_materialPBRFS_MSAA_mergeToVS: I_ShaderTemplate = {
             SHT_addPCSS,
         ],
         replace: [
+            SHT_replace_PBR_mainColorCode,
             SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
             SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
@@ -146,6 +245,7 @@ export var SHT_materialPBRFS_MSAA_mergeToVS: I_ShaderTemplate = {
                 replace: "$PBR_color",
                 replaceType: E_shaderTemplateReplaceType.value,
             },
+            SHT_replace_PBR_LightAndShadow_encode,
         ],
     }
 }
@@ -154,7 +254,7 @@ import PBRMaterialMSAAinfoWGSL from "../../shader/material/PBR/PBRMSAAinfo.fs.wg
 var PBRFS_MSAAinfo = PBRMaterialMSAAinfoWGSL.toString();
 export var SHT_materialPBRFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
     material: {
-        owner: "PhongMaterial",
+        owner: "PBRMaterial",
         add: [
             {
                 name: "fsOnput",
@@ -162,13 +262,14 @@ export var SHT_materialPBRFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
             },
             {
                 name: "fs",
-                code: PBRFS_MSAAinfo,
+                code: PBRFS,
             },
             SHT_addMathBase,
             SHT_addMathTBN,
         ],
         replace: [
-            SHT_replaceGBufferMSAAinfo_FSOutput,                                            // WGSL_replace_MSAAinfo_gbuffer_output部分
+            SHT_replace_PBR_mainColorCode_null,                                         //替换$mainColorCode为空字符串
+            SHT_replaceGBufferMSAAinfo_FSOutput,                                      // WGSL_replace_MSAAinfo_gbuffer_output部分
             SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
             {
                 name: "PBR_albedo",
@@ -195,11 +296,14 @@ export var SHT_materialPBRFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
                 replace: "$PBR_normal",
                 replaceType: E_shaderTemplateReplaceType.value,
             },
-            // {
-            //     name: "PBR_color",
-            //     replace: "$PBR_color",
-            //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
+            SHT_replace_PBR_LightAndShadow_encode,
+            //替换$PBR_color为空字符串
+            {
+                name: "PBR_color",
+                replace: "$PBR_color",
+                replaceType: E_shaderTemplateReplaceType.replaceCode,
+                replaceCode: ""
+            },
         ],
     }
 }
@@ -207,25 +311,22 @@ export var SHT_materialPBRFS_MSAA_info_mergeToVS: I_ShaderTemplate = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //defer PBR
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-import replace_gbuffer_deferPBR_outputWGSL from "../../shader/gbuffers/replace_gbuffer_output_deferPBR.fs.wgsl?raw";
-var WGSL_replace_gbuffer_deferPBR_output = replace_gbuffer_deferPBR_outputWGSL.toString();
-var SHT_replaceGBufferFSOutput_deferPBR: I_shaderTemplateReplace =
+//PBR forward的光影Code内容单项
+var SHT_replace_PBR_deferColorCode: I_shaderTemplateReplace =
 {
-    name: "colorFS.output content",
-    replace: "$fsOutput",           //
+    name: "mainColorCode",
+    replace: "$mainColorCode",
     replaceType: E_shaderTemplateReplaceType.replaceCode,
-    replaceCode: WGSL_replace_gbuffer_deferPBR_output
+    replaceCode: "",//延迟渲染中，颜色只计算颜色，不需要乘以albedo，albedo在光影中计算
+    // replaceCode: `    materialColor=vec4f(albedo ,1);`
 }
 
-
-import PBR_deferMaterialWGSL from "../../shader/material/PBR/PBRdefer.fs.wgsl?raw"
-var PBR_defer_FS = PBR_deferMaterialWGSL.toString();
 /**
  * forward defer PBR part of forward SHT。(未进行材质统一化)
  */
 export var SHT_materialPBRFS_defer_mergeToVS: I_ShaderTemplate = {
     material: {
-        owner: "PhongMaterial",
+        owner: "PBRMaterial",
         add: [
             {
                 name: "fsOnput",
@@ -233,7 +334,7 @@ export var SHT_materialPBRFS_defer_mergeToVS: I_ShaderTemplate = {
             },
             {
                 name: "fs",
-                code: PBR_defer_FS,
+                code: PBRFS,
             },
             SHT_addMathBase,
             SHT_addMathTBN,
@@ -245,14 +346,10 @@ export var SHT_materialPBRFS_defer_mergeToVS: I_ShaderTemplate = {
             //     replaceType: E_shaderTemplateReplaceType.value,
             // },           
             //替换GBuffer输出的内容占位符为：PBR的延迟渲染的GBuffer输出内容，
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_gbuffer_deferPBR_output
-            },
+            SHT_replace_PBR_deferColorCode,
+            // SHT_replace_PBR_mainColorCode_null,                                         //替换$mainColorCode为 只有颜色的代码
+            SHT_replaceGBufferFSOutput,                                            // WGSL_replace_gbuffer_output部分
             SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
-
             {
                 name: "PBR_albedo",
                 replace: "$PBR_albedo",
@@ -283,15 +380,15 @@ export var SHT_materialPBRFS_defer_mergeToVS: I_ShaderTemplate = {
                 replace: "$PBR_color",
                 replaceType: E_shaderTemplateReplaceType.value,
             },
-            //缺少alpha 透明处理
+            SHT_replace_PBR_LightAndShadow_encode,
+            //缺少alpha 透明处理，todo
         ],
     }
 }
-import PBR_defer_MSAA_MaterialWGSL from "../../shader/material/PBR/PBRdeferMSAA.fs.wgsl?raw"
-var PBR_defer_MSAA_FS = PBR_defer_MSAA_MaterialWGSL.toString();
+
 export var SHT_materialPBRFS_defer_MSAA_mergeToVS: I_ShaderTemplate = {
     material: {
-        owner: "PhongMaterial",
+        owner: "PBRMaterial",
         add: [
             {
                 name: "fsOnput",
@@ -305,14 +402,9 @@ export var SHT_materialPBRFS_defer_MSAA_mergeToVS: I_ShaderTemplate = {
             SHT_addMathTBN,
         ],
         replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAA_gbuffer_output
-            },
+            SHT_replace_PBR_mainColorCode_null,                                         //替换$mainColorCode为空字符串
+            SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
             SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
-
             // {
             //     name: "PBR_albedo",
             //     replace: "$PBR_albedo",
@@ -348,81 +440,6 @@ export var SHT_materialPBRFS_defer_MSAA_mergeToVS: I_ShaderTemplate = {
     }
 }
 
-import PBR_defer_MSAA_info_MaterialWGSL from "../../shader/material/PBR/PBRdeferMSAAinfo.fs.wgsl?raw"
-var PBR_defer_MSAA_info_FS = PBR_defer_MSAA_info_MaterialWGSL.toString();
-export var SHT_materialPBRFS_defer_MSAA_info_mergeToVS: I_ShaderTemplate = {
-    material: {
-        owner: "PhongMaterial",
-        add: [
-            {
-                name: "fsOnput",
-                code: WGSL_st_MSAAinfo_Guffer,
-            },
-            {
-                name: "fs",
-                code: PBR_defer_MSAA_info_FS,
-            },
-            SHT_addMathBase,
-            SHT_addMathTBN,
-        ],
-        replace: [
-            {
-                name: "colorFS.output content",
-                replace: "$fsOutput",           //
-                replaceType: E_shaderTemplateReplaceType.replaceCode,
-                replaceCode: WGSL_replace_MSAAinfo_gbuffer_output
-            },
-            SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
+export var SHT_materialPBRFS_defer_MSAA_info_mergeToVS: I_ShaderTemplate = SHT_materialPBRFS_MSAA_info_mergeToVS;
 
-            {
-                name: "PBR_albedo",
-                replace: "$PBR_albedo",
-                replaceType: E_shaderTemplateReplaceType.value,
-            },
-            {
-                name: "PBR_metallic",
-                replace: "$PBR_metallic",
-                replaceType: E_shaderTemplateReplaceType.value,
-            },
-            {
-                name: "PBR_roughness",
-                replace: "$PBR_roughness",
-                replaceType: E_shaderTemplateReplaceType.value,
-            },
-            {
-                name: "PBR_ao",
-                replace: "$PBR_ao",
-                replaceType: E_shaderTemplateReplaceType.value,
-            },
-            {
-                name: "PBR_normal",
-                replace: "$PBR_normal",
-                replaceType: E_shaderTemplateReplaceType.value,
-            },
-            // {
-            //     name: "PBR_color",
-            //     replace: "$PBR_color",
-            //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
-        ],
-    }
-}
-/**Defer PBR light and shadow shader template */
-export var SHT_DeferPBR: I_ShaderTemplate = {
-    material: {
-        owner: "Defer DC, cameraManager",
-        add: [
-            {
-                name: "fsOnput",
-                code: WGSL_st_Guffer,
-            },
-            {
-                name: "fs",
-                code: PBRFS,
-            },
-            SHT_add_PBR_function,
-            SHT_addMathBase,
-            SHT_addMathTBN,
-        ],
-    }
-}
+

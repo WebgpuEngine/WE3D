@@ -403,12 +403,12 @@ export class Scene {
         this.root = new RootManager(this);
         await this.root.init(this);
         this.renderManager = new RenderManager(this);
-        this.cameraManager = new CameraManager({ scene: this });
         this.entityManager = new EntityManager(this);
         this.textureManager = new TextureManager(this);
         this.materialManager = new MaterialManager(this);
         this.lightsManager = new LightsManager(this);
         this.inputManager = new InputManager(this);
+        this.cameraManager = new CameraManager({ scene: this });
     }
 
 

@@ -1,56 +1,27 @@
-//PBRfunction.wgsl   ,start
-fn fresnelSchlick(cosTheta : f32, F0 : vec3f) -> vec3f
-{
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+//PBRColor.fs.wgsl   ,start
+struct PBRBaseUniform{
+    color : vec4f,          //颜色
+    albedo : vec3f,             //反射率
+    metallic : f32,             //金属度
+    roughness : f32,        //粗糙度
+    ao : f32,               //环境光遮蔽
 }
-fn DistributionGGX(normal : vec3f, halfVector : vec3f, roughness : f32) -> f32
-{
-    let a = roughness * roughness;
-    let a2 = a * a;
-    let NdotH = max(dot(normal, halfVector), 0.0);
-    let NdotH2 = NdotH * NdotH;
-    let nom = a2;
-    var denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-    return nom / denom;
-}
-fn GeometrySchlickGGX(NdotV : f32, roughness : f32) -> f32
-{
-    let r = (roughness + 1.0);
-    let k = (r * r) / 8.0;
-
-    let nom = NdotV;
-    let denom = NdotV * (1.0 - k) + k;
-    return nom / denom;
-}
-
-fn GeometrySmith(normal : vec3f, wo : vec3f, wi : vec3f, roughness : f32) -> f32
-{
-    let NdotV = max(dot(normal, wo), 0.0);
-    let NdotL = max(dot(normal, wi), 0.0);
-    let ggx2 = GeometrySchlickGGX(NdotV, roughness);
-    let ggx1 = GeometrySchlickGGX(NdotL, roughness);
-
-    return ggx1 * ggx2;
-}
-fn getAmbientColor(albedo : vec3f, ao : f32) -> vec3f
-{
-    return AmbientLight.color * AmbientLight.intensity * albedo * ao;
-}
-fn calcLightAndShadowOfPBR(
-    worldPosition : vec3f,
-    normal : vec3f,
-    albedo : vec3f,
-    metallic : f32,
-    roughness : f32,
-    ao : f32,
-    color : vec4f,
-    emissiveColor : vec3f,
-    emissiveIntensity : f32) -> vec4f
-{
+@fragment
+fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
+    $gbufferCommonValues //初始化GBuffer的通用值
+    initSystemOfFS();   
     let F0 = vec3(0.04);
-
-    let wo = normalize(defaultCameraPosition - worldPosition);
+    //占位符,统一工作流在这里处理
+    // $PBR_Uniform
+    $PBR_albedo
+    $PBR_metallic
+    $PBR_roughness
+    $PBR_ao
+    $PBR_normal
+    $PBR_color
+    //normal = normalize(normal); //这里是切线空间的法线，vs插值输出的，需要归一化
+    // $deferRender_Depth  //延迟渲染的深度比较占位符
+    let wo = normalize(defaultCameraPosition - fsInput.worldPosition);
     var Lo = vec3(0.0);
     if(U_lights.lightNumber >0)
     {
@@ -66,9 +37,9 @@ fn calcLightAndShadowOfPBR(
             var wi = U_lights.lights[i].direction;      //方向光
             if(U_lights.lights[i].kind!=0)
             {
-                wi = normalize(lightPosition - worldPosition);
-                distance = length(lightPosition - worldPosition);
-                attenuation = lightIntensity / (distance * distance);       //光衰减,这里光是平方,todo:需要考虑gamma校正
+                wi = normalize(lightPosition - fsInput.worldPosition);
+                distance = length(lightPosition - fsInput.worldPosition);
+                attenuation = lightIntensity / (distance * distance);       //光衰减，这里光是平方，todo，需要考虑gamma校正
             }
             //计算光照强度
             let cosTheta = max(dot(normal, wi), 0.0);
@@ -92,16 +63,31 @@ fn calcLightAndShadowOfPBR(
             //add to outgoing radiance Lo
             let diffuse = (kD * albedo / PI) * radiance * NdotL;//only diffuse light is currently implemented
             //let ambient = getAmbientColor(albedo, ao);
-            var visibility = getVisibilityOflight(onelight,worldPosition,normal); 
+            var visibility = getVisibilityOflight(onelight,fsInput.worldPosition,normal); 
             Lo += (diffuse + specular) * radiance* visibility;
             // Lo += (diffuse + specular) * radiance;
             //Lo=vec3f(metallic);          
         }
     }
     let ambient = getAmbientColor(albedo, ao);
-    let emissive = emissiveColor * emissiveIntensity;
-    return vec4f(  color.rgb*(ambient + Lo) + emissive,1);
-    // return vec4f(  color.rgb*AmbientLight.color * AmbientLight.intensity,1);
+    var colorOfPBR = (ambient + Lo);
+        //HDR tonemapping,取消单个的，最后集中进行
+    // colorOfPBR = colorOfPBR / (colorOfPBR + vec3f(1.0));
+    // colorOfPBR = pow(colorOfPBR, vec3f(1.0 / 2.2)) * materialColor.rgb;
+     colorOfPBR = colorOfPBR * materialColor.rgb;
+
+
+    //defer ,可以输出，不影响，不用而已    
+    $encodeLightAndShadow
+
+    var output : ST_GBuffer;
+    $fsOutput                         //占位符
+    //output.color = vec4f(normal*0.5+0.5, 1);    //
+    output.color = vec4f(colorOfPBR, 1);    //
+    //    let depth=textureLoad(U_shadowMap_depth_texture, vec2i(i32(fsInput.position.x*2),i32(fsInput.position.y*2)),0,0) ;
+    // output.color = vec4f( depth,depth,depth,1);
+
+    return output;
 }
 
-//PBRfunction.wgsl   ,end
+//PBRColor.fs.wgsl   ,end

@@ -11,6 +11,7 @@ import { E_renderPassName } from "../scene/renderManager";
 import { Scene } from "../scene/scene";
 import { colorSpace } from "../shadermanagemnet/colorSpace/colorSpace";
 import { BaseCamera } from "./baseCamera";
+import { DeferDrawCommandGenerator } from "./DeferDrawCommandGenerator";
 import { OrthographicCamera } from "./orthographicCamera";
 import { PerspectiveCamera } from "./perspectiveCamera";
 
@@ -58,13 +59,25 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 3、每次compute完毕，copy到camera的depth
      */
     computeOutputTextureForDepth!: GPUTexture;
+    /**
+     * 测试用，渲染到屏幕的texture
+     */
     testTexture!: GPUTexture;
+
+    /**
+     * 延迟渲染的DrawCommandGenerator
+     */
+    deferDCG!: DeferDrawCommandGenerator;
+
+    deferRender: boolean = false;
 
     constructor(input: IV_CameraManager) {
         super(input.scene);
+        this.deferRender = this.scene.deferRender.deferRenderColor;
         this.MSAA = this.scene.MSAA;
         this.GBufferManager = new GBuffers(this, this.scene.device);
         this.DCG = new DrawCommandGenerator({ scene: this.scene });
+        this.deferDCG = new DeferDrawCommandGenerator({ scene: this.scene, parent: this, });
         /**
          * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
          * 将false改为true
@@ -77,12 +90,12 @@ export class CameraManager extends ECSManager<BaseCamera> {
         //         usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
         //     });
 
-        // this.testTexture = this.device.createTexture({
-        //     label: "Test texture " + new Date().getTime(),
-        //     size: [this.scene.surface.size.width, this.scene.surface.size.height],
-        //     format: "rgba16float",
-        //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
-        // });
+        this.testTexture = this.device.createTexture({
+            label: "Test texture " + new Date().getTime(),
+            size: [this.scene.surface.size.width, this.scene.surface.size.height],
+            format: "rgba16float",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
+        });
     }
     /**
      * 增加摄像机
@@ -98,6 +111,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @param camera 相机
      */
     add(camera: BaseCamera) {
+        this.scene.renderManager.initRenderCommandForCamera(camera.UUID);
+
         camera.manager = this;
         let width = this.scene.surface.size.width;
         let height = this.scene.surface.size.height;
@@ -130,6 +145,10 @@ export class CameraManager extends ECSManager<BaseCamera> {
         //4、初始化TTP相关GBuffer
         this.GBufferManager.reInitCommonTransparentGBuffer();
         this.cleanValueOfTT();//清除TT的缓存值,并设置TT_Uniform 和TT_Render
+
+        if (this.deferRender === true) {
+            this.deferDCG.generateDeferDrawCommand(camera.UUID);
+        }
 
         /**
          * 20251018，MSAA的depth数据进行resolve（先compute，在render 从朋友）后，有精度损失。放弃深度对比方法。
@@ -188,6 +207,11 @@ export class CameraManager extends ECSManager<BaseCamera> {
             let UUID = camera.UUID;
             this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].toneMapping!, E_renderPassName.toneMapping, UUID);
             // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].defer!, E_renderPassName.defer, UUID);
+            if (this.deferRender === true) {
+                for (let perCommand of this.deferDCG.DDC[UUID]) {
+                    this.scene.renderManager.push(perCommand, E_renderPassName.defer, UUID);
+                }
+            }
         }
     }
     async onResize() {
@@ -211,6 +235,16 @@ export class CameraManager extends ECSManager<BaseCamera> {
             //     });
             // }
         }
+        if (this.testTexture) {
+            this.testTexture.destroy();
+        }
+        this.testTexture = this.device.createTexture({
+            label: "Test texture " + new Date().getTime(),
+            size: [this.scene.surface.size.width, this.scene.surface.size.height],
+            format: "rgba16float",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
+        });
+
         //重建computeOutputTextureForDepth
         if (this.computeOutputTextureForDepth)
             this.computeOutputTextureForDepth.destroy();
@@ -221,6 +255,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
             usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
         });
 
+        if (this.deferRender === true) {
+            this.deferDCG.clear();
+        }
         // 重新创建GBuffer
         for (let UUID in this.GBufferManager.GBuffer) {
             let camera = this.getCameraByUUID(UUID) as BaseCamera;
@@ -261,7 +298,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
             //初始化toneMapping DrawCommand
             this.createDrawCommandOfToneMapping(camera.UUID);
             //初始化defer DrawCommand
-            // this.DCG.initDeferDrawCommand(camera.UUID);
+            if (this.deferRender === true) {
+                this.deferDCG.generateDeferDrawCommand(camera.UUID);
+            }
         }
         // 清除OnePointToTT_DC_A和OnePointToTT_DC_B,并重新初始化GBufferManager的CommonTransparentGBuffer
         {
@@ -929,6 +968,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
     //     // this.device.queue.submit([commandEncoder.finish()]);
     //     this.device.queue.submit([commandEncoder.finish()]);
     // }
+
     /**
      * 创建渲染命令，将MSAA解析后的深度纹理复制到GBuffer的深度纹理中
      * RCC:RenderCopyCommand
@@ -1045,6 +1085,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
 
         let returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
+        // let returnColor = "return vec4f( copyColorToSRGB(color.rgb), color.a);";
         if (this.scene.colorSpaceAndLinearSpace.colorSpace == "srgb")
             returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
         let shader = `   

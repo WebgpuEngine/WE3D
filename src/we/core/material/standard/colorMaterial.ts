@@ -125,13 +125,13 @@ export class ColorMaterial extends BaseMaterial {
         let inforForward: I_materialBundleOutput = this.getOpaqueCodeFS(SHT_materialColorFS_MSAA_info_mergeToVS, startBinding);
         return { MSAA, inforForward };
     }
-    //color 不需要
+    //同MSAA
     getOpacity_DeferColorOfMSAA(startBinding: number): I_BundleOfMaterialForMSAA {
-        throw new Error("Method not implemented.");
+        return this.getOpacity_MSAA(startBinding);
     }
-    //color 不需要
+    //同Forward
     getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
-        throw new Error("Method not implemented.");
+        return this.getOpacity_Forward(startBinding);
     }
     //color 不需要
     getFS_TO(startBinding: number): I_materialBundleOutput {
