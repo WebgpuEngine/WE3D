@@ -169,6 +169,12 @@ export interface V_DC {
      *  B、没有，则去scene中获取NDC的RPD
      */
     renderPassDescriptor?: GPURenderPassDescriptor | (() => GPURenderPassDescriptor),
+    /**
+     * shader模块的名称
+     * 1、用于shader module的Map 操作的key
+     * 2、如果没有，则不进行Map操作，直接创建使用
+     */
+    shaderModuleName?: string,
 
 }
 

@@ -2,8 +2,11 @@
 //todo,包含占位符，未使用uniform替换，会产生shader简单变体
 
 // 初版方向光计算
-fn phongColorDS(position : vec3f, vNormal : vec3f, lightDir : vec3f, lightColor : vec3f, lightIntensity : f32, viewerPosition : vec3f,roughness : f32,shininess : f32,metallic : f32) -> vec3f
+fn phongColorDS(position : vec3f, vNormal : vec3f, onelight: ST_Light, viewerPosition : vec3f,roughness : f32,shininess : f32,metallic : f32) -> vec3f
 {
+    let lightDir : vec3f = onelight.direction;
+    let lightColor : vec3f = onelight.color;
+    let lightIntensity : f32 = onelight.intensity;
     // let lightDir = normalize(lightPosition - position);
     let normal = normalize(vNormal);
     let light_atten_coff = lightIntensity ;
@@ -34,8 +37,11 @@ fn dotNormal(normal : vec3f, lightDir : vec3f) -> bool{
 fn PhongAmbientColor() -> vec3f{    return AmbientLight.color * AmbientLight.intensity;}
 
 // 方向光计算，返回漫反射和高光颜色
-fn phongColorOfDirectionalLight(position : vec3f, vNormal : vec3f, lightDir : vec3f, lightColor : vec3f, lightIntensity : f32, viewerPosition : vec3f, inSpecularColor : vec3f,roughness : f32,shininess : f32,metallic : f32) ->array<vec3f, 2>
+fn phongColorOfDirectionalLight(position : vec3f, vNormal : vec3f, onelight : ST_Light, viewerPosition : vec3f, inSpecularColor : vec3f,roughness : f32,shininess : f32,metallic : f32) ->array<vec3f, 2>
 {
+     let lightDir : vec3f = onelight.direction;
+     let lightColor : vec3f = onelight.color;
+     let lightIntensity : f32 = onelight.intensity;
     var colos_DS : array<vec3f, 2>;
     let normal = normalize(vNormal);
     let light_atten_coff = lightIntensity ;
@@ -61,8 +67,11 @@ fn phongColorOfDirectionalLight(position : vec3f, vNormal : vec3f, lightDir : ve
 }
 
 // 点光源计算，返回漫反射和高光颜色
-fn phongColorOfPointLight(position : vec3f, vNormal : vec3f, lightPosition : vec3f, lightColor : vec3f, lightIntensity : f32, viewerPosition : vec3f, inSpecularColor : vec3f,roughness : f32,shininess : f32,metallic : f32) -> array<vec3f, 2>
+fn phongColorOfPointLight(position : vec3f, vNormal : vec3f,onelight : ST_Light, viewerPosition : vec3f, inSpecularColor : vec3f,roughness : f32,shininess : f32,metallic : f32) -> array<vec3f, 2>
 {
+     let lightPosition : vec3f = onelight.position;
+     let lightColor : vec3f = onelight.color;
+     let lightIntensity : f32 = onelight.intensity;
     var colos_DS : array<vec3f, 2>;
     let lightDir = normalize(lightPosition - position);
     var normal = normalize(vNormal);            //归一化normal，或法线贴图的值
@@ -87,8 +96,14 @@ fn phongColorOfPointLight(position : vec3f, vNormal : vec3f, lightPosition : vec
 }
 
 // 聚光灯计算，返回漫反射和高光颜色
-fn phongColorOfSpotLight(position : vec3f, vNormal : vec3f, lightPosition : vec3f, lightDirection : vec3f, lightColor : vec3f, lightIntensity : f32, angle : vec2f, viewerPosition : vec3f, inSpecularColor : vec3f,roughness : f32,shininess : f32,metallic : f32) ->array<vec3f, 2>
+fn phongColorOfSpotLight(position : vec3f, vNormal : vec3f, onelight : ST_Light, viewerPosition : vec3f, inSpecularColor : vec3f,roughness : f32,shininess : f32,metallic : f32) ->array<vec3f, 2>
 {
+    let lightPosition : vec3f = onelight.position;
+    let lightDirection : vec3f = onelight.direction;
+    let  lightColor : vec3f = onelight.color;
+    let  lightIntensity : f32 = onelight.intensity;
+    let  angle : vec2f = onelight.angle;
+
     var colos_DS : array<vec3f, 2>;
     let lightDir = normalize(lightPosition - position);                     //光源到物体的点的方向
     let viewDir = normalize(viewerPosition - position);
@@ -161,17 +176,16 @@ fn calcLightAndShadowOfPhong(
             var inPointShadow = false;                      //是否为点光源的阴影
             if (onelight.kind ==0)
             {
-                onelightPhongColor = phongColorOfDirectionalLight(worldPosition, normal, onelight.direction, onelight.color, onelight.intensity, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
+                onelightPhongColor = phongColorOfDirectionalLight(worldPosition, normal, onelight, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
             }
             else if (onelight.kind ==1)
             {
-                onelightPhongColor = phongColorOfPointLight(worldPosition, normal, onelight.position, onelight.color, onelight.intensity, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
+                onelightPhongColor = phongColorOfPointLight(worldPosition, normal, onelight, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
             }
             else if (onelight.kind ==2)
             {
-                onelightPhongColor = phongColorOfSpotLight(worldPosition, normal, onelight.position, onelight.direction, onelight.color, onelight.intensity, onelight.angle, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
+                onelightPhongColor = phongColorOfSpotLight(worldPosition, normal, onelight, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
             }
- 
             colorOfPhoneOfLights[0] = colorOfPhoneOfLights[0] +visibility * onelightPhongColor[0];
             colorOfPhoneOfLights[1] = colorOfPhoneOfLights[1] +visibility * onelightPhongColor[1];
         }

@@ -43,19 +43,19 @@ let camera = new PerspectiveCamera({
 await scene.add(camera);
 
 
-let onelight= new PointLight(
-  {
-    position: [0.0, 0.0, 8.0],
-    intensity: 1.0,
+// let onelight= new PointLight(
+//   {
+//     position: [0.0, 0.0, 8.0],
+//     intensity: 1.0,
 
-  }
-);
+//   }
+// );
 
-// let onelight= new DirectionalLight({
-//   color: [1, 1, 1],
-//   direction: [0, 1, 0],
-//   intensity: 1,
-//   });
+let onelight= new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [0, 1, 0],
+  intensity: 1,
+  });
 
 
 await scene.add(onelight);
@@ -63,7 +63,7 @@ await scene.add(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.013
+    intensity: 0.3
   }
 )
 await scene.add(ambientLight);

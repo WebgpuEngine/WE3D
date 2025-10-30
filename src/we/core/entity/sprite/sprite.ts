@@ -10,7 +10,7 @@ import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";
 import { SHT_PointEmuSpriteVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityBundleMaterial, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
+import { E_entityType, I_EntityBundleMaterial, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
 import { BaseEntity } from "../baseEntity";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 
@@ -41,7 +41,7 @@ export class Sprite extends EntityBundleMaterial {
     constructor(input: IV_Sprite) {
         super(input);
         this.inputValues = input;
-        this._type = "Sprite";
+        this.kind = E_entityType.sprite;
         if (input.onTop && input.onTop === true) this.top = true;
         if (input.material) {
             this._material = input.material;

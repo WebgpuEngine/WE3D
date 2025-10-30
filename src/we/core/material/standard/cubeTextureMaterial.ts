@@ -17,7 +17,7 @@ import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_s
 import { BaseCamera } from "../../camera/baseCamera";
 import { IV_TextureMaterial, TextureMaterial } from "./textureMaterial";
 import { CubeTexture } from "../../texture/cubeTexxture";
-import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../base";
+import { E_MaterialType, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../base";
 import { SHT_materialCubePositionTextureFS_mergeToVS, SHT_materialCubePositionTextureFS_MSAA_mergeToVS, SHT_materialCubePositionTextureFS_MSAAinfo_mergeToVS, SHT_materialCubeSkyTextureFS_mergeToVS, SHT_materialCubeSkyTextureFS_MSAA_mergeToVS, SHT_materialCubeSkyTextureFS_MSAAinfo_mergeToVS } from "../../shadermanagemnet/material/cubeTextureMaterial";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { SHT_materialTextureFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/textureMaterial";
@@ -33,6 +33,7 @@ export class CubeTextureMaterial extends TextureMaterial {
     cubeType: IV_CubeTextureMaterial["cubeType"] = "cube";
     constructor(inputValues: IV_CubeTextureMaterial) {
         super(inputValues);
+        this.kind = E_MaterialType.cube;
         if (this.inputValues.cubeType) {
             this.cubeType = this.inputValues.cubeType;
         }

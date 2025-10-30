@@ -9,6 +9,14 @@ import { BaseLight } from "../light/baseLight";
 import { BaseMaterial } from "../material/baseMaterial";
 import { BaseGeometry } from "../geometry/baseGeometry";
 
+export enum E_entityType {
+   mesh = "mesh",
+   points = "points",
+   pointsEmu = "pointsEmu",
+   lines = "lines",
+   sprite = "sprite",
+   oneColorCube = "oneColorCube",
+}
 
 export interface meshConstantsVS {
     uvScale_u?: number,

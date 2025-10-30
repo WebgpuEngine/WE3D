@@ -38,7 +38,31 @@
 
 
     var materialColor = vec4f(.0);
-    materialColor = calcLightAndShadowOfPBR(
+    // materialColor = calcLightAndShadowOfPBR(
+    //         worldPosition.rgb,
+    //         normal.rgb,
+    //         albedo.rgb,
+    //         metallic,
+    //         roughness,
+    //         ao,
+    //         color,//vec3f(1),albedo的颜色已经在color中，不需要再乘以albedo
+    //         emissiveRGB,
+    //         emissiveIntensity);
+
+
+    // materialColor = calcLightAndShadowOfPhong(
+    //         worldPosition.rgb,
+    //         normal.rgb,
+    //         albedo.rgb,
+    //         metallic,
+    //         roughness,
+    //         ao,
+    //         color,//vec3f(1),albedo的颜色已经在color中，不需要再乘以albedo
+    //         emissiveRGB,
+    //         emissiveIntensity,
+    //         );
+
+    materialColor = calcLightAndShadow(
             worldPosition.rgb,
             normal.rgb,
             albedo.rgb,
@@ -47,20 +71,27 @@
             ao,
             color,//vec3f(1),albedo的颜色已经在color中，不需要再乘以albedo
             emissiveRGB,
-            emissiveIntensity);
-
+            emissiveIntensity,
+            materialKind
+            );
 
     if(materialKind==0){  
           materialColor =color;
           }
     else if(materialKind==1){
         //   materialColor =worldPosition;
-
     }
     // else if(materialKind==1){
     //     // materialColor = calcLightAndShadowOfPhong(
 
     // }
+    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),0,0) *0.5;//第一个方向光的阴影
+    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),1,0) *0.5;//第二个方向光的阴影
+    // materialColor = vec4f( depthTest,depthTest,depthTest,1);
+    // materialColor=normal;
+
+     var visibility = getVisibilityOflight(U_lights.lights[1],worldPosition.rgb,normal.rgb); 
+     materialColor =vec4f(visibility,visibility,visibility,1);
     return materialColor;
 }
 
@@ -81,7 +112,7 @@ fn calcLightAndShadow(
     var colorOfPhoneOfLights : array<vec3f, 2>;             //漫反射，高光反射
     colorOfPhoneOfLights[0]= vec3f(0.0);                    //漫反射：所有光源在pixel上的总和
     colorOfPhoneOfLights[1]= vec3f(0.0);                    //高光反射：所有光源在pixel上的总和
-    let colorOfAmbient = PhongAmbientColor();
+
     //PBR 光照模型
     let F0 = vec3(0.04);
     let wo = normalize(defaultCameraPosition - worldPosition);
@@ -92,7 +123,7 @@ fn calcLightAndShadow(
         for (var i : u32 = 0; i < U_lights.lightNumber; i = i + 1)
         {
             //计算当前光源的可见性
-             let onelight = U_lights.lights[i ];  
+            let onelight = U_lights.lights[i ];  
             var visibility = getVisibilityOflight(onelight,worldPosition,normal); 
             //分别计算PBR和Phong光照模型
             if(materialKind==1){
@@ -133,31 +164,28 @@ fn calcLightAndShadow(
                 // var visibility = getVisibilityOflight(onelight,worldPosition,normal); 
                 Lo += (diffuse + specular) * radiance* visibility;
             }
-            else if(materialKind==1){
-                 let inSpecularColor = albedo;
+            else if(materialKind==2){
+                let inSpecularColor = albedo;
                 let shininess = ao;
                 var onelightPhongColor : array<vec3f, 2>;       //当前光源的漫反射，高光反射
                 var computeShadow = false;                      //是否计算阴影
                 var shadow_map_index = onelight.shadow_map_array_index;         //当前光源的阴影贴图索引
                 var inPointShadow = false;                      //是否为点光源的阴影
-            if (onelight.kind ==0)
-            {
-                onelightPhongColor = phongColorOfDirectionalLight(worldPosition, normal, onelight.direction, onelight.color, onelight.intensity, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
-            }
-            else if (onelight.kind ==1)
-            {
-                onelightPhongColor = phongColorOfPointLight(worldPosition, normal, onelight.position, onelight.color, onelight.intensity, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
-            }
-            else if (onelight.kind ==2)
-            {
-                onelightPhongColor = phongColorOfSpotLight(worldPosition, normal, onelight.position, onelight.direction, onelight.color, onelight.intensity, onelight.angle, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
-            }
-    
-                // var visibility = getVisibilityOflight(onelight,worldPosition,normal); 
+                if (onelight.kind ==0)
+                {
+                    onelightPhongColor = phongColorOfDirectionalLight(worldPosition, normal, onelight, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
+                }
+                else if (onelight.kind ==1)
+                {
+                    onelightPhongColor = phongColorOfPointLight(worldPosition, normal, onelight, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
+                }
+                else if (onelight.kind ==2)
+                {
+                    onelightPhongColor = phongColorOfSpotLight(worldPosition, normal, onelight, defaultCameraPosition,inSpecularColor,roughness,shininess,metallic);
+                }    
                 colorOfPhoneOfLights[0] = colorOfPhoneOfLights[0] +visibility * onelightPhongColor[0];
                 colorOfPhoneOfLights[1] = colorOfPhoneOfLights[1] +visibility * onelightPhongColor[1];
-
-            }
+                }
         }
     }
     var finialColor:vec4f=vec4f(0);
@@ -167,9 +195,12 @@ fn calcLightAndShadow(
         finialColor =vec4f(  color.rgb*(ambient + Lo) + emissive,color.a);
     }
     else if(materialKind==2){
+        let colorOfAmbient = PhongAmbientColor();
         colorOfPhoneOfLights[0] = colorOfPhoneOfLights[0] /f32(U_lights.lightNumber);
         colorOfPhoneOfLights[1] = colorOfPhoneOfLights[1] /f32(U_lights.lightNumber);
         finialColor = vec4f((colorOfAmbient + colorOfPhoneOfLights[0]) * color.rgb + colorOfPhoneOfLights[1], color.a);
+        finialColor = vec4f(finialColor.rgb, 1.0);
+        // finialColor = vec4f(1,0,0,1);
     }
     return finialColor;
 }

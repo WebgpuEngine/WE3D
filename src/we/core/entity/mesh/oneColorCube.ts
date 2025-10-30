@@ -4,7 +4,7 @@ import { I_ShaderTemplate, I_ShaderTemplate_Final } from "../../shadermanagemnet
 import { IV_MeshEntity, Mesh } from "./mesh";
 import { SHT_OneCubeColorVS } from "../../shadermanagemnet/mesh/meshVS";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../base";
+import { E_entityType, I_EntityBundleOfUniformAndShaderTemplateFinal } from "../base";
 
 
 
@@ -42,6 +42,7 @@ export class OneColoeCube extends Mesh {
             _input = input;
         }
         super(_input);
+        this.kind = E_entityType.oneColorCube;
     }
     async readyForGPU() {
         this._material = new VertexColorMaterial();

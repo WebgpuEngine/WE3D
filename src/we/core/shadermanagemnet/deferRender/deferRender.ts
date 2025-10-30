@@ -22,15 +22,16 @@ export var SHT_DeferRender: I_ShaderTemplate = {
     material: {
         owner: "Defer DC, cameraManager",
         add: [
-            {
-                name: "fs",
-                code: DeferRenderFS,
-            },
             SHT_addMathBase,
             SHT_addMathRandom,
             SHT_addPCSS,
             SHT_add_PBR_function,
-            SHT_add_Phong_function
+            SHT_add_Phong_function,
+            {
+                name: "fs",
+                code: DeferRenderFS,
+            },
+
 
         ],
     }

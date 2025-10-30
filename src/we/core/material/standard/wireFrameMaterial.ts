@@ -5,7 +5,7 @@ import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_WireFrameFS_mergeToVS, SHT_WireFrameFS_MSAA_mergeToVS, SHT_WireFrameFS_MSAAinfo_mergeToVS } from "../../shadermanagemnet/material/wireFrameMaterial";
-import { I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../base";
+import { E_MaterialType, I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../base";
 import { ColorMaterial, I_ColorMaterial } from "./colorMaterial";
 
 
@@ -36,6 +36,7 @@ export class WireFrameMaterial extends ColorMaterial {
 
     constructor(input: I_ColorMaterial) {
         super(input);
+        this.kind = E_MaterialType.wireframe;
         this.inputValues = input;
         this.color = input.color;
         this.red = input.color[0];

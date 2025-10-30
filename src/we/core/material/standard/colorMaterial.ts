@@ -6,7 +6,7 @@ import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColor_TTP_FS_mergeToVS, SHT_materialColor_TT_FS_mergeToVS, SHT_materialColorFS_mergeToVS, SHT_materialColor_TTPF_FS_mergeToVS, SHT_materialColorFS_MSAA_mergeToVS, SHT_materialColorFS_MSAA_info_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { IV_BaseMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType, I_BundleOfMaterialForMSAA } from "../base";
+import { IV_BaseMaterial, I_materialBundleOutput, I_AlphaTransparentOfMaterial, E_TransparentType, I_BundleOfMaterialForMSAA, E_MaterialType } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface I_ColorMaterial extends IV_BaseMaterial {
@@ -25,6 +25,7 @@ export class ColorMaterial extends BaseMaterial {
 
     constructor(input: I_ColorMaterial) {
         super(input);
+        this.kind = E_MaterialType.color;
         this.inputValues = input;
         if (isWeColor4(input.color)) {
 

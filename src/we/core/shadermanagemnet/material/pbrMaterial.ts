@@ -26,64 +26,6 @@ export var SHT_add_PBR_function: I_shaderTemplateAdd =
     code: WGSL_add_PBR_function
 }
 //PBR forward的光影Code内容单项
-var old_SHT_replace_PBR_mainColorCode: I_shaderTemplateReplace =
-{
-    name: "mainColorCode",
-    replace: "$mainColorCode",
-    replaceType: E_shaderTemplateReplaceType.replaceCode,
-    replaceCode: `   
-    let F0 = vec3(0.04);
-    let wo = normalize(defaultCameraPosition - fsInput.worldPosition);
-    var Lo = vec3(0.0);
-    if(U_lights.lightNumber >0)
-    {
-        for (var i : u32 = 0; i < U_lights.lightNumber; i = i + 1)
-        {
-            let onelight = U_lights.lights[i ];  
-
-            let lightColor = U_lights.lights[i].color;
-            let lightPosition = U_lights.lights[i].position;
-            let lightIntensity = U_lights.lights[i].intensity;
-            var distance = 0.0;                         //方向光没有距离
-            var attenuation = lightIntensity;           //方向光没有衰减
-            var wi = U_lights.lights[i].direction;      //方向光
-            if(U_lights.lights[i].kind!=0)
-            {
-                wi = normalize(lightPosition - fsInput.worldPosition);
-                distance = length(lightPosition - fsInput.worldPosition);
-                attenuation = lightIntensity / (distance * distance);       //光衰减,这里光是平方,todo:需要考虑gamma校正
-            }
-            //计算光照强度
-            let cosTheta = max(dot(normal, wi), 0.0);
-            let radiance = lightColor * attenuation * cosTheta;         //光强
-            //计算 DFG
-            let halfVector = normalize(wi + wo);
-            let f0 = mix(F0, albedo, metallic);
-            let F = fresnelSchlick(max(dot(halfVector, wo), 0.0), f0);
-            let NDF = DistributionGGX(normal, halfVector, roughness);
-            let G = GeometrySmith(normal, wo, wi, roughness);
-            //计算Cook-Torrance BRDF:
-            let numerator = NDF * G * F;
-            let denominator = 4.0 * max(dot(normal, wo), 0.0) * max(dot(normal, wi), 0.0) + 0.0001;
-            let specular = numerator / denominator;
-            //kS is equal to Fresnel
-            let kS = F;
-            var kD = vec3(1.0) - kS;
-            kD *= 1.0 - metallic;
-            //scale light by NdotL   L=wi
-            let NdotL = max(dot(normal, wi), 0.0);
-            //add to outgoing radiance Lo
-            let diffuse = (kD * albedo / PI) * radiance * NdotL;//only diffuse light is currently implemented
-            //let ambient = getAmbientColor(albedo, ao);
-            var visibility = getVisibilityOflight(onelight,fsInput.worldPosition,normal); 
-            Lo += (diffuse + specular) * radiance* visibility;
-            // Lo += (diffuse + specular) * radiance;
-            //Lo=vec3f(metallic);          
-        }
-    }
-    let ambient = getAmbientColor(albedo, ao);
-    materialColor=vec4f(  materialColor.rgb*(ambient + Lo),1);`
-}
 var SHT_replace_PBR_mainColorCode: I_shaderTemplateReplace =
 {
     name: "mainColorCode",
@@ -116,7 +58,8 @@ var SHT_replace_PBR_LightAndShadow_encode: I_shaderTemplateReplace =
     name: "encodeLightAndShadow",
     replace: "$encodeLightAndShadow",
     replaceType: E_shaderTemplateReplaceType.replaceCode,
-    replaceCode: `acceptShadow = 1;
+    replaceCode: `
+    acceptShadow = 1;
     shadowKind = 0;
     acceptlight = 1;
     materialKind = 1;
@@ -405,26 +348,26 @@ export var SHT_materialPBRFS_defer_MSAA_mergeToVS: I_ShaderTemplate = {
             SHT_replace_PBR_mainColorCode_null,                                         //替换$mainColorCode为空字符串
             SHT_replaceGBufferMSAA_FSOutput,                                            // WGSL_replace_MSAA_gbuffer_output部分
             SHT_replaceGBufferCommonValue,                                            // WGSL_replace_gbuffer_commonValues部分
-            // {
-            //     name: "PBR_albedo",
-            //     replace: "$PBR_albedo",
-            //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
-            // {
-            //     name: "PBR_metallic",
-            //     replace: "$PBR_metallic",
-            //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
-            // {
-            //     name: "PBR_roughness",
-            //     replace: "$PBR_roughness",
-            //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
-            // {
-            //     name: "PBR_ao",
-            //     replace: "$PBR_ao",
-            //     replaceType: E_shaderTemplateReplaceType.value,
-            // },
+            {
+                name: "PBR_albedo",
+                replace: "$PBR_albedo",
+                replaceType: E_shaderTemplateReplaceType.value,
+            },
+            {
+                name: "PBR_metallic",
+                replace: "$PBR_metallic",
+                replaceType: E_shaderTemplateReplaceType.value,
+            },
+            {
+                name: "PBR_roughness",
+                replace: "$PBR_roughness",
+                replaceType: E_shaderTemplateReplaceType.value,
+            },
+            {
+                name: "PBR_ao",
+                replace: "$PBR_ao",
+                replaceType: E_shaderTemplateReplaceType.value,
+            },
             {
                 name: "PBR_normal",
                 replace: "$PBR_normal",
@@ -435,6 +378,7 @@ export var SHT_materialPBRFS_defer_MSAA_mergeToVS: I_ShaderTemplate = {
                 replace: "$PBR_color",
                 replaceType: E_shaderTemplateReplaceType.value,
             },
+            SHT_replace_PBR_LightAndShadow_encode,
             //缺少alpha 透明处理
         ],
     }

@@ -14,7 +14,7 @@ import { BaseMaterial, } from "../baseMaterial";
 
 import { Texture } from "../../texture/texture";
 import { T_textureSourceType } from "../../texture/base";
-import { E_TextureType, E_TransparentType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_MaterialType, E_TextureType, E_TransparentType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { E_lifeState } from "../../base/coreDefine";
 import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base";
 import { Clock } from "../../scene/clock";
@@ -63,6 +63,7 @@ export class TextureMaterial extends BaseMaterial {
 
     constructor(input: IV_TextureMaterial) {
         super(input);
+        this.kind = E_MaterialType.texture;
         this.textures = {};
         this.countOfTextures = 0;
         this.countOfTexturesOfFineshed = 0;

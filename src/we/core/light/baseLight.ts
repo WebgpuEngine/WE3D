@@ -115,7 +115,7 @@ export abstract class BaseLight extends RootOfGPU {
      * type of lights
      * 光源的类型
      */
-    _kind!: E_lightType;
+    kind!: E_lightType;
     /**
      * light's uniform buffer
      * 光源的uniform的buffer
@@ -224,7 +224,7 @@ export abstract class BaseLight extends RootOfGPU {
 
         if (input.size !== undefined) this._size = input.size;
         if (input.visible !== undefined) this.visible = input.visible;
-        this._kind = kind;
+        this.kind = kind;
 
         this._buffer = this.updateStructBuffer();
         // this.GPUBufferOfMVP = this.device.createBuffer({
@@ -236,10 +236,10 @@ export abstract class BaseLight extends RootOfGPU {
 
 
     get Kind(): number {
-        return this._kind
+        return this.kind
     }
     set Kind(v: E_lightType) {
-        this._kind = v;
+        this.kind = v;
     }
 
     get Color() {
@@ -285,7 +285,7 @@ export abstract class BaseLight extends RootOfGPU {
     /**只有方向光返回值，其他返回false */
 
     get Direction(): Vec3 | false {
-        if (this._kind == E_lightType.point) {
+        if (this.kind == E_lightType.point) {
             return false;
         }
         else {
@@ -313,7 +313,7 @@ export abstract class BaseLight extends RootOfGPU {
      * 
      * */
     get Angle(): number[] | false {
-        if (this._kind == E_lightType.spot) {
+        if (this.kind == E_lightType.spot) {
             return [this._angle, this._angleOut];
         }
         return false;

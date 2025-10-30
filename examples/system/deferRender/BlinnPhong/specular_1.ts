@@ -21,11 +21,12 @@ let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.],
   // reversedZ:true,
-  AA: {
-    MSAA: {
-      enable: true
-    }
-  },    
+  // AA: {
+  //   MSAA: {
+  //     enable: true
+  //   }
+  // },    
+  deferRender: "color",
 };
 let scene = await initScene({
   initConfig: input,
@@ -46,7 +47,7 @@ let camera = new PerspectiveCamera({
 await scene.add(camera);
 
 
-let onelight= new PointLight(
+let onelight = new PointLight(
   {
     position: [0.0, 0.0, 2.0],
     intensity: 2.0,
@@ -81,8 +82,8 @@ let phongMaterial = new PhongMaterial({
   // roughness:0.5,
   // metalness:1.5,
   // shininess:32,
-  textures:{
-    color:{
+  textures: {
+    color: {
       source: "/examples/resource/images/specular/container2.png",
     },
     specular: {

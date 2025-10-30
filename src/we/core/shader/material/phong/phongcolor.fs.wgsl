@@ -17,14 +17,17 @@ struct st_bulin_phong {
     var inSpecularColor : vec3f = vec3f(1.0);
     $specular
     let shininess = u_bulinphong.shininess;
-     metallic = u_bulinphong.metalness;
-     roughness = u_bulinphong.roughness;
-
-    let colorOfAmbient = PhongAmbientColor();
-    var colorOfPhoneOfLights : array<vec3f, 2>;             //漫反射，高光反射
-    colorOfPhoneOfLights[0]= vec3f(0.0);                    //漫反射：所有光源在pixel上的总和
-    colorOfPhoneOfLights[1]= vec3f(0.0);                    //高光反射：所有光源在pixel上的总和
-
+    metallic = u_bulinphong.metalness;
+    roughness = u_bulinphong.roughness;
+    $encodeLightAndShadow
+    albedo=inSpecularColor;
+    ao=shininess;
+    RMAO=vec3f(roughness,metallic,ao);
+    
+    // let colorOfAmbient = PhongAmbientColor();
+    // var colorOfPhoneOfLights : array<vec3f, 2>;             //漫反射，高光反射
+    // colorOfPhoneOfLights[0]= vec3f(0.0);                    //漫反射：所有光源在pixel上的总和
+    // colorOfPhoneOfLights[1]= vec3f(0.0);                    //高光反射：所有光源在pixel上的总和
     // if(U_lights.lightNumber >0)
     // {
     //     for (var i : u32 = 0; i < U_lights.lightNumber; i = i + 1)
@@ -57,17 +60,19 @@ struct st_bulin_phong {
     //     colorOfPhoneOfLights[1] = colorOfPhoneOfLights[1] /f32(U_lights.lightNumber);
     // }
 
-    materialColor=calcLightAndShadowOfPhong(
-        worldPosition,
-        normal,
-        inSpecularColor,
-        metallic,
-        roughness,
-        shininess,
-        materialColor,
-        vec3f(0.0, 0.0, 0.0),
-        1.0
-    );
+    // materialColor=calcLightAndShadowOfPhong(
+    //     worldPosition,
+    //     normal,
+    //     inSpecularColor,
+    //     metallic,
+    //     roughness,
+    //     shininess,
+    //     materialColor,
+    //     vec3f(0.0, 0.0, 0.0),
+    //     1.0
+    // );
+
+    $mainColorCode
     var output: ST_GBuffer;
     $fsOutput
     // output.color = vec4f((colorOfAmbient + colorOfPhoneOfLights[0]) * materialColor.rgb + colorOfPhoneOfLights[1], materialColor.a);
@@ -83,6 +88,9 @@ struct st_bulin_phong {
 
     // let depth=textureLoad(U_shadowMap_depth_texture, vec2i(i32(fsInput.position.x*2),i32(fsInput.position.y*2)),0,0) ;
     // output.color = vec4f( depth,depth,depth,1);
+    
+    //  var visibility = getVisibilityOflight(U_lights.lights[0],worldPosition.rgb,normal.rgb); 
+    //  output.color  =vec4f(visibility,visibility,visibility,1);
 
     return output;
 }

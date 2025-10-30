@@ -77,10 +77,12 @@ fn getShadowBias(c: f32, filterRadiusUV: f32, normal: vec3f, lightDirection: vec
 //计算阴影可见度
 fn shadowMapVisibilityPCSS(onelight: ST_Light, shadow_map_index:i32,position: vec3f, normal: vec3f, biasC: f32) -> f32 {
     var posFromLight =matrix_z* U_shadowMapMatrix[shadow_map_index].MVP * vec4(position, 1.0);    //光源视界的位置
-    if(posFromLight.w < 0.000001   && posFromLight.w > -0.000001){       //posFromLight =posFromLight/posFromLight.w;
+     //posFromLight =posFromLight/posFromLight.w;
+    if(posFromLight.w < 0.000001   && posFromLight.w > -0.000001){      
+        //w值为0或过小，不进行除法
     }
     else{
-      posFromLight =posFromLight/posFromLight.w; 
+        posFromLight =posFromLight/posFromLight.w; 
     }
     //Convert XY to (0, 1)    //Y is flipped because texture coords are Y-down.
     let shadowPos = vec3(posFromLight.xy * vec2(0.5, -0.5) + vec2(0.5), posFromLight.z);  //这里的z是深度数据,xy是UV在光源depth texture中的位置
@@ -263,7 +265,6 @@ fn checkPixelInShadowRangOfPointLight(pixelWorldPosition : vec3f, onelight : ST_
 //根据光源类型获取阴影可见度
 fn getVisibilityOflight(onelight: ST_Light,worldPosition: vec3f, normal: vec3f) -> f32 {
             var computeShadow = false;                      //是否计算阴影
-            var isPointShadow = false;                      //是否为点光源的阴影
             var shadow_map_index = onelight.shadow_map_array_index;         //当前光源的阴影贴图索引
             var visibility = 0.0; 
             if (onelight.kind ==0)
@@ -272,35 +273,20 @@ fn getVisibilityOflight(onelight: ST_Light,worldPosition: vec3f, normal: vec3f) 
             }
             else if (onelight.kind ==1)
             {
-                computeShadow = true;
                 shadow_map_index = checkPixelInShadowRangOfPointLight(worldPosition, onelight);
+                if(shadow_map_index >=0){            //点光源的阴影中，计算阴影
+                    computeShadow = true;
+                }
             }
             else if (onelight.kind ==2)
             {
                 computeShadow = checkPixelInShadowRangOfSpotLight(worldPosition, onelight.position, onelight.direction, onelight.angle);
             }
-            if(shadow_map_index >=0){            //如果在点光源的阴影中，计算阴影
-                isPointShadow = true;
-            }
-            // else{            //如果不在点光源的阴影中，不计算阴影，进行一次统一工作流
-            //     shadow_map_index = onelight.shadow_map_array_index;
-            // }
-
-            //统一工作流问题 start
-            if (onelight.kind ==1){
-                visibility = shadowMapVisibilityPCSS(onelight, shadow_map_index, worldPosition, normal, 0.08); //点光源的pcss在计算block是需要适配，目前多出来了边界的黑框，目前考虑是block的uv在边界的地方越界了，需要进行特殊处理
-                //下面三个在V01版本中没有问题，应该时wordPosition相关的问题
-                //是因为：near的问题，near的默认值是1，没问题，0.1就出现问题，todo
-                // visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);//出现了在点光源半径3.5时，远端的实体的阴影消失问题
-                // visibility = shadowMapVisibilityPCF_3x3(onelight,shadow_map_index,  worldPosition, normal);//点光源在cube中的阴影，右下前三方向消失，其他方向存在远端消失问题
-                //   visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
-            }
-            else{
-                visibility = shadowMapVisibilityPCSS(onelight, shadow_map_index, worldPosition, normal, 0.08); 
-                // visibility = shadowMapVisibilityPCF_3x3(onelight,shadow_map_index,  worldPosition, normal);
-                // visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);
-                //  visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
-           }
+  
+           visibility = shadowMapVisibilityPCSS(onelight, shadow_map_index, worldPosition, normal, 0.08); //20251030,没有问题了，已经适配过了
+           // visibility = shadowMapVisibilityPCF_3x3(onelight,shadow_map_index,  worldPosition, normal);
+           // visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);
+           // visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
            if (onelight.shadow ==0 ) //没有阴影
            {
                 visibility = 1.0;

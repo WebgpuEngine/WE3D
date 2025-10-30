@@ -9,7 +9,7 @@ import { WireFrameMaterial } from "../../material/standard/wireFrameMaterial";
 import { E_renderPassName } from "../../scene/renderManager";
 import { I_ShaderTemplate } from "../../shadermanagemnet/base";
 import { SHT_MeshShadowMapVS, SHT_MeshVS, SHT_MeshWireframeVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityAttributes, I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_ShadowMapValueOfDC } from "../base";
+import { E_entityType, I_EntityAttributes, I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_ShadowMapValueOfDC } from "../base";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 
 
@@ -77,7 +77,7 @@ export class Mesh extends EntityBundleMaterial {
 
     constructor(input: IV_MeshEntity) {
         super(input);
-        this._type = "Mesh";
+        this.kind = E_entityType.mesh;
         this.inputValues = input;
         if (input.attributes.geometry) {
             this._geometry = input.attributes.geometry;

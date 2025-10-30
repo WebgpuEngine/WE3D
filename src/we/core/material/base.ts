@@ -5,6 +5,23 @@ import { Scene } from "../scene/scene";
 import { I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { I_mipmap } from "../texture/base";
 
+export enum E_MaterialType {
+    /** 颜色材质 */
+    color = "color",
+    vertex = "vertex",
+    /** 纹理材质 */
+    texture = "texture",
+    cube = "cube",
+    cubeSky = "cubeSky",
+    video = "video",
+    wireframe = "wireframe",
+    /** PBR材质 */
+    PBR = "PBR",
+    /** 冯氏材质 */
+    Phong = "Phong",
+}
+
+/** 透明材质的类型 */
 export type T_TransparentOfMaterial = I_AlphaTransparentOfMaterial | I_PhysicalTransparentOfMaterial | I_SSSTransparentOfMaterial
 /**透明材质的初始化参数 */
 export interface I_AlphaTransparentOfMaterial {
@@ -138,6 +155,8 @@ export enum E_TextureType {
     // depthMap = "depthMap",//这个是深度|高度|视差贴图，前面已有parallax
     /** 视频贴图 */
     video = "video",
+    /** 透明度贴图 */
+    alpha = "alpha",
 }
 
 

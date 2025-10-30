@@ -6,6 +6,7 @@ import { boundingSphere, generateSphereFromBox3 } from "../math/sphere";
 
 
 import {
+    E_entityType,
     I_EntityBundleOfUniformAndShaderTemplateFinal,
     I_entityInstance,
     I_optionBaseEntity,
@@ -35,7 +36,7 @@ export abstract class BaseEntity extends RootOfGPU {
     stage_id!: Uint32Array;
 
     /** 实体类型 */
-    _type!:string;
+    kind!: E_entityType;
 
     /**entiy 的ID（u32）等其他数据占位，这个需要与wgsl shader中同步更改 */
     _entityIdSizeForWGSL = 4;//以u32（f32）计算

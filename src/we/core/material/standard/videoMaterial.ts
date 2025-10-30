@@ -1,7 +1,7 @@
 import { BaseMaterial, } from "../baseMaterial";
 import { Texture } from "../../texture/texture";
 import { T_textureSourceType } from "../../texture/base";
-import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_MaterialType, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { E_lifeState } from "../../base/coreDefine";
 import { T_uniformEntries, T_uniformGroup } from "../../command/base";
 import { Clock } from "../../scene/clock";
@@ -52,6 +52,7 @@ export class VideoMaterial extends BaseMaterial {
 
     constructor(input: IV_VideoMaterial) {
         super(input);
+        this.kind = E_MaterialType.video;
         this.textures = {};
         this.countOfTextures = 0;
         this.countOfTexturesOfFineshed = 0;

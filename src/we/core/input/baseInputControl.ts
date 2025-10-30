@@ -65,7 +65,7 @@ export abstract class BaseInputControl {
         }
 
     constructor(type: E_InputControlType, manager: InputManager) {
-        this._type = type;
+        this.kind = type;
         this.UUID = WeGenerateUUID();
         if (manager) {
             this.manager = manager;

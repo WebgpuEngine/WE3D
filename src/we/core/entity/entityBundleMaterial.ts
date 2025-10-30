@@ -339,14 +339,14 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.MSAA.singleShaderTemplateFinal;
                 }
                 else {
-                    throw new Error(this._type + " generateOpacityDC: MSAA is true, but no MSAA material");
+                    throw new Error(this.kind + " generateOpacityDC: MSAA is true, but no MSAA material");
                 }
                 let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle, false, this);
                 valueDC.system!.MSAA = "MSAA";
                 if (TO !== undefined)
-                    valueDC.label = this._type + " TO MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + " TO MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 else
-                    valueDC.label = this._type + " opacity MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + " opacity MSAA :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 let dc = this.DCG.generateDrawCommand(valueDC);
                 this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
             }
@@ -356,14 +356,14 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     bundle.shaderTemplateFinal.material = uniformsMaterialMSAA.inforForward.singleShaderTemplateFinal;
                 }
                 else {
-                    throw new Error(this._type + " generateOpacityDC: MSAA is true, but no info material");
+                    throw new Error(this.kind + " generateOpacityDC: MSAA is true, but no info material");
                 }
                 let valueDC = getV_DC(E_renderForDC.camera, UUID, bundle, false, this);
                 valueDC.system!.MSAA = "MSAAinfo";
                 if (TO !== undefined)
-                    valueDC.label = this._type + " TO MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + " TO MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 else
-                    valueDC.label = this._type + " opacity MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + " opacity MSAA info :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 let dc = this.DCG.generateDrawCommand(valueDC);
                 this.cameraDC[UUID][E_renderPassName.forward].push(dc);
             }
@@ -397,9 +397,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 let drawFor = " forward ";
                 if (this.deferColor) drawFor = " defer "
                 if (TO !== undefined)
-                    valueDC.label = this._type + drawFor + "TO forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + drawFor + "TO forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 else
-                    valueDC.label = this._type + drawFor + "opacity forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + drawFor + "opacity forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
                 let dc = this.DCG.generateDrawCommand(valueDC);
 
                 this.cameraDC[UUID][E_renderPassName.forward].push(dc);

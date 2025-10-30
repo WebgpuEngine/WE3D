@@ -9,7 +9,7 @@ import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_s
 import { SHT_materialPBRFS_defer_mergeToVS, SHT_materialPBRFS_defer_MSAA_mergeToVS, SHT_materialPBRFS_mergeToVS, SHT_materialPBRFS_MSAA_info_mergeToVS, SHT_materialPBRFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
 import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_MaterialType, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -44,6 +44,7 @@ export class PBRMaterial extends BaseMaterial {
     constructor(input: IV_PBRMaterial) {
         super(input);
         this.inputValues = input;
+        this.kind = E_MaterialType.PBR;
         this.textures = {};
     }
     getAttributeOfThisTextures(texture: T_ThisTexturesType): E_ThisTexturesType {

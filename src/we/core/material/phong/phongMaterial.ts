@@ -5,10 +5,10 @@ import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
-import { SHT_materialPhongFS_mergeToVS, SHT_materialPhongFS_MSAA_info_mergeToVS, SHT_materialPhongFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/phongMaterial";
+import { SHT_materialPhongFS_defer_mergeToVS, SHT_materialPhongFS_mergeToVS, SHT_materialPhongFS_MSAA_info_mergeToVS, SHT_materialPhongFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/phongMaterial";
 import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_MaterialType, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -42,6 +42,7 @@ export class PhongMaterial extends BaseMaterial {
   color: weColor4 = [1, 1, 1, 1];
   constructor(options: IV_PhongMaterial) {
     super(options);
+    this.kind = E_MaterialType.Phong;
     this.textures = {};
     this.inputValues = options;
     let uniformPhongF32A = new Float32Array(this.uniformPhong);
@@ -293,7 +294,7 @@ export class PhongMaterial extends BaseMaterial {
     throw new Error("Method not implemented.");
   }
   getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
-    throw new Error("Method not implemented.");
+    return this.getOpaqueCodeFS(SHT_materialPhongFS_defer_mergeToVS, startBinding);
   }
   getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
     throw new Error("Method not implemented.");

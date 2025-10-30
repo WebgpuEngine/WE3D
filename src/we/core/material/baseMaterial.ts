@@ -3,7 +3,7 @@ import { RootOfGPU } from "../organization/root";
 
 import { E_lifeState } from "../base/coreDefine";
 import { I_ShadowMapValueOfDC } from "../entity/base";
-import { IV_BaseMaterial, I_PartBundleOfUniform_TT, T_TransparentOfMaterial, I_materialBundleOutput, E_TransparentType, I_AlphaTransparentOfMaterial, I_TransparentOptionOfMaterial, I_UniformBundleOfMaterial, I_BundleOfMaterialForMSAA } from "./base";
+import { IV_BaseMaterial, I_PartBundleOfUniform_TT, T_TransparentOfMaterial, I_materialBundleOutput, E_TransparentType, I_AlphaTransparentOfMaterial, I_TransparentOptionOfMaterial, I_UniformBundleOfMaterial, I_BundleOfMaterialForMSAA, E_MaterialType } from "./base";
 import { commmandType, I_dynamicTextureEntryForView, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate, I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { Scene } from "../scene/scene";
@@ -18,6 +18,8 @@ import { E_GBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 
 export abstract class BaseMaterial extends RootOfGPU {
     declare inputValues: IV_BaseMaterial;
+
+    kind!:E_MaterialType;
 
     /**
      * blending混合的状态interface

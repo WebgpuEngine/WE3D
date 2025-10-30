@@ -22,6 +22,7 @@ let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.],
   // reversedZ:true,
+  
 };
 let scene = await initScene({
   initConfig: input,

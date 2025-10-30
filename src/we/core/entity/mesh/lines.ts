@@ -1,7 +1,7 @@
 import {  E_renderForDC } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import {  SHT_MeshVS } from "../../shadermanagemnet/mesh/meshVS";
-import {  I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal,  I_ShadowMapValueOfDC } from "../base";
+import {  E_entityType, I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal,  I_ShadowMapValueOfDC } from "../base";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 
 
@@ -22,7 +22,7 @@ export class Lines extends EntityBundleMaterial {
 
     constructor(input: IV_LinesEntity) {
         super(input);
-        this._type = "lines";
+        this.kind = E_entityType.lines;
         this.inputValues = input;
 
         if (input.lineMode) this.lineMode = input.lineMode;

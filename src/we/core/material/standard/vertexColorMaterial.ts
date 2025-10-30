@@ -5,7 +5,7 @@ import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColorFS_mergeToVS, SHT_materialColorFS_MSAA_info_mergeToVS, SHT_materialColorFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
-import { I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_MaterialType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export interface IV_VertexColorMaterial extends IV_BaseMaterial {
@@ -18,6 +18,7 @@ export class VertexColorMaterial extends BaseMaterial {
     declare inputValues: IV_BaseMaterial;
     constructor(input?: IV_VertexColorMaterial) {
         super(input);
+        this.kind = E_MaterialType.vertex;
         if (!input) {
             input = {};
         }

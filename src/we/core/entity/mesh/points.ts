@@ -4,7 +4,7 @@ import { V_DC } from "../../command/DrawCommandGenerator";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { ColorMaterial } from "../../material/standard/colorMaterial";
 import { SHT_PointEmuSpriteVS, SHT_PointVS } from "../../shadermanagemnet/mesh/meshVS";
-import { I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_ShadowMapValueOfDC } from "../base";
+import { E_entityType, I_EntityBundleMaterial, I_EntityBundleOfUniformAndShaderTemplateFinal, I_ShadowMapValueOfDC } from "../base";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 
 
@@ -76,14 +76,14 @@ export class Points extends EntityBundleMaterial {
         //     }
         // }
         super(input);
-        this._type = "Points";
+        this.kind = E_entityType.points;
         this.inputValues = input;
 
         if (input.color) this.color = input.color;
 
         // 模拟模式
         if (input.emulate && input.emulate !== "none") {
-            this._type = "Points emulate";
+            this.kind = E_entityType.pointsEmu;
 
             if (this.checkEmulateType(input.emulate)) {
                 this.emulate = input.emulate;

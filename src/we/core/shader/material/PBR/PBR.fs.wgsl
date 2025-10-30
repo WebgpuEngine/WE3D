@@ -36,8 +36,8 @@ fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
     $fsOutput                         //fs 输出
     //output.color = vec4f(normal*0.5+0.5, 1);    //
     // output.color = vec4f(colorOfPBR, 1);    //
-    //    let depth=textureLoad(U_shadowMap_depth_texture, vec2i(i32(fsInput.position.x*2),i32(fsInput.position.y*2)),0,0) ;
-    // output.color = vec4f( depth,depth,depth,1);
+    //    let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(fsInput.position.x),i32(fsInput.position.y)),0,0) *1.;
+    // output.color = vec4f( depthTest,depthTest,depthTest,1);
     return output;
 }
 
