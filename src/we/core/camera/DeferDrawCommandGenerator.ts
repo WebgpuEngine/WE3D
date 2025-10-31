@@ -20,7 +20,7 @@ export class DeferDrawCommandGenerator implements IV_DeferDrawCommand {
     scene: Scene;
     device: GPUDevice;
 
-    shaderModule!: GPUShaderModule;
+    shaderModule!: GPUShaderModule|undefined;
     flagShaderModule: string = "DeferRender";
     DDC: {
         [UUID in string]: commmandType[]
@@ -40,6 +40,7 @@ export class DeferDrawCommandGenerator implements IV_DeferDrawCommand {
             }
         }
         this.DDC = {};
+        this.shaderModule = undefined;
     }
 
     generateDeferDrawCommand(UUID: string,) {

@@ -302,11 +302,22 @@ export abstract class BaseCamera extends RootOfGPU {
     else {
       this.back = direction;
     }
-    if (this.back[0] == 0 && this.back[2] == 0 && this.back[1] == -1) {
+    /**方向在世界坐标系的-Y轴
+     *   Z|  / Y
+     *    | /
+     *    |/______X
+     */
+    if (this.back[0] == 0 && this.back[1] == -1 && this.back[2] == 0) {
       vec3.copy(vec3.create(1, 0, 0), this.right);
       vec3.copy(vec3.create(0, 0, 1), this.up);
     }
-    else if (this.back[0] == 0 && this.back[2] == 0 && this.back[1] == 1) {
+    /**方向在世界坐标系的+Y轴
+     *    ______X
+     *   /|
+     * Y/ |Z
+     * 
+     */
+    else if (this.back[0] == 0 && this.back[1] == 1 && this.back[2] == 0) {
       vec3.copy(vec3.create(1, 0, 0), this.right);
       vec3.copy(vec3.create(0, 0, -1), this.up);
     }

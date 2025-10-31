@@ -53,7 +53,7 @@ await scene.add(camera);
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [1, 1,-1],
-  intensity: 0.3,
+  intensity: 0.13,
   shadow: true,
   update: (light) => {
     const now = Date.now() / 400; 
@@ -66,7 +66,7 @@ await scene.add(onelight);
 let twolight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [1, 1,-1],
-  intensity: 0.3,
+  intensity: 0.13,
   shadow: true,
   update: (light) => {
     const now = Date.now() / 2000; 

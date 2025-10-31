@@ -87,12 +87,15 @@
 
     //测试阴影贴图
     // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),1,0) ;//第一个方向光的阴影
-    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),1,0) ;//第二个方向光的阴影
+    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),2,0) ;//第二个方向光的阴影
     // materialColor = vec4f( depthTest,depthTest,depthTest,1);
 
     // //测试可见性
     //  var visibility = getVisibilityOflight(U_lights.lights[1],worldPosition.rgb,normal.rgb); 
     //  materialColor =vec4f(visibility,visibility,visibility,1);
+
+    // let abc=f32(U_lights.lights[1].shadow_map_array_index);
+    // materialColor =vec4f(abc,abc,abc,1);
     return materialColor;
 }
 
@@ -123,6 +126,10 @@ fn calcLightAndShadow(
     {
         for (var i : u32 = 0; i < U_lights.lightNumber; i = i + 1)
         {
+            // if(i==0) {
+            //     continue;
+            // }
+
             //计算当前光源的可见性
             let onelight = U_lights.lights[i ];  
             var visibility = getVisibilityOflight(onelight,worldPosition,normal); 

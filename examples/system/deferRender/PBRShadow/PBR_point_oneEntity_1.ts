@@ -89,7 +89,7 @@ await light1Entity1.addChild(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.1
+    intensity: 0.001
   }
 )
 await scene.add(ambientLight);

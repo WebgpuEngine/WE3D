@@ -70,6 +70,18 @@ let light1Entity1 = new Mesh(
     // }
   });
 await scene.add(light1Entity1);
+let onelightDirectional = new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [1, 1,-1],
+  intensity: 0.13,
+  shadow: true,
+  update: (light) => {
+    const now = Date.now() / 400; 
+    light.Direction=[Math.sin(now), 1,Math.cos(now)];
+  }
+});
+
+await scene.add(onelightDirectional);
 
 let onelight = new PointLight(
   {
@@ -94,7 +106,6 @@ let ambientLight = new AmbientLight(
   }
 )
 await scene.add(ambientLight);
-
 ///////////////////////////////////////////////////////////////////////
 let sphere = new SphereGeometry({
   widthSegments: 128,

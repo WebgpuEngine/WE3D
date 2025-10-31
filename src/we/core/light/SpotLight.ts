@@ -13,7 +13,8 @@ export interface IV_SpotLight extends I_optionBaseLight {
     */
     intensity?: number,
     /**
-     * 在spot light direction 可以是方向，也可以是lookat的位置，由islookAt确定
+     * 1、isLookat=false时， direction 是方向，
+     * 2、isLookat=true时，  direction是lookat的位置，方向计算是direction-position
      */
     direction: weVec3,
     /**
@@ -107,23 +108,29 @@ export class SpotLight extends BaseLight {
                 // 
                 // vec3.copy(vec3.create(-3,-3,-3), position);
 
-                // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
-                let dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.inputValues.direction!));//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                if (this.inputValues.direction![0] == 0 && this.inputValues.direction![2] == 0 && this.inputValues.direction![1] == 1) {
+                //+Z
+                //摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的照射来的方向（spot的光源的反方向，+Z）。
+                let dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.inputValues.direction!));
+                //方向在世界坐标系的+轴
+                if (this.inputValues.direction![0] == 0 && this.inputValues.direction![1] == 1 && this.inputValues.direction![2] == 0) {
                     vec3.copy(dir, back);
                     vec3.copy(vec3.create(1, 0, 0), right);
                     vec3.copy(vec3.create(0, 0, 1), up);
                 }
-                else if (this.inputValues.direction![0] == 0 && this.inputValues.direction![2] == 0 && this.inputValues.direction![1] == -1) {
+                //方向在世界坐标系的-Y轴
+                else if (this.inputValues.direction![0] == 0 && this.inputValues.direction![1] == -1 && this.inputValues.direction![2] == 0) {
                     vec3.copy(dir, back);
                     vec3.copy(vec3.create(1, 0, 0), right);
                     vec3.copy(vec3.create(0, 0, -1), up);
                 }
                 else {
                     if (this.inputValues.isLookAt === undefined || this.inputValues.isLookAt === true) {
-                        //这个方向是shader中使用的
-                        this.Direction = vec3.normalize(vec3.sub(this.inputValues.direction, this.worldPosition));
-                        // this.Direction = vec3.normalize(vec3.sub( this.worldPosition,this.inputValues.direction));
+                        //这个方向是shader中使用的（位置-->光源，即-Z），需要与shader保持一致
+                        //之所以时-Z，同camera的视线方向
+                        if (this.inputValues.isLookAt == true)//都是用这个是可以的，为了理解方便，分成两个
+                            this.Direction = vec3.normalize(vec3.sub(this.inputValues.direction, this.worldPosition));//lookat方向=lookat-position
+                        else
+                            this.Direction = vec3.normalize(this.inputValues.direction);//固定的位置与方向，也是-Z
 
                         vec3.copy(vec3.normalize(vec3.sub(this.worldPosition, this.inputValues.direction)), back);//正Z轴方向
                         // console.log('lookAt', vec3.normalize(this.Direction));

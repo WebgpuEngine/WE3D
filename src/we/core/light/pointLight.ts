@@ -113,6 +113,13 @@ export class PointLight extends BaseLight {
 
 
                 // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
+                /**
+                 * 1、摄像机方向看向-Z，+Z=position(camera)-position(lookat),
+                 * 2、光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                 * 3、+X方向=(0,0,0)-(1.0.0)=-1,0,0
+                 * 
+                 * backdir =+Z
+                 */
                 let backdir = vec3.create(-1, 0, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
                 let upDir = vec3.create(0, 1, 0);
                 let rightDir = vec3.create(0, 0, 1);

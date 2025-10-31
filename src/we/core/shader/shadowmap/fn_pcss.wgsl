@@ -286,7 +286,7 @@ fn getVisibilityOflight(onelight: ST_Light,worldPosition: vec3f, normal: vec3f) 
            visibility = shadowMapVisibilityPCSS(onelight, shadow_map_index, worldPosition, normal, 0.08); //20251030,没有问题了，已经适配过了
            // visibility = shadowMapVisibilityPCF_3x3(onelight,shadow_map_index,  worldPosition, normal);
            // visibility = shadowMapVisibilityPCF(onelight, shadow_map_index, worldPosition, normal,0.08);
-           // visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
+        //    visibility = shadowMapVisibilityHard(onelight, shadow_map_index, worldPosition, normal);
            if (onelight.shadow ==0 ) //没有阴影
            {
                 visibility = 1.0;

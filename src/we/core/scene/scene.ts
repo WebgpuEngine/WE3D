@@ -1010,6 +1010,10 @@ export class Scene {
             this.getSystemBindGroupAndBindGroupLayoutForZero(UUID, kind);
             bindGroup = undefined;
         }
+        this.cameraManager.deferDCG.clear();
+        for(let perCamera of this.cameraManager.list){
+            this.cameraManager.deferDCG.generateDeferDrawCommand(perCamera.UUID);
+        }
     }
     /**
      * 获取RPD，DCG使用

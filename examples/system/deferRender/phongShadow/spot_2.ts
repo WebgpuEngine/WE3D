@@ -23,12 +23,15 @@ let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.],
   // reversedZ:true,
-  deferRender: "color"
+  deferRender: "color",
+  
 };
 let scene = await initScene({
   initConfig: input,
+  // runImmediately:false,
 });
 window.scene = scene;
+
 
 let radius = 2;
 let Y = 0;
@@ -44,6 +47,28 @@ let camera = new PerspectiveCamera({
 await scene.add(camera);
 
 /////////////////////////////////////////////////////////////
+//方向光1
+let onelightDirectional_1 = new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [1, 1,-1],
+  intensity: 0.13,
+  shadow: true,
+  update: (light) => {
+    const now = Date.now() / 200; 
+    light.Direction=[Math.sin(now), 1,Math.cos(now)];
+  }
+});
+//方向光2
+let onelightDirectional_2 = new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [1, 1,-1],
+  intensity: 0.3,
+  shadow: true,
+  update: (light) => {
+    const now = Date.now() / 2000; 
+    light.Direction=[Math.sin(now), 1,Math.cos(now)];
+  }
+});
 // let onelight= new PointLight(
 //   {
 //     position: [0.0, 0.0, 8.0],
@@ -93,29 +118,21 @@ let onelight = new SpotLight({
   shadow: true,
 });
 
-await light1Entity1.addChild(onelight);
+
 // await scene.add(onelight);
 
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.01
+    intensity: 0.001
   }
 )
+await light1Entity1.addChild(onelight);
 await scene.add(ambientLight);
+await scene.add(onelightDirectional_1);
+await scene.add(onelightDirectional_2);
 
-//方向光1
-let onelightDirectional = new DirectionalLight({
-  color: [1, 1, 1],
-  direction: [1, 1,-1],
-  intensity: 0.13,
-  shadow: true,
-  update: (light) => {
-    const now = Date.now() / 400; 
-    light.Direction=[Math.sin(now), 1,Math.cos(now)];
-  }
-});
-await scene.add(onelightDirectional);
+
 
 ///////////////////////////////////////////////////////////////////////
 let sphere = new SphereGeometry({
@@ -229,3 +246,5 @@ await scene.add(bottomPlane);
 //   rotate: [0, 1, 0, -Math.PI / 2],//负的,normal 相关
 // });
 // await scene.add(rightPlane);
+
+// scene.run();

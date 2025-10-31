@@ -43,12 +43,29 @@ let camera = new PerspectiveCamera({
 await scene.add(camera);
 
 /////////////////////////////////////////////////////////////
-// let onelight= new PointLight(
-//   {
-//     position: [0.0, 0.0, 8.0],
-//     intensity: 2.0,
-//   }
-// );
+//方向光1
+let onelightDirectional_1 = new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [1, 1,-1],
+  intensity: 0.13,
+  shadow: true,
+  update: (light) => {
+    const now = Date.now() / 200; 
+    light.Direction=[Math.sin(now), 1,Math.cos(now)];
+  }
+});
+//方向光2
+let onelightDirectional_2 = new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [1, 1,-1],
+  intensity: 0.3,
+  shadow: true,
+  update: (light) => {
+    const now = Date.now() / 1000; 
+    light.Direction=[Math.sin(now), 1,Math.cos(now)];
+  }
+});
+
 let ballGeometry = new SphereGeometry({
   radius: 0.1,
   widthSegments: 64,
@@ -92,29 +109,18 @@ let onelight = new SpotLight({
   shadow: true,
 });
 
-await light1Entity1.addChild(onelight);
-// await scene.add(onelight);
 
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.01
+    intensity: 0.001
   }
 )
 await scene.add(ambientLight);
+await scene.add(onelightDirectional_1);
+await scene.add(onelightDirectional_2);
+await light1Entity1.addChild(onelight);
 
-//方向光1
-let onelightDirectional = new DirectionalLight({
-  color: [1, 1, 1],
-  direction: [1, 1,-1],
-  intensity: 0.13,
-  shadow: true,
-  update: (light) => {
-    const now = Date.now() / 400; 
-    light.Direction=[Math.sin(now), 1,Math.cos(now)];
-  }
-});
-await scene.add(onelightDirectional);
 ///////////////////////////////////////////////////////////////////////
 let sphere = new SphereGeometry({
   widthSegments: 128,
