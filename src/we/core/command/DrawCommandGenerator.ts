@@ -14,6 +14,7 @@ import { AA } from "../scene/base";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, SHT_refDCG } from "../shadermanagemnet/base";
 import { BaseCamera } from "../camera/baseCamera";
 import { E_TransparentType, I_TransparentOptionOfMaterial } from "../material/base";
+import { Clock } from "../scene/clock";
 
 export interface IV_DrawCommandGenerator {
     scene: Scene,
@@ -170,7 +171,7 @@ export interface V_DC {
      */
     renderPassDescriptor?: GPURenderPassDescriptor | (() => GPURenderPassDescriptor),
     /**
-     * shader模块的名称
+     * 材质 shader模块的名称
      * 1、用于shader module的Map 操作的key
      * 2、如果没有，则不进行Map操作，直接创建使用
      */
@@ -188,12 +189,15 @@ export class DrawCommandGenerator {
     /**DrawCommand的输入参数数组 */
     inputDC: V_DC[] = [];
 
+    clock: Clock;
+
     constructor(inputValue: IV_DrawCommandGenerator) {
         this.device = inputValue.scene.device;
         this.scene = inputValue.scene;
         this.resources = this.scene.resourcesGPU;
         this.AA = this.scene.AA;
         this.MSAA = this.scene.MSAA;
+        this.clock = this.scene.clock;
     }
     clear() {
         console.warn("DrawCommandGenerator.clear() 未实现");
@@ -471,7 +475,7 @@ export class DrawCommandGenerator {
         if (values.system) {
             let UUID = this.checkUUID(values);
             if (UUID) {
-                let { bindGroup, bindGroupLayout } = this.scene.getSystemBindGroupAndBindGroupLayoutFroZero(UUID, values.system.type);
+                let { bindGroup, bindGroupLayout } = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(UUID, values.system.type);
                 DC_bindGroups.push(bindGroup);
                 DC_bindGroupLayouts.push(bindGroupLayout);
                 layoutNumber++;
@@ -495,7 +499,8 @@ export class DrawCommandGenerator {
                 let bindGroupLayout: GPUBindGroupLayout;
                 //BindGroup 的layout 描述，重点2->2.1
                 let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                    label: values.label + " bindGroupLayoutDescriptor of " + layoutNumber,
+                    label: `BGLD(${layoutNumber})@${this.clock.now} ${values.label}`,
+                    // label: values.label +" BGLD: "+ layoutNumber + " time:"+this.clock.now,
                     entries: []
                 };
                 //BindGroup layout的数据入口  -->2.1.1
@@ -597,7 +602,8 @@ export class DrawCommandGenerator {
                     bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
                     //初始化BindGroup描述
                     bindGroupDesc = {
-                        label: values.label + " bindGroupLayoutDescriptor of " + layoutNumber,
+                        // label: values.label + " BGD:" + layoutNumber + " time:"+this.clock.now,
+                        label:  `BGD(${layoutNumber})@${this.clock.now} ${values.label}`,
                         layout: bindGroupLayout,
                         entries: bindGroupEntry,
                     }
@@ -634,7 +640,7 @@ export class DrawCommandGenerator {
         // if (values.transparent)
         //     console.log(shadercode);
         moduleVS = this.device.createShaderModule({
-            label: values.label + " createShaderModule()",
+            label: "SHM@"+this.clock.now + " " + values.label ,
             code: shadercode,
         });
         //3、生产GPURenderPipelineDescriptor
@@ -706,12 +712,12 @@ export class DrawCommandGenerator {
 
         //3.3、GPURenderPipelineDescriptor.layout 部分
         let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: values.label,
+            label: "PipelineLayout@"+this.clock.now + " " + values.label,
             bindGroupLayouts: DC_bindGroupLayouts,
         }
         let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
         let descriptor: GPURenderPipelineDescriptor = {
-            label: values.label,
+            label: "Pipeline@"+this.clock.now + " " + values.label,
             vertex,
             layout: pipelineLayout,
         }
@@ -820,7 +826,16 @@ export class DrawCommandGenerator {
             renderPassDescriptor,
             // dynamic: values.dynamic || false,
         }
-
+        //为了适配动态增加光源后的阴影贴图的动态更新。
+        if(values.system) {
+            let UUID = this.checkUUID(values);
+            if(UUID) {
+                commandOption.system = {
+                    UUID,
+                    type: values.system.type,
+                }
+            }
+        }
         if (values.IDS) {
             commandOption.IDS = values.IDS;
         }

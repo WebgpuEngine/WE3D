@@ -5,8 +5,8 @@ export async function initScene(config: initSceneConfig) {
     let initValues = config.initConfig;
     if (config.loadConfig) {
         initValues.backgroudColor = config.loadConfig.weRender.backgroudColor;
-        if (config.loadConfig.weRender.AA == "MSAA" || config.loadConfig.weRender.AA == "FXAA" || config.loadConfig.weRender.AA == "TAA") {
-            initValues.AA = { type: config.loadConfig.weRender.AA };
+        if (config.loadConfig.weRender.AA) {
+            initValues.AA = config.loadConfig.weRender.AA;
         }
         initValues.premultipliedAlpha = config.loadConfig.surface.premultipliedAlpha;
         initValues.surface = config.loadConfig.surface;
@@ -18,7 +18,7 @@ export async function initScene(config: initSceneConfig) {
     if (config.loadConfig) {
         scene.load(config.loadConfig);
     }
-    if (config.runImmediately || config.loadConfig == undefined) {
+    if (config.runImmediately == undefined || config.loadConfig == undefined) {
         scene.run();
     }
     return scene;

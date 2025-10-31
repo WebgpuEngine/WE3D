@@ -81,17 +81,18 @@
     else if(materialKind==1){
         //   materialColor =worldPosition;
     }
-    // else if(materialKind==1){
+    // else if(materialKind==2){
     //     // materialColor = calcLightAndShadowOfPhong(
-
     // }
-    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),0,0) *0.5;//第一个方向光的阴影
-    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),1,0) *0.5;//第二个方向光的阴影
-    // materialColor = vec4f( depthTest,depthTest,depthTest,1);
-    // materialColor=normal;
 
-     var visibility = getVisibilityOflight(U_lights.lights[1],worldPosition.rgb,normal.rgb); 
-     materialColor =vec4f(visibility,visibility,visibility,1);
+    //测试阴影贴图
+    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),1,0) ;//第一个方向光的阴影
+    // let depthTest=textureLoad(U_shadowMap_depth_texture, vec2i(i32(pos.x),i32(pos.y)),1,0) ;//第二个方向光的阴影
+    // materialColor = vec4f( depthTest,depthTest,depthTest,1);
+
+    // //测试可见性
+    //  var visibility = getVisibilityOflight(U_lights.lights[1],worldPosition.rgb,normal.rgb); 
+    //  materialColor =vec4f(visibility,visibility,visibility,1);
     return materialColor;
 }
 

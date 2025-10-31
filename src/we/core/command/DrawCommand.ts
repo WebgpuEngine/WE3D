@@ -1,3 +1,4 @@
+import { E_renderForDC } from "../base/coreDefine";
 import { E_TransparentType } from "../material/base";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
@@ -57,6 +58,10 @@ export interface IV_DrawCommand extends IV_BaseCommand {
      */
     IDS?: I_DrawCommandIDs,
     transparentType?: E_TransparentType,
+    system?: {
+        UUID: string,
+        type: E_renderForDC,//"camera" | "light"
+    }
 }
 
 export class DrawCommand {
@@ -89,7 +94,10 @@ export class DrawCommand {
 
     drawMode: I_drawMode | I_drawModeIndexed
 
-
+    system: {
+        UUID: string,
+        type: E_renderForDC,//"camera" | "light"
+    }|undefined;
 
     /**
      * 缓存的pipeline结构，用于标识DC在renderManaager中优化渲染使用
@@ -130,6 +138,7 @@ export class DrawCommand {
         if (input.IDS) this.IDS = input.IDS;
         // this.resourcesGPU = input.scene.resourcesGPU;
         this.transparentType = input.transparentType;
+        if (input.system) this.system = input.system;
     }
     /**
      * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
@@ -143,8 +152,8 @@ export class DrawCommand {
      */
     uniformBufferList: any[] = [];
     destroy() {
-        if (this.isOwner ===true){
-            
+        if (this.isOwner === true) {
+
         }
         console.warn("DrawCommand destroy:", this.label);
         // if (this.resourcesGPU) {
@@ -225,6 +234,18 @@ export class DrawCommand {
             let maxDepth = this.inputValues.viewport.maxDepth == undefined ? 1 : this.inputValues.viewport.maxDepth;
 
             passEncoder.setViewport(this.inputValues.viewport.x, this.inputValues.viewport.y, this.inputValues.viewport.width, this.inputValues.viewport.height, minDepth, maxDepth);
+        }
+
+        if(this.system !== undefined) {
+            /**
+             * 目标：
+             * 1、为DC绑定camera的bindGroup0（动态增加光源的阴影贴图后，shadowmap textture 会重建，原来绑定的会失效）
+             * 2、透明的shadowmap渲染，预计也可能有类似的问题。（如果是copy 到公用的uniform depth texture的方式，应该没有此问题）todo
+             */
+            if(this.system.type === E_renderForDC.camera) {
+                let bindGroupBundle =this.scene.getSystemBindGroupAndBindGroupLayoutForZero(this.system.UUID,this.system.type);
+                this.bindGroups[0] = bindGroupBundle.bindGroup;
+            }
         }
 
         for (let i in this.bindGroups) {

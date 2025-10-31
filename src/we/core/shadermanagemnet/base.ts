@@ -136,19 +136,19 @@ export var WGSL_replace_MSAA_gbuffer_output = replace_MSAA_gbuffer_outputWGSL.to
 import replace_MSAAinfo_gbuffer_outputWGSL from "../shader/gbuffers/replace_MSAAinfo_gbuffer_output.fs.wgsl?raw";
 export var WGSL_replace_MSAAinfo_gbuffer_output = replace_MSAAinfo_gbuffer_outputWGSL.toString();
 
-import deferDepthWGSL from "../shader/defer/replace_deferDepthCompare.fs.wgsl?raw";
-var deferDepthFS = deferDepthWGSL.toString();
-//defer渲染的深度比较,未使用，但有导入引用
-export var SHT_replaceDefer: I_shaderTemplateReplace = {
-    name: "replaceDefer",
-    description: "根据scene.deferRender.deferRenderDepth 判断行为",
-    replace: "$deferRender_Depth",
-    replaceType: E_shaderTemplateReplaceType.checkVarOfJS,
-    varOfJS: ["scene", "deferRender", "deferRenderDepth"],
-    varOfJSCheck: [
-        { "true": deferDepthFS },
-        { "false": "" }],
-}
+// import deferDepthWGSL from "../shader/defer/replace_deferDepthCompare.fs.wgsl?raw";
+// var deferDepthFS = deferDepthWGSL.toString();
+// //defer渲染的深度比较,未使用，但有导入引用
+// export var SHT_replaceDefer: I_shaderTemplateReplace = {
+//     name: "replaceDefer",
+//     description: "根据scene.deferRender.deferRenderDepth 判断行为",
+//     replace: "$deferRender_Depth",
+//     replaceType: E_shaderTemplateReplaceType.checkVarOfJS,
+//     varOfJS: ["scene", "deferRender", "deferRenderDepth"],
+//     varOfJSCheck: [
+//         { "true": deferDepthFS },
+//         { "false": "" }],
+// }
 
 import WGSL_replace_gbuffer_commonValues from "../shader/gbuffers/commonGBufferValue.wgsl?raw";
 var replace_gbuffer_commonValues = WGSL_replace_gbuffer_commonValues.toString();

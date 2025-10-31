@@ -783,7 +783,7 @@ export class Scene {
      * @param kind 渲染的类型
      * @returns 
      */
-    getSystemBindGroupAndBindGroupLayoutFroZero(UUID: string, kind: E_renderForDC): I_bindGroupAndGroupLayout {
+    getSystemBindGroupAndBindGroupLayoutForZero(UUID: string, kind: E_renderForDC): I_bindGroupAndGroupLayout {
         let bindGroup: GPUBindGroup;
         let bindGroupLayout: GPUBindGroupLayout;
         let generate = true;
@@ -798,12 +798,14 @@ export class Scene {
         let entriesGroupLayout: GPUBindGroupLayoutEntry[] = []
         let entriesGroup: GPUBindGroupEntry[] = [];
         if (generate) {
+            let workFor = "";
             if (kind == E_renderForDC.light) {
+                workFor = " light ";
                 let light = this.lightsManager.getLightByMergeID(UUID);
                 // return this.lightsManager.getLightBindGroupAndBindGroupLayoutByMergeID(id);
-                let mvpGPUBuffer = this.lightsManager.getOneLightsMVPByMergeID(UUID);
+                let mvpGPUBuffer = this.lightsManager.getOneLightMVP_ByMergeID(UUID);
                 if (!mvpGPUBuffer) {
-                    throw new Error("getSystemBindGroupAndBindGroupLayoutFroZero error,mvpGPUBuffer is undefined");
+                    throw new Error("getSystemBindGroupAndBindGroupLayoutForZero error,mvpGPUBuffer is undefined");
                 }
                 ////////////////////////////////
                 //camera uniform 
@@ -825,6 +827,7 @@ export class Scene {
 
             }
             else {
+                workFor = " camera ";
                 let camera = this.cameraManager.getCameraByUUID(UUID);
                 if (camera) {
                     /////////////////////////////////
@@ -832,11 +835,11 @@ export class Scene {
                     // if (this.resourcesGPU.systemGroup0ByID.has(UUID)) {
                     //     bindGroup = this.resourcesGPU.systemGroup0ByID.get(UUID)!;
                     //     if(!bindGroup){
-                    //         throw new Error("getSystemBindGroupAndBindGroupLayoutFroZero error,bindGroup is undefined");
+                    //         throw new Error("getSystemBindGroupAndBindGroupLayoutForZero error,bindGroup is undefined");
                     //     }
                     //     bindGroupLayout = this.resourcesGPU.systemGroupToGroupLayout.get(bindGroup)!;
                     //     if(!bindGroupLayout){
-                    //         throw new Error("getSystemBindGroupAndBindGroupLayoutFroZero error,bindGroupLayout is undefined");
+                    //         throw new Error("getSystemBindGroupAndBindGroupLayoutForZero error,bindGroupLayout is undefined");
                     //     }
                     // }
                     // else 
@@ -976,12 +979,12 @@ export class Scene {
             //////////////////////////////////////////////////
             //bind group zero 
             let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                label: "system bind group layout 0",
+                label: "System BGLD(0)@" + this.clock.now + workFor + UUID,
                 entries: entriesGroupLayout
             }
             bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
             let bindGroupDescriptor: GPUBindGroupDescriptor = {
-                label: "system bind group 0",
+                label: "System BGD(0)@" + this.clock.now + workFor + UUID,
                 layout: bindGroupLayout,
                 entries: entriesGroup
             }
@@ -990,6 +993,23 @@ export class Scene {
             this.resourcesGPU.systemGroupToGroupLayout.set(bindGroup, bindGroupLayout);
         }
         return { bindGroup: bindGroup!, bindGroupLayout: bindGroupLayout! };
+    }
+    /**
+     * 刷新系统BindGroup和BindGroupLayout
+     * @param UUID 
+     * @param kind 
+     */
+    refreshSystemBindGroupAndBindGroupLayoutZeroForCamera() {
+        for (let perCamera of this.cameraManager.list) {
+            let UUID = perCamera.UUID;
+            let kind: E_renderForDC = E_renderForDC.camera;
+            let bindGroup = this.resourcesGPU.systemGroup0ByID.get(UUID);
+            // let bindGroupLayout = this.resourcesGPU.systemGroupToGroupLayout.get(bindGroup!);
+            this.resourcesGPU.systemGroupToGroupLayout.delete(bindGroup!);
+            this.resourcesGPU.systemGroup0ByID.delete(UUID);
+            this.getSystemBindGroupAndBindGroupLayoutForZero(UUID, kind);
+            bindGroup = undefined;
+        }
     }
     /**
      * 获取RPD，DCG使用

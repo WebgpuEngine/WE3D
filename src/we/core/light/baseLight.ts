@@ -436,7 +436,7 @@ export abstract class BaseLight extends RootOfGPU {
 
 
         ST_LightViews.visible[0] = this.Visible ? 1 : 0;
-        //对应的shadowmap的信息
+        //对应的shadowmap的信息,字面量(copy)
         ST_LightViews.shadow[0] = this.Shadow ? 1 : 0;
         ST_LightViews.shadow_map_type[0] = this.shadowMapOfSt_Light.shadow_map_type;
         ST_LightViews.shadow_map_array_index[0] = this.shadowMapOfSt_Light.shadow_map_array_index;

@@ -84,7 +84,7 @@ let onelight = new SpotLight({
   isLookAt: true,
   position: [0, 0, 0],
   // position: [3, 3, 3],
-  intensity: 2.0,
+  intensity: 1.0,
   // angle: 25 / 180 * Math.PI,
   // angleOut: 30 / 180 * Math.PI,
   angle: 20 * (Math.PI) / 180,
@@ -98,11 +98,23 @@ await light1Entity1.addChild(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-    intensity: 0.1
+    intensity: 0.01
   }
 )
 await scene.add(ambientLight);
 
+//方向光1
+let onelightDirectional = new DirectionalLight({
+  color: [1, 1, 1],
+  direction: [1, 1,-1],
+  intensity: 0.13,
+  shadow: true,
+  update: (light) => {
+    const now = Date.now() / 400; 
+    light.Direction=[Math.sin(now), 1,Math.cos(now)];
+  }
+});
+await scene.add(onelightDirectional);
 ///////////////////////////////////////////////////////////////////////
 let sphere = new SphereGeometry({
   widthSegments: 128,

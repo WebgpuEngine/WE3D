@@ -59,7 +59,7 @@ export class DeferDrawCommandGenerator implements IV_DeferDrawCommand {
         let pipeline: GPURenderPipeline;
         let uniforms: GPUBindGroup[] = [];
         {
-            let uniform0 = this.scene.getSystemBindGroupAndBindGroupLayoutFroZero(UUID, E_renderForDC.camera);
+            let uniform0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(UUID, E_renderForDC.camera);
             let uniform1_entry: GPUBindGroupEntry[] =
                 [
                     {

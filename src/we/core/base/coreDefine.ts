@@ -27,7 +27,9 @@ export interface I_Update {
 /** 渲染类型，用于shadow map 或者camera */
 export enum E_renderForDC {
     "camera" = "camrea",
-    "light" = "light"
+    "light" = "light",
+    /**透明的shadow map 渲染 */
+    "lightTransparent" = "lightTransparent",
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +63,7 @@ export var V_layerOfShadowMapTransparnet = 3;
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //HDR and color space 
 
-export var V_weLinearFormat:GPUTextureFormat = "rgba16float";
+export var V_weLinearFormat: GPUTextureFormat = "rgba16float";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //通用

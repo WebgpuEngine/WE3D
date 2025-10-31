@@ -100,7 +100,7 @@ export interface IJ_Scene {
     description: string,
     surface: optionSurface,
     weRender: {
-        AA: string,
+        AA: AA,
         backgroudColor: [number, number, number, number],
         colorFormat: "rgba16float" | "rgba32float",
     },

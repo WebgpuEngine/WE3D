@@ -243,7 +243,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         if (boundingBoxMaxSize === 0) boundingBoxMaxSize = 1;
 
         let valueDC: V_DC = {
-            label: scope._type + scope.Name + " for " + renderType + ":" + UUID,
+            label: scope.kind + scope.Name + " for " + renderType + ":" + UUID,
             data: {
                 vertices: scope.attributes.vertices,
                 vertexStepMode: scope.attributes.vertexStepMode,
@@ -397,9 +397,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 let drawFor = " forward ";
                 if (this.deferColor) drawFor = " defer "
                 if (TO !== undefined)
-                    valueDC.label = this.kind + drawFor + "TO forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + this.Name + drawFor + "TO for " + E_renderForDC.camera + ": " + UUID;
                 else
-                    valueDC.label = this.kind + drawFor + "opacity forward :" + this.Name + " for  " + E_renderForDC.camera + ": " + UUID;
+                    valueDC.label = this.kind + this.Name + drawFor + "opacity for " + E_renderForDC.camera + ": " + UUID;
                 let dc = this.DCG.generateDrawCommand(valueDC);
 
                 this.cameraDC[UUID][E_renderPassName.forward].push(dc);

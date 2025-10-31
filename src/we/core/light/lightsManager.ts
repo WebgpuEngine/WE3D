@@ -32,7 +32,7 @@ import { Scene } from "../scene/scene";
 import { AmbientLight, IV_AmbientLight } from "./ambientLight";
 import { BaseLight, E_lightType, lightStructSize } from "./baseLight";
 import { I_bindGroupAndGroupLayout } from "../command/base";
-import { V_layerOfShadowMapTransparnet, V_shadowMapSize, V_weLinearFormat } from "../base/coreDefine";
+import { E_renderForDC, V_layerOfShadowMapTransparnet, V_shadowMapSize, V_weLinearFormat } from "../base/coreDefine";
 import { Clock } from "../scene/clock";
 import { ECSManager } from "../organization/manager";
 
@@ -133,7 +133,8 @@ export class LightsManager extends ECSManager<BaseLight> {
     shadowIndexID: number = 0;
 
     /**
-     * copy shadowMapTexture[i of light ] 的transparent depth texture
+     * copy shadowMapTexture[i of light ] 的transparent depth texture(公用的临时copy depth texture)
+     * 
      * 1、每个light的transparent 都会copy一次
      * 2、然后此纹理作为输入的depth 比较纹理
      */
@@ -158,7 +159,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * */
     // lights: BaseLight[] = [];
 
-    /***上一帧光源数量，动态增减光源，uniform的光源的GPUBuffer大小会变化，这个值如果与this.lights.length相同，不更新；不同，怎更新GPUBuffer */
+    /***上一帧光源数量，动态增减光源，uniform的光源的GPUBuffer大小会变化，这个值如果与this.lights.length相同，不更新；不同，更新GPUBuffer */
     _lastNumberOfLights: number = 0;
     /***上一帧shadowmap数量，动态增减光源，uniform的shadowmap的GPUBuffer大小会变化，
      * 这个值如果与this.shadowArrayOfDepthMapAndMVP.length相同，不更新；不同，怎更新GPUBuffer */
@@ -205,7 +206,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         });
         this.ShadowMapUniformGPUBuffer = this.createShadowMapUniformGPUBuffer();
         this.shadowMapCopyTransparentDepthTexture = this.device.createTexture({
-            label: "LightsManager create shadow map depth texture",
+            label: "LightsManager shadowMapCopyTransparentDepthTexture",
             size: {
                 width: V_shadowMapSize,
                 height: V_shadowMapSize,
@@ -215,7 +216,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             // format: this.scene.depthDefaultFormat,
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
         });
-        this.shadowMapTexture = this.generateShadowMapTexture();//todo 20250105,目前是固定的，后期改成动态
+        this.shadowMapTexture = this.generateShadowMapTexture(1);//todo 20250105,目前是固定的，后期改成动态
     }
     /**
      * 设置最大光源数量,并且更新reNewLightsNumberOfShadow=true
@@ -248,16 +249,18 @@ export class LightsManager extends ECSManager<BaseLight> {
      * 
      * @returns GPUTexture
      */
-    generateShadowMapTexture(): GPUTexture {
+    generateShadowMapTexture(layerNumber: number): GPUTexture {
         if (this.shadowMapTexture) {
             this.shadowMapTexture.destroy();
         }
         const shadowmapTextureDesc: GPUTextureDescriptor = {
-            label: "LightsManager create shadow map depth texture",
+            label: "LightsManager shadowmap depth texture"+new Date().getTime(),
             size: {
                 width: V_shadowMapSize,
                 height: V_shadowMapSize,
-                depthOrArrayLayers: this._maxlightNumber * 6,
+                depthOrArrayLayers: layerNumber,
+
+                // depthOrArrayLayers: this._maxlightNumber * 6,
             },
             format: "depth32float",
             // format: "depth24plus-stencil8",
@@ -309,11 +312,12 @@ export class LightsManager extends ECSManager<BaseLight> {
                 one.updateShdowMapValues(this.shadowIndexID, count, count);
                 // this.shadowIndexID ++;
             }
+            this.shadowMapTexture = this.generateShadowMapTexture(this.shadowIndexID+count);//todo 20250105,目前是固定的，后期改成动态
 
             //这里有个问题，即使是使用async/await，也出现得不到matrixp[],所以更改为现在的初始化为单位矩阵
             // let MVPs = one.getMVP();//获取MVP，并for
             for (let i = 0; i < count; i++) {
-                let oneShadowMapRenderUniformBuffer = this.createShadowMapRenderUniformBuffer(one.ID.toString());//todo 202508222 :这里的ID需要在stage的root中统一处理，与entity相同，此处为暂时的
+                let oneShadowMapRenderUniformBuffer = this.createShadowMapGPUBufferOfMVP(one.ID.toString());//todo 202508222 :这里的ID需要在stage的root中统一处理，与entity相同，此处为暂时的
                 const oneMVP: light_shadowMapMatrix = {
                     light_id: one.ID,
                     index: this.shadowIndexID,//在shadowMapTexture中的开始位置
@@ -325,21 +329,29 @@ export class LightsManager extends ECSManager<BaseLight> {
                 }
                 this.shadowArrayOfDepthMapAndMVP.push(oneMVP)
             }
-
             if (one.Kind == E_lightType.point) {//point light
                 this.shadowIndexID += 6;
             }
             else {//other
                 this.shadowIndexID++;
             }
-
             this.reNewLightsNumberOfShadow = true;//动态更新用，目前没有用途
         }
+        this.updateAllShadowMapRPD();
         one.manager = this;
         this.list.push(one);
     }
 
+    updateAllShadowMapRPD() {
+        for (let i = 0; i < this.shadowArrayOfDepthMapAndMVP.length; i++) {
+            let oneMVP = this.shadowArrayOfDepthMapAndMVP[i];
+            oneMVP.RPD = this.createShadowMapRPD(oneMVP.index, oneMVP.matrix_self_index);
+        }
+        this.scene.refreshSystemBindGroupAndBindGroupLayoutZeroForCamera();
+    }
+
     /**
+     * shadow map render RPD
      * 创建shadowMap的RPD,每个MVP对应一个RPD（因为depth textrue 是array）
      * @param index 光源的shadowIndexID,开始的位置
      * @param selfIndex 光源的selfIndex，当前位置后的便宜了
@@ -350,7 +362,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             depthStencilAttachment: {
                 view: this.shadowMapTexture.createView(
                     {
-                        label: "lights management shadowMapTexture array ,the index is :" + shadowIndexID + " offset is :" + selfIndex,
+                        label: "lightManager RPD,index:" + shadowIndexID + " offset is :" + selfIndex,
                         dimension: "2d",
                         // dimension: "2d-array",
                         baseArrayLayer: shadowIndexID + selfIndex,
@@ -368,98 +380,47 @@ export class LightsManager extends ECSManager<BaseLight> {
         };
         return renderPassDescriptor;
     }
-    // end add light
-
-    ////////////////////////////////////////////////////////////////////////////
-    // get function 
-
-    getShadowMapDepthTextureView_ByMergeID(mergeID: string): GPUTextureView {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
-        return this.getShadowMapDepthTextureView_ByIdAndMatrixID(id, matrixIndex);
-    }
-    getShadowMapDepthTextureView_ByIdAndMatrixID(id: number, matrixIndex: number): GPUTextureView {
-        let index=-1;
-        for (let i of this.shadowArrayOfDepthMapAndMVP) {
-            if (i.light_id == id && i.matrix_self_index == matrixIndex!) {
-                index=i.index;
-                break;
-            }
-        }
-        if(index==-1){
-            throw new Error("getShadowMapDepthTextureView_ByMergeID: not found");
-        }
-        return this.shadowMapTexture.createView(
-            {
-                label: "lights management shadowMapTexture array,the index is :" + index + " offset is :" + matrixIndex,
-                dimension: "2d",
-                // dimension: "2d-array",
-                baseArrayLayer: index + matrixIndex,
-                arrayLayerCount: 1,
-            }
-        );
-    }
     /**
-     * 获取shadowMap的RPD，
-     * @param mergeIDmergeID 光源的mergeID：由光源的ID，和selfIndex组成
-     * @returns  GPURenderPassDescriptor | false
-     */
-    gettShadowMapRPD_ByMergeID(mergeID: string): GPURenderPassDescriptor | false {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
-        return this.getShadowMapRPDByIdAndSelfIndex(id, matrixIndex);
-    }
-
-    /**
-     * 获取shadowMap的RPD，
+     * 创建光源的shadow map的uniform buffer（GPUBuffer），渲染shadow map 使用
      * @param id 光源的ID
-     * @param matrixIndex 光源的selfIndex
-     * @returns  GPURenderPassDescriptor | false
+     * @param m4 光源的MVP
+     * @returns 光源的shadow map的uniform buffer
      */
+    createShadowMapGPUBufferOfMVP(id: string, m4?: Mat4): GPUBuffer {
 
-    getShadowMapRPDByIdAndSelfIndex(id: number, matrixIndex: number): GPURenderPassDescriptor | false {
-        for (let i of this.shadowArrayOfDepthMapAndMVP) {
-            if (i.light_id == id && i.matrix_self_index == matrixIndex!) {
-                return i.RPD;
-            }
+        let MVP_buffer = new Float32Array([
+            1, 0, 0, 0,     //start martix
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            0, 0, 0, 0,     //reversedZ: u32,
+        ]);
+        let MVP = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);
+        if (m4)
+            mat4.copy(m4, MVP);
+        if (this.scene.reversedZ.isReversedZ) {
+            let reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 1);
+            reversedZ[0] = 1;
         }
-        return false;
-    }
-    /**
-     * 获取光源数量
-     * @returns number
-     */
-    getLightNumbers() {
-        return this.list.length;//这个需要进行可见性处理(enable,visible,stage)，todo 20241021
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //目前没有使用，todo
-    reInit() {
-        this.reNewLightsNumberOfShadow = false;
-
-        this._lastNumberOfLights = 0;
-
-        this.list = [];
-        // this.lightsCommands = {};
-        this.ambientLight = new AmbientLight({ color: [1, 1, 1], intensity: 1 });
-        this.shadowArrayOfDepthMapAndMVP = [];
-
-        ////////////////////////////////////////////////
-        //创建GPUBuffer，大小与shader中的ST_Lights一致，光源数量与初始化参数一致
-        this.lightsUniformGPUBuffer = this.device.createBuffer({
-            label: 'lightsGPUBuffer',
-            size: 16 + 16 + this._maxlightNumber * lightStructSize,
+        let oneGPUBuffer: GPUBuffer = this.device.createBuffer({
+            label: "Light Manager create buffer for lights MVP ,lights id :" + id,
+            size: MVP_buffer.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
-
-
-        this.shadowIndexID = 0;//MVP and depth texture index;
-        this.shadowMapTexture = this.generateShadowMapTexture();//todo 20250105,目前是固定的，后期改成动态
-        this.ShadowMapUniformGPUBuffer = this.createShadowMapUniformGPUBuffer();
+        this.device.queue.writeBuffer(
+            oneGPUBuffer,
+            0,
+            MVP_buffer.buffer,
+            MVP_buffer.byteOffset,
+            MVP_buffer.byteLength
+        );
+        return oneGPUBuffer;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // update function
+    // onSystemBeforeUpdate(clock: Clock) {
+    // }
     /**
      * 更新所有光源的入口之前的预处理
      */
@@ -473,7 +434,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         this.beforUpdate();
         this.updateLights(clock);//更新所有光源属性
         this.updateSystemUniformBufferForlights();//更新lights的system uniform ；@group(0) @binding(1)
-        this.updateSytemUniformOfShadowMap();//更新shadowmap  uniform，@group(0) @binding(2)；同步更新每个光源生成shadow map用的MVP
+        this.updateSystemUniformOfShadowMap();//更新shadowmap  uniform，@group(0) @binding(2)；同步更新每个光源生成shadow map用的MVP
     }
     /** 更新所有光源参数*/
     updateLights(clock: Clock) {
@@ -548,7 +509,7 @@ export class LightsManager extends ECSManager<BaseLight> {
     /**1、更新所有光源的shadow map的uniform :@group(0)@binding(2) var<uniform> U_shadowMapMatrix
      * 2、同步更新每个光源生成shadow map用的MVP
     */
-    updateSytemUniformOfShadowMap(): GPUBuffer {
+    updateSystemUniformOfShadowMap(): GPUBuffer {
 
         //重点，ArrayBuffer是一个整体的缓冲区，而不是多个小缓冲区
         const ST_shadowMapMatrixValues = new ArrayBuffer(ST_shadowMapMatrix_Size * this._maxlightNumber);//@group(0)@binding(2) var<uniform> U_shadowMapMatrix,all
@@ -569,7 +530,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             // ST_shadowMapMatrixViews.light_id[0] = oneST.light_id;
             // ST_shadowMapMatrixViews.matrix_count[0] = oneST.matrix_count;
             // ST_shadowMapMatrixViews.matrix_index[0] = oneST.matrix_self_index;
-            const m4 = this.getLightMVPByID(oneST.light_id, oneST.matrix_self_index);
+            const m4 = this.getLightMVP_ByID(oneST.light_id, oneST.matrix_self_index);
             mat4.copy(m4, oneST.MVP);
             /*更新的是scene中的shadowmap的uniform */
             mat4.copy(m4, ST_shadowMapMatrixViews.MVP);//@group(0)@binding(2) var<uniform> U_shadowMapMatrix，每个的MVP
@@ -588,42 +549,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         return this.ShadowMapUniformGPUBuffer;
     }
 
-    /**
-     * 创建光源的shadow map的uniform buffer（GPUBuffer），渲染shadow map 使用
-     * @param id 光源的ID
-     * @param m4 光源的MVP
-     * @returns 光源的shadow map的uniform buffer
-     */
-    createShadowMapRenderUniformBuffer(id: string, m4?: Mat4,) {
 
-        let MVP_buffer = new Float32Array([
-            1, 0, 0, 0,     //start martix
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-            0, 0, 0, 0,     //reversedZ: u32,
-        ]);
-        let MVP = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);
-        if (m4)
-            mat4.copy(m4, MVP);
-        if (this.scene.reversedZ.isReversedZ) {
-            let reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 1);
-            reversedZ[0] = 1;
-        }
-        let oneGPUBuffer: GPUBuffer = this.device.createBuffer({
-            label: "Light Manager create buffer for lights MVP ,lights id :" + id,
-            size: MVP_buffer.byteLength,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-        this.device.queue.writeBuffer(
-            oneGPUBuffer,
-            0,
-            MVP_buffer.buffer,
-            MVP_buffer.byteOffset,
-            MVP_buffer.byteLength
-        );
-        return oneGPUBuffer;
-    }
 
     /**
      * 写入MVP到GPUBuffer
@@ -652,17 +578,50 @@ export class LightsManager extends ECSManager<BaseLight> {
             MVP_buffer.byteLength
         );
     }
-    getOneLightsMVPByMergeID(mergeID: string): GPUBuffer | false {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
-        return this.getOneLightMVPByID(id, matrixIndex);
+    ////////////////////////////////////////////////////////////////////////////
+    // get function 
+
+    /**
+     * 获取光源数量
+     * @returns number
+     */
+    getLightNumbers() {
+        return this.list.length;//这个需要进行可见性处理(enable,visible,stage)，todo 20241021
+    }
+    //////////////////////////////////////////////
+    //shadow map ，uniform of light of system
+
+    /**
+     * 获取光源的shadow map的uniform buffer（GPUBuffer）
+     * system camera 使用:@group(0) @binding(2) var<uniform> U_shadowMapMatrix : array<ST_shadowMapMatrix,$lightNumberShadowNumber>;
+     * @returns 光源的shadow map的uniform buffer
+     */
+    getShadowMapUniformForSystem() {
+        return this.ShadowMapUniformGPUBuffer;
     }
 
+    /**获取光源的uniform buffer（GPUBuffer）
+     * system camera 使用:@group(0) @binding(1) var<uniform> U_lights : ST_Lights;  
+     * @returns 光源的uniform buffer
+     */
+    getLightsUniformForSystem() {
+        return this.lightsUniformGPUBuffer;
+    }
     /**获取shadowmap的结构数组
-     * 
+     * BaseEntity 调用此函数
      * @returns light_shadowMapMatrix[]
      */
     getShdowMapsStructArray(): light_shadowMapMatrix[] {
         return this.shadowArrayOfDepthMapAndMVP;
+    }
+
+
+    //////////////////////////////////////////////
+    //获取MVP
+    //secen 使用
+    getOneLightMVP_ByMergeID(mergeID: string): GPUBuffer | false {
+        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        return this.getOneLightMVP_ByID(id, matrixIndex);
     }
     /**获取光源的shadow map  的MVP
      * 
@@ -670,7 +629,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @param matrixIndex number, 光源的矩阵index，0-5，点光源有6个shadow map
      * @returns GPUBuffer | false 
      */
-    getOneLightMVPByID(id: number, matrixIndex: number): GPUBuffer | false {
+    getOneLightMVP_ByID(id: number, matrixIndex: number): GPUBuffer | false {
         for (let i of this.shadowArrayOfDepthMapAndMVP) {
             if (i.light_id == id && i.matrix_self_index == matrixIndex) {
                 return i.GPUBuffer;
@@ -686,7 +645,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @param matrix_index 
      * @returns 
      */
-    getLightMVPByID(id: number, matrix_index: number): Mat4 {
+    getLightMVP_ByID(id: number, matrix_index: number): Mat4 {
         let m4 = mat4.identity();
         let one = this.getLightByID(id);
         if (one) {
@@ -699,10 +658,13 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @param mergeID 光源的合并ID
      * @returns 光源的MVP
      */
-    getLightMVPByMergeID(mergeID: string): Mat4 {
+    getLightMVP_ByMergeID(mergeID: string): Mat4 {
         let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
-        return this.getLightMVPByID(id, matrixIndex);
+        return this.getLightMVP_ByID(id, matrixIndex);
     }
+
+    //////////////////////////////////////////////
+    //获取光源
     /**
      * 获取当前光源的index的MVP
      * get light by id
@@ -736,21 +698,27 @@ export class LightsManager extends ECSManager<BaseLight> {
             throw new Error("light not found,id:" + id);
         }
     }
-    /**获取光源的uniform buffer（GPUBuffer）
-     * system camera 使用:@group(0) @binding(1) var<uniform> U_lights : ST_Lights;  
-     * @returns 光源的uniform buffer
-     */
-    getLightsUniformForSystem() {
-        return this.lightsUniformGPUBuffer;
-    }
     /**
-     * 获取光源的shadow map的uniform buffer（GPUBuffer）
-     * system camera 使用:@group(0) @binding(2) var<uniform> U_shadowMapMatrix : array<ST_shadowMapMatrix,$lightNumberShadowNumber>;
-     * @returns 光源的shadow map的uniform buffer
+     * 获取光源的ID和matrixIndex，根据mergeID
+     * @param mergeUUID 光源的mergeID：由光源的ID，和matrixIndex组成
+     * @returns 光源的ID和matrixIndex
      */
-    getShadowMapUniformForSystem() {
-        return this.ShadowMapUniformGPUBuffer;
+    getIdAndMatrixIndexByMergeID(mergeUUID: string) {
+        let lightId = mergeUUID.split("__");
+        let UUID = lightId[0];
+        let light = this.getOneByUUID(UUID);
+        let id;
+        if (light) {
+            id = light.ID;
+        }
+        else {
+            throw new Error("获取光源失败");
+        }
+        let matrixIndex = parseInt(lightId[1]);
+        return { id, matrixIndex }
     }
+    //////////////////////////////////////////////
+    //shadowmap render part
 
     /**
      * 目前的版本没有采用，shadow map render
@@ -764,9 +732,9 @@ export class LightsManager extends ECSManager<BaseLight> {
         // let lightId = mergeID.split("__");
         // let id = parseInt(lightId[0]);
         // let matrixIndex = parseInt(lightId[1]);
-        let uniformBuffer = this.getOneLightMVPByID(id, matrixIndex);
+        let uniformBuffer = this.getOneLightMVP_ByID(id, matrixIndex);
         if (uniformBuffer === false) {
-            throw new Error("createSystemUnifromGroupForPerShaderOfShadowMap(),  call this.lightsManager.getOneLightMVPByID(id,matrixIndex) is false ");
+            throw new Error("createSystemUnifromGroupForPerShaderOfShadowMap(),  call this.lightsManager.getOneLightMVP_ByID(id,matrixIndex) is false ");
         }
         else {
             // createBindGroupLayout
@@ -810,9 +778,9 @@ export class LightsManager extends ECSManager<BaseLight> {
             // let lightId = mergeID.split("__");
             // let id = parseInt(lightId[0]);
             // let matrixIndex = parseInt(lightId[1]);
-            let uniformBuffer = this.getOneLightMVPByID(id, matrixIndex);
+            let uniformBuffer = this.getOneLightMVP_ByID(id, matrixIndex);
             if (uniformBuffer === false) {
-                throw new Error("createSystemUnifromGroupForPerShaderOfShadowMap(),  call this.lightsManager.getOneLightMVPByID(id,matrixIndex) is false ");
+                throw new Error("createSystemUnifromGroupForPerShaderOfShadowMap(),  call this.lightsManager.getOneLightMVP_ByID(id,matrixIndex) is false ");
             }
             else {
                 // let entries: GPUBindGroupLayoutEntry[] = [
@@ -858,26 +826,121 @@ export class LightsManager extends ECSManager<BaseLight> {
             }
         }
     }
-    getIdAndMatrixIndexByMergeID(mergeUUID: string) {
-        let lightId = mergeUUID.split("__");
-        let UUID = lightId[0];
-        let light = this.getOneByUUID(UUID);
-        let id;
-        if (light) {
-            id = light.ID;
+
+
+
+
+    /**
+     * 获取shadowMap的depth texture view，根据mergeID
+     * @param mergeID 光源的mergeID：由光源的ID，和matrixIndex组成
+     * @returns 光源的shadow map的depth texture view
+     */
+    getShadowMapDepthTextureView_ByMergeID(mergeID: string): GPUTextureView {
+        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        return this.getShadowMapDepthTextureView_ByIdAndMatrixID(id, matrixIndex);
+    }    
+    /**
+     * 获取shadowMap的depth texture view，根据ID和matrixIndex
+     * @param id 光源的ID
+     * @param matrixIndex 光源的selfIndex
+     * @returns 光源的shadow map的depth texture view
+     */
+    getShadowMapDepthTextureView_ByIdAndMatrixID(id: number, matrixIndex: number): GPUTextureView {
+        let index = -1;
+        for (let i of this.shadowArrayOfDepthMapAndMVP) {
+            if (i.light_id == id && i.matrix_self_index == matrixIndex!) {
+                index = i.index;
+                break;
+            }
         }
-        else {
-            throw new Error("获取光源失败");
+        if (index == -1) {
+            throw new Error("getShadowMapDepthTextureView_ByMergeID: not found");
         }
-        let matrixIndex = parseInt(lightId[1]);
-        return { id, matrixIndex }
+        return this.shadowMapTexture.createView(
+            {
+                label: "lights management shadowMapTexture array,the index is :" + index + " offset is :" + matrixIndex,
+                dimension: "2d",
+                // dimension: "2d-array",
+                baseArrayLayer: index + matrixIndex,
+                arrayLayerCount: 1,
+            }
+        );
+    }
+
+
+
+    /**
+     * 获取shadowMap的RPD，
+     * @param mergeIDmergeID 光源的mergeID：由光源的ID，和selfIndex组成
+     * @returns  GPURenderPassDescriptor | false
+     */
+    gettShadowMapRPD_ByMergeID(mergeID: string): GPURenderPassDescriptor | false {
+        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        return this.getShadowMapRPDByIdAndSelfIndex(id, matrixIndex);
+    }
+    /**
+     * 获取shadowMap的RPD，
+     * @param id 光源的ID
+     * @param matrixIndex 光源的selfIndex
+     * @returns  GPURenderPassDescriptor | false
+     */
+    getShadowMapRPDByIdAndSelfIndex(id: number, matrixIndex: number): GPURenderPassDescriptor | false {
+        for (let i of this.shadowArrayOfDepthMapAndMVP) {
+            if (i.light_id == id && i.matrix_self_index == matrixIndex!) {
+                return i.RPD;
+            }
+        }
+        return false;
+    }
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //目前没有使用，todo
+    reInit() {
+        this.reNewLightsNumberOfShadow = false;
+
+        this._lastNumberOfLights = 0;
+
+        this.list = [];
+        // this.lightsCommands = {};
+        this.ambientLight = new AmbientLight({ color: [1, 1, 1], intensity: 1 });
+        this.shadowArrayOfDepthMapAndMVP = [];
+
+        ////////////////////////////////////////////////
+        //创建GPUBuffer，大小与shader中的ST_Lights一致，光源数量与初始化参数一致
+        this.lightsUniformGPUBuffer = this.device.createBuffer({
+            label: 'lightsGPUBuffer',
+            size: 16 + 16 + this._maxlightNumber * lightStructSize,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+
+        this.shadowIndexID = 0;//MVP and depth texture index;
+        this.shadowMapTexture = this.generateShadowMapTexture();//todo 20250105,目前是固定的，后期改成动态
+        this.ShadowMapUniformGPUBuffer = this.createShadowMapUniformGPUBuffer();
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //透明阴影
+    /**
+     * 获取光源shadowmap渲染的colorAttachmentTargets
+     * 1、按照mergeID获取光源的ID和matrixIndex
+     * 2、不透明阴影没有color target,返回透明的，但会由于没有FS，所以不会使用此调用
+     * @param mergeID 光源的mergeID
+     * @returns GPUColorTargetState[]
+     */
+    getColorAttachmentTargetsByMergeID(mergeID: string): GPUColorTargetState[] {
+        let transparentLayer = this.shadowMapTransparentLayerTexture[mergeID];
+        if (transparentLayer) {
+            return transparentLayer.colorAttachmentTargets;
+        }
+        return [];
     }
 
     /**
-     * shadowmap的transparent color texture texture_depth_2d_array
-     * 动态的
-     */
-
+    * shadowmap的transparent color texture texture_depth_2d_array
+    * 动态的
+    */
     shadowMapTransparentLayerTexture: {
         [mergeID: string]: {
             colorTexture: GPUTexture,
@@ -887,10 +950,8 @@ export class LightsManager extends ECSManager<BaseLight> {
         }
     } = {};
 
-    onSystemBeforeUpdate(clock: Clock){
-        
-    }
-    
+
+
     /**
      * 为阴影的透明使用，创建相同层数的color和depth texture，但都用于ColorAttachment
      * @param mergeID 光源的mergeID
@@ -972,19 +1033,4 @@ export class LightsManager extends ECSManager<BaseLight> {
         }
 
     }
-    /**
-     * 获取光源shadowmap渲染的colorAttachmentTargets
-     * 1、按照mergeID获取光源的ID和matrixIndex
-     * 2、不透明阴影没有color target,返回透明的，但会由于没有FS，所以不会使用此调用
-     * @param mergeID 光源的mergeID
-     * @returns GPUColorTargetState[]
-     */
-    getColorAttachmentTargetsByMergeID(mergeID: string): GPUColorTargetState[] {
-        let transparentLayer = this.shadowMapTransparentLayerTexture[mergeID];
-        if (transparentLayer) {
-            return transparentLayer.colorAttachmentTargets;
-        }
-        return [];
-    }
-
 }

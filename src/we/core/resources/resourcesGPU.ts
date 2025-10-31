@@ -53,7 +53,7 @@ export class ResourceManagerOfGPU {
     systemGroup0ByID: Map<string, GPUBindGroup> = new Map();
     /**systemGroup0 对应的 GPUBindGroupLayout */
     systemGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map();
-    
+
     cleanSystemUniform() {
         this.systemGroup0ByID.clear();
         this.systemGroupToGroupLayout.clear();
@@ -80,8 +80,8 @@ export class ResourceManagerOfGPU {
 
     //////////////////////////////////////////////////////////////////////////////////////////
     // 透明渲染
-    TT2TTP:Map<DrawCommand,DrawCommand> = new Map();
-    TT2TTPF:Map<DrawCommand,DrawCommand> = new Map();
+    TT2TTP: Map<DrawCommand, DrawCommand> = new Map();
+    TT2TTPF: Map<DrawCommand, DrawCommand> = new Map();
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //shaderModule
@@ -266,10 +266,15 @@ export class ResourceManagerOfGPU {
             }
         }
     }
+    /**
+     * 获取属性(根据key获取属性/根据key获取资源的类型)
+     * @param key 
+     * @returns 
+     */
     getProperty<K extends keyof ResourceManagerOfGPU>(key: K): ResourceManagerOfGPU[K] {
-    // 此时 this[key] 不会报错，因为 key 被约束为 MyClass 的属性名
-    return this[key];
-  }
+        // 此时 this[key] 不会报错，因为 key 被约束为 MyClass 的属性名
+        return this[key];
+    }
 }
 
 export enum E_resourceKind {
