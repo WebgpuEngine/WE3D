@@ -917,7 +917,7 @@ export class LightsManager extends ECSManager<BaseLight> {
 
 
         this.shadowIndexID = 0;//MVP and depth texture index;
-        this.shadowMapTexture = this.generateShadowMapTexture();//todo 20250105,目前是固定的，后期改成动态
+        this.shadowMapTexture = this.generateShadowMapTexture(this.shadowIndexID);//todo 20250105,目前是固定的，后期改成动态
         this.ShadowMapUniformGPUBuffer = this.createShadowMapUniformGPUBuffer();
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////

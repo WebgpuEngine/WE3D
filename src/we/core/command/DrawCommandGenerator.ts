@@ -786,8 +786,8 @@ export class DrawCommandGenerator {
                 renderPassDescriptor = values.renderPassDescriptor();
             }
             //2.5 增加一个MSAA 的NDC
-            else if (this.scene.finalTarget.NDC == true) {
-                if (values.system?.MSAA)
+            else if (this.scene.finalTarget.NDC == true && values.system?.MSAA) {
+                // if (values.system?.MSAA)
                     renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
             }
             //3、如果没有rpd描述，且有system。

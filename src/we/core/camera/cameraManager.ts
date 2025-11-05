@@ -141,6 +141,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         //3、设置默认camera
         if (this.defaultCamera == undefined) {
             this.defaultCamera = camera;
+            this.scene.defaultCamera=camera;
         }
         //4、初始化TTP相关GBuffer
         this.GBufferManager.reInitCommonTransparentGBuffer();
@@ -184,6 +185,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
         if (this.defaultCamera == camera) {
             this.defaultCamera = this.list[0];
+            this.scene.defaultCamera=this.defaultCamera;
         }
         this.GBufferManager.removeGBuffer(camera.UUID);
         let zindex = this.zindexList.indexOf(camera.UUID);

@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    <H1>系统功能：重构</H1>
     <div>
         <span>系统基础功能</span>
         <ul>
@@ -213,6 +214,7 @@
             <li><a href="./lights/DirectionalLight_1.html">方向光</a></li>
             <li><a href="./lights/PointLight.html">点光源</a></li>
             <li><a href="./lights/SpotLight.html">spot</a></li>
+            <li><a href="https://blog.selfshadow.com/sandbox/ltc.html">面积光参考URL</a></li>
             <li><a href="">todo :面积光</a></li>
         </ul>
 
@@ -340,19 +342,45 @@
 
 
 
+        <span>pickup管理器</span>
+        <ul>
+            <span>不同渲染模式下的拾取</span>
+            <ul>
+                <li><a href="./pickup/renderModel/sphere.html">单目标</a></li>
+                <li><a href="./pickup/renderModel/mesh_instance_1.html">单目标 instance</a></li>
+                <li><a href="./pickup/renderModel/line_array_1.html">lines</a></li>
+                <li><a href="./pickup/renderModel/points_EMU_box.html">point EMU box</a></li>
+                <li><a href="./pickup/renderModel/spot_1.html">多个物体</a></li>
+                <li><a href="./pickup/renderModel/MSAAspecular_1.html">MSAA 物体</a></li>
+                <li><a href="./pickup/renderModel/deferpointLight_1.html">延迟渲染 多个物体</a></li>
+            </ul>
+            <span>拾取功能:mouse</span>
+            <ul>
+                <li><a href="./pickup/mouseKey/ctrl.html">ctrl+right</a></li>
+                <li><a href="./pickup/mouseKey/move.html">move</a></li>
+            </ul>
+            <span>自定义function</span>
+            <ul>
+                <li><a href="./pickup/userDefineFn/sphere.html">自定义callback</a></li>
+                <li><a href="">todo: touch 功能</a></li>
+                <li><a href=""></a></li>
+            </ul>
+        </ul>
 
         <span>post Process</span>
         <ul>
-            <li><a href="">后处理管理者 postProcessManager : root,update,render 队列</a></li>
-            <li><a href="">bure 3*3</a></li>
+            <li><a href="">PP管理器</a></li>
+            <li><a href="">blur 3*3</a></li>
+            <li><a href="">FXAA</a></li>
+            <li><a href="">描边</a></li>
+            <li><a href="">bloom</a></li>
         </ul>
 
-
-
-
-        <span>简单数据模型</span>
+        <span>输入管理器</span>
         <ul>
-            <li><a href=""></a></li>
+            <li>输入管理器:监听,注册,(独占、广播)。完成,融入系统</li>
+            <li>相机控制器：注册、激活。完成,融入系统</li>
+            <li><a href="">对象控制器：注册、激活；位移、旋转、缩放</a></li>
         </ul>
 
         <span>输出管理器</span>
@@ -370,12 +398,18 @@
             <li><a href="">GBuffer 可视化</a></li>
         </ul>
 
-        <span>输入管理器</span>
+        <span>辅助功能</span>
         <ul>
-            <li>输入管理器:监听,注册,(独占、广播)。完成,融入系统</li>
-            <li>相机控制器：注册、激活。完成,融入系统</li>
-            <li><a href="">对象控制器：注册、激活；位移、旋转、缩放</a></li>
-            <li><a href="">pickup:状态，注册、激活</a></li>
+            <li><a href="">三色坐标轴</a></li>
+            <li><a href="">摄像机</a></li>
+            <li><a href="">包围盒</a></li>
+            <li><a href="">包围球</a></li>
+            <li><a href="">normal 法线</a></li>
+            <li><a href="">cliping</a></li>
+            <li><a href="">SDF clipping</a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
+            <li><a href=""></a></li>
         </ul>
 
         <span>observer</span>

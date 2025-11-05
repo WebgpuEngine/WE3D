@@ -20,7 +20,7 @@ export enum E_InputEvent {
  * input control 事件优先级
  */
 export enum E_InputPriority {
-    broadcastFirst = "broadcastFirst",//优先广播，不影响其他控制器
+    broadcastStart = "broadcastStart",//优先广播，不影响其他控制器
     intercept = "intercept",//独占，其他控制器不会收到该事件
     broadcastEnd = "broadcastEnd",//最后广播，无认领的事件会被广播
 }
@@ -29,7 +29,7 @@ export enum E_InputPriority {
  * input control 注册的事件优先级层
  */
 export interface I_InputRegisterPriorityLayer {
-    [E_InputPriority.broadcastFirst]: BaseInputControl[],
+    [E_InputPriority.broadcastStart]: BaseInputControl[],
     [E_InputPriority.intercept]: BaseInputControl[],
     [E_InputPriority.broadcastEnd]: BaseInputControl[],
 }

@@ -44,8 +44,9 @@ struct ST_GBuffer{
     @location(0) color : vec4f,
     @location(1) id : u32,
     @location(2) normal : vec4f,
-    @location(3) worldPosition : vec4f,
-    @location(4) RMAO : vec4f,
+    @location(3) RMAO : vec4f,
+    @location(4) worldPosition : vec4f,
+    @location(5) albedo : vec4f,
 }
  struct OurVertexShaderOutput {
     @builtin(position) position: vec4f,

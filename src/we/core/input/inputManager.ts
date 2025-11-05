@@ -13,8 +13,8 @@ export class InputManager extends ECSManager<BaseInputControl> {
 
     /**
      * 事件注册列表
-     * 每个事件，都有三个优先级层，分别是broadcastFirst, intercept, broadcastEnd
-     * 事件的发送顺序是：broadcastFirst -> intercept -> broadcastEnd
+     * 每个事件，都有三个优先级层，分别是broadcastStart, intercept, broadcastEnd
+     * 事件的发送顺序是：broadcastStart -> intercept -> broadcastEnd
      *  event由DOM的EventTarget.addEventListener()触发，多个触发需要在控制器中组合
      */
     registerEventList: {
@@ -31,57 +31,57 @@ export class InputManager extends ECSManager<BaseInputControl> {
         [E_InputEvent.dblclick]: I_InputRegisterPriorityLayer,
     } = {
             [E_InputEvent.keydown]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.keyup]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.pointerdown]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.pointerup]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.pointermove]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.wheel]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.touchstart]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.touchend]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.touchmove]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.click]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.dblclick]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
@@ -162,57 +162,57 @@ export class InputManager extends ECSManager<BaseInputControl> {
     cleanRegisterEvent() {
         this.registerEventList = {
             [E_InputEvent.keydown]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.keyup]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.pointerdown]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.pointerup]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.pointermove]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.wheel]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.touchstart]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.touchend]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.touchmove]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.click]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
             [E_InputEvent.dblclick]: {
-                [E_InputPriority.broadcastFirst]: [],
+                [E_InputPriority.broadcastStart]: [],
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },

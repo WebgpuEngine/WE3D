@@ -40,8 +40,9 @@ struct ST_GBuffer{
     @location(0) color : vec4f,
     @location(1) id : u32,
     @location(2) normal : vec4f,
-    @location(3) worldPosition : vec4f,
-    @location(4) RMAO : vec4f,
+    @location(3) RMAO : vec4f,
+    @location(4) worldPosition : vec4f,
+    @location(5) albedo : vec4f,
 }
  struct OurVertexShaderOutput {
     @builtin(position) position: vec4f,
@@ -159,7 +160,7 @@ let orthCamera = new OrthographicCamera({
   bottom: -2,
   near: 0.1,
   far: 100,
-  position: [0, 0, 0.1],
+  position: [0, 0, 2],
   lookAt: [0, 0, 0],
 
 });

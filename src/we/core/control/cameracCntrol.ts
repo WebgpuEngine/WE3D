@@ -452,16 +452,13 @@ export abstract class CamreaControl extends BaseInputControl {
     abstract init(): any;
     abstract update(deltaTime: number): boolean
 
-    destroy(): any {
-        for (let i = 0; i < this.event.length; i++) {
-            const item = this.event[i];
-            if (item.type == "pointerWheel") {
-                item.target.removeEventListener(item.type, item.callback, item.option);
-            }
-            else {
-                item.target.removeEventListener(item.type, item.callback);
-            }
-        }
+    _destroy(): any {
+        this.removeRegisterEvent(E_InputEvent.keydown, E_InputPriority.broadcastEnd, this);
+        this.removeRegisterEvent(E_InputEvent.keyup, E_InputPriority.broadcastEnd, this);
+        this.removeRegisterEvent(E_InputEvent.pointerdown, E_InputPriority.broadcastEnd, this);
+        this.removeRegisterEvent(E_InputEvent.pointerup, E_InputPriority.broadcastEnd, this);
+        this.removeRegisterEvent(E_InputEvent.pointermove, E_InputPriority.broadcastEnd, this);
+        this.removeRegisterEvent(E_InputEvent.wheel, E_InputPriority.broadcastEnd, this);
     }
 
     set camera(camera: BaseCamera) {

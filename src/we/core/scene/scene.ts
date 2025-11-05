@@ -12,6 +12,9 @@ import { MaterialManager } from "../material/materialManager";
 import { generateBox3ByArrayBox3s, type boundingBox } from "../math/Box";
 import { generateSphereFromBox3, type boundingSphere } from "../math/sphere";
 import { RootOfGPU, RootOfOrganization } from "../organization/root";
+import { Pickup } from "../pickup/pickup";
+import { pickupManager } from "../pickup/pickupManager";
+import { PostProcessManager } from "../postprocess/postProcessManager";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
 import { TextureManager } from "../texture/textureManager";
@@ -259,7 +262,9 @@ export class Scene {
     /**输入管理器 */
     inputManager!: InputManager;
 
+    pickupManager!: pickupManager;
 
+    postProcessManager!: PostProcessManager;
     ////////////////////////////////////////////////////////////////////////////////
     /**每帧循环用户自定义更新function */
     userDefineUpdateArray: userDefineEventCall[] = [];
@@ -391,7 +396,7 @@ export class Scene {
 
 
 
-        const devicePixelRatio = window.devicePixelRatio;//设备像素比
+        const devicePixelRatio = 1;// window.devicePixelRatio;//设备像素比
         const width = this.canvas.clientWidth * devicePixelRatio;
         const height = this.canvas.clientHeight * devicePixelRatio;
         this.canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
@@ -409,6 +414,8 @@ export class Scene {
         this.lightsManager = new LightsManager(this);
         this.inputManager = new InputManager(this);
         this.cameraManager = new CameraManager({ scene: this });
+        this.pickupManager = new pickupManager(this);
+        this.postProcessManager = new PostProcessManager(this);
     }
 
 
@@ -515,8 +522,11 @@ export class Scene {
         const scope = this;
         const observer = new ResizeObserver(entries => {
             for (const entry of entries) {
-                const width = entry.devicePixelContentBoxSize[0].inlineSize;
-                const height = entry.devicePixelContentBoxSize[0].blockSize;
+                //即使在100%的比例，devicePixcel得到的size还是大于contentRect，在pickup时，定位会不准
+                // const width = entry.devicePixelContentBoxSize[0].inlineSize;
+                // const height = entry.devicePixelContentBoxSize[0].blockSize;
+                const width = Math.ceil(entry.contentRect.width);
+                const height = Math.ceil(entry.contentRect.height);
                 if (width != scope.surface.size.width || height != scope.surface.size.height) {
                     scope.aspect = width / height;
                     scope.flags.reSize.width = width;
@@ -584,12 +594,13 @@ export class Scene {
     /**每帧循环 onBeforeUpdate */
     async onBeforeUpdate() {
         this.Box3s = [];//清空包围盒
-        if (this.flags.reSize.status) {
+        if (this.flags.reSize.status === true) {
             // console.log("reseize event at onBeforeRender");
             this.reSize(this.flags.reSize.width, this.flags.reSize.height);
             await this.cameraManager.onResize();
             //实体的onSizeChange
             await this.entityManager.onResize();
+            this.pickupManager.onResize();
             this.flags.reSize.status = false;
         }
         this.renderManager.clean();
@@ -649,6 +660,7 @@ export class Scene {
      */
     async generateBundleOfCameraAndBVH() { }
 
+    //每帧清除数据
     async cleanUp() {
         this.inputManager.clean();
     }
@@ -661,13 +673,13 @@ export class Scene {
                 //时间更新
                 scope.clock.update();
                 await scope.onBeforeUpdate();
+                await scope.pickup();//pickup 在当前帧的update开始之前
                 await scope.update();
                 await scope.onAfterUpdate();
                 await scope.onBeforeRender();
                 await scope.render();
                 await scope.onAfterRender();
                 // await scope.renderToneMappingAndMSAA();//test 
-                await scope.pickup();
                 await scope.postProcess();
                 await scope.showGBuffersVisualize();
                 await scope.renderToSurface();
@@ -702,7 +714,9 @@ export class Scene {
     // }
 
 
-    async pickup() { }
+    async pickup() {
+        await this.pickupManager.update(this.clock);
+    }
     async postProcess() { }
     async showGBuffersVisualize() { }
 
@@ -1011,7 +1025,7 @@ export class Scene {
             bindGroup = undefined;
         }
         this.cameraManager.deferDCG.clear();
-        for(let perCamera of this.cameraManager.list){
+        for (let perCamera of this.cameraManager.list) {
             this.cameraManager.deferDCG.generateDeferDrawCommand(perCamera.UUID);
         }
     }

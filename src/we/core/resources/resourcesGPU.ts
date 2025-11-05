@@ -275,6 +275,11 @@ export class ResourceManagerOfGPU {
         // 此时 this[key] 不会报错，因为 key 被约束为 MyClass 的属性名
         return this[key];
     }
+
+    registerResource(key: any, kind: E_resourceKind) {
+        this.resources.set(key, value);
+        this.getProperty(kind).set(key, value);
+    }
 }
 
 export enum E_resourceKind {
