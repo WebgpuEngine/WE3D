@@ -1,60 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <div>
         <H1>DCCC 基础功能:重构</H1>
         <ul>
-            <li><a href="./00_scene/b1.html">0  scene  基础测试</a></li>
-            <li><a href="./01_DC/DC_att_1.html">DCG1    基础测试,只有位置（单个数组），输出红色</a></li>
-            <li><a href="./01_DC/DC_att_1_1.html">DCG 1.1  基础测试,位置和颜色,多个数组形式</a></li>
-            <li><a href="./01_DC/DC_att_2.html"> DCG 2   基础测试,位置和颜色（多个数组，非标准名称） </a></li>
-            <li><a href="./01_DC/DC_att_3.html">  DCG  3 基础测试,merge位置和颜色</a></li>
-            <li><a href="./01_DC/DC_vertexStepMode.html">  DCG vertexStepMode</a></li>
-            <li><a href="./01_DC/DC_att_index.html">  DCG attribute,index</a></li>
-            <br>
-            <li><a href="./02_uniform/DC_uniform_1.html">uniform  DC 1  基础测试:group0,binding0</a></li>
-            <li><a href="./02_uniform/DC_uniform_2.html">uniform  DC 2  基础测试:group0,binding0,binding1</a></li>
-            <li><a href="./02_uniform/DC_group4.html">uniform  DC 4  基础测试:groupX4,使用group4，binding0</a></li>
-            <br>
+            <h2>base scene</h2>
 
-            <li><a href="./03_viewport/DC_viewport_1.html">viewport  DC 1  基础测试</a></li>
-            <br>
+            <li><a href="./00_scene/b1.html">0 scene 基础测试</a></li>
 
+            <h2>draw command </h2>
+            <li><a href="./01_DC/DC_att_1.html">DCG1 基础测试,只有位置（单个数组），输出红色</a></li>
+            <li><a href="./01_DC/DC_att_1_1.html">DCG 1.1 基础测试,位置和颜色,多个数组形式</a></li>
+            <li><a href="./01_DC/DC_att_2.html"> DCG 2 基础测试,位置和颜色（多个数组，非标准名称） </a></li>
+            <li><a href="./01_DC/DC_att_3.html"> DCG 3 基础测试,merge位置和颜色</a></li>
+            <li><a href="./01_DC/DC_vertexStepMode.html"> DCG vertexStepMode</a></li>
+            <li><a href="./01_DC/DC_att_index.html"> DCG attribute,index</a></li>
+
+            <h2>compute shader</h2>
+            <li><a href="./10_CC/cs_1.html">CC 1 ：基础测试</a></li>
+
+            <h2>simple draw command </h2>
+            <li><a href="./11_simpleDC/SDC_1_shaderCode.html">SDC 1 vertex and shader code</a></li>
+            <li><a href="./11_simpleDC/SDC_2_shaderCode_withOutDepth.html">SDC 2 vertex and shader code without depth</a></li>
+            <li><a href="./11_simpleDC/SDC_3_quadAndSHT.html">SDC 1 quad and SHT</a></li>
+
+            <h2>uniform</h2>>
+            <li><a href="./02_uniform/DC_uniform_1.html">uniform DC 1 基础测试:group0,binding0</a></li>
+            <li><a href="./02_uniform/DC_uniform_2.html">uniform DC 2 基础测试:group0,binding0,binding1</a></li>
+            <li><a href="./02_uniform/DC_group4.html">uniform DC 4 基础测试:groupX4,使用group4，binding0</a></li>
+            <h2>view port</h2>
+            <li><a href="./03_viewport/DC_viewport_1.html">viewport DC 1 基础测试</a></li>
+
+            <h2>multisample</h2>
             <li><a href="./04_multisample/DC_multisample_1.html">multisample DC_multisample_1</a></li>
             <li><a href="./04_multisample/oneTriangle_YellowAndRead.html">multisample oneTriangle_YellowAndRead</a></li>
-            <li><a href="./04_multisample/oneTriangle_YellowAndRead_centroid.html">multisample oneTriangle_YellowAndRead_centroid</a></li>
-            <br>
+            <li><a href="./04_multisample/oneTriangle_YellowAndRead_centroid.html">multisample
+                    oneTriangle_YellowAndRead_centroid</a></li>
 
+            <h2>depthStencil</h2>
             <li><a href="./05_depthStencil/DC_depth_1.html">depthStencil 绿色后绘制，红色先绘制</a></li>
-            <br>
-            
+
+            <h2>primitive triangle</h2>
             <li><a href="./06_primitive/triangle-list.html">primitive triangle-list</a></li>
             <li><a href="./06_primitive/triangle-strip.html">primitive triangle-strip</a></li>
-            <li><a href="./06_primitive/triangle-strip_fullscreen.html">primitive triangle-strip-fullscreen 测试 为摄像机TT Blend render</a></li>
+            <li><a href="./06_primitive/triangle-strip_fullscreen.html">primitive triangle-strip-fullscreen 测试 为摄像机TT
+                    Blend render</a></li>
             <li><a href="./06_primitive/triangle-strip-index.html">primitive triangle-strip-index</a></li>
             <li><a href="./06_primitive/triangle-strip-index_2.html">primitive triangle-strip-index_2 扇形</a></li>
 
+            <h2>primitive line</h2>
             <li><a href="./06_primitive/point-list_1.html">primitive point-list_1</a></li>
             <li><a href="./06_primitive/point-list_2.html">primitive point-list_2 测试 一个点 ,为清除摄像机TT</a></li>
             <li><a href="./06_primitive/point-list_index_1.html">primitive point-list_index_1</a></li>
             <li><a href="./06_primitive/point-list_emu_1.html">primitive point-list_emu_1</a></li>
             <li><a href="./06_primitive/point-list_emu_texture_1.html">primitive point-list_emu_texture</a></li>
 
+            <h2>primitive point</h2>
             <li><a href="./06_primitive/line-list.html">primitive line-list</a></li>
             <li><a href="./06_primitive/line-strip.html">primitive line-strip</a></li>
 
-            <br>
+            <h2>texture</h2>
             <li><a href="./09_texture/texture_1.html">纹理1 ：texture：普通color纹理；sample：线性</a></li>
 
-            <li><a href="./10_CC/cs_1.html">CC 1 ：基础测试</a></li>
 
 
         </ul>
     </div>
 </body>
+
 </html>

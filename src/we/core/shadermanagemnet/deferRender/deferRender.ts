@@ -8,15 +8,13 @@ var DeferRenderFS = DeferRenderFS_WGSL.toString();
 
 import QuadVS_WGSL from "../../shader/quad/quad.vs.wgsl?raw";
 import { SHT_add_Phong_function } from "../material/phongMaterial";
+import { QuadVS } from "../mesh/quad";
 /**Defer PBR light and shadow shader template */
 export var SHT_DeferRender: I_ShaderTemplate = {
     scene: SHT_ScenOfCamera,
     entity: {
         add: [
-            {
-                name: "vs",
-                code: QuadVS_WGSL.toString(),
-            }
+            QuadVS
         ]
     },
     material: {

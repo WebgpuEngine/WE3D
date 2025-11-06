@@ -149,11 +149,11 @@ export class DeferDrawCommandGenerator implements IV_DeferDrawCommand {
                 label: "DeferRender",
                 layout: pipelineLayout,
                 vertex: {
-                    module: this.shaderModule,
+                    module: this.shaderModule!,
                     entryPoint: "vs",
                 },
                 fragment: {
-                    module: this.shaderModule,
+                    module: this.shaderModule!,
                     entryPoint: "fs",
                     targets: [{ format: V_weLinearFormat }],
                 },

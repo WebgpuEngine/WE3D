@@ -275,10 +275,29 @@ export class ResourceManagerOfGPU {
         // 此时 this[key] 不会报错，因为 key 被约束为 MyClass 的属性名
         return this[key];
     }
-
+    //////////////////////////////////////////////////////////////////////////////////
+    // GC 资源
+    //////////////////////////////////////////////////////////////////////////////////
+    /**
+     * 方案
+     * 1、全部使用class中的set，get ，delete 方法。方法内置计数器
+     * 2、clean 方法，遍历所有资源，删除引用计数为0的资源
+     */
+    /**
+     * todo 资源计数器
+     * GC 资源使用
+     * @param key 
+     * @param kind 
+     */
     registerResource(key: any, kind: E_resourceKind) {
-        this.resources.set(key, value);
-        this.getProperty(kind).set(key, value);
+ 
+    }
+    /**
+     * 清理资源
+     * 1、遍历所有资源，删除引用计数为0的资源
+     */
+    clean(){
+ 
     }
 }
 

@@ -28,6 +28,17 @@ export interface I_PipelineStructure {
  * DCCC类型
  */
 export type commmandType = DrawCommand | ComputeCommand | CopyCommandT2T;
+/**
+ * https://www.w3.org/TR/webgpu/#ref-for-dom-gpurenderpassencoder-setviewport%E2%91%A1
+ */
+export interface I_viewport {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    minDepth: number,
+    maxDepth: number
+}
 //base end 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

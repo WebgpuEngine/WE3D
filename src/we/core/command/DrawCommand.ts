@@ -1,20 +1,11 @@
 import { E_renderForDC } from "../base/coreDefine";
 import { E_TransparentType } from "../material/base";
-import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, ResourceManagerOfGPU } from "../resources/resourcesGPU";
+import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferPart, IV_BaseCommand, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferPart, I_viewport, IV_BaseCommand, T_uniformGroup } from "./base";
+import { BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer } from "./baseFunction";
-/**
- * https://www.w3.org/TR/webgpu/#ref-for-dom-gpurenderpassencoder-setviewport%E2%91%A1
- */
-export interface I_viewport {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    minDepth: number,
-    maxDepth: number
-}
+
 
 /**
  * 动态uniform，每帧都需要更新的uniform，例如：视频纹理的External模式，也可以扩展。
@@ -64,40 +55,9 @@ export interface IV_DrawCommand extends IV_BaseCommand {
     }
 }
 
-export class DrawCommand {
-    _isDestroy: boolean = false;
-
+export class DrawCommand extends BaseDrawCommand {
     inputValues: IV_DrawCommand;
-    isOwner: boolean = true;
-
     transparentType: E_TransparentType | undefined;
-    dynamic: boolean = false;
-    scene!: Scene;
-    label!: string;
-    rawUniform!: boolean;
-    device!: GPUDevice;
-
-    pipeline!: GPURenderPipeline;
-    /**
-     * 不使用“auto”布局，需要手动创建布局。(不使用auto布局，可以bindgroup0可以共享）
-     */
-    // pipelineLayout: GPUPipelineLayout | "auto" = "auto";
-    renderPassDescriptor: () => GPURenderPassDescriptor;// GPURenderPassDescriptor;
-
-    vertexBuffers: GPUBuffer[] = [];
-    indexBuffer!: GPUBuffer;
-
-    bindGroups: GPUBindGroup[] = [];
-    // bindGroupDescriptors: GPUBindGroupDescriptor[] = [];
-    // bindGroupLayouts: GPUBindGroupLayout[] = [];
-    // bindGroupLayoutDescriptors: GPUBindGroupLayoutDescriptor[] = [];
-
-    drawMode: I_drawMode | I_drawModeIndexed
-
-    system: {
-        UUID: string,
-        type: E_renderForDC,//"camera" | "light"
-    }|undefined;
 
     /**
      * 缓存的pipeline结构，用于标识DC在renderManaager中优化渲染使用
@@ -111,7 +71,12 @@ export class DrawCommand {
         ID: 0,
         renderID: 0,
     }
-
+    /**
+     * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
+     * 例如：[texture, bindGroupEntry]
+     * destroy时需要删除映射关系
+     */
+    resourcesOfMapList: any[] = [];
     // mapList: {
     //     key: any,//key of map
     //     type: string, //类型
@@ -121,6 +86,7 @@ export class DrawCommand {
     // resourcesGPU!: ResourceManagerOfGPU;
 
     constructor(input: IV_DrawCommand) {
+        super(input);
         this.inputValues = input;
         this.label = input.label;
         if (input.isOwner !== undefined)
@@ -140,12 +106,7 @@ export class DrawCommand {
         this.transparentType = input.transparentType;
         if (input.system) this.system = input.system;
     }
-    /**
-     * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
-     * 例如：[texture, bindGroupEntry]
-     * destroy时需要删除映射关系
-     */
-    resourcesOfMapList: any[] = [];
+
     /**
      * uniform 的GPUBuffer列表，
      * destroy时需要删除GPUBuffer
@@ -193,121 +154,7 @@ export class DrawCommand {
         }
         this._isDestroy = true;
     }
-    get IsDestroy() {
-        return this._isDestroy;
-    }
-    set IsDestroy(v: boolean) {
-        this._isDestroy = v;
-    }
-    /**
-     * 完整的绘制命令编码
-     * @returns GPUCommandBuffer
-     */
-    update(): GPUCommandBuffer {
-        let device = this.device;
-        if (this.dynamic === true) {
-            this.generateBindGroup();
-        }
-        const commandEncoder = device.createCommandEncoder({ label: "Draw Command :commandEncoder" });
-        const passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor());
-        passEncoder.setPipeline(this.pipeline);
 
-        this.doEncoder(passEncoder);
-
-        passEncoder.end();
-        const commandBuffer = commandEncoder.finish();
-        return commandBuffer;
-    }
-
-    /**
-     * 绘制命令编码
-     * @param passEncoder 
-     */
-    doEncoder(passEncoder: GPURenderPassEncoder) {
-
-        for (let i in this.vertexBuffers) {
-            const verticesBuffer = this.vertexBuffers[i];
-            passEncoder.setVertexBuffer(parseInt(i), verticesBuffer);
-        }
-        if (this.inputValues.viewport) {
-            let minDepth = this.inputValues.viewport.minDepth == undefined ? 0 : this.inputValues.viewport.minDepth;
-            let maxDepth = this.inputValues.viewport.maxDepth == undefined ? 1 : this.inputValues.viewport.maxDepth;
-
-            passEncoder.setViewport(this.inputValues.viewport.x, this.inputValues.viewport.y, this.inputValues.viewport.width, this.inputValues.viewport.height, minDepth, maxDepth);
-        }
-
-        if(this.system !== undefined) {
-            /**
-             * 目标：
-             * 1、为DC绑定camera的bindGroup0（动态增加光源的阴影贴图后，shadowmap textture 会重建，原来绑定的会失效）
-             * 2、透明的shadowmap渲染，预计也可能有类似的问题。（如果是copy 到公用的uniform depth texture的方式，应该没有此问题）todo
-             */
-            if(this.system.type === E_renderForDC.camera) {
-                let bindGroupBundle =this.scene.getSystemBindGroupAndBindGroupLayoutForZero(this.system.UUID,this.system.type);
-                this.bindGroups[0] = bindGroupBundle.bindGroup;
-            }
-        }
-
-        for (let i in this.bindGroups) {
-            passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
-        }
-
-
-        if ("vertexCount" in this.drawMode) {
-            const count = this.drawMode.vertexCount;
-            let instanceCount = 1;
-            let firstIndex = 0;
-            let firstInstance = 0;
-            if ("instanceCount" in this.drawMode) {
-                instanceCount = this.drawMode.instanceCount as number;
-            }
-            if ("firstIndex" in this.drawMode) {
-                firstIndex = this.drawMode.firstIndex as number;
-            }
-            if ("firstInstance" in this.drawMode) {
-                firstInstance = this.drawMode.firstInstance as number;
-            }
-
-            passEncoder.draw(count, instanceCount, firstIndex, firstInstance);
-
-        }
-        else if ("indexCount" in this.drawMode) {
-            const indexCount = this.drawMode.indexCount;
-            let instanceCount = 1;
-            let firstIndex = 0;
-            let firstInstance = 0;
-            let baseVertex = 0;
-            if ("instanceCount" in this.drawMode) {
-                instanceCount = this.drawMode.instanceCount as number;
-            }
-            if ("firstIndex" in this.drawMode) {
-                firstIndex = this.drawMode.firstIndex as number;
-            }
-            if ("firstInstance" in this.drawMode) {
-                firstInstance = this.drawMode.firstInstance as number;
-            }
-            if ("baseVertex" in this.drawMode) {
-                baseVertex = this.drawMode.baseVertex as number;
-            }
-            passEncoder.setIndexBuffer(this.indexBuffer, 'uint32');
-            passEncoder.drawIndexed(indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
-        }
-        else {
-            // throw new Error("draw 模式设置错误");
-            console.error("draw 模式设置错误,label=", this.inputValues.label);
-        }
-    }
-    /**
-     * 提交单次命令
-     */
-    submit() {
-        let commandBuffer = this.update()
-        this.device.queue.submit([commandBuffer]);
-    }
-    /**
-     * 获取pipeline和renderPassDescriptor、group数量、vertex属性buffer数量
-     * @returns I_PipelineStructure
-     */
     getPipeLineStructure(): I_PipelineStructure {
         if (this.cacheFlagPipeline == undefined) {
             this.cacheFlagPipeline = {
@@ -317,30 +164,8 @@ export class DrawCommand {
             }
         }
         return this.cacheFlagPipeline;
+    }
 
-    }
-    /**
-     * 合批开始，获取passEncoder和commandEncoder
-     * @returns 
-     */
-    doEncoderStart(): { passEncoder: GPURenderPassEncoder, commandEncoder: GPUCommandEncoder } {
-        const commandEncoder = this.device.createCommandEncoder({ label: "Draw Command :commandEncoder" });
-        const passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor());
-        passEncoder.setPipeline(this.pipeline);
-
-        return { passEncoder, commandEncoder };
-    }
-    /**
-     * 合批结束，提交commandBuffer
-     * @param passEncoder 
-     * @param commandEncoder 
-     */
-    dotEncoderEnd(passEncoder: GPURenderPassEncoder, commandEncoder: GPUCommandEncoder): GPUCommandBuffer {
-        passEncoder.end();
-        const commandBuffer = commandEncoder.finish();
-        return commandBuffer;
-        // this.device.queue.submit([commandBuffer]);
-    }
     generateBindGroup() {
         let values = this.inputValues;
         let uniformGroup = this.inputValues.dynamicUniform!.bindGroupsUniform;

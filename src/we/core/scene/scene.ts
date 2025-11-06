@@ -645,6 +645,7 @@ export class Scene {
         this.generateBox();
         this.generateSphere();
         this.updateBVH();
+        this.postProcessManager.update(this.clock);
     }
     /**每帧循环 onBeforeRender */
     async onBeforeRender() {
@@ -680,7 +681,6 @@ export class Scene {
                 await scope.render();
                 await scope.onAfterRender();
                 // await scope.renderToneMappingAndMSAA();//test 
-                await scope.postProcess();
                 await scope.showGBuffersVisualize();
                 await scope.renderToSurface();
                 await scope.cleanUp();
@@ -717,7 +717,6 @@ export class Scene {
     async pickup() {
         await this.pickupManager.update(this.clock);
     }
-    async postProcess() { }
     async showGBuffersVisualize() { }
 
     async renderToSurface() {
