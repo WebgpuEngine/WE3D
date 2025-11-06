@@ -7,7 +7,7 @@ import { QuadVS } from "../mesh/quad";
 import PP_Blur3x3_FS_WGSL from "../../shader/PostProcess/blur/blur3x3.fs.wgsl?raw";
 var PP_Blur3x3FS = PP_Blur3x3_FS_WGSL.toString();
 
-export var SHT_DeferRender: I_ShaderTemplate = {
+export var SHT_PP_Blur3x3: I_ShaderTemplate = {
     entity: {
         add: [
             QuadVS,

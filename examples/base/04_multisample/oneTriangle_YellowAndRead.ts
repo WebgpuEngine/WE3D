@@ -1,4 +1,4 @@
-import { I_uniformBufferPart } from "../../../src/we/core/command/base";
+import { I_uniformBufferEntry } from "../../../src/we/core/command/base";
 import { DrawCommandGenerator, IV_DrawCommandGenerator, V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
@@ -82,7 +82,7 @@ dataF32A[2] = 1.0;
 dataF32A[3] = 1.0;
 
 
-let unifrom1: I_uniformBufferPart = {
+let unifrom1: I_uniformBufferEntry = {
   label: "uniform1",
   binding: 0,
   size: 4 * 4,

@@ -1,4 +1,4 @@
-import { I_uniformBufferPart } from "../../../src/we/core/command/base";
+import { I_uniformBufferEntry } from "../../../src/we/core/command/base";
 import { DrawCommandGenerator, type IV_DrawCommandGenerator, V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";

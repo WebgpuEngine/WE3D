@@ -1,7 +1,7 @@
 import { Color4, E_lifeState } from "../../base/coreDefine";
 import { isWeColor3, isWeColor4 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_uniformBufferPart, T_uniformEntries, T_uniformGroup } from "../../command/base";
+import { I_uniformBufferEntry, T_uniformEntries, T_uniformGroup } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";

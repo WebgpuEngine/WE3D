@@ -4,7 +4,7 @@
  */
 import { E_lifeState, E_renderForDC, I_Update } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_uniformGroup } from "../../command/base";
+import { I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, T_uniformGroup } from "../../command/base";
 import { V_DC } from "../../command/DrawCommandGenerator";
 import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
@@ -169,7 +169,7 @@ export class Sprite extends EntityBundleMaterial {
         let bindingNumber = startBinding;
         let uniform1: T_uniformGroup = [];
 
-        let unifrom10: I_uniformBufferPart = {
+        let unifrom10: I_uniformBufferEntry = {
             label: this.Name + " uniform at group(1) binding(0)",
             binding: bindingNumber,
             size: this.getSizeOfUniformArrayBuffer(),

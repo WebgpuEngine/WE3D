@@ -18,7 +18,7 @@ import { PostProcessManager } from "../postprocess/postProcessManager";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
 import { TextureManager } from "../texture/textureManager";
-import { AA, eventOfScene, IV_Scene, IJ_Scene, userDefineEventCall } from "./base";
+import { AA, eventOfScene, IV_Scene, IJ_Scene, userDefineEventCall, E_ToneMappingType } from "./base";
 import { Clock } from "./clock";
 // import { classList } from "../base/coreClass";
 import { RenderManager } from "./renderManager";
@@ -109,6 +109,7 @@ export class Scene {
          */
         NDC: boolean,
         color: GPUTexture | undefined,
+        colorPostProcess: GPUTexture | undefined,
         /**
          * NDC模式下有深度纹理
          */
@@ -121,6 +122,7 @@ export class Scene {
     } = {
             NDC: false,
             color: undefined,
+            colorPostProcess: undefined,
             depth: undefined,
             id: undefined
         }
@@ -142,7 +144,16 @@ export class Scene {
             colorSpace: "display-p3",
             linearSpace: V_weLinearFormat,
         };
-    /////////////////////////////////////
+
+    /** 
+     * 色调映射，默认：acesToSRGB
+     * 1、不同的色调映射，会有不同的效果
+     * 
+     * 2、如果是计算类的颜色，建议使用linearToSRGB
+     * 
+     * 3、如果是显示类的颜色，建议使用acesToSRGB
+     */
+    E_ToneMappingType: E_ToneMappingType = E_ToneMappingType.acesToSRGB;
 
 
 
@@ -282,6 +293,9 @@ export class Scene {
         // this.deferRenderDepth = false;//为了测试方便,后期更改为:true,20241128
         // this.deferRenderColor = false;//为了测试方便,后期更改为:true,20241128
         this._maxlightNumber = V_lightNumber;
+        if(value.toneMapping){
+            this.E_ToneMappingType=value.toneMapping;
+        }
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //input赋值
         if (value.AA) {
@@ -495,11 +509,21 @@ export class Scene {
             if (this.finalTarget.color) {
                 this.finalTarget.color.destroy();
             }
+            if (this.finalTarget.colorPostProcess) {
+                this.finalTarget.colorPostProcess.destroy();
+            }
             if (this.finalTarget.depth) {
                 this.finalTarget.depth.destroy();
             }
             this.finalTarget.color = this.device.createTexture({
-                label: "scene finalTarget.color",
+                label: "finalTarget color",
+                size: [width, height],
+                format: this.colorFormatOfCanvas,
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                // sampleCount: this.MSAA ? 4 : 1,
+            });
+            this.finalTarget.color = this.device.createTexture({
+                label: "finalTarget color post process for uniform ",
                 size: [width, height],
                 format: this.colorFormatOfCanvas,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
@@ -507,7 +531,7 @@ export class Scene {
             });
             if (this.finalTarget.NDC === true)
                 this.finalTarget.depth = this.device.createTexture({
-                    label: "scene finalTarget.depth",
+                    label: "finalTarget.depth",
                     size: [width, height],
                     format: this.depthMode.depthDefaultFormat,
                     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
@@ -600,7 +624,8 @@ export class Scene {
             await this.cameraManager.onResize();
             //实体的onSizeChange
             await this.entityManager.onResize();
-            this.pickupManager.onResize();
+            await this.pickupManager.onResize();
+            await this.postProcessManager.onResize();
             this.flags.reSize.status = false;
         }
         this.renderManager.clean();
@@ -702,6 +727,15 @@ export class Scene {
      * 1、用户自定义事件
     */
     async onAfterRender() {
+        copyTextureToTexture(
+            this.device,
+            this.cameraManager.GBufferManager.GBuffer[this.defaultCamera.UUID].finalRender.toneMappingTexture,
+            this.finalTarget.color!,
+            {
+                width: this.surface.size.width,
+                height: this.surface.size.height,
+            }
+        );
         this.updateUserDefineEvent(eventOfScene.onAfterRender);
     }
     // /**
@@ -724,15 +758,11 @@ export class Scene {
         if (defaultCamera) {
             //直接copy GBuffer的color到canvas
             // let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].forward.GBuffer["color"];
-            let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].finalRender.toneMappingTexture;
-            copyTextureToTexture(this.device, finalColorOfGBuffer, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
-
-
-            //copy finalTarget.color to canvas
-            // copyTextureToTexture(this.device, this.finalTarget.color!, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
+            // let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].finalRender.toneMappingTexture;
+            copyTextureToTexture(this.device, this.finalTarget.color!, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
         }
         else {
-            // console.error("没有默认相机");
+            console.error("没有默认相机");
         }
     }
 

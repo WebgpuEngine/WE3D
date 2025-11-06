@@ -96,9 +96,9 @@ fn processColorToP3_twoStep(hdrLinearColor : vec3f) -> vec3f {
     // return pow(p3Linear, vec3f(1.0 / 2.2));
     
 }
-//线性空间 → display-p3 转换函数
+//线性空间 → aces → display-p3 转换函数
 //1、目前偏亮、部分颜色偏粉，这个就是问题了，纯白的输出也是偏粉的。（目前看是矩阵问题，不用矩阵，进行gamma编码，就没有这个问题）
-fn processColorToP3(hdrLinearColor : vec3f) -> vec3f  {
+fn acesToP3(hdrLinearColor : vec3f) -> vec3f  {
     //1. HDR线性空间 -> LDR线性空间（ACES色调映射）
     let ldrLinear = acesToneMap(hdrLinearColor);
     // let ldrLinear = hdrLinearColor;
@@ -113,6 +113,7 @@ fn processColorToP3(hdrLinearColor : vec3f) -> vec3f  {
 ////////////////////////////////////////////////////////////////////////////
 //sRGB
 //sRGBgamma两段式编码
+//线性空间 → sRGB 转换函数
 fn linearToSRGB(linearColor : vec3f) -> vec3f  {
     //分段gamma校正，更精确的sRGB转换
     //let isLow = linearColor <= vec3f(0.0031308);
@@ -121,11 +122,11 @@ fn linearToSRGB(linearColor : vec3f) -> vec3f  {
     
     return select(high, low, linearColor <= vec3f(0.0031308));
 }
-//线性空间 → sRGB 转换函数
+//线性空间 → ACES → sRGB 转换函数
 //1、进行ACES色调映射，后颜色偏亮
 //2、目前是不适用ACES色调映射，直接使用sRGB的gamma编码，颜色正确（考虑，目前没有HDR，使用ACES后颜色偏亮）
 //3、ACES色调映射后，颜色偏亮（考虑是ACES色调映射的风格问题，电影风格），而非映射问题。比如：纯白色经ACES转换后变为(0.8,0.8,0.8)左右，这是正常现象
-fn processColorToSRGB(hdrLinearColor : vec3f) -> vec3f  {
+fn ACESToSRGB(hdrLinearColor : vec3f) -> vec3f  {
     //1. HDR线性空间 -> LDR线性空间（ACES色调映射）
     let ldrLinear = acesToneMap(hdrLinearColor);
     // let ldrLinear = acesToneMapWithWhite(hdrLinearColor);
@@ -136,7 +137,21 @@ fn processColorToSRGB(hdrLinearColor : vec3f) -> vec3f  {
     let displayColor = linearToSRGB(ldrLinear);    //转换到sRGB
     return displayColor;
 }
-fn copyColorToSRGB(hdrLinearColor : vec3f) -> vec3f  {
+//进行了白色补偿，白色会被映射到1.0，不是0.8
+fn ACESToSRGB_white(hdrLinearColor : vec3f) -> vec3f  {
+    //1. HDR线性空间 -> LDR线性空间（ACES色调映射）
+    let ldrLinear = acesToneMapWithWhite(hdrLinearColor);
+    // let ldrLinear = acesToneMapWithWhite(hdrLinearColor);
+    
+    // let ldrLinear = hdrLinearColor;//不使用ACES色调映射，直接使用线性空间颜色
+
+    //2. 选择目标色域（二选一）
+    let displayColor = linearToSRGB(ldrLinear);    //转换到sRGB
+    return displayColor;
+}
+
+//linear  HDR output
+fn linearToHDR(hdrLinearColor : vec3f) -> vec3f  {
     return hdrLinearColor;
 }
 

@@ -5,7 +5,7 @@
  */
 
 import type { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferPart, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
 import { DrawCommand, IV_DrawCommand, I_viewport } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
@@ -222,7 +222,7 @@ export class DrawCommandGenerator {
                             if (this.resources.has(perEntry, "uniformBuffer")) {
                                 let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
                                 if (buffer) {
-                                    updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferPart).data)
+                                    updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferEntry).data)
                                 }
                                 else {
                                     console.warn(i, perGroup, perEntry, "获取uiform对应的GPUBuffer资源获取失败");
@@ -240,13 +240,13 @@ export class DrawCommandGenerator {
      * 更新uniform 数据的GPUBuffer
      * 1、立即更新模式。（与每帧的update相同，但可以一帧按需更新多次）
      * 2、TTPF需要使用
-     * @param perEntry I_uniformBufferPart
+     * @param perEntry I_uniformBufferEntry
      */
-    updateUniformOfGPUBuffer(perEntry: I_uniformBufferPart) {
+    updateUniformOfGPUBuffer(perEntry: I_uniformBufferEntry) {
         if (this.resources.has(perEntry, "uniformBuffer")) {
             let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
             if (buffer) {
-                updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferPart).data)
+                updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferEntry).data)
             }
             else {
                 console.warn(perEntry, "获取uiform对应的GPUBuffer资源获取失败");
@@ -564,8 +564,8 @@ export class DrawCommandGenerator {
                                     });
                             }
                             else {//没有，创建
-                                const label = (perEntry as I_uniformBufferPart).label;
-                                let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferPart).size, label, (perEntry as I_uniformBufferPart).data);
+                                const label = (perEntry as I_uniformBufferEntry).label;
+                                let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
                                 this.resources.set(perEntry, buffer, "uniformBuffer");
                                 bindGroupEntry.push({
                                     binding: perEntry.binding,

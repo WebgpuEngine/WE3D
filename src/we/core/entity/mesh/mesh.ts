@@ -1,6 +1,6 @@
 import { E_renderForDC, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_drawModeIndexed, I_uniformBufferPart } from "../../command/base";
+import { I_drawModeIndexed, I_uniformBufferEntry } from "../../command/base";
 import { V_DC } from "../../command/DrawCommandGenerator";
 import { mergeLightUUID } from "../../light/lightsManager";
 import { I_BundleOfMaterialForMSAA, I_materialBundleOutput, I_TransparentOptionOfMaterial } from "../../material/base";
@@ -390,7 +390,7 @@ export class Mesh extends EntityBundleMaterial {
                 //增加TTPF的layer uniform到TTPF
                 {
                     // uniform  层数
-                    let unifromTTPF: I_uniformBufferPart = {
+                    let unifromTTPF: I_uniformBufferEntry = {
                         label: this.Name + " uniform at group(1) binding(" + bindingNumber + ")",
                         binding: bindingNumber,
                         size: this.uniformOfTTPFSize,

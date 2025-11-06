@@ -12,11 +12,6 @@ export declare interface IV_Scene {
     /**是否预乘底色，默认=true */
     premultipliedAlpha?: boolean,
 
-    // /**渲染的输出目标 */
-    // renderTo?: HTMLCanvasElement | GPUTexture,
-
-    // /**深度与模板 */
-    // depthStencil?: GPUDepthStencilState,
 
     /**环境光 */
     ambientLight?: IV_DirectionalLight,
@@ -40,8 +35,47 @@ export declare interface IV_Scene {
     /** 是否进行实时渲染*/
     realTimeRender?: boolean,
     modeNDC?: boolean,
+    /**
+     * 色调映射，默认：acesToSRGB
+     */
+    toneMapping?: E_ToneMappingType,
 }
-
+/**
+ *  色调映射，默认：acesToSRGB
+ * 
+* 1、不同的色调映射，会有不同的效果
+* 
+* 2、如果是计算类的颜色，建议使用linearToSRGB
+* 
+* 3、如果是显示类的颜色，建议使用acesToSRGB
+* 
+* 4、todo，P3空间，目前还有问题
+* 
+*      A、资料：
+* 
+*          P3定义：https://www.w3.org/TR/css-color-4/#color-conversion-code
+* 
+*          色域：https://www.w3.org/TR/mediaqueries-5/#color-gamut
+* 
+*          动态范围： https://www.w3.org/TR/mediaqueries-5/#dynamic-range
+* 
+*      B、HDR的上限是多少的确定，因显示器的不同而不同。目前无法明确确定HDR2HDR的上限。预计这个需要等待HDR标准以及在浏览器中的进一步发展。
+ */
+export enum E_ToneMappingType {
+    acesToSRGB = "acesToSRGB",
+    /**
+     * 补偿了白色，白色会被映射到1.0，不是0.8
+     */
+    acesToSRGB_White = "acesToSRGB_White",
+    linearToSRGB = "linearToSRGB",
+    linearToP3 = "linearToP3",
+    acesToP3 = "acesToP3",
+    /**
+     * 线性映射，不进行任何映射
+     * 
+     */
+    linear = "linear",
+}
 
 /**AA */
 export interface AA {

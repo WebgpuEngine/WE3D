@@ -1,7 +1,7 @@
 import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../entity/base";
 import { isUniformBufferPart } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
-import { I_uniformBufferPart, T_uniformGroup } from "./base";
+import { I_uniformBufferEntry, T_uniformGroup } from "./base";
 import { BaseDrawCommand, IV_BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
 
@@ -9,7 +9,7 @@ import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
 /**
  * 简单绘制命令的uniform组条目类型,只由uniform data 和GPUBindGroupEntry
  */
-export type T_uniformGroupEntryOfSimple = GPUBindGroupEntry | I_uniformBufferPart;
+export type T_uniformGroupEntryOfSimple = GPUBindGroupEntry | I_uniformBufferEntry;
 
 /**
  * 1、不考虑system的情况，如果有system，使用DrawCommand
@@ -41,7 +41,7 @@ export interface IV_SimpleDrawCommand extends IV_BaseDrawCommand {
         SHT_Final?: I_ShaderTemplate_Final,
     },
     ColorTargetStat: GPUColorTargetState[],
-    uniforms?: T_uniformGroupEntryOfSimple[][]
+    uniforms?: T_uniformGroupEntryOfSimple[][];
     /**
      * 绘制数据，position,uv,normal,color,indexes
      * 非必须，比如quad
@@ -68,6 +68,8 @@ export class SimpleDrawCommand extends BaseDrawCommand {
     shaderModule!: GPUShaderModule | undefined;
     declare inputValues: IV_SimpleDrawCommand;
     verticesBufferLayout: GPUVertexBufferLayout[] = [];
+    uniformGPUBuffers: GPUBuffer[] = [];
+
 
     constructor(input: IV_SimpleDrawCommand) {
         super(input);
@@ -81,6 +83,9 @@ export class SimpleDrawCommand extends BaseDrawCommand {
             this.indexBuffer.destroy();
         for (let i = 0; i < this.vertexBuffers.length; i++) {
             this.vertexBuffers[i].destroy();
+        }
+        for (let i = 0; i < this.uniformGPUBuffers.length; i++) {
+            this.uniformGPUBuffers[i].destroy();
         }
         this.IsDestroy = true;
     }
@@ -96,8 +101,8 @@ export class SimpleDrawCommand extends BaseDrawCommand {
                 let gpuBuffer = createVerticesBuffer(this.device, data.buffer, this.label + " position vertex GPUBuffer");
 
                 if (i == "indexes") {
-                        this.indexBuffer = gpuBuffer;
-                 }
+                    this.indexBuffer = gpuBuffer;
+                }
                 else {
                     if (i == "position") {
                         //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
@@ -274,8 +279,9 @@ export class SimpleDrawCommand extends BaseDrawCommand {
 
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 if (isUniformBufferPart(perEntry)) {
-                    const label = (perEntry as I_uniformBufferPart).label;
-                    let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferPart).size, label, (perEntry as I_uniformBufferPart).data);
+                    const label = (perEntry as I_uniformBufferEntry).label;
+                    let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
+                    this.uniformGPUBuffers.push(buffer);
                     bindGroupEntry.push({
                         binding: perEntry.binding,
                         resource: {

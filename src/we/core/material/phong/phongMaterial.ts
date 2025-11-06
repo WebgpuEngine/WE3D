@@ -1,6 +1,6 @@
 import { E_lifeState, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_uniformBufferPart, T_uniformGroup } from "../../command/base";
+import { I_uniformBufferEntry, T_uniformGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { Clock } from "../../scene/clock";
@@ -102,7 +102,7 @@ export class PhongMaterial extends BaseMaterial {
     ////group binding  texture 字符串
     groupAndBindingString = ` @group(1) @binding(${binding})  var<uniform> u_bulinphong : st_bulin_phong;\n `;
     //uniform texture
-    let uniformPhong: I_uniformBufferPart = {
+    let uniformPhong: I_uniformBufferEntry = {
       binding: binding,
       size: 4 * 4,
       data: this.uniformPhong,

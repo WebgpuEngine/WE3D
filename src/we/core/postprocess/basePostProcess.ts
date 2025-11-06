@@ -1,12 +1,10 @@
 import { I_Update } from "../base/coreDefine";
-import { commmandType, T_uniformGroup } from "../command/base";
+import { commmandType } from "../command/base";
 import { CopyCommandT2T } from "../command/copyCommandT2T";
-import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../entity/base";
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
+import { WeGenerateUUID } from "../math/baseFunction";
 import { I_UUID } from "../organization/root";
 import { Clock } from "../scene/clock";
 import { Scene } from "../scene/scene";
-import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
 import { PostProcessManager } from "./postProcessManager";
 
 export interface IV_PostProcess extends I_Update {
@@ -37,7 +35,8 @@ export abstract class BasePostProcess implements I_UUID {
     /**
      * PostProcess 功能实现
      */
-    abstract init(): any
+    abstract init(): any;
+    abstract onResize(): Promise<void>;
     /**
      * 1、更新自身
      */
@@ -54,14 +53,16 @@ export abstract class BasePostProcess implements I_UUID {
         }
     }
 
+    defaultPushCopyCommand() {
+        this.copy(this.scene.finalTarget.color!, this.scene.finalTarget.colorPostProcess!);
+    }
     copy(source: GPUTexture, target: GPUTexture) {
+        let size = this.scene.surface.size;
         let copyToColorTexture = new CopyCommandT2T(
             {
                 A: source,
                 B: target,
-                // A: this.rawColorTexture,
-                // B: this.copyToTarget,
-                size: { width: this.size.width, height: this.size.height },
+                size: { width: size.width, height: size.height },
                 device: this.device
             }
         );

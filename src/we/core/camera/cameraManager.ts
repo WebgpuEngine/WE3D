@@ -6,6 +6,7 @@ import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
 import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 import { GBuffers, IV_GBuffer } from "../gbuffers/GBuffers";
 import { ECSManager } from "../organization/manager";
+import { E_ToneMappingType } from "../scene/base";
 import { Clock } from "../scene/clock";
 import { E_renderPassName } from "../scene/renderManager";
 import { Scene } from "../scene/scene";
@@ -141,7 +142,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         //3、设置默认camera
         if (this.defaultCamera == undefined) {
             this.defaultCamera = camera;
-            this.scene.defaultCamera=camera;
+            this.scene.defaultCamera = camera;
         }
         //4、初始化TTP相关GBuffer
         this.GBufferManager.reInitCommonTransparentGBuffer();
@@ -185,7 +186,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         }
         if (this.defaultCamera == camera) {
             this.defaultCamera = this.list[0];
-            this.scene.defaultCamera=this.defaultCamera;
+            this.scene.defaultCamera = this.defaultCamera;
         }
         this.GBufferManager.removeGBuffer(camera.UUID);
         let zindex = this.zindexList.indexOf(camera.UUID);
@@ -1086,8 +1087,29 @@ export class CameraManager extends ECSManager<BaseCamera> {
             this.cameraDrawCommandOfFinalStep[UUID].toneMapping.destroy();
         }
 
-        let returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
-        // let returnColor = "return vec4f( copyColorToSRGB(color.rgb), color.a);";
+        let returnColor = "return vec4f( ACESToSRGB(color.rgb), color.a);";
+        switch (this.scene.E_ToneMappingType) {
+            case E_ToneMappingType.acesToSRGB:
+                returnColor = "return vec4f( ACESToSRGB(color.rgb), color.a);";
+                break;
+            case E_ToneMappingType.acesToSRGB_White:
+                returnColor = "return vec4f( ACESToSRGB_white(color.rgb), color.a);";
+                break;
+            case E_ToneMappingType.linearToSRGB:
+                returnColor = "return vec4f( linearToSRGB(color.rgb), color.a);";
+                break;
+            case E_ToneMappingType.acesToP3:
+                returnColor = "return vec4f( acesToP3(color.rgb), color.a);";
+                break;
+            case E_ToneMappingType.linearToP3:
+                returnColor = "return vec4f( linearToDisplayP3(color.rgb), color.a);";
+                break;
+            case E_ToneMappingType.linear:
+                returnColor = "return vec4f(linearToHDR(color.rgb), color.a);";
+                break;
+            default:
+                returnColor = "return vec4f( ACESToSRGB(color.rgb), color.a);";
+        }
         if (this.scene.colorSpaceAndLinearSpace.colorSpace == "srgb")
             returnColor = "return vec4f( processColorToSRGB(color.rgb), color.a);";
         let shader = `   

@@ -1,6 +1,6 @@
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import { I_DrawCommandIDs, I_uniformBufferPart, IV_BaseCommand, T_uniformGroup } from "./base";
+import { I_DrawCommandIDs, I_uniformBufferEntry, IV_BaseCommand, T_uniformGroup } from "./base";
 import { createUniformBuffer } from "./baseFunction";
 import { I_DynamicUniformOfDrawCommand } from "./DrawCommand";
 
@@ -187,8 +187,8 @@ export class ComputeCommand {
                  * 其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 */
                 if (isUniformBufferPart(perEntry)) {
-                    const label = (perEntry as I_uniformBufferPart).label;
-                    let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferPart).size, label, (perEntry as I_uniformBufferPart).data);
+                    const label = (perEntry as I_uniformBufferEntry).label;
+                    let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
                     bindGroupEntry.push({
                         binding: perEntry.binding,
                         resource: {

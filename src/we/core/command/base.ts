@@ -1,6 +1,7 @@
 import { ComputeCommand } from "./ComputeCommand";
 import { CopyCommandT2T } from "./copyCommandT2T";
 import { DrawCommand } from "./DrawCommand";
+import { SimpleDrawCommand } from "./SimpleDrawCommand";
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //base start 
 /** 
@@ -27,7 +28,7 @@ export interface I_PipelineStructure {
 /**
  * DCCC类型
  */
-export type commmandType = DrawCommand | ComputeCommand | CopyCommandT2T;
+export type commmandType = DrawCommand | ComputeCommand | CopyCommandT2T | SimpleDrawCommand;
 /**
  * https://www.w3.org/TR/webgpu/#ref-for-dom-gpurenderpassencoder-setviewport%E2%91%A1
  */
@@ -89,7 +90,7 @@ export interface I_drawModeIndexed {
  * 用于创建uniformBuffer的参数
  * 
  */
-export interface I_uniformBufferPart {
+export interface I_uniformBufferEntry {
     label: string,
     binding: number,//从0开始
 
@@ -128,10 +129,10 @@ export interface I_dynamicTextureEntryForView {
     getResource: () => GPUBindingResource,
 }
 /** 单个bind group的  unifrom 入口的数组格式 
- * I_uniformBufferPart 是自定义的uniformBuffer，用于创建GPUBuffer
+ * I_uniformBufferEntry 是自定义的uniformBuffer，用于创建GPUBuffer
  * GPUBindGroupEntry 是标准的
  */
-export type T_uniformEntries = GPUBindGroupEntry | I_uniformBufferPart | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
+export type T_uniformEntries = GPUBindGroupEntry | I_uniformBufferEntry | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
 
 /**  bind group的数组  */
 export type T_uniformGroup = T_uniformEntries[];
