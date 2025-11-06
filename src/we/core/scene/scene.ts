@@ -522,7 +522,7 @@ export class Scene {
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
                 // sampleCount: this.MSAA ? 4 : 1,
             });
-            this.finalTarget.color = this.device.createTexture({
+            this.finalTarget.colorPostProcess = this.device.createTexture({
                 label: "finalTarget color post process for uniform ",
                 size: [width, height],
                 format: this.colorFormatOfCanvas,
@@ -727,15 +727,15 @@ export class Scene {
      * 1、用户自定义事件
     */
     async onAfterRender() {
-        copyTextureToTexture(
-            this.device,
-            this.cameraManager.GBufferManager.GBuffer[this.defaultCamera.UUID].finalRender.toneMappingTexture,
-            this.finalTarget.color!,
-            {
-                width: this.surface.size.width,
-                height: this.surface.size.height,
-            }
-        );
+        // copyTextureToTexture(
+        //     this.device,
+        //     this.cameraManager.GBufferManager.GBuffer[this.defaultCamera.UUID].finalRender.toneMappingTexture,
+        //     this.finalTarget.color!,
+        //     {
+        //         width: this.surface.size.width,
+        //         height: this.surface.size.height,
+        //     }
+        // );
         this.updateUserDefineEvent(eventOfScene.onAfterRender);
     }
     // /**

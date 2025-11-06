@@ -1,6 +1,7 @@
 import { copyTextureToTexture } from "../base/coreFunction";
-import { I_dynamicTextureEntryForView } from "../command/base";
+import { commmandType, I_dynamicTextureEntryForView } from "../command/base";
 import { ComputeCommand, IV_ComputeCommand } from "../command/ComputeCommand";
+import { CopyCommandT2T } from "../command/copyCommandT2T";
 import { DrawCommand, I_DynamicUniformOfDrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
 import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
@@ -208,7 +209,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
     async update(clock: Clock) {
         for (let camera of this.list) {
             let UUID = camera.UUID;
-            this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].toneMapping!, E_renderPassName.toneMapping, UUID);
+            for (let perToneMappingCommand of this.cameraDrawCommandOfFinalStep[UUID].toneMapping) {
+                this.scene.renderManager.push(perToneMappingCommand, E_renderPassName.toneMapping, UUID);
+            }
             // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].defer!, E_renderPassName.defer, UUID);
             if (this.deferRender === true) {
                 for (let perCommand of this.deferDCG.DDC[UUID]) {
@@ -759,7 +762,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
     cameraDrawCommandOfFinalStep: {
         [UUID: string]: {
             MSAA?: DrawCommand,
-            toneMapping?: DrawCommand,
+            toneMapping: commmandType[],
             defer?: DrawCommand,
         }
     } = {};
@@ -1081,12 +1084,21 @@ export class CameraManager extends ECSManager<BaseCamera> {
     }
 
     createDrawCommandOfToneMapping(UUID: string) {
-        if (this.cameraDrawCommandOfFinalStep[UUID] == undefined)
-            this.cameraDrawCommandOfFinalStep[UUID] = {};
-        if (this.cameraDrawCommandOfFinalStep[UUID].toneMapping != undefined && this.cameraDrawCommandOfFinalStep[UUID].toneMapping.IsDestroy != false) {
-            this.cameraDrawCommandOfFinalStep[UUID].toneMapping.destroy();
+        if (this.cameraDrawCommandOfFinalStep[UUID] == undefined) {
+            this.cameraDrawCommandOfFinalStep[UUID] = {
+                // MSAA?: DrawCommand,
+                toneMapping: [],
+                // defer?: DrawCommand,
+            };
         }
-
+        else {
+            for (let perCommand of this.cameraDrawCommandOfFinalStep[UUID].toneMapping) {
+                if (perCommand instanceof DrawCommand && perCommand.IsDestroy != false) {
+                    perCommand.destroy();
+                }
+            }
+            this.cameraDrawCommandOfFinalStep[UUID].toneMapping = [];
+        }
         let returnColor = "return vec4f( ACESToSRGB(color.rgb), color.a);";
         switch (this.scene.E_ToneMappingType) {
             case E_ToneMappingType.acesToSRGB:
@@ -1219,7 +1231,19 @@ export class CameraManager extends ECSManager<BaseCamera> {
             label: "RenderFinal ToneMapping: " + UUID,
             // dynamicUniform: uniforIDTexture,
         }
-        this.cameraDrawCommandOfFinalStep[UUID].toneMapping = new DrawCommand(valuesDC);
+        this.cameraDrawCommandOfFinalStep[UUID].toneMapping.push(new DrawCommand(valuesDC));
+        if (UUID === this.defaultCamera.UUID) {
+            let size = this.scene.surface.size;
+            let copyToColorTexture = new CopyCommandT2T(
+                {
+                    A: this.GBufferManager.GBuffer[UUID].finalRender.toneMappingTexture,
+                    B: this.scene.finalTarget.color!,
+                    size: { width: size.width, height: size.height },
+                    device: this.device
+                }
+            );
+            this.cameraDrawCommandOfFinalStep[UUID].toneMapping.push(copyToColorTexture);
+        }
     }
     // /**
     //  * 渲染相机GBuffer到最终目标纹理
