@@ -10,6 +10,9 @@ export class PP_RedToOne extends BasePostProcess {
 
     constructor(input: IV_PostProcess) {
         super(input);
+        this.init();
+    }
+    _destroy(): void {
     }
     init() {
         this.defaultPushCopyCommand();
@@ -27,7 +30,7 @@ export class PP_RedToOne extends BasePostProcess {
         };
         let screenSize = new ArrayBuffer(4 * 2);
         new Float32Array(screenSize).set([this.scene.surface.size.width, this.scene.surface.size.height]);
-        
+
 
         let texture1: GPUBindGroupEntry = {
             binding: 0,

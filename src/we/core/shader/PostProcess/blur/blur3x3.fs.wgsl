@@ -5,7 +5,8 @@
  
 
 @fragment
-fn fs(@builtin(position) coord: vec4f) -> @location(0)  vec4f {
+fn fs(fsInput:st_quad_output) -> @location(0)  vec4f {
+    let coord = fsInput.position.xy;
     var left = -1.0;
     var right = 1.0;
     var top = -1.0;

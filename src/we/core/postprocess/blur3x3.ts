@@ -10,6 +10,9 @@ export class Blur3x3 extends BasePostProcess {
 
     constructor(input: IV_PostProcess) {
         super(input);
+        this.init();
+    }
+    _destroy(): void {
     }
     init() {
         this.defaultPushCopyCommand();
@@ -65,15 +68,7 @@ export class Blur3x3 extends BasePostProcess {
         this.commands.push(SDC1);
     }
 
-    async onResize(): Promise<void> {
-        for (let perCommand of this.commands) {
-            if (perCommand instanceof SimpleDrawCommand) {
-                perCommand.destroy();
-            }
-        }
-        this.commands = [];
-        this.init();
-    }
+
     updateSelf(clock: Clock): void {
         // throw new Error("Method not implemented.");
     }

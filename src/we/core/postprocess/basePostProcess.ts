@@ -1,6 +1,9 @@
 import { I_Update } from "../base/coreDefine";
 import { commmandType } from "../command/base";
+import { ComputeCommand } from "../command/ComputeCommand";
 import { CopyCommandT2T } from "../command/copyCommandT2T";
+import { DrawCommand } from "../command/DrawCommand";
+import { SimpleDrawCommand } from "../command/SimpleDrawCommand";
 import { WeGenerateUUID } from "../math/baseFunction";
 import { I_UUID } from "../organization/root";
 import { Clock } from "../scene/clock";
@@ -29,18 +32,27 @@ export abstract class BasePostProcess implements I_UUID {
         this.device = this.scene.device;
         this.size = this.scene.surface.size;
         this.manager = this.scene.postProcessManager;
-        this.init();
+        // this.init();
         this.manager.add(this);
     }
+    abstract _destroy(): void;
     /**
      * PostProcess 功能实现
      */
     abstract init(): any;
-    abstract onResize(): Promise<void>;
     /**
      * 1、更新自身
      */
     abstract updateSelf(clock: Clock): void;
+    destroy(): void {
+        this._destroy();
+        for (let perCommand of this.commands) {
+            if (perCommand instanceof SimpleDrawCommand || perCommand instanceof DrawCommand || perCommand instanceof ComputeCommand) {
+                perCommand.destroy();
+            }
+        }
+        this.commands = [];
+    }
     /**
      * 1、更新自身
      * 2、如果有输入的callback update()，调用更新
@@ -68,5 +80,13 @@ export abstract class BasePostProcess implements I_UUID {
         );
         this.commands.push(copyToColorTexture);
     }
-
+    async onResize(): Promise<void> {
+        for (let perCommand of this.commands) {
+            if (perCommand instanceof SimpleDrawCommand || perCommand instanceof DrawCommand || perCommand instanceof ComputeCommand) {
+                perCommand.destroy();
+            }
+        }
+        this.commands = [];
+        this.init();
+    }
 }
