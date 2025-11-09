@@ -120,7 +120,7 @@ export class Points extends EntityBundleMaterial {
 
             //设置每个instance的数据
 
-            this.attributes.vertices.set("position", this.emulateData[this.emulate].vertices);
+            this.attributes.vertices["position"] = this.emulateData[this.emulate].vertices;
             this.attributes.indexes = this.emulateData[this.emulate].indexes;
             if (input.size) {
                 this.size = input.size;
@@ -143,7 +143,7 @@ export class Points extends EntityBundleMaterial {
                 }
                 //设置map数据
                 for (let key in attributes) {
-                    this.attributes.vertices.set(key, attributes[key]);
+                    this.attributes.vertices[key]= attributes[key];
                 }
                 //索引数据
                 if (input.attributes.data.indexes) {
