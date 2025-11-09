@@ -161,6 +161,7 @@ export abstract class BaseEntity extends RootOfGPU {
         }
         // console.log(this.ID);
     }
+    abstract detachData(): void;
     /**
      * 检查instance是否合法
      */

@@ -69,7 +69,7 @@ export class Mesh extends EntityBundleMaterial {
         };
     /** 顶点数据 */
     attributes: I_EntityAttributes = {
-        vertices: new Map(),
+        vertices: {},
         vertexStepMode: "vertex",
         indexes: [],
     };
@@ -83,7 +83,7 @@ export class Mesh extends EntityBundleMaterial {
             this._geometry = input.attributes.geometry;
             let attributes = input.attributes.geometry.getAttribute();
             for (let key in attributes) {
-                this.attributes.vertices!.set(key, attributes[key]);
+                this.attributes.vertices[key] = attributes[key];
             }
             let indexes = input.attributes.geometry.getIndeices();
             if (indexes) {
@@ -93,7 +93,7 @@ export class Mesh extends EntityBundleMaterial {
         else if (input.attributes.data) {
             let attributes = input.attributes.data.vertices;
             for (let key in attributes) {
-                this.attributes.vertices.set(key, attributes[key]);
+                this.attributes.vertices[key] = attributes[key];
             }
             if (input.attributes.data.indexes) {
                 this.attributes.indexes = input.attributes.data.indexes;
@@ -202,8 +202,8 @@ export class Mesh extends EntityBundleMaterial {
      * 反转法线，未测试过
      */
     invertNormal() {
-        if (this.attributes.vertices.has("normal")) {
-            let normal = this.attributes.vertices.get("normal") as number[];
+        if (this.attributes.vertices["normal"]) {
+            let normal = this.attributes.vertices["normal"] as number[];
             if (normal) {
                 for (let i = 0; i < normal.length; i += 3) {
                     normal[i] = -normal[i];

@@ -22,11 +22,9 @@ struct st_FXAA_values {
 // const u_showEdges: bool = false;       // 调试开关：true 显示边缘（红色），false 正常抗锯齿
 
 // 辅助函数：采样纹理颜色（简化纹理采样调用）
-fn sampleColor(uv: vec2f) -> vec3f {
-    return textureSample(u_colorTexture, u_colorSampler, uv).rgb;
-}
-fn sampleColorOfPosition(uv: vec2i) -> vec3f {
+fn sampleColor(uv: vec2i) -> vec3f {
     return textureLoad(u_colorTexture, uv,0).rgb;
+    // return textureSample(u_colorTexture, u_colorSampler, uv).rgb;
 }
 
 // 辅助函数：颜色转亮度（Rec.601 标准，符合人眼视觉特性）
@@ -45,16 +43,20 @@ fn fs(fsInput: st_quad_output) -> @location(0) vec4f {
     let u_maxSpan: f32 = u_FXAA_values.maxSpan;           
     let u_showEdges: bool = u_FXAA_values.showEdges == 1;       
 
-    let uv: vec2f = fsInput.uv;
-    let uvOfPos :vec2i = vec2i(floor(vec2f(fsInput.position.xy)));
+    // let uv: vec2f = fsInput.uv;
+    let uv :vec2i = vec2i(floor(vec2f(fsInput.position.xy)));
 
     // -------------------------- 步骤 1：采样 5 个关键像素的颜色与亮度 --------------------------
     // 5点采样：当前像素(M)、左上(NW)、右上(NE)、左下(SW)、右下(SE)
-    let rgbM: vec3f = sampleColorOfPosition(uvOfPos);
-    let rgbNW: vec3f = sampleColorOfPosition(uvOfPos + vec2i(-1, 1));
-    let rgbNE: vec3f = sampleColorOfPosition(uvOfPos + vec2i(1 ,1));
-    let rgbSW: vec3f = sampleColorOfPosition(uvOfPos + vec2i(-1, -1));
-    let rgbSE: vec3f = sampleColorOfPosition(uvOfPos + vec2i(1, -1));
+    let rgbM: vec3f = sampleColor(uv);
+    // let rgbNW: vec3f = sampleColor(uv + vec2f(-u_texelStep.x, u_texelStep.y));
+    // let rgbNE: vec3f = sampleColor(uv + vec2f(u_texelStep.x, u_texelStep.y));
+    // let rgbSW: vec3f = sampleColor(uv + vec2f(-u_texelStep.x, -u_texelStep.y));
+    // let rgbSE: vec3f = sampleColor(uv + vec2f(u_texelStep.x, -u_texelStep.y));
+    let rgbNW: vec3f = sampleColor(uv + vec2i(-1, 1));
+    let rgbNE: vec3f = sampleColor(uv + vec2i(1 ,1));
+    let rgbSW: vec3f = sampleColor(uv + vec2i(-1, -1));
+    let rgbSE: vec3f = sampleColor(uv + vec2i(1, -1));
 
     // 转换为亮度值
     let lumaM: f32 = rgbToLuma(rgbM);
@@ -67,9 +69,6 @@ fn fs(fsInput: st_quad_output) -> @location(0) vec4f {
     // 计算 5 点亮度的最大/最小值
     let lumaMin: f32 = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
     let lumaMax: f32 = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-
-    // -------------------------- 调试模式：显示边缘（黑白） --------------------------
-    // return vec4f(vec3f(lumaMax - lumaMin), 1.0);
 
     var noEdge=false;
     if (lumaMax - lumaMin <= lumaMax * u_lumaThreshold) {
@@ -119,15 +118,15 @@ fn fs(fsInput: st_quad_output) -> @location(0) vec4f {
 
     // 替换最终返回值，输出亮度差异（白色=差异大，黑色=差异小）
     // return vec4f(vec3f(lumaMax - lumaMin), 1.0);
-    
     // 非边缘像素直接返回原颜色
     if (noEdge) {
         // 替换最终返回值，输出当前像素的亮度（白色=亮，黑色=暗）
         // return vec4f(vec3f(lumaM), 1.0);
+        // return vec4f(0,1,0, 1.0);
         return vec4f(rgbM, 1.0);
     }
 
-    let outputColor: vec3f = select(finalColor, vec3f(1.0, 0.0, 0.0), u_showEdges);
+    let outputColor: vec3f = select(finalColor, vec3f(1.0, 0.0, 0.0), true);
 
     // 亮度差异小于阈值 → 非边缘，直接返回原颜色（节省性能）//uniform control flow
     // if (lumaMax - lumaMin <= lumaMax * u_lumaThreshold) {

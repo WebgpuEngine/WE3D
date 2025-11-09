@@ -13,6 +13,6 @@ struct st_quad_output {
             );
     return st_quad_output(
         vec4f(pos[vertexIndex], 0.0, 1.0),
-        pos[vertexIndex] * 0.5 + 0.5
+        vec2f(pos[vertexIndex].x * 0.5 + 0.5, pos[vertexIndex].y * -0.5 + 0.5)
     );
 }

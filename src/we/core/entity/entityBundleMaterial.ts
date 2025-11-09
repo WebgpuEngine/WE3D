@@ -24,17 +24,27 @@ import { BaseEntity } from "./baseEntity";
 export abstract class EntityBundleMaterial extends BaseEntity {
     declare inputValues: I_EntityBundleMaterial;
     /**mesh的geometry内部对象，获取attribute使用 */
-    _geometry!: BaseGeometry;
+    _geometry: BaseGeometry | undefined;
     /**
      * mesh的material内部对象，获取uniform、bindingroup字符串、SHT等使用
      */
     _material!: BaseMaterial;
     /** 顶点数据 */
     attributes: I_EntityAttributes = {
-        vertices: new Map(),
+        vertices: {},
         vertexStepMode: "vertex",
         indexes: [],
     };
+
+    detachData(): void {
+        this.inputValues.attributes.geometry=undefined;
+        this.inputValues.attributes.data=undefined;
+
+        // this._geometry?.destroy();
+        this._geometry = undefined;
+        this.attributes.vertices = {};
+        this.attributes.indexes = [];
+    }
     /**
      * 状态检查，是否已经完成初始化。updateSelf()中调用
      * @returns 是否完成初始化
@@ -74,8 +84,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     generateBoxAndSphere(): void {
         if (this.checkStatus()) {
             let position: number[] = [];
-            if (this.attributes.vertices.has("position")) {
-                position = this.attributes.vertices.get("position") as number[];
+            if (this.attributes.vertices["position"]) {
+                position = this.attributes.vertices["position"] as number[];
                 if (position.length) {
                     this.boundingBox = this.generateBox(position);
                     this.boundingSphere = this.generateSphere(this.boundingBox);
@@ -93,7 +103,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             //         min: [0, 0, 0],
             //         max: [0, 0, 0]
             //     };
-           //     this.boundingSphere = this.generateSphere(this.boundingBox);
+            //     this.boundingSphere = this.generateSphere(this.boundingBox);
             // }
 
         }
@@ -224,8 +234,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 drawMode = drawModeIndexMesh;
             }
             else {
-                if (scope.attributes.vertices.has("position")) {
-                    let pos = scope.attributes.vertices.get("position")!;
+                if (scope.attributes.vertices["position"]) {
+                    let pos = scope.attributes.vertices["position"]!;
                     if ("data" in pos) {
                         drawModeMesh.vertexCount = pos.count;
                     }

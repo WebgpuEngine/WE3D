@@ -2,7 +2,7 @@ import { E_renderForDC } from "../base/coreDefine";
 import { E_TransparentType } from "../material/base";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferEntry, I_viewport, IV_BaseCommand, T_uniformGroup } from "./base";
+import { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferEntry, I_viewport, IV_BaseCommand, T_uniformGroup } from "./base";
 import { BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer } from "./baseFunction";
 

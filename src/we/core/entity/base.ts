@@ -10,12 +10,12 @@ import { BaseMaterial } from "../material/baseMaterial";
 import { BaseGeometry } from "../geometry/baseGeometry";
 
 export enum E_entityType {
-   mesh = "mesh",
-   points = "points",
-   pointsEmu = "pointsEmu",
-   lines = "lines",
-   sprite = "sprite",
-   oneColorCube = "oneColorCube",
+    mesh = "mesh",
+    points = "points",
+    pointsEmu = "pointsEmu",
+    lines = "lines",
+    sprite = "sprite",
+    oneColorCube = "oneColorCube",
 }
 
 export interface meshConstantsVS {
@@ -199,9 +199,10 @@ export interface I_BaseEntityStep2 {
 
 /**enity的顶点属性参数 */
 export interface I_EntityAttributes {
-    vertices: Map<string, T_vsAttribute>;
-    vertexStepMode: GPUVertexStepMode;
-    indexes: number[];
+    // vertices: Map<string, T_vsAttribute>,
+    vertices: { [name in string]: T_vsAttribute },
+    vertexStepMode: GPUVertexStepMode,
+    indexes: number[],
 }
 
 /**

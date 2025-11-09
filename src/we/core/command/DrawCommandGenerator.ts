@@ -5,9 +5,9 @@
  */
 
 import type { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, I_viewport, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
-import { DrawCommand, IV_DrawCommand, I_viewport } from "./DrawCommand";
+import { DrawCommand, IV_DrawCommand  } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { AA } from "../scene/base";
@@ -104,7 +104,8 @@ export interface V_DC {
      */
     IDS?: I_DrawCommandIDs,
     data: {
-        vertices?: Map<string, T_vsAttribute>,
+        vertices?: { [name in string]: T_vsAttribute },
+        // vertices?: Map<string, T_vsAttribute>,
         vertexStepMode?: GPUVertexStepMode,
         indexes?: number[],
         /**
@@ -276,7 +277,9 @@ export class DrawCommandGenerator {
         let shaderLocation = 0;//最多16个
         let location_i = 0;
         if (values.data.vertices) {
-            for (const [key, value] of values.data.vertices) {
+            // for (const [key, value] of values.data.vertices) {
+            for (let key in values.data.vertices) {
+                let value = values.data.vertices[key];
                 let locationString: string = "";
                 let lowKey = key.toLocaleLowerCase();
                 let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
@@ -603,7 +606,7 @@ export class DrawCommandGenerator {
                     //初始化BindGroup描述
                     bindGroupDesc = {
                         // label: values.label + " BGD:" + layoutNumber + " time:"+this.clock.now,
-                        label:  `BGD(${layoutNumber})@${this.clock.now} ${values.label}`,
+                        label: `BGD(${layoutNumber})@${this.clock.now} ${values.label}`,
                         layout: bindGroupLayout,
                         entries: bindGroupEntry,
                     }
@@ -640,7 +643,7 @@ export class DrawCommandGenerator {
         // if (values.transparent)
         //     console.log(shadercode);
         moduleVS = this.device.createShaderModule({
-            label: "SHM@"+this.clock.now + " " + values.label ,
+            label: "SHM@" + this.clock.now + " " + values.label,
             code: shadercode,
         });
         //3、生产GPURenderPipelineDescriptor
@@ -712,12 +715,12 @@ export class DrawCommandGenerator {
 
         //3.3、GPURenderPipelineDescriptor.layout 部分
         let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: "PipelineLayout@"+this.clock.now + " " + values.label,
+            label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: DC_bindGroupLayouts,
         }
         let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
         let descriptor: GPURenderPipelineDescriptor = {
-            label: "Pipeline@"+this.clock.now + " " + values.label,
+            label: "Pipeline@" + this.clock.now + " " + values.label,
             vertex,
             layout: pipelineLayout,
         }
@@ -788,7 +791,7 @@ export class DrawCommandGenerator {
             //2.5 增加一个MSAA 的NDC
             else if (this.scene.finalTarget.NDC == true && values.system?.MSAA) {
                 // if (values.system?.MSAA)
-                    renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
+                renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
             }
             //3、如果没有rpd描述，且有system。
             else if (values.system && values.renderPassDescriptor == undefined) {
@@ -827,9 +830,9 @@ export class DrawCommandGenerator {
             // dynamic: values.dynamic || false,
         }
         //为了适配动态增加光源后的阴影贴图的动态更新。
-        if(values.system) {
+        if (values.system) {
             let UUID = this.checkUUID(values);
-            if(UUID) {
+            if (UUID) {
                 commandOption.system = {
                     UUID,
                     type: values.system.type,
