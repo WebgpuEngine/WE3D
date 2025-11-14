@@ -2,7 +2,7 @@
 // 'wgpu-matrix' library, so produces many temporary vectors and matrices.
 // This is intentional, as this sample prefers readability over performance.
 import { Mat4, Vec3, Vec4, mat4, vec3, vec4 } from 'wgpu-matrix';
-import { RootOfGPU, } from '../organization/root';
+import { RootGPU, } from '../organization/root';
 import { CamreaControl, optionCamreaControl } from '../control/cameracCntrol';
 import { I_Update } from '../base/coreDefine';
 import { cameracCntrolType } from '../control/base';
@@ -64,7 +64,7 @@ export interface projectionOptions extends I_Update {
 /***
  * 摄像机抽象类
  */
-export abstract class BaseCamera extends RootOfGPU {
+export abstract class BaseCamera extends RootGPU {
   /** 初始化参数  */
   declare inpuValues: projectionOptions;
   manager!: CameraManager;
@@ -431,7 +431,7 @@ export abstract class BaseCamera extends RootOfGPU {
   }
 
   updateWorldPosition() {
-    ////移动到RootOfOrganization中
+    ////移动到RootOrigin中
     // this.worldPosition = vec3.fromValues(this.matrixWorld[12], this.matrixWorld[13], this.matrixWorld[14]);
     super.updateWorldPosition();
     this.position = this.worldPosition;//更新model matrix

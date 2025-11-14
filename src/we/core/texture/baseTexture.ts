@@ -1,11 +1,11 @@
 import { E_lifeState } from "../base/coreDefine";
 import { commmandType } from "../command/base";
-import { RootOfGPU } from "../organization/root";
+import { RootGPU } from "../organization/root";
 import { Clock } from "../scene/clock";
 import { Scene } from "../scene/scene";
 import { I_BaseTexture, T_textureSourceType } from "./base";
 
-export abstract class BaseTexture extends RootOfGPU {
+export abstract class BaseTexture extends RootGPU {
     device: GPUDevice;
 
     inputValues: I_BaseTexture;

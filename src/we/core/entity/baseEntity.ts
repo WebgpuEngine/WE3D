@@ -1,5 +1,5 @@
 import { mat4, vec3 } from "wgpu-matrix";
-import { RootOfGPU } from "../organization/root";
+import { RootGPU } from "../organization/root";
 
 import { boundingBox, generateBox3 } from "../math/Box";
 import { boundingSphere, generateSphereFromBox3 } from "../math/sphere";
@@ -9,7 +9,7 @@ import {
     E_entityType,
     I_EntityBundleOfUniformAndShaderTemplateFinal,
     I_entityInstance,
-    I_optionBaseEntity,
+    IV_BaseEntity,
     I_optionShadowEntity,
     I_ShadowMapValueOfDC,
 } from "./base";
@@ -27,7 +27,7 @@ import { E_renderPassName } from "../scene/renderManager";
 import { mergeLightUUID } from "../light/lightsManager";
 
 
-export abstract class BaseEntity extends RootOfGPU {
+export abstract class BaseEntity extends RootGPU {
     ///////////////////////////////////////////
     // shader
     /**for shader  */
@@ -42,7 +42,7 @@ export abstract class BaseEntity extends RootOfGPU {
     _entityIdSizeForWGSL = 4;//以u32（f32）计算
     ////////////////////////////////////////////////////////////////////
     //基础属性
-    input: I_optionBaseEntity;
+    input: IV_BaseEntity;
     /** stageID*/
     stageID: number = 0;
     /**实例化数量，默认为1 */
@@ -131,7 +131,7 @@ export abstract class BaseEntity extends RootOfGPU {
     ////////////////////////////////////////////////////////////////////////////
     entityManager!: EntityManager;
 
-    constructor(input: I_optionBaseEntity) {
+    constructor(input: IV_BaseEntity) {
         super();
         this.type = "entity";
         this._state = E_lifeState.constructing;
@@ -202,7 +202,7 @@ export abstract class BaseEntity extends RootOfGPU {
      * 三段式初始化的第二步：init
      * @param values
      */
-    async init(scene: Scene, parent: RootOfGPU, renderID: number): Promise<number> {
+    async init(scene: Scene, parent: RootGPU, renderID: number): Promise<number> {
         this.MSAA = scene.MSAA;
         this.deferColor = scene.deferRender.deferRenderColor;
         this.structUnifomrBuffer = new ArrayBuffer(this.getSizeOfUniformArrayBuffer());//4 * 4 * this.numInstances * 4 + this._entityIdSizeForWGSL * 4

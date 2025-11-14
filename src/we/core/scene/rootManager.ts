@@ -1,8 +1,8 @@
-import { RootOfGPU, RootOfOrganization } from "../organization/root";
+import { RootGPU, RootOrigin } from "../organization/root";
 import { Clock } from "./clock";
 import { Scene } from "./scene";
 
-export class RootManager extends RootOfGPU {
+export class RootManager extends RootGPU {
     currentRenderID: number = 0;   
     constructor(scene: Scene) {
         super();
@@ -27,7 +27,7 @@ export class RootManager extends RootOfGPU {
     updateSelf(clock: Clock): void {
         
     }
-    // async addChild(child: RootOfOrganization): Promise<number> {
+    // async addChild(child: RootOrigin): Promise<number> {
     //     return await super.addChild(child);
     // }
     async readyForGPU(): Promise<any> {

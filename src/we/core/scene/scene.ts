@@ -11,7 +11,7 @@ import { LightsManager } from "../light/lightsManager";
 import { MaterialManager } from "../material/materialManager";
 import { generateBox3ByArrayBox3s, type boundingBox } from "../math/Box";
 import { generateSphereFromBox3, type boundingSphere } from "../math/sphere";
-import { RootOfGPU, RootOfOrganization } from "../organization/root";
+import { RootGPU, RootOrigin } from "../organization/root";
 import { Pickup } from "../pickup/pickup";
 import { pickupManager } from "../pickup/pickupManager";
 import { PostProcessManager } from "../postprocess/postProcessManager";
@@ -805,14 +805,14 @@ export class Scene {
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //add 
-    async add(child: RootOfGPU) {
+    async add(child: RootGPU) {
         if (child.type == "Light" && child instanceof AmbientLight) {
             this.lightsManager.ambientLight = child;
         }
         else
             this.root.currentRenderID = await this.root.addChild(child);
     }
-    remove(child: RootOfOrganization) {
+    remove(child: RootOrigin) {
         this.root.removeChild(child);
     }
 

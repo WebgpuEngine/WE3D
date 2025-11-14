@@ -1,5 +1,5 @@
 
-import { RootOfGPU } from "../organization/root";
+import { RootGPU } from "../organization/root";
 
 import { E_lifeState } from "../base/coreDefine";
 import { I_ShadowMapValueOfDC } from "../entity/base";
@@ -16,7 +16,7 @@ import { E_GBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 
 
 
-export abstract class BaseMaterial extends RootOfGPU {
+export abstract class BaseMaterial extends RootGPU {
     declare inputValues: IV_BaseMaterial;
 
     kind!:E_MaterialType;
@@ -130,7 +130,7 @@ export abstract class BaseMaterial extends RootOfGPU {
         return this._state;
     }
 
-    async init(scene: Scene, parent: RootOfGPU, renderID: number = 0): Promise<number> {
+    async init(scene: Scene, parent: RootGPU, renderID: number = 0): Promise<number> {
         // this._shadow = (parent as BaseEntity)._shadow;
         this.renderID = renderID
         await super.init(scene, parent, renderID);

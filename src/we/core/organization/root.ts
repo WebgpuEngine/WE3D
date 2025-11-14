@@ -16,7 +16,7 @@ import { E_renderPassName } from "../scene/renderManager";
 export interface I_UUID {
     UUID: string;
 }
-export interface RootOfOrganizationJSON {
+export interface RootOriginJSON {
     type: string,
     name: string,
     id: number,
@@ -36,7 +36,7 @@ export interface RootOfOrganizationJSON {
     children: number[],
 }
 
-export abstract class RootOfOrganization implements I_UUID {
+export abstract class RootOrigin implements I_UUID {
     /**
      * 节点名称
      * node name
@@ -89,13 +89,13 @@ export abstract class RootOfOrganization implements I_UUID {
      * 父节点
      * parent node
      */
-    _parent: RootOfOrganization | undefined;
+    _parent: RootOrigin | undefined;
 
     /**
      * 子节点
      * child nodes
      */
-    _children: RootOfOrganization[] = [];
+    _children: RootOrigin[] = [];
 
     /**
      * 节点类型
@@ -133,7 +133,7 @@ export abstract class RootOfOrganization implements I_UUID {
      * 添加子节点
      * @param child 
      */
-    async addChild(child: RootOfOrganization): Promise<number> {
+    async addChild(child: RootOrigin): Promise<number> {
         child.parent = this;
         this._children.push(child);
         return child._renderID;
@@ -143,11 +143,11 @@ export abstract class RootOfOrganization implements I_UUID {
      * remove child
      * 移除子节点
      * @param child 
-     * @returns RootOfOrganization | false
+     * @returns RootOrigin | false
      *           移除成功返回子节点，失败返回false
      *           success return child, fail return false
      */
-    removeChild(child: RootOfOrganization): RootOfOrganization | false {
+    removeChild(child: RootOrigin): RootOrigin | false {
         let index = this._children.indexOf(child);
 
         if (index !== -1) {
@@ -200,12 +200,12 @@ export abstract class RootOfOrganization implements I_UUID {
      * @param name 
      * @returns 
      */
-    getObjectByName(name: string): RootOfOrganization | boolean {
+    getObjectByName(name: string): RootOrigin | boolean {
         for (let i of this.children) {
             if (i.Name == name) {
                 return this;
             }
-            else if (i instanceof RootOfOrganization) {
+            else if (i instanceof RootOrigin) {
                 let scope = i.getObjectByName(name);
                 if (typeof scope != "boolean") {
                     return scope;
@@ -215,10 +215,10 @@ export abstract class RootOfOrganization implements I_UUID {
         return false;
     }
 
-    get parent(): RootOfOrganization | undefined {
+    get parent(): RootOrigin | undefined {
         return this._parent;
     }
-    set parent(value: RootOfOrganization) {
+    set parent(value: RootOrigin) {
         this._parent = value;
     }
 
@@ -428,8 +428,8 @@ export abstract class RootOfOrganization implements I_UUID {
      * @param json 输入的JSON格式数据
      */
     abstract loadJSON(json: any): void;
-    getBaseJSON(): RootOfOrganizationJSON {
-        let outputJSON: RootOfOrganizationJSON = {
+    getBaseJSON(): RootOriginJSON {
+        let outputJSON: RootOriginJSON = {
             type: this.type,
             name: this._name,
             id: this._id,
@@ -481,7 +481,7 @@ export abstract class RootOfOrganization implements I_UUID {
 }
 
 
-export abstract class RootOfGPU extends RootOfOrganization {
+export abstract class RootGPU extends RootOrigin {
 
     device!: GPUDevice;
 
@@ -515,7 +515,7 @@ export abstract class RootOfGPU extends RootOfOrganization {
      * @param renderID 
      * @returns 
      */
-    async init(scene: Scene, parent?: RootOfGPU, renderID?: number): Promise<number> {
+    async init(scene: Scene, parent?: RootGPU, renderID?: number): Promise<number> {
         if (parent) {
             this.parent = parent;
         }
@@ -564,14 +564,14 @@ export abstract class RootOfGPU extends RootOfOrganization {
     }
     abstract _destroy(): void;
 
-    async addChild(child: RootOfGPU): Promise<number> {
+    async addChild(child: RootGPU): Promise<number> {
         let renderID = await child.init(this.scene, this, this.renderID);
         await super.addChild(child);
-        // if (child instanceof RootOfGPU) {
+        // if (child instanceof RootGPU) {
         //     child.init(this.scene, this);
         // }
         // super.addChild(child);
-        if (this.parent instanceof RootOfGPU && child instanceof RootOfGPU) {
+        if (this.parent instanceof RootGPU && child instanceof RootGPU) {
             await child.setRootENV(this.scene);
         }
         if (child.type == "Camera") {
@@ -603,7 +603,7 @@ export abstract class RootOfGPU extends RootOfOrganization {
         }
         return renderID;
     }
-    removeChild(child: RootOfOrganization): RootOfOrganization | false {
+    removeChild(child: RootOrigin): RootOrigin | false {
         let childRemoveResult = super.removeChild(child);
         if (childRemoveResult) {
             if (child.type == "Camera") {

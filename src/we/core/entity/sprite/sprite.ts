@@ -10,7 +10,7 @@ import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";
 import { SHT_PointEmuSpriteVS } from "../../shadermanagemnet/mesh/meshVS";
-import { E_entityType, I_EntityBundleMaterial, I_optionBaseEntity, I_ShadowMapValueOfDC } from "../base";
+import { E_entityType, I_EntityBundleMaterial, IV_BaseEntity, I_ShadowMapValueOfDC } from "../base";
 import { BaseEntity } from "../baseEntity";
 import { EntityBundleMaterial } from "../entityBundleMaterial";
 

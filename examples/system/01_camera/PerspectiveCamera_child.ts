@@ -8,7 +8,7 @@ import { initScene } from "../../../src/we/core/scene/fn";
 import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
 import { Scene } from "../../../src/we/core/scene/scene";
 import { RootManager } from "../../../src/we/core/scene/rootManager";
-import { RootOfGPU } from "../../../src/we/core/organization/root";
+import { RootGPU } from "../../../src/we/core/organization/root";
 
 declare global {
   interface Window {

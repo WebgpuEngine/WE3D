@@ -89,7 +89,7 @@ export interface I_optionShadowEntity {
 
 
 /**三段式初始化的第一步： input参数 */
-export interface I_optionBaseEntity extends I_Update {
+export interface IV_BaseEntity extends I_Update {
     /**
      * 两种情况：
      * 
@@ -144,7 +144,7 @@ export interface I_optionBaseEntity extends I_Update {
     shaderCode?: string,
 }
 
-export interface I_EntityBundleMaterial extends I_optionBaseEntity {
+export interface I_EntityBundleMaterial extends IV_BaseEntity {
     /** 顶点属性 和几何体二选一*/
     attributes: {
         /**几何体 */
