@@ -431,6 +431,7 @@ export class LightsManager extends ECSManager<BaseLight> {
     }
     /**更新所有光源的入口 */
     update(clock: Clock) {
+        this.checkDestroy();
         this.beforUpdate();
         this.updateLights(clock);//更新所有光源属性
         this.updateSystemUniformBufferForlights();//更新lights的system uniform ；@group(0) @binding(1)

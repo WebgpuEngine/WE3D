@@ -7,6 +7,7 @@ import { BaseMaterial } from "./baseMaterial";
 export class MaterialManager extends ECSManager<BaseMaterial> {
 
     update(clock: Clock): void {
+        this.checkDestroy();
         for (let i of this.list) {
             i.update(clock);
             for (let j of i.commands) {

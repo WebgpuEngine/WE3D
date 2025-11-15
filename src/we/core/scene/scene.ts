@@ -31,7 +31,7 @@ export class Scene {
     ///////////////////////////////////////////////////////////////
     //基础内容。base content.
     clock: Clock;
-    _inputValue: IV_Scene;
+    inputValue: IV_Scene;
     /**场景的标志位
      * 用途：经常会改变的重要标志
      */
@@ -66,7 +66,7 @@ export class Scene {
                 height: 0,
             }
         };
-
+    backgroudColor: number[] = [0, 0, 0, 1];
     ///////////////////////////////////////////////////////////////
     //GPU
     adapter!: GPUAdapter;
@@ -76,7 +76,7 @@ export class Scene {
     context!: GPUCanvasContext | GPUTexture;
     /**颜色通道输出的纹理格式     *  presentationFormat*/
     presentationFormat!: GPUTextureFormat;
-    backgroudColor: number[] = [0, 0, 0, 1];
+
     /**是否使用premultiplied alpha */
     premultipliedAlpha: boolean = true;
 
@@ -289,12 +289,12 @@ export class Scene {
         if (value.modeNDC && value.modeNDC === true)
             this.finalTarget.NDC = true;
         this.clock = new Clock();
-        this._inputValue = value;
+        this.inputValue = value;
         // this.deferRenderDepth = false;//为了测试方便,后期更改为:true,20241128
         // this.deferRenderColor = false;//为了测试方便,后期更改为:true,20241128
         this._maxlightNumber = V_lightNumber;
-        if(value.toneMapping){
-            this.E_ToneMappingType=value.toneMapping;
+        if (value.toneMapping) {
+            this.E_ToneMappingType = value.toneMapping;
         }
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //input赋值
@@ -403,7 +403,7 @@ export class Scene {
         if (!device) throw new Error("Couldn't request WebGPU device.");
         this.device = device;
 
-        this.canvas = document.getElementById(this._inputValue.canvas) as HTMLCanvasElement;
+        this.canvas = document.getElementById(this.inputValue.canvas) as HTMLCanvasElement;
         this.context = this.canvas.getContext('webgpu') as GPUCanvasContext;
         this.presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -441,18 +441,18 @@ export class Scene {
      */
     configure() {
         let usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING;
-        if (this._inputValue.surface) {
+        if (this.inputValue.surface) {
             try {
                 (this.context as GPUCanvasContext).configure({
                     device: this.device,
-                    format: this._inputValue.surface.format,
-                    colorSpace: this._inputValue.surface.colorSpace,
-                    toneMapping: this._inputValue.surface.toneMapping,
+                    format: this.inputValue.surface.format,
+                    colorSpace: this.inputValue.surface.colorSpace,
+                    toneMapping: this.inputValue.surface.toneMapping,
                     alphaMode: this.premultipliedAlpha ? "premultiplied" : "opaque", //'premultiplied',//预乘透明度
                     usage
                 });
-                this.colorFormatOfCanvas = this._inputValue.surface.format;
-                this.colorSpaceAndLinearSpace.colorSpace = this._inputValue.surface.colorSpace;
+                this.colorFormatOfCanvas = this.inputValue.surface.format;
+                this.colorSpaceAndLinearSpace.colorSpace = this.inputValue.surface.colorSpace;
             } catch (e) {
                 (this.context as GPUCanvasContext).configure({
                     device: this.device,
@@ -595,7 +595,7 @@ export class Scene {
         this.userDefineUpdateArray.push(call);
     }
     /**设置用户自定义call function的状态 */
-    setUserDfineEventStateByName(name: String, state: boolean) {
+    setUserDefineEventStateByName(name: String, state: boolean) {
         for (let i of this.userDefineUpdateArray) {
             if (i.name == name) {
                 i.state = state;
@@ -604,7 +604,7 @@ export class Scene {
         }
     }
     /**获取用户字自定义 call function的状态 */
-    getUserDfineEventStateByName(name: string, state: boolean): { name: string, state: boolean } {
+    getUserDefineEventStateByName(name: string, state: boolean): { name: string, state: boolean } {
         for (let i of this.userDefineUpdateArray) {
             if (i.name == name) {
                 i.state = state;
@@ -1135,7 +1135,7 @@ export class Scene {
      * @param template 单Shader模板
      * @returns I_ShaderTemplate_Final
      */
-    getShaderCodeOfSHT_ScenOfCamera(template: I_singleShaderTemplate): I_ShaderTemplate_Final {
+    getShaderCodeOfSHT_SceneOfCamera(template: I_singleShaderTemplate): I_ShaderTemplate_Final {
         let code: string = "";
         for (let perOne of template.add as I_shaderTemplateAdd[]) {
             code += perOne.code;

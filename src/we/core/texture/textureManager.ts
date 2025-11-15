@@ -7,6 +7,7 @@ import { BaseTexture } from "./baseTexture";
 export class TextureManager extends ECSManager<BaseTexture> {
 
     update(clock: Clock): void {
+        this.checkDestroy();
         for (let i of this.list) {
             i.update(clock);
             for(let j of i.commands){

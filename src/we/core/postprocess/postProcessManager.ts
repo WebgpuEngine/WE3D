@@ -8,6 +8,7 @@ export class PostProcessManager extends ECSManager<BasePostProcess> {
 
 
     update(clock: Clock): void {
+        this.checkDestroy();
         for (let perOne of this.list) {
             perOne.update(clock);
             for (let perCommand of perOne.commands) {

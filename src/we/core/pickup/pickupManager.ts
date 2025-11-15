@@ -44,6 +44,7 @@ export class pickupManager extends ECSManager<Pickup> {
         }
     }
     async update(clock: Clock): Promise<void> {
+        this.checkDestroy();
         for (let perOne of this.list) {
             await perOne.update();
         }

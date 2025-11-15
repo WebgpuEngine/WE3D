@@ -11,6 +11,7 @@ import { InputManager } from "./inputManager";
 export abstract class BaseInputControl {
     kind: E_InputControlType;
     UUID: string;
+    _isDestroy: boolean = false;
     manager: InputManager;
     eventValues: {
         keyValue: {
@@ -79,6 +80,7 @@ export abstract class BaseInputControl {
     destroy(): void {
         this.manager.remove(this);
         this.__destroy();
+        this._isDestroy=true;
     }
     registerEvent(event: E_InputEvent, priority: E_InputPriority, control: BaseInputControl): boolean {
         return this.manager.registerEvent(event, priority, control);

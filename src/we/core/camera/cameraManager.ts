@@ -207,6 +207,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 数据队列都是规定的DC，onResize是会全部重建，所以还是每帧push
      */
     async update(clock: Clock) {
+        this.checkDestroy();
         for (let camera of this.list) {
             let UUID = camera.UUID;
             for (let perToneMappingCommand of this.cameraDrawCommandOfFinalStep[UUID].toneMapping) {

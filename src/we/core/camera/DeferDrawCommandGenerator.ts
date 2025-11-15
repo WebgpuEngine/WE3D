@@ -209,7 +209,7 @@ export class DeferDrawCommandGenerator implements IV_DeferDrawCommand {
         let shaderTemplateFinal: I_ShaderTemplate_Final = {};
         for (let i in SHT_VS) {
             if (i == "scene") {
-                let shader = this.scene.getShaderCodeOfSHT_ScenOfCamera(SHT_VS[i]);
+                let shader = this.scene.getShaderCodeOfSHT_SceneOfCamera(SHT_VS[i]);
                 shaderTemplateFinal.scene = shader.scene;
             }
             else {

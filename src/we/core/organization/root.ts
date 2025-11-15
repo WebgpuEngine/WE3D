@@ -14,7 +14,9 @@ import { E_renderPassName } from "../scene/renderManager";
 
 
 export interface I_UUID {
-    UUID: string;
+    // update(clock: Clock): unknown;
+    UUID: string,
+    _isDestroy: boolean,
 }
 export interface RootOriginJSON {
     type: string,

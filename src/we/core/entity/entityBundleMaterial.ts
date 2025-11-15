@@ -183,7 +183,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
 
         for (let i in SHT_VS) {
             if (i == "scene") {
-                let shader = this.scene.getShaderCodeOfSHT_ScenOfCamera(SHT_VS[i]);
+                let shader = this.scene.getShaderCodeOfSHT_SceneOfCamera(SHT_VS[i]);
                 shaderTemplateFinal.scene = shader.scene;
             }
             else if (i == "entity") {

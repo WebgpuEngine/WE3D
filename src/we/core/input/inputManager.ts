@@ -221,6 +221,7 @@ export class InputManager extends ECSManager<BaseInputControl> {
     pickupClick() { }
     pickupMove() { }
     update(clock: Clock): void {
+        this.checkDestroy();
         //最前面
         // this.pickupClick();cleanRegisterEvent() 
 

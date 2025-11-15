@@ -16,6 +16,7 @@ export interface IV_PostProcess extends I_Update {
 
 export abstract class BasePostProcess implements I_UUID {
     UUID: string;
+    _isDestroy: boolean = false;
     scene: Scene;
     manager: PostProcessManager;
     commands: commmandType[] = [];
@@ -52,6 +53,7 @@ export abstract class BasePostProcess implements I_UUID {
             }
         }
         this.commands = [];
+        this._isDestroy=true;
     }
     /**
      * 1、更新自身
