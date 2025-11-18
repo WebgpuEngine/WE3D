@@ -120,7 +120,7 @@ export interface IV_BaseEntity extends I_Update {
     rotate?: RotationArray,
 
     /**是否每帧更新Matrix，默认=false */
-    updateMatrixPerFrame?: boolean,
+    updatePerFrame?: boolean,
 
     /**剔除面 
      *  "front" | "back" | "all"

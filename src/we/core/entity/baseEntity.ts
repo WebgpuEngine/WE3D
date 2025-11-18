@@ -73,10 +73,13 @@ export abstract class BaseEntity extends RootGPU {
     //状态属性
     // _init: E_lifeState = E_lifeState.unstart;
     /**是否每帧更新 */
-    updateMatrixPerFrame: boolean = true;
+    updatePerFrame: boolean = true;
+
     // /**是否单独更新每个instance  默认=false    */
     // flagUpdateForPerInstance: boolean = false;
-    /**是否需要更新 */
+    /**
+     * 是否需要更新,根据初始化状态，或触发更新
+     */
     needUpdate: boolean = true;
     //////////////////////////////////////////////////////////////////
     //是否透明属性
@@ -136,6 +139,23 @@ export abstract class BaseEntity extends RootGPU {
         this.type = "entity";
         this._state = E_lifeState.constructing;
         this.input = input;
+
+        //是否每帧更新矩阵等
+        if (input.updatePerFrame !== undefined) {
+            this.updatePerFrame = input.updatePerFrame;
+        }
+        else if (input.dynamicMesh !== undefined) {
+            this.updatePerFrame = input.dynamicMesh;
+        }
+        else if (input.dynamicPostion !== undefined) {
+            this.updatePerFrame = input.dynamicPostion;
+        }
+        else if (input.update !== undefined) {
+            this.updatePerFrame = true;
+        }
+        else {
+            this.updatePerFrame = false;
+        }
         if (input.instance) {
             this.instance = input.instance;
             this.checkInstance();
@@ -451,7 +471,12 @@ export abstract class BaseEntity extends RootGPU {
         }
     }
 
-
+    update(clock: Clock, updateSelftFN?: boolean): boolean {
+        if (this.updatePerFrame === true || this.needUpdate === true || this._state != E_lifeState.finished) {
+            super.update(clock, updateSelftFN);
+        }
+        return this.needUpdate;
+    }
 
     updateSelf(clock: Clock) {
         //uniform @group(1) @binding(0)

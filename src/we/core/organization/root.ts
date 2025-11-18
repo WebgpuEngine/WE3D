@@ -11,6 +11,7 @@ import { BaseMaterial } from "../material/baseMaterial";
 import { isWeVec3 } from "../base/coreFunction";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { E_renderPassName } from "../scene/renderManager";
+import { BaseAnimation } from "../animation/BaseAnimation";
 
 
 export interface I_UUID {
@@ -506,6 +507,7 @@ export abstract class RootGPU extends RootOrigin {
      * node is ready of GPU
      */
     _readyForGPU!: boolean;
+    animation: BaseAnimation[]|undefined;
 
 
 

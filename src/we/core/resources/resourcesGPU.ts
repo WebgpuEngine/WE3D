@@ -305,8 +305,24 @@ export enum E_resourceKind {
     vertices = "vertices",
     indexes = "indexes",
     uniformBuffer = "uniformBuffer",
+    uniformEntryLayout = "uniformEntryLayout",
+    uniformGroup = "uniformGroup",
+    bindGroupLayout = "bindGroupLayout",
+    //下面3个是基本没有使用的，
+    //cameraToEntryOfDepthTT = "cameraToEntryOfDepthTT",
+    // RenderPipeline = "RenderPipeline",
+    // ComputePipeline = "ComputePipeline",
+    systemGroup0 = "systemGroup0",
+    systemGroup0Layout = "systemGroup0Layout",
+    shadowBindGroup = "shadowBindGroup",
+    shadowBindGroupLayout = "shadowBindGroupLayout",
     texture = "texture",
+    textureLayout = "textureLayout",
     sampler = "sampler",
+    samplerLayout = "samplerLayout",
+    TT2TTP = "TT2TTP",
+    TT2TTPF = "TT2TTPF",
+    shaderModule = "shaderModule",
 }
 
 class GPUBindGroupEntryImpl implements GPUBindGroupEntry {

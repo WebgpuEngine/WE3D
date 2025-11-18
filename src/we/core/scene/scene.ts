@@ -1038,9 +1038,9 @@ export class Scene {
         return { bindGroup: bindGroup!, bindGroupLayout: bindGroupLayout! };
     }
     /**
-     * 刷新系统BindGroup和BindGroupLayout
-     * @param UUID 
-     * @param kind 
+     * 1、 刷新系统BindGroup和BindGroupLayout
+     *   在光源的阴影数量发生变化时，需要刷新系统BindGroup和BindGroupLayout，因为阴影纹理会注销与重建
+     * 2、重建deferRender的DC
      */
     refreshSystemBindGroupAndBindGroupLayoutZeroForCamera() {
         for (let perCamera of this.cameraManager.list) {
