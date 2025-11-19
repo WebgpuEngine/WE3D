@@ -1,7 +1,7 @@
 import { E_renderForDC, V_weLinearFormat } from "../base/coreDefine";
 import { commmandType, I_PipelineStructure, T_rpdInfomationOfMSAA } from "../command/base";
 import { DrawCommand } from "../command/DrawCommand";
-import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
+import { DrawCommandGenerator, IV_DC } from "../command/DrawCommandGenerator";
 import { Mesh } from "../entity/mesh/mesh";
 import { E_GBufferNames } from "../gbuffers/base";
 import { splitLightUUID } from "../light/lightsManager";
@@ -1123,7 +1123,7 @@ export class RenderManager {
     //                     let colorIndex = parseInt(i) + 1;//i 从0开始，color的数字从1开始
     //                     let colorTextureName = "color" + colorIndex;
     //                     let idTextureName = "id";
-    //                     let valueDC: V_DC = {
+    //                     let valueDC: IV_DC = {
     //                         label: "renderManager TT blend render to camera :" + UUID,
     //                         data: {
     //                             uniforms: [

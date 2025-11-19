@@ -1,4 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC, type vsAttribute } from "../../../src/we/core/command/DrawCommandGenerator";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, type vsAttribute } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -69,7 +69,7 @@ let att2: vsAttribute = {
   arrayStride: 4 * 3,
   offset: 0
 }
-let valueDC: V_DC = {
+let valueDC: IV_DC = {
   label: "dc1",
   data: {
     vertices: new Map([

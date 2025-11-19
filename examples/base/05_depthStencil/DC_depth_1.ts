@@ -1,4 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformBufferEntry, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformBufferEntry, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -88,7 +88,7 @@ const oneTriangleColorArray_1 = [
 let rpd = scene.getRenderPassDescriptorForNDC();
 let depthStencil = scene.depthMode.depthStencil;
 
-let valueDC: V_DC = {
+let valueDC: IV_DC = {
   label: "dc0",
   data: {
     vertices: new Map([
@@ -126,7 +126,7 @@ dc0.submit()
 rpd.colorAttachments[0].loadOp = "load";
 rpd.depthStencilAttachment.depthLoadOp = "load";
 
-let valueDC_1: V_DC = {
+let valueDC_1: IV_DC = {
   label: "dc1",
   data: {
     vertices: new Map([

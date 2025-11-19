@@ -332,7 +332,7 @@ export abstract class RootOrigin implements I_UUID {
     }
 
     /**
-     * 更新矩阵的顺序是先进行线性变换，再进行位置变换
+     * TRS，更新矩阵的顺序是先进行线性变换，再进行位置变换
      *      其实是没有影响，线性工作在3x3矩阵，位置变换在[12,13,14]
      * 
      */

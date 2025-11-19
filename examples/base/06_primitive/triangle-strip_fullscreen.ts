@@ -1,4 +1,4 @@
-import { DrawCommandGenerator,  IV_DrawCommandGenerator,   V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { DrawCommandGenerator,  IV_DrawCommandGenerator,   IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -37,7 +37,7 @@ let shader = `
 
 let rpd = scene.getRenderPassDescriptorForNDC();
 
-let valueDC: V_DC = {
+let valueDC: IV_DC = {
   label: "dc0",
   data: {
   },

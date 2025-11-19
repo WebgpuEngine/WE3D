@@ -79,7 +79,7 @@ export type T_vsAttribute = vsAttribute | vsAttributeMerge | number[]
  * @render  渲染参数 
  * @system  系统参数:camera 或 light
  */
-export interface V_DC {
+export interface IV_DC {
     /**是否包括动态资源在binding group中
      * 默认：false，
      * 如果true，则需要动态绑定资源
@@ -112,7 +112,7 @@ export interface V_DC {
          * 1、最多4个bind group；
          * 2、如果有system，system的bindGroup是0，还剩3个；
          * 3、entity的bindGroup占用bindGroup1的位置；
-         * 4、如果V_DC,没有定义system，则uniform不考虑system的BindGroup的问题，即raw模式（NDC）
+         * 4、如果IV_DC,没有定义system，则uniform不考虑system的BindGroup的问题，即raw模式（NDC）
          */
         uniforms?: T_uniformGroup[],//vs 部分有会 vertex texture
         unifromLayout?: GPUBindGroupLayoutEntry[][],
@@ -188,7 +188,7 @@ export class DrawCommandGenerator {
     MSAA: boolean;
 
     /**DrawCommand的输入参数数组 */
-    inputDC: V_DC[] = [];
+    inputDC: IV_DC[] = [];
 
     clock: Clock;
 
@@ -264,7 +264,7 @@ export class DrawCommandGenerator {
      * @returns 
      */
 
-    generateDrawCommand(values: V_DC) {
+    generateDrawCommand(values: IV_DC) {
         this.inputDC.push(values);//保存每个DC的init参数，为了后续的更新uniform使用（如果其中有update选项）
         //1、buffer资源
         //1.1、顶点资源
@@ -876,7 +876,7 @@ export class DrawCommandGenerator {
      * @param values 
      * @returns BaseCamera | false
      */
-    getCamera(values: V_DC): BaseCamera | false {
+    getCamera(values: IV_DC): BaseCamera | false {
         if (values.system?.type == E_renderForDC.camera) {
             let UUID = this.checkUUID(values);
             if (UUID) {
@@ -892,7 +892,7 @@ export class DrawCommandGenerator {
         throw new Error("获取UUID失败");
     }
 
-    checkUUID(values: V_DC): string | false {
+    checkUUID(values: IV_DC): string | false {
         if (values.system) {
             let UUID = values.system.UUID;
             if (values.system.type === E_renderForDC.camera && values.system.UUID == undefined) {//相机没有UUID，默认使用默认相机

@@ -1,4 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type V_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -84,7 +84,7 @@ let DCManager = new DrawCommandGenerator(inputDC);
 
 
 
-let valueDC: V_DC = {
+let valueDC: IV_DC = {
   label: "dc1",
   data: {
     vertices: new Map([

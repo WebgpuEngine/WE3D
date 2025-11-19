@@ -1,7 +1,7 @@
 import { E_renderForDC, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_drawModeIndexed, I_uniformBufferEntry } from "../../command/base";
-import { V_DC } from "../../command/DrawCommandGenerator";
+import { IV_DC } from "../../command/DrawCommandGenerator";
 import { mergeLightUUID } from "../../light/lightsManager";
 import { I_BundleOfMaterialForMSAA, I_materialBundleOutput, I_TransparentOptionOfMaterial } from "../../material/base";
 import { BaseMaterial } from "../../material/baseMaterial";
@@ -221,7 +221,7 @@ export class Mesh extends EntityBundleMaterial {
      * @param bundle 实体的uniform和shader模板
      * @returns IV_DrawCommand
      */
-    generateWireFrameInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Mesh): V_DC {
+    generateWireFrameInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Mesh): IV_DC {
        if (scope == undefined) scope = this;
         let drawMode: I_drawModeIndexed = {
             indexCount: 0,
@@ -237,7 +237,7 @@ export class Mesh extends EntityBundleMaterial {
         else {
             throw new Error("Mesh constructor: wireFrame must have geometry or attribute data");
         }
-        let valueDC: V_DC = {
+        let valueDC: IV_DC = {
             label: "wireframe :" + scope.Name + " for  " + type + ": " + UUID,
             data: {
                 vertices: scope.attributes.vertices,

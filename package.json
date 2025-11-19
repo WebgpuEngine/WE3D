@@ -22,6 +22,7 @@
   "dependencies": {
     "@dimforge/rapier3d": "^0.19.2",
     "muigui": "^0.0.22",
+    "webgpu-matrix": "^1.0.0",
     "webgpu-utils": "^1.11.0",
     "wgpu-matrix": "^3.4.0"
   }

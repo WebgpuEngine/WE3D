@@ -5,7 +5,7 @@
 import { E_lifeState, E_renderForDC, I_Update } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
 import { I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, T_uniformGroup } from "../../command/base";
-import { V_DC } from "../../command/DrawCommandGenerator";
+import { IV_DC } from "../../command/DrawCommandGenerator";
 import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../../shadermanagemnet/base";
@@ -112,7 +112,7 @@ export class Sprite extends EntityBundleMaterial {
         drawModeIndexMesh.instanceCount = this.instance.numInstances;
         drawMode = drawModeIndexMesh;
 
-        let valueDC: V_DC = {
+        let valueDC: IV_DC = {
             label: "DrawCommand mesh :" + this.Name + " for  camera: " + camera.UUID,
             data: {
                 vertices: this.vertices,

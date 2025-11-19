@@ -3,7 +3,7 @@ import { commmandType, I_dynamicTextureEntryForView } from "../command/base";
 import { ComputeCommand, IV_ComputeCommand } from "../command/ComputeCommand";
 import { CopyCommandT2T } from "../command/copyCommandT2T";
 import { DrawCommand, I_DynamicUniformOfDrawCommand, IV_DrawCommand } from "../command/DrawCommand";
-import { DrawCommandGenerator, V_DC } from "../command/DrawCommandGenerator";
+import { DrawCommandGenerator, IV_DC } from "../command/DrawCommandGenerator";
 import { E_GBufferNames, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 import { GBuffers, IV_GBuffer } from "../gbuffers/GBuffers";
 import { ECSManager } from "../organization/manager";
