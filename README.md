@@ -1,4 +1,4 @@
-# WE 3D(webGPU engine 3D) 渲染引擎
+# WE 3D 渲染引擎 webGPU engine 3D
 
 WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发阶段，功能、模块与结构会频繁调整。）
 
@@ -16,7 +16,7 @@ WE3D includes two parts: the base engine and the editor. (WE3D is currently in t
 4. document todo [https://github.com/WebgpuEngine/WE3D\_DOC](https:)
 5. In the later stage of WE3D, there will also be back-end services to support server-side live links, USD, Nerf workflows, 3D reconstruction, etc., as well as the expected graphics large model AI workflows.
 
-## 引擎基础说明 Engine Basics Description
+# 引擎基础说明 Engine Basics Description
 
 * WE 3D是使用typescript 和webGPU API 开发的web 端三维渲染引擎
 * 在引擎基础部分涵盖场景、实体、纹理、材质、摄像机、光源、阴影、后处理、ECS、GPU拾取、AA、颜色空间、tonemapping、延迟渲染、BVH等；
@@ -37,7 +37,7 @@ WE3D includes two parts: the base engine and the editor. (WE3D is currently in t
 * Shader submission is carried out with the command collection (Draw Command, Compute Command, Copy Command) in the underlying mechanism.
 * In terms of update mechanism and event mechanism, there are multiple ways to handle update mechanism and onEvent.
 
-## 更多功能说明 More feature descriptions
+# 更多功能说明 More feature descriptions
 
 * 支持sRGB和display P3的颜色空间，WE3D内部以linear的线性空间进行工作，支持多种模式的色彩映射输出；
 * 光源支持环境光、方向光、点光源、聚光灯、面积光；
@@ -76,7 +76,7 @@ WE3D includes two parts: the base engine and the editor. (WE3D is currently in t
 * ECS is used in many applications, such as entities, materials, light and shadow, cameras, input management, animation, textures, etc. are all managed by the concept of ECS;
 * todo: Particle System, Animation System, SSGI, SSR, SSAO, TAA,
 
-## 简单示例 Simple example
+# 简单示例 Simple example
 
 
 | ReversedZ                                         | mipmap                                            | alpha 透明材质 transparent material               |
@@ -89,7 +89,7 @@ WE3D includes two parts: the base engine and the editor. (WE3D is currently in t
 | 点光源+视差纹理                                   | viewpot                                           | PBR                                               |
 | ![1763628725930](images/README/1763628725930.png) | ![1763628774853](images/README/1763628774853.png) | ![1763629421784](images/README/1763629421784.png) |
 | PBR                                               | PBR+spot+shadow                                   | PBR+point light+shadow                            |
-| ![1763628732926](images/README/1763628732926.png) | ![1763628801823](images/README/1763628801823.png) | ![1763628915780](images/README/1763628915780.png) |
+| ![1763628732926](images/README/1763628732926.png) | ![1763650026549](images/README/1763650026549.png) | ![1763650035163](images/README/1763650035163.png) |
 | 1024个光源                                        | MSAA                                              | FXAA                                              |
 | ![1763629587110](images/README/1763629587110.png) | ![1763630052789](images/README/1763630052789.png) | ![1763631597397](images/README/1763631597397.png) |
 | post process blue 3*3                             | post process red to 1                             | 延迟渲染 deferRender：PBR                         |
@@ -98,7 +98,7 @@ WE3D includes two parts: the base engine and the editor. (WE3D is currently in t
 | ![1763631817758](images/README/1763631817758.png) | ![1763631965740](images/README/1763631965740.png) | ![1763631975198](images/README/1763631975198.png) |
 |                                                   |                                                   |                                                   |
 
-## 资料参考与推荐 Information reference and recommendation
+# 资料参考与推荐 Information reference and recommendation
 
 * webGPU标准：https://www.w3.org/TR/webgpu/
 * WGSL的标准：https://www.w3.org/TR/wgsl/
