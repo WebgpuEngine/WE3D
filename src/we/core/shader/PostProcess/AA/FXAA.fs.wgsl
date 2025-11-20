@@ -25,8 +25,8 @@ struct st_FXAA_values {
 fn sampleColor(uv: vec2f) -> vec3f {
     return textureSample(u_colorTexture, u_colorSampler, uv).rgb;
 }
-fn sampleColorOfPosition(uv: vec2i) -> vec3f {
-    return textureLoad(u_colorTexture, uv,0).rgb;
+fn sampleColorOfPosition(uv: vec2i) -> vec4f {
+    return textureLoad(u_colorTexture, uv,0);
 }
 
 // 辅助函数：颜色转亮度（Rec.601 标准，符合人眼视觉特性）
@@ -50,18 +50,18 @@ fn fs(fsInput: st_quad_output) -> @location(0) vec4f {
 
     // -------------------------- 步骤 1：采样 5 个关键像素的颜色与亮度 --------------------------
     // 5点采样：当前像素(M)、左上(NW)、右上(NE)、左下(SW)、右下(SE)
-    let rgbM: vec3f = sampleColorOfPosition(uvOfPos);
-    let rgbNW: vec3f = sampleColorOfPosition(uvOfPos + vec2i(-1, 1));
-    let rgbNE: vec3f = sampleColorOfPosition(uvOfPos + vec2i(1 ,1));
-    let rgbSW: vec3f = sampleColorOfPosition(uvOfPos + vec2i(-1, -1));
-    let rgbSE: vec3f = sampleColorOfPosition(uvOfPos + vec2i(1, -1));
+    let rgbM: vec4f = sampleColorOfPosition(uvOfPos);
+    let rgbNW: vec4f = sampleColorOfPosition(uvOfPos + vec2i(-1, 1));
+    let rgbNE: vec4f = sampleColorOfPosition(uvOfPos + vec2i(1 ,1));
+    let rgbSW: vec4f = sampleColorOfPosition(uvOfPos + vec2i(-1, -1));
+    let rgbSE: vec4f = sampleColorOfPosition(uvOfPos + vec2i(1, -1));
 
     // 转换为亮度值
-    let lumaM: f32 = rgbToLuma(rgbM);
-    let lumaNW: f32 = rgbToLuma(rgbNW);
-    let lumaNE: f32 = rgbToLuma(rgbNE);
-    let lumaSW: f32 = rgbToLuma(rgbSW);
-    let lumaSE: f32 = rgbToLuma(rgbSE);
+    let lumaM: f32 = rgbToLuma(rgbM.rgb);
+    let lumaNW: f32 = rgbToLuma(rgbNW.rgb);
+    let lumaNE: f32 = rgbToLuma(rgbNE.rgb);
+    let lumaSW: f32 = rgbToLuma(rgbSW.rgb);
+    let lumaSE: f32 = rgbToLuma(rgbSE.rgb);
 
     // -------------------------- 步骤 2：边缘判定（过滤非边缘像素） --------------------------
     // 计算 5 点亮度的最大/最小值
@@ -124,7 +124,7 @@ fn fs(fsInput: st_quad_output) -> @location(0) vec4f {
     if (noEdge) {
         // 替换最终返回值，输出当前像素的亮度（白色=亮，黑色=暗）
         // return vec4f(vec3f(lumaM), 1.0);
-        return vec4f(rgbM, 1.0);
+        return rgbM;
     }
 
     let outputColor: vec3f = select(finalColor, vec3f(1.0, 0.0, 0.0), u_showEdges);

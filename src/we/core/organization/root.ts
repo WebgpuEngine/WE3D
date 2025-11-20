@@ -332,9 +332,11 @@ export abstract class RootOrigin implements I_UUID {
     }
 
     /**
-     * TRS，更新矩阵的顺序是先进行线性变换，再进行位置变换
-     *      其实是没有影响，线性工作在3x3矩阵，位置变换在[12,13,14]
+     * 更新矩阵的顺序是先进行线性变换，再进行位置变换
+     *      CPU中：S*R*T(右乘)
+     *      GPU中: T*R*S(左乘)
      * 
+     *      其实是没有影响，线性工作在3x3矩阵，位置变换在[12,13,14]，列优先。
      */
     updateMatrix(_m4?: Mat4, _opera: "copy" | "multiply" = "copy"): Mat4 {
         this.matrix = mat4.set(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);

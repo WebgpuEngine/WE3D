@@ -18,9 +18,9 @@ declare global {
 }
 let input: IV_Scene = {
   canvas: "render",
-  backgroudColor: [0, 0., 0., 0.],
-  // reversedZ:true,
-  toneMapping:E_ToneMappingType.linear
+  backgroudColor: [0, 0., 0., 0.2],
+  reversedZ:true,
+  toneMapping:E_ToneMappingType.linearToSRGB
 };
 let scene = await initScene({
   initConfig: input,

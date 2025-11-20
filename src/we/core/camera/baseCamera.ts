@@ -1,18 +1,15 @@
-// Note: The code in this file does not use the 'dst' output parameter of functions in the
-// 'wgpu-matrix' library, so produces many temporary vectors and matrices.
-// This is intentional, as this sample prefers readability over performance.
-import { Mat4, Vec3, Vec4, mat4, vec3, vec4 } from 'wgpu-matrix';
+import { Mat4, Vec3, Vec4, mat4, vec3 } from 'wgpu-matrix';
 import { RootGPU, } from '../organization/root';
 import { CamreaControl, optionCamreaControl } from '../control/cameracCntrol';
 import { I_Update } from '../base/coreDefine';
 import { cameracCntrolType } from '../control/base';
 import { ArcballCameraControl } from '../control/arcballCameraControl';
 import { WASDCameraControl } from '../control/wasdCameraControl';
-import { I_viewport } from '../command/DrawCommand';
 import { Clock } from '../scene/clock';
-import { boundingBox, generateBox3 } from '../math/Box';
-import { boundingSphere, generateSphereFromBox3 } from '../math/sphere';
+import { boundingBox } from '../math/Box';
+import { boundingSphere } from '../math/sphere';
 import { CameraManager } from './cameraManager';
+import { I_viewport } from '../command/base';
 
 
 
