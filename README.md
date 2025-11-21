@@ -79,9 +79,9 @@ WE3D includes two parts: the base engine and the editor. (WE3D is currently in t
 # 简单示例 Simple example
 
 
-| ReversedZ                                         | mipmap                                            | alpha 透明材质 transparent material               |
+| ReversedZ                                         | material alpha blend                             | pixel level alpha transparent material           |
 | ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
-| ![1763628630397](images/README/1763628630397.png) | ![1763629691306](images/README/1763629691306.png) | ![1763628670056](images/README/1763628670056.png) |
+| ![1763628630397](images/README/1763628630397.png) | ![1763692901994](images/README/1763692901994.png) | ![1763628670056](images/README/1763628670056.png) |
 | 高光纹理 specular texture                         | 视差纹理 parallax texture                         | 法线纹理 normal texture                           |
 | ![1763628478518](images/README/1763628478518.png) | ![1763632177789](images/README/1763632177789.png) | ![1763629809872](images/README/1763629809872.png) |
 | direction light +PCSS shadow                      | point light+PCSS shadow                           | spot light +PCSS shadow                           |
