@@ -534,15 +534,16 @@ export class RenderManager {
             //2 for 单个camera的command
 
             for (let perCommand of perOne) {
-                if (Array.isArray(perCommand)) {
+                if (Array.isArray(perCommand)) {//如果是数组（BVH相交的透明物体集合），说明是TTP，执行TTP渲染
                     this.renderTTP(UUID, perCommand);
                 }
-                else {
+                else {//否则，是单个透明物体，直接渲染
                     this.cameraRendered[UUID] = this.autoChangeForwaredRPD_loadOP(UUID, this.cameraRendered[UUID]);//TT的rpd使用的与标准的forward一样，只是关闭深度写入
                     this.cameraRendered[UUID]++;//更改 TT loadOP计数器
                     perCommand.submit();  // 渲染
                 }
             }
+            //这里是透明渲染DC的渲染TTP的单纯渲染TTP的测试，相对于上面的for中的array直接传入
             // await this.renderTTP(UUID, perOne as commmandType[]);
 
         }// end for of camera UUID
