@@ -446,15 +446,19 @@ export abstract class BaseMaterial extends RootGPU {
         {
             //camera 的深度纹理，用于透明度测试（像素是否在不透明的前面）
             let uniform1: I_dynamicTextureEntryForView;
+            //这里使用map，因为每个相机都有一个深度纹理而且uniform1是动态getResource，就是说：uniform1是不变的（里面是function）
             if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(renderObject.UUID)) {
                 uniform1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(renderObject.UUID) as I_dynamicTextureEntryForView;
             }
-            else {
+            else
+                 {
                 uniform1 = {
                     label: "colorTT camera depth of " + renderObject.UUID,
                     binding: bindingNumber,
                     getResource: () => { return renderObject.manager.getGBufferTextureByUUID(renderObject.UUID, E_GBufferNames.depth); },
                 };
+                this.scene.resourcesGPU.cameraToEntryOfDepthTT.set(renderObject.UUID, uniform1);
+                this.mapList.push({ key: uniform1, type: "GPUBindGroupLayoutEntry", map: "cameraToEntryOfDepthTT" });
             }
             let uniformLayout_1: GPUBindGroupLayoutEntry;
             if (this.scene.resourcesGPU.entriesToEntriesLayout.has(uniform1)) {

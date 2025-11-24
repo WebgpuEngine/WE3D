@@ -762,20 +762,21 @@ export class DrawCommandGenerator {
 
 
         //3.6 生产pipeline
-        let pipeline: GPURenderPipeline;
-        if (this.resources.renderPipelineDescriptor.has(descriptor)) {
-            const pl = this.resources.renderPipelineDescriptor.get(descriptor);
-            if (pl)
-                pipeline = pl;
-            else {
-                pipeline = this.device.createRenderPipeline(descriptor);
-                this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
-            }
-        }
-        else {
-            pipeline = this.device.createRenderPipeline(descriptor);
-            this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
-        }
+        let pipeline: GPURenderPipeline =this.device.createRenderPipeline(descriptor);
+        // let pipeline: GPURenderPipeline;
+        // if (this.resources.renderPipelineDescriptor.has(descriptor)) {
+        //     const pl = this.resources.renderPipelineDescriptor.get(descriptor);
+        //     if (pl)
+        //         pipeline = pl;
+        //     else {
+        //         pipeline = this.device.createRenderPipeline(descriptor);
+        //         this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
+        //     }
+        // }
+        // else {
+        //     pipeline = this.device.createRenderPipeline(descriptor);
+        //     this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
+        // }
 
         //4、GPURenderPassDescriptor
         let renderPassDescriptor = () => {
