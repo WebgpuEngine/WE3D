@@ -36,8 +36,8 @@ export class Texture extends BaseTexture {
         }
         //GPUCopyExternalImageSource
         else {
-            if (this.scene.resourcesGPU.has(source, E_resourceKind.texture)) {
-                this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.texture);
+            if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
+                this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
             }
             else {
                 if (typeof source == "string") {
@@ -48,10 +48,10 @@ export class Texture extends BaseTexture {
                 else if (source instanceof ImageBitmap || source instanceof ImageData || source instanceof HTMLImageElement || source instanceof HTMLVideoElement || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas || source instanceof VideoFrame) {
                     await this.generateTextureByImageSource(source);
                 }
-                this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+                this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
                 this.mapList.push({
                     key: source,
-                    type: E_resourceKind.texture,
+                    type: E_resourceKind.textureOfString,
                 });
             }
         }

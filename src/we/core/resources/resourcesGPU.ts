@@ -100,8 +100,8 @@ export class ResourceManagerOfGPU {
             if (_kind == E_resourceKind.vertices) return this.vertices.has(key);
             else if (_kind == E_resourceKind.indexes) return this.indexes.has(key);
             else if (_kind == E_resourceKind.uniformBuffer) return this.uniformBuffer.has(key);
-            else if (_kind == E_resourceKind.texture) return this.textureOfString.has(key);
-            else if (_kind == E_resourceKind.sampler) return this.samplerOfString.has(key);
+            else if (_kind == E_resourceKind.textureOfString) return this.textureOfString.has(key);
+            else if (_kind == E_resourceKind.samplerOfString) return this.samplerOfString.has(key);
         }
         else {
             if (key instanceof GPUBindGroup) {
@@ -131,8 +131,8 @@ export class ResourceManagerOfGPU {
             if (_kind == E_resourceKind.vertices) return this.vertices.get(key);
             else if (_kind == E_resourceKind.indexes) return this.indexes.get(key);
             else if (_kind == E_resourceKind.uniformBuffer) return this.uniformBuffer.get(key);
-            else if (_kind == E_resourceKind.texture) return this.textureOfString.get(key);
-            else if (_kind == E_resourceKind.sampler) return this.samplerOfString.get(key);
+            else if (_kind == E_resourceKind.textureOfString) return this.textureOfString.get(key);
+            else if (_kind == E_resourceKind.samplerOfString) return this.samplerOfString.get(key);
         }
         else {
             if (key instanceof GPUBindGroup) {
@@ -168,10 +168,10 @@ export class ResourceManagerOfGPU {
             if (_kind == E_resourceKind.vertices) this.vertices.set(key, value);
             else if (_kind == E_resourceKind.indexes) this.indexes.set(key, value);
             else if (_kind == E_resourceKind.uniformBuffer) this.uniformBuffer.set(key, value);
-            else if (_kind == E_resourceKind.texture) {
+            else if (_kind == E_resourceKind.textureOfString) {
                 this.textureOfString.set(key, value);
             }
-            else if (_kind == E_resourceKind.sampler) {
+            else if (_kind == E_resourceKind.samplerOfString) {
                 this.samplerOfString.set(key, value);
             }
         }
@@ -244,10 +244,10 @@ export class ResourceManagerOfGPU {
             // else if (_kind == E_resourceKind.indexes) this.indexes.delete(key);
             // else if (_kind == E_resourceKind.uniformBuffer) this.uniformBuffer.delete(key);
 
-            // else if (_kind == E_resourceKind.texture) {
+            // else if (_kind == E_resourceKind.textureOfString) {
             //     this.textureOfString.delete(key);
             // }
-            // else if (_kind == E_resourceKind.sampler) {
+            // else if (_kind == E_resourceKind.samplerOfString) {
             //     this.samplerOfString.delete(key);
             // }
             let map = this.getProperty(_kind as keyof ResourceManagerOfGPU);

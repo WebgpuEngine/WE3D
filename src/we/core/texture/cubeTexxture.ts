@@ -30,8 +30,8 @@ export class CubeTexture extends Texture {
     async readyForGPU(): Promise<any> {
         let scope = this;
         let source = this.inputValues.source;
-        if (this.scene.resourcesGPU.has(source, E_resourceKind.texture)) {
-            this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.texture);
+        if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
+            this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
         }
         else {
             let allImages: ImageBitmap[] = await weGetImagesByUrl(
@@ -79,10 +79,10 @@ export class CubeTexture extends Texture {
             if (this.texture.mipLevelCount > 1) {
                 this.generateMips(this.texture);
             }
-            this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+            this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
             this.mapList.push({
                 key: source,
-                type: E_resourceKind.texture,
+                type: E_resourceKind.textureOfString,
             });
         }
         this.setTextureLayoutsampleType("float");

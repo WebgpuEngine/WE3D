@@ -85,15 +85,15 @@ export class VideoTexture extends BaseTexture {
                 await this.getVidoeTexture(source);
             }
             else {
-                if (this.scene.resourcesGPU.has(source, E_resourceKind.texture)) {
-                    this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.texture);
+                if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
+                    this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
                 }
                 else {
                     await this.getVidoeTexture(source);
-                    this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.texture);
+                    this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
                     this.mapList.push({
                        key: source,
-                       type: E_resourceKind.texture,
+                       type: E_resourceKind.textureOfString,
                     });
                 }
             }

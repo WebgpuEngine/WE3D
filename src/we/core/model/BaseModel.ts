@@ -6,8 +6,7 @@ import { RootGPU, RootOrigin } from "../organization/root";
 import { Scene } from "../scene/scene";
 
 export interface I_Model {
-    scene: Scene,
-
+    // scene: Scene,
 }
 
 

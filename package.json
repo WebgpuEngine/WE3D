@@ -22,8 +22,16 @@
   "dependencies": {
     "@dimforge/rapier3d": "^0.19.2",
     "muigui": "^0.0.22",
-    "webgpu-matrix": "^1.0.0",
     "webgpu-utils": "^1.11.0",
-    "wgpu-matrix": "^3.4.0"
+    "wgpu-matrix": "^3.4.0",
+    "@loaders.gl/compression": "^4.3.4",
+    "@loaders.gl/core": "^4.3.4",
+    "@loaders.gl/gltf": "^4.3.4",
+    "@loaders.gl/json": "^4.3.4",
+    "@loaders.gl/obj": "^4.3.4",
+    "@loaders.gl/textures": "^4.3.4",
+    "@loaders.gl/video": "^4.3.4",
+    "@loaders.gl/zip": "^4.3.4",
+    "@loaders.gl/draco": "^4.3.4"
   }
 }

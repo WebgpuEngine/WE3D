@@ -102,12 +102,12 @@ export class TextureMaterial extends BaseMaterial {
         //     this.sampler = this.scene.resourcesGPU.getSampler("linear");
         // }
         // else if(this.inputValues.samplerDescriptor){
-        //     if(this.scene.resourcesGPU.has(this.inputValues.samplerDescriptor,E_resourceKind.sampler)){
-        //         this.sampler = this.scene.resourcesGPU.getSampler(this.inputValues.samplerDescriptor.label!,E_resourceKind.sampler);
+        //     if(this.scene.resourcesGPU.has(this.inputValues.samplerDescriptor,E_resourceKind.samplerOfString)){
+        //         this.sampler = this.scene.resourcesGPU.getSampler(this.inputValues.samplerDescriptor.label!,E_resourceKind.samplerOfString);
         //     }
         //     else {
         //         this.sampler = this.device.createSampler(this.inputValues.samplerDescriptor);
-        //         this.scene.resourcesGPU.setSampler(this.inputValues.samplerDescriptor.label!,this.sampler,E_resourceKind.sampler);
+        //         this.scene.resourcesGPU.setSampler(this.inputValues.samplerDescriptor.label!,this.sampler,E_resourceKind.samplerOfString);
         //     }
         // }
         // else {
@@ -172,7 +172,7 @@ export class TextureMaterial extends BaseMaterial {
                 this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
                 this.mapList.push({
                     key: uniformTexture,
-                    type: E_resourceKind.texture,
+                    type: E_resourceKind.textureOfString,
                 });
                 //push到uniform1队列
                 uniform1.push(uniformTexture);

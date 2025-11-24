@@ -105,7 +105,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
         this.mapList.push({
             key: uniformTexture,
-            type: E_resourceKind.texture,
+            type: E_resourceKind.textureOfString,
         });
         //push到uniform1队列
         uniform1.push(uniformTexture);

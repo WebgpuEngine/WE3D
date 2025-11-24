@@ -701,13 +701,13 @@ export abstract class BaseMaterial extends RootGPU {
             this._samplerBindingType = "filtering";
         }
         else if (input.samplerDescriptor) {
-            if (this.scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.sampler)) {
-                sampler = this.scene.resourcesGPU.get(input.samplerDescriptor.label!, E_resourceKind.sampler) as GPUSampler;
+            if (this.scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.samplerOfString)) {
+                sampler = this.scene.resourcesGPU.get(input.samplerDescriptor.label!, E_resourceKind.samplerOfString) as GPUSampler;
             }
             else {
                 sampler = this.device.createSampler(this.inputValues.samplerDescriptor);
-                this.scene.resourcesGPU.set(this.inputValues.samplerDescriptor, sampler, E_resourceKind.sampler);
-                this.mapList.push({ key: input.samplerDescriptor, type: E_resourceKind.sampler });
+                this.scene.resourcesGPU.set(this.inputValues.samplerDescriptor, sampler, E_resourceKind.samplerOfString);
+                this.mapList.push({ key: input.samplerDescriptor, type: E_resourceKind.samplerOfString });
             }
             this._samplerBindingType = input.samplerBindingType!;
         }
