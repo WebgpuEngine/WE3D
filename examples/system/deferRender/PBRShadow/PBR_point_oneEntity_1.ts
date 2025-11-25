@@ -103,10 +103,10 @@ let geometry = new SphereGeometry({
 });
 let PBROption: IV_PBRMaterial = {
   textures: {
-    albedo: { source: "/examples/resource/PBR/rustediron/rustediron2_basecolor.png" },
-    normal: { source: "/examples/resource/PBR/rustediron/rustediron2_normal.png" },
-    metallic: { source: "/examples/resource/PBR/rustediron/rustediron2_metallic.png" },
-    roughness: { source: "/examples/resource/PBR/rustediron/rustediron2_roughness.png" },
+    albedo: { source: "/resource/PBR/rustediron/rustediron2_basecolor.png" },
+    normal: { source: "/resource/PBR/rustediron/rustediron2_normal.png" },
+    metallic: { source: "/resource/PBR/rustediron/rustediron2_metallic.png" },
+    roughness: { source: "/resource/PBR/rustediron/rustediron2_roughness.png" },
   }
 }
 let pbrMaterial = new PBRMaterial(PBROption);
@@ -140,12 +140,12 @@ let planeGeometry = new PlaneGeometry({
 
 let groundMaterialPBROption: IV_PBRMaterial = {
   textures: {
-    albedo: { source: "/examples/resource/PBR/grainy-concrete/grainy-concrete_albedo.png" },
-    normal: { source: "/examples/resource/PBR/grainy-concrete/grainy-concrete_normal-ogl.png" },
+    albedo: { source: "/resource/PBR/grainy-concrete/grainy-concrete_albedo.png" },
+    normal: { source: "/resource/PBR/grainy-concrete/grainy-concrete_normal-ogl.png" },
     metallic:// 0.95,
-    { source: "/examples/resource/PBR/grainy-concrete/grainy-concrete_metallic.png" },
-    roughness: { source: "/examples/resource/PBR/grainy-concrete/grainy-concrete_roughness.png" },
-    ao: { source: "/examples/resource/PBR/grainy-concrete/grainy-concrete_ao.png" },
+    { source: "/resource/PBR/grainy-concrete/grainy-concrete_metallic.png" },
+    roughness: { source: "/resource/PBR/grainy-concrete/grainy-concrete_roughness.png" },
+    ao: { source: "/resource/PBR/grainy-concrete/grainy-concrete_ao.png" },
   }
 }
 let groundMaterial = new PBRMaterial(groundMaterialPBROption);

@@ -45,7 +45,7 @@ let video_1 = document.getElementById("video") as HTMLVideoElement;
 
 let colorMaterial = new VideoMaterial({
   textures: {
-    video: "/examples/resource/video/sea.mp4",
+    video: "/resource/video/sea.mp4",
   },
   videoOption: {
     loop: true,

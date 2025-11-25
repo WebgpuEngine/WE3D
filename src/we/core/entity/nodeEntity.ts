@@ -9,13 +9,13 @@ export class NodeEntity extends RootGPU {
     }
 
     readyForGPU(): Promise<any> {
-        throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
     }
     _destroy(): void {
-        throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
     }
     updateSelf(clock: Clock): void {
-        throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
     }
     saveJSON() {
         throw new Error("Method not implemented.");

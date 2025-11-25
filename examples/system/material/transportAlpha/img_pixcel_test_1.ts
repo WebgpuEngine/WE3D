@@ -56,7 +56,7 @@ let colorMaterial1 = new ColorMaterial({
 });
 let textureMaterial = new TextureMaterial({
   textures: {
-    color: "/examples/resource/images/img/we3D_alpha.png",
+    color: "/resource/images/img/we3D_alpha.png",
   },
   transparent:{
     type: E_TransparentType.alpha,

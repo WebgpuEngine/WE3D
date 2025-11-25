@@ -120,10 +120,10 @@ let sphere = new SphereGeometry({
 let ballPBROption: IV_PBRMaterial = {
   name:"PBRMaterial",
   textures: {
-    albedo: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-albedo.png" },
-    normal: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-normal.png" },
-    metallic: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-metalness.png" },
-    roughness: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-roughness.png" },
+    albedo: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-albedo.png" },
+    normal: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-normal.png" },
+    metallic: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-metalness.png" },
+    roughness: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-roughness.png" },
   }
 }
 let ballpbrMaterial = new PBRMaterial(ballPBROption);

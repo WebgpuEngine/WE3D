@@ -133,10 +133,10 @@ let sphere = new SphereGeometry({
 // });
 let ballPBROption: IV_PBRMaterial = {
   textures: {
-    albedo: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-albedo.png" },
-    normal: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-normal.png" },
-    metallic: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-metalness.png" },
-    roughness: { source: "/examples/resource/PBR/marble-speckled-bl/marble-speckled-roughness.png" },
+    albedo: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-albedo.png" },
+    normal: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-normal.png" },
+    metallic: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-metalness.png" },
+    roughness: { source: "/resource/PBR/marble-speckled-bl/marble-speckled-roughness.png" },
   }
 }
 let ballpbrMaterial = new PBRMaterial(ballPBROption);
@@ -173,11 +173,11 @@ let planeGeometry = new PlaneGeometry({
 });
 let PBROption: IV_PBRMaterial = {
   textures: {
-    albedo: { source: "/examples/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_albedo.png" },
-    // normal: { source: "/examples/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_normal-ogl.png" },
-    metallic:    { source: "/examples/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_metallic.png" },
-    roughness: { source: "/examples/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_roughness.png" },
-    ao: { source: "/examples/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_ao.png" },
+    albedo: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_albedo.png" },
+    // normal: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_normal-ogl.png" },
+    metallic:    { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_metallic.png" },
+    roughness: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_roughness.png" },
+    ao: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_ao.png" },
   }
 }
 let groundMaterial = new PBRMaterial(PBROption);

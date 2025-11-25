@@ -49,7 +49,7 @@ let colorMaterial = new ColorMaterial({
 
 let textureMaterial = new TextureMaterial({
   textures: {
-    color: "/examples/resource/images/img/we3D.png",
+    color: "/resource/images/img/we3D.png",
   },
 });
 

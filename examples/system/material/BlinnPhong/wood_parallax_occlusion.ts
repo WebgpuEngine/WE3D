@@ -108,13 +108,13 @@ let phongMaterial = new PhongMaterial({
   // shininess:32,
   textures: {
     color: {
-      source: "/examples/resource/images/parallax/wood.png",
+      source: "/resource/images/parallax/wood.png",
     },
     normal: {
-      source: "/examples/resource/images/parallax/toy_box_normal.png",
+      source: "/resource/images/parallax/toy_box_normal.png",
     },
     parallax: {
-      source: "/examples/resource/images/parallax/toy_box_disp.png",
+      source: "/resource/images/parallax/toy_box_disp.png",
     }
   },
   parallax: {

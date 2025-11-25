@@ -12,12 +12,14 @@ import { isWeVec3 } from "../base/coreFunction";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { E_renderPassName } from "../scene/renderManager";
 import { BaseAnimation } from "../animation/BaseAnimation";
+import { BaseModel } from "../model/BaseModel";
 
 
 export interface I_UUID {
     // update(clock: Clock): unknown;
     UUID: string,
     _isDestroy: boolean,
+
 }
 export interface RootOriginJSON {
     type: string,
@@ -37,6 +39,7 @@ export interface RootOriginJSON {
     matrixWorld: number[],
     parent: number,
     children: number[],
+
 }
 
 export abstract class RootOrigin implements I_UUID {
@@ -112,6 +115,8 @@ export abstract class RootOrigin implements I_UUID {
     inputValues!: I_Update;
 
     lastUpdaeTime: number = 0;
+    /**是否为模型的子节点 */
+    belongModel?: BaseModel | undefined;
 
     constructor(input?: I_Update) {
         this.UUID = WeGenerateUUID();
@@ -123,7 +128,7 @@ export abstract class RootOrigin implements I_UUID {
 
         this.matrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
         this.matrixWorld = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
-
+        if (input?.belongModel) this.belongModel = input.belongModel;
     }
 
     isDestroy() {
@@ -154,11 +159,21 @@ export abstract class RootOrigin implements I_UUID {
         let index = this._children.indexOf(child);
 
         if (index !== -1) {
+            this._children[index].removeChildren();
             this._children[index].visible = false;
             let child = this._children.splice(index, 1);
             return child[0];
         }
         return false;
+    }
+    /**
+     * remove all children
+     * 移除所有子节点
+     */
+    removeChildren() {
+        this._children.forEach((child) => {
+            child.removeChild(child);
+        });
     }
     /**
      * 返回第一个具有id的object
@@ -216,6 +231,31 @@ export abstract class RootOrigin implements I_UUID {
             }
         }
         return false;
+    }
+
+    set Enable(value: boolean) {
+        if (value === this.enable) return;
+        else {
+            this.enable = value;
+            this.children.forEach((child) => {
+                child.Enable = value;
+            });
+        }
+    }
+    get Enable(): boolean {
+        return this.enable;
+    }
+    set Visible(value: boolean) {
+        if (value === this.visible) return;
+        else {
+            this.visible = value;
+            this.children.forEach((child) => {
+                child.Visible = value;
+            });
+        }
+    }
+    get Visible(): boolean {
+        return this.visible;
     }
 
     get parent(): RootOrigin | undefined {
@@ -509,7 +549,7 @@ export abstract class RootGPU extends RootOrigin {
      * node is ready of GPU
      */
     _readyForGPU!: boolean;
-    animation: BaseAnimation[]|undefined;
+    animation: BaseAnimation[] | undefined;
 
 
 
@@ -595,14 +635,24 @@ export abstract class RootGPU extends RootOrigin {
         // else if (child.type == "ParticleSystem") {
         //     this.scene.particleManager.addParticleSystem(child as ParticleSystem);
         // }
-        // else if (child.type == "Model") {
-        //     this.scene.modelManager.addModel(child as Model);
-        // }
+        else if (child.type == "Model") {
+            // this.scene.modelManager.addModel(child as Model);
+        }
         else if (child.type == "entity") {
-            this.scene.entityManager.add(child as BaseEntity);
+            // if (child.belongModel) {
+            //     (child.inputValues.belongModel as BaseModel).entities.push(child as BaseEntity);
+            // }
+            // else {
+                this.scene.entityManager.add(child as BaseEntity);
+            // }
         }
         else if (child.type == "material") {
-            this.scene.materialManager.add(child as BaseMaterial);
+            // if (child.belongModel) {
+            //     (child.inputValues.belongModel as BaseModel).materials.push(child as BaseMaterial);
+            // }
+            // else {
+                this.scene.materialManager.add(child as BaseMaterial);
+            // }
         }
         else {
             console.log("未找到对应的ECS manager", child);

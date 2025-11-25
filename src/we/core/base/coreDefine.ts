@@ -1,4 +1,7 @@
 /////////////////////////////////////////////////
+
+import { BaseModel } from "../model/BaseModel";
+
 //about  GPU  setting 
 export var limitsOfWE = {
     maxColorAttachmentBytesPerSample: 64,
@@ -20,6 +23,8 @@ export interface I_Update {
     /**自定义更新functon() */
     update?: (scope: any) => any,
     name?: string,
+    /**是否为模型的子节点 */
+    belongModel?: BaseModel,
 }
 
 /** 渲染类型，用于shadow map 或者camera */

@@ -1,12 +1,17 @@
 import { BaseAnimation } from "../animation/BaseAnimation";
+import { I_Update } from "../base/coreDefine";
 import { BaseCamera } from "../camera/baseCamera";
 import { BaseEntity } from "../entity/baseEntity";
+import { NodeEntity } from "../entity/nodeEntity";
 import { BaseMaterial } from "../material/baseMaterial";
-import { RootGPU, RootOrigin } from "../organization/root";
+import { RootGPU } from "../organization/root";
+import { Clock } from "../scene/clock";
 import { Scene } from "../scene/scene";
 
-export interface I_Model {
-    // scene: Scene,
+export interface I_Model extends I_Update {
+    scene: Scene,
+    url: string,
+
 }
 
 
@@ -14,6 +19,7 @@ export interface I_Model {
 
 export abstract class BaseModel extends RootGPU {
 
+    root: RootGPU = new NodeEntity();
     modelData: any;
     entities: BaseEntity[] = [];
     materials: BaseMaterial[] = [];
@@ -21,9 +27,9 @@ export abstract class BaseModel extends RootGPU {
     animations: BaseAnimation[] = [];
     attributeBuffers: GPUBuffer[] = [];
 
-    constructor() {
-        super();
-        this.type = "model";
+    constructor(input: I_Model) {
+        super(input);
+        this.type = "Model";
     }
 
     _destroy(): void {
@@ -34,6 +40,11 @@ export abstract class BaseModel extends RootGPU {
 
     abstract detectData(): void;
 
+    update(clock: Clock, updateSelftFN: boolean = true): boolean {
 
+        for (let perOne of this.children) {
+            (perOne as RootGPU).update(clock);
+        }
+    }
 
 }

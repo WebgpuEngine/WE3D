@@ -88,13 +88,13 @@ let phongMaterial = new PhongMaterial({
   // shininess:32,
   textures:{
     color:{
-      source: "/examples/resource/images/wall/bricks2.jpg",
+      source: "/resource/images/wall/bricks2.jpg",
     },
     // normal: {
-    //   source:  "/examples/resource/images/wall/bricks2_normal.jpg",
+    //   source:  "/resource/images/wall/bricks2_normal.jpg",
     // },
     // parallax: {
-    //   source: "/examples/resource/images/wall/bricks2_disp.jpg"
+    //   source: "/resource/images/wall/bricks2_disp.jpg"
     // }
   }
 });

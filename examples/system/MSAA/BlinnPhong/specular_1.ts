@@ -83,10 +83,10 @@ let phongMaterial = new PhongMaterial({
   // shininess:32,
   textures:{
     color:{
-      source: "/examples/resource/images/specular/container2.png",
+      source: "/resource/images/specular/container2.png",
     },
     specular: {
-      source: "/examples/resource/images/specular/container2_specular.png",
+      source: "/resource/images/specular/container2_specular.png",
     },
   }
 });

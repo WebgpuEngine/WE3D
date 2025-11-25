@@ -88,10 +88,10 @@ let phongMaterial = new PhongMaterial({
   // shininess:32,
   textures:{
     color:{
-      source: "/examples/resource/images/wall/brickwall.jpg",
+      source: "/resource/images/wall/brickwall.jpg",
     },
     normal: {
-      source:  "/examples/resource/images/wall/brickwall_normal.jpg",
+      source:  "/resource/images/wall/brickwall_normal.jpg",
     },
   }
 });
