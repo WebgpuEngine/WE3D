@@ -228,18 +228,20 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 baseVertex: 0,
                 firstInstance: 0,
             }
+            //index mode
             if (scope.attributes.indexes && scope.attributes.indexes.length > 0) {
                 drawModeIndexMesh.indexCount = scope.attributes.indexes.length;
                 drawModeIndexMesh.instanceCount = scope.instance.numInstances;
                 drawMode = drawModeIndexMesh;
             }
+            //non-index mode
             else {
                 if (scope.attributes.vertices["position"]) {
                     let pos = scope.attributes.vertices["position"]!;
-                    if ("data" in pos) {
+                    if ("count" in pos) {//vsAttribute | vsAttributeMerge |I_vsGPUBufferBundle
                         drawModeMesh.vertexCount = pos.count;
                     }
-                    else {
+                    else if(Array.isArray(pos)) {// array[]
                         drawModeMesh.vertexCount = pos.length / 3;
                     }
                 }

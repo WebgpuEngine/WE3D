@@ -7,7 +7,7 @@
 import type { Scene } from "../scene/scene";
 import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, I_viewport, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
-import { DrawCommand, IV_DrawCommand  } from "./DrawCommand";
+import { DrawCommand, IV_DrawCommand } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { AA } from "../scene/base";
@@ -25,33 +25,108 @@ export interface vsAttribute {
     // shaderLocation: 0,//这个在function，自动增加计算
     /**
      * 顶点相关的各类数据
+     * date of vertex attribute
      * 1、比如:position ,uv,normail,color
+     * 1, exp: position ,uv ...
      * 2、也可以自定义，
+     * 2, custom attribute exp: custom0, custom1 ...
      */
     data: number[],
-    /**顶点数量 */
+    /**
+     * 顶点数量 
+     * count of vertex
+     */
     count: number,
     /**
      * 顶点数据的格式,必须
+     * vertex attribute format
+     * 
      * 比如："float32x3",GPUBuffer对应ArrayBuffer按照对应的格式建立
+     * exp: float32x3, float32x2, uint32x4
      */
     format: GPUVertexFormat,
-    /**      以byte计算 ，比如：xyz=4*3，uv=4*2    */
+    /**      
+     * 以byte计算 ，比如：xyz=4*3，uv=4*2    
+     * by byte ,exp: xyz=4*3 , uv=4*2
+     */
     arrayStride: number,
-    /**默认从0开始 */
+    /**
+     * 默认从0开始 
+     * default: 0
+     */
     offset?: 0,
 }
-/**单个vertex的多个属性merge在一起的形式
+/**
+ * 顶点属性的bundle，用于绑定到DC的vertex buffer
+ * 1、gltf使用
+ */
+export interface I_vsGPUBufferBundle {
+    buffer: GPUBuffer,
+    format: GPUVertexFormat,
+    wgslFormat: string,
+    name: string,
+    arrayStride: number,
+    count: number,
+    /**
+     * 从buffer的offset开始读取数据,比如一个大的GPUBuffer，包括了多个vertex attribute和index attribute，还可能包括uniform数据
+     *  from offset to size，exp:one big GPUBuffer, include vertex attribute and index attribute and uniform data
+     * default: 0
+     */
+    offset?: number,
+    /**
+     * 读取数据的大小，默认=count*arrayStride
+     * default: count*arrayStride
+     */
+    size?: number,
+}
+
+/**
+ * 索引buffer的bundle，用于绑定到DC的index buffer 。GLTF使用
+ * index buffer bundle , used for bind index buffer to DC .gltf use
+ */
+export interface I_indexGPUBufferBundle {
+    buffer: GPUBuffer,
+    format: GPUIndexFormat,
+    name: string,
+    count: number,
+    /**
+     * 从buffer的offset开始读取数据,比如一个大的GPUBuffer，包括了多个vertex attribute和index attribute，还可能包括uniform数据
+     *  from offset to size，exp:one big GPUBuffer, include vertex attribute and index attribute and uniform data
+     * default: 0
+     */
+    offset?: number,
+    /**
+     * 读取数据的大小，默认=count*arrayStride
+     * default: count*arrayStride
+     */
+    size?: number,
+}
+
+/**
+ * 单个vertex的多个属性merge在一起的形式
+ * merge vertex attribute
  * 1、一个数组形式，名称不能重复
+ * 1, array, exp: position ,uv ,normal ...
  * 2、可以有多个map的，需要保持结构与数量同步，未测试
+ * 2, map, exp: {position:0,uv:1,normal:2}
  */
 export interface vsAttributeMerge {
-    /**单个vertex的多个属性的大数组 */
+    /**单个vertex的多个属性的大数组 
+     * attributes in array, exp: position ,uv ,normal ...
+    */
     data: number[],
-    /**顶点数量 */
+    /**顶点数量 
+     * count of vertex
+    */
     count: number,
-    /**单个vertex属性的总长度*/
+    /**单个vertex属性的总长度
+     * array stride of vertex attribute
+     */
     arrayStride: number,
+    /**
+     * 单个vertex属性的合并格式
+     * merge attribute format
+     */
     mergeAttribute: vsAttributeMergeAttribute[],
     // /**每个vertex的属性的格式 */
     // format: GPUVertexFormat[],
@@ -63,6 +138,7 @@ export interface vsAttributeMerge {
 }
 /**
  * 单个vertex属性的合并格式
+ * per one attribute format and offset in merge attribute
  */
 export interface vsAttributeMergeAttribute {
     name: string,
@@ -73,7 +149,9 @@ export interface vsAttributeMergeAttribute {
 /**
  * 顶点属性的类型:三种类型
  */
-export type T_vsAttribute = vsAttribute | vsAttributeMerge | number[]
+export type T_vsAttribute = vsAttribute | vsAttributeMerge | number[] | I_vsGPUBufferBundle
+
+export type T_indexAttribute = number[] | I_indexGPUBufferBundle
 /**
  * @data    数据部分 
  * @render  渲染参数 
@@ -107,7 +185,7 @@ export interface IV_DC {
         vertices?: { [name in string]: T_vsAttribute },
         // vertices?: Map<string, T_vsAttribute>,
         vertexStepMode?: GPUVertexStepMode,
-        indexes?: number[],
+        indexes?: T_indexAttribute,//number[] | I_indexGPUBufferBundle,
         /**
          * 1、最多4个bind group；
          * 2、如果有system，system的bindGroup是0，还剩3个；
@@ -283,6 +361,7 @@ export class DrawCommandGenerator {
                 let locationString: string = "";
                 let lowKey = key.toLocaleLowerCase();
                 let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
+                let vertexBuffer: GPUBuffer | undefined;
                 if (Array.isArray(value)) {//标准的数组格式，默认为position等
                     if (value.length == 0) {
                         console.warn("顶点属性" + key + "数据为空");
@@ -320,8 +399,11 @@ export class DrawCommandGenerator {
 
                     //判断是否以及存在顶点GPUBuffer
                     if (!this.resources.has(value, "vertices")) {
-                        let vertexBuffer = createVerticesBuffer(this.device, data.buffer, values.label + " vertex GPUBuffer of " + lowKey);
+                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey, data.buffer);
                         this.resources.set(value, vertexBuffer, "vertices");
+                    }
+                    else {
+                        vertexBuffer = this.resources.get(value, "vertices");
                     }
                     //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                     _GPUVertexBufferLayout = {
@@ -333,7 +415,7 @@ export class DrawCommandGenerator {
                         }],
                     }
                 }
-                else if ("format" in value) {
+                else if ("format" in value && "data" in value) {
                     let format: GPUVertexFormat = value.format;
                     let data;//默认:float32
                     let arrayStride = 4 * 3;
@@ -395,8 +477,11 @@ export class DrawCommandGenerator {
                     locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
                     //判断是否以及存在顶点GPUBuffer
                     if (!this.resources.has(value, "vertices")) {
-                        let vertexBuffer = createVerticesBuffer(this.device, data.buffer, values.label + " vertex GPUBuffer of " + lowKey + " format =" + format);
+                        let vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =" + format, data.buffer);
                         this.resources.set(value, vertexBuffer, "vertices");
+                    }
+                    else {
+                        vertexBuffer = this.resources.get(value, "vertices");
                     }
                     //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                     _GPUVertexBufferLayout = {
@@ -425,16 +510,35 @@ export class DrawCommandGenerator {
                         location_i++;//合并属性，每个属性都要增加一个location
                     }
                     if (!this.resources.has(value, "vertices")) {
-                        let vertexBuffer = createVerticesBuffer(this.device, data.buffer, values.label + " vertex GPUBuffer of " + lowKey + " format =mergeAttribute");
+                        let vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =mergeAttribute", data.buffer);
                         this.resources.set(value, vertexBuffer, "vertices");
+                    }
+                    else {
+                        vertexBuffer = this.resources.get(value, "vertices");
                     }
                     _GPUVertexBufferLayout = {
                         arrayStride: arrayStride,
                         attributes,
                     }
                 }
+                else if ("format" in value && value.buffer instanceof GPUBuffer) {
+                    let format = value.format;
+                    let arrayStride = value.arrayStride;
+                    let wgsl_value_format = this.getWgslValueFormat(format);
+                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
+                    vertexBuffer = value.buffer;
+                    _GPUVertexBufferLayout = {
+                        arrayStride: arrayStride,
+                        attributes: [{
+                            shaderLocation: shaderLocation++,
+                            format: format,
+                            offset: 0,
+                        }],
+                    }
+                }
                 else {
                     console.warn("顶点属性", key, value, " 不能匹配数据");
+                    throw new Error("顶点属性 key, value 不能匹配数据");
                     continue;
                 }
                 if (values.data.vertexStepMode) {
@@ -444,25 +548,34 @@ export class DrawCommandGenerator {
                 DC_verticesBufferLayout.push(_GPUVertexBufferLayout);      //顺序push顶点Buffer的layout
                 DC_localtions.push(locationString);                                  //顺序push顶点名称
                 DC_vertexNames.push(key);                                  //顺序push顶点名称
-                let vertexBuffer = this.resources.get(value, "vertices");
+
                 if (vertexBuffer) {
                     DC_vertexBuffers.push(vertexBuffer);             //顺序push顶点Buffer
                 }
                 else {
                     console.warn("顶点属性", key, value, " 不能匹配数据");
+                    throw new Error("顶点属性 key, value 不能匹配数据");
                 }
                 location_i++;
             }
             //1.2、索引资源
-            if (values.data.indexes && values.data.indexes.length > 0) {
-                let u32Buffer = new Uint32Array(values.data.indexes);
-                if (!this.resources.has(values.data.indexes, "indexes")) {
-                    let _indexBuffer = createIndexBuffer(this.device, u32Buffer.buffer, values.label + " index GPUBuffer");
-                    this.resources.set(values.data.indexes, _indexBuffer, "indexes");
+            if (Array.isArray(values.data.indexes)) {
+                if (values.data.indexes && values.data.indexes.length > 0) {
+                    let u32Buffer = new Uint32Array(values.data.indexes);
+                    if (!this.resources.has(values.data.indexes, "indexes")) {
+                        let _indexBuffer = createIndexBuffer(this.device, values.label + " index GPUBuffer", u32Buffer.buffer);
+                        this.resources.set(values.data.indexes, _indexBuffer, "indexes");
+                    }
+                    let index = this.resources.get(values.data.indexes, "indexes");
+                    if (index) {
+                        DC_indexBuffer = index;
+                    }
                 }
-                let index = this.resources.get(values.data.indexes, "indexes");
-                if (index) {
-                    DC_indexBuffer = index;
+            }
+            else {
+                let indexBundle = values.data.indexes as I_indexGPUBufferBundle;
+                if (indexBundle) {
+                    DC_indexBuffer = indexBundle.buffer;
                 }
             }
         }
@@ -568,7 +681,7 @@ export class DrawCommandGenerator {
                             }
                             else {//没有，创建
                                 const label = (perEntry as I_uniformBufferEntry).label;
-                                let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
+                                let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
                                 this.resources.set(perEntry, buffer, "uniformBuffer");
                                 bindGroupEntry.push({
                                     binding: perEntry.binding,
@@ -762,7 +875,7 @@ export class DrawCommandGenerator {
 
 
         //3.6 生产pipeline
-        let pipeline: GPURenderPipeline =this.device.createRenderPipeline(descriptor);
+        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
         // let pipeline: GPURenderPipeline;
         // if (this.resources.renderPipelineDescriptor.has(descriptor)) {
         //     const pl = this.resources.renderPipelineDescriptor.get(descriptor);
@@ -867,6 +980,9 @@ export class DrawCommandGenerator {
 
         if (DC_indexBuffer) {
             commandOption.indexBuffer = DC_indexBuffer;
+            if ("buffer" in values.data.indexes!) {
+                commandOption.indexFormat = values.data.indexes.format;
+            }
         }
         let drawCommand = new DrawCommand(commandOption);
         return drawCommand;
@@ -961,18 +1077,19 @@ export class DrawCommandGenerator {
      */
     getWgslValueFormat(format: string) {
         let wgsl_value_format = "";
-        if (format == "float32x3") {
-            wgsl_value_format = "vec3f";
+        if (format == "float32") {
+            wgsl_value_format = "f32";
         }
         else if (format == "float32x2") {
             wgsl_value_format = "vec2f";
         }
+        else if (format == "float32x3") {
+            wgsl_value_format = "vec3f";
+        }
         else if (format == "float32x4") {
             wgsl_value_format = "vec4f";
         }
-        else if (format == "float32") {
-            wgsl_value_format = "f32";
-        }
+
         else if (format == "uint32") {
             wgsl_value_format = "u32";
         }
@@ -985,6 +1102,7 @@ export class DrawCommandGenerator {
         else if (format == "uint32x4") {
             wgsl_value_format = "vec4u";
         }
+
         else if (format == "sint32") {
             wgsl_value_format = "i32";
         }

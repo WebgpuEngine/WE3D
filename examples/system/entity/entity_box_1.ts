@@ -24,7 +24,6 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-window.scene = scene;
 
 
 let radius = 5;

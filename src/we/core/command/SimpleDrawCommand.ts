@@ -98,7 +98,7 @@ export class SimpleDrawCommand extends BaseDrawCommand {
                 let perOne = this.inputValues.data[i as keyof typeof this.inputValues.data];
                 let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                 let data = new Float32Array(perOne! as number[]);
-                let gpuBuffer = createVerticesBuffer(this.device, data.buffer, this.label + " position vertex GPUBuffer");
+                let gpuBuffer = createVerticesBuffer(this.device, this.label + " position vertex GPUBuffer", data.buffer);
 
                 if (i == "indexes") {
                     this.indexBuffer = gpuBuffer;
@@ -280,7 +280,7 @@ export class SimpleDrawCommand extends BaseDrawCommand {
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 if (isUniformBufferPart(perEntry)) {
                     const label = (perEntry as I_uniformBufferEntry).label;
-                    let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
+                    let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
                     this.uniformGPUBuffers.push(buffer);
                     bindGroupEntry.push({
                         binding: perEntry.binding,

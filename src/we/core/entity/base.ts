@@ -2,7 +2,7 @@ import { Mat4, Vec3 } from "wgpu-matrix";
 import { I_Update, E_renderForDC } from "../base/coreDefine";
 import { Scene } from "../scene/scene";
 import { Rotation, RotationArray } from "../math/baseDefine";
-import { T_vsAttribute, vsAttribute, vsAttributeMerge } from "../command/DrawCommandGenerator";
+import { T_indexAttribute, T_vsAttribute, vsAttribute, vsAttributeMerge } from "../command/DrawCommandGenerator";
 import { I_drawMode, I_drawModeIndexed, T_uniformGroup } from "../command/base";
 import { I_ShaderTemplate_Final } from "../shadermanagemnet/base";
 import { BaseLight } from "../light/baseLight";
@@ -154,7 +154,7 @@ export interface I_EntityBundleMaterial extends IV_BaseEntity {
             vertices: {
                 [name: string]: T_vsAttribute;
             },
-            indexes?: number[],
+            indexes?: T_indexAttribute,
             vertexStepMode?: GPUVertexStepMode,
         },
     }

@@ -141,7 +141,7 @@ export class Mesh extends EntityBundleMaterial {
                     if (positionTemp === undefined) {
                         throw new Error("Mesh constructor: wireFrame must have position attribute");
                     }
-                    if ("format" in positionTemp) {//vsAttribute
+                    if ("format" in positionTemp && "data" in positionTemp) {//vsAttribute
                         position = positionTemp.data as number[];
                     }
                     //如果有mergeAttribute属性
@@ -222,7 +222,7 @@ export class Mesh extends EntityBundleMaterial {
      * @returns IV_DrawCommand
      */
     generateWireFrameInputValueOfDC(type: E_renderForDC, UUID: string, bundle: I_EntityBundleOfUniformAndShaderTemplateFinal, vsOnly: boolean = false, scope?: Mesh): IV_DC {
-       if (scope == undefined) scope = this;
+        if (scope == undefined) scope = this;
         let drawMode: I_drawModeIndexed = {
             indexCount: 0,
             instanceCount: 1,
@@ -304,7 +304,7 @@ export class Mesh extends EntityBundleMaterial {
             // // let dc = this.DCG.generateDrawCommand(valueDC);
             // // this.cameraDC[UUID][E_renderPassName.forward].push(dc);
             // this.generateWireFrameOpacityDC(UUID, SHT_MeshWireframeVS, undefined, this._materialWireframe);
-            this.generateOpacityDC(UUID, SHT_MeshWireframeVS, undefined, this._materialWireframe,this.generateWireFrameInputValueOfDC);
+            this.generateOpacityDC(UUID, SHT_MeshWireframeVS, undefined, this._materialWireframe, this.generateWireFrameInputValueOfDC);
         }
     }
 

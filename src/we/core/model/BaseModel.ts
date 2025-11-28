@@ -19,13 +19,13 @@ export interface I_Model extends I_Update {
 
 export abstract class BaseModel extends RootGPU {
 
-    root: RootGPU = new NodeEntity();
     modelData: any;
-    entities: BaseEntity[] = [];
-    materials: BaseMaterial[] = [];
-    cameras: BaseCamera[] = [];
-    animations: BaseAnimation[] = [];
-    attributeBuffers: GPUBuffer[] = [];
+    modeEntities: BaseEntity[] = [];
+    modelMaterials: BaseMaterial[] = [];
+    modelCameras: BaseCamera[] = [];
+    modelAnimations: BaseAnimation[] = [];
+    modelGPUBuffers: GPUBuffer[] = [];
+    moddelImages:ImageBitmap[] = [];
 
     constructor(input: I_Model) {
         super(input);

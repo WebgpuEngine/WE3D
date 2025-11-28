@@ -188,7 +188,7 @@ export class ComputeCommand {
                 */
                 if (isUniformBufferPart(perEntry)) {
                     const label = (perEntry as I_uniformBufferEntry).label;
-                    let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
+                    let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
                     bindGroupEntry.push({
                         binding: perEntry.binding,
                         resource: {

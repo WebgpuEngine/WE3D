@@ -46,7 +46,7 @@ export class FXAA extends BasePostProcess {
         this.FXAA_GPUBuffer.destroy();
     }
     init() {
-        this.FXAA_GPUBuffer = createUniformBuffer(this.device, this.FXAA_structSize, "FXAA uniform", this.FXAA_ArrayBuffer);
+        this.FXAA_GPUBuffer = createUniformBuffer(this.device, "FXAA uniform", this.FXAA_ArrayBuffer);
         this.FXX_Sampler = this.device.createSampler({
             magFilter: "linear",
             minFilter: "linear",

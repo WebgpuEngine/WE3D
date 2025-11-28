@@ -39,6 +39,7 @@ export interface IV_DrawCommand extends IV_BaseCommand {
     pipeline: GPURenderPipeline,
     vertexBuffers?: GPUBuffer[],
     indexBuffer?: GPUBuffer,
+    indexFormat?: GPUIndexFormat,
     uniform?: GPUBindGroup[],
     viewport?: I_viewport,
     renderPassDescriptor: () => GPURenderPassDescriptor,
@@ -96,6 +97,7 @@ export class DrawCommand extends BaseDrawCommand {
         this.pipeline = input.pipeline;
         this.vertexBuffers = input.vertexBuffers || [];
         if (input.indexBuffer) this.indexBuffer = input.indexBuffer;
+        if (input.indexFormat) this.indexFormat = input.indexFormat;
         if (input.uniform) this.bindGroups = input.uniform;
         this.drawMode = input.drawMode;
         this.renderPassDescriptor = input.renderPassDescriptor;
@@ -204,7 +206,7 @@ export class DrawCommand extends BaseDrawCommand {
                     }
                     else {//没有，创建
                         const label = (perEntry as I_uniformBufferEntry).label;
-                        let buffer = createUniformBuffer(this.device, (perEntry as I_uniformBufferEntry).size, label, (perEntry as I_uniformBufferEntry).data);
+                        let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
                         this.uniformBufferList.push(buffer);
                         this.scene.resourcesGPU.set(perEntry, buffer, "uniformBuffer");
                         this.resourcesOfMapList.push({ key: perEntry, value: buffer, type: "uniformBuffer" });

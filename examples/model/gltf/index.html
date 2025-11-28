@@ -1,67 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <H1>GLTF 模型</H1>
     <span>基础
         <ul>
-            <li><a href="base/1_buffers/test1.html">1_buffers</a></li>
-            <li><a href=""></a></li>
+            <li><a href="base/1_buffers/triangle_test_1.html">triangle buffers& view test</a></li>
+            <li><a href="base/1_buffers/uniform_animation.html"> animation uniform data test</a></li>
+            <li><a href=""></a>morph target :mesh targets data <br>
+                1、target数据是所有顶点? target以顶点属性(固定不能大于16),storage(OK) 哪种适合<br>
+                2、顶点属性方式:变形数量受限<br>
+                3、shader model 简单变种问题<br>
+            </li>
+            <li><a href=""></a>morph target :uniforms ,时间与权重的数组大小问题,是uniform,还是storage适合</li>
+            <li><a href="">skin uniform data test</a></li>
+            <li><a href="">skin uniform data test.<br>
+                    1、动画数据:骨骼节点与权重(初步顶点属性,数据量可以接受),逆绑定矩阵(使用storage,gltfRender中使用texture处理矩阵 )<br>
+                    2、shader model 简单变种问题: 顶点属性方式会产生,storage方式可以使用通用的bind适配<br>
+                </a></li>
+            <li><a href="">texture &sampler & images output</a></li>
+            <li><a href="">material & pbr data output </a></li>
+            <li><a href="">camera</a></li>
+        </ul>
+    </span><span>插值
+        <ul>
+            <li><a href="">linear</a></li>
+            <li><a href="">step</a></li>
+            <li><a href="">CUBICSPLINE</a></li>
+        </ul>
+    </span><span>glb
+        <ul>
+            <li><a href="">buffer</a></li>
+            <li><a href="">animaton uniform data</a></li>
+            <li><a href="">morph target data</a></li>
+            <li><a href="">skin uniform data</a></li>
+            <li><a href="">textures</a></li>
+            <li><a href="">material </a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
+    </span><span>mesh
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
+    </span><span>primitive
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
+    </span><span>material
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
+    </span><span>动画
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
+    </span><span>morph target
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
+    </span><span>skin
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
         </ul>
-    </span><span>
-        <ul>
-            <li><a href=""></a></li>
-            <li><a href=""></a></li>
-            <li><a href=""></a></li>
-        </ul>
-    </span><span>
-        <ul>
-            <li><a href=""></a></li>
-            <li><a href=""></a></li>
-            <li><a href=""></a></li>
-        </ul>
-    </span><span>
+
         <ul>
             <li><a href=""></a></li>
             <li><a href=""></a></li>
@@ -81,6 +100,7 @@
         </ul>
     </span>
 
-    
+
 </body>
+
 </html>

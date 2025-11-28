@@ -35,6 +35,7 @@ export abstract class BaseDrawCommand {
     renderPassDescriptor!:GPURenderPassDescriptor  | (() => GPURenderPassDescriptor);
     vertexBuffers: GPUBuffer[] = [];
     indexBuffer!: GPUBuffer;
+    indexFormat: GPUIndexFormat = "uint32";
     bindGroups: GPUBindGroup[] = [];
     pipeline!: GPURenderPipeline;
     inputValues!: IV_BaseDrawCommand;

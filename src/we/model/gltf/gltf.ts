@@ -5,8 +5,10 @@ import { DracoLoader } from "@loaders.gl/draco";
 import { GLB, GLTFLoader, GLTFWithBuffers } from '@loaders.gl/gltf';
 import { GLBLoader } from '@loaders.gl/gltf';
 import { Scene } from "../../core/scene/scene";
-import { RootGPU, RootOrigin } from "../../core/organization/root";
-import { createVerticesBuffer } from "../../core/command/baseFunction";
+import { RootGPU } from "../../core/organization/root";
+import { createCommonGPUBuffer, createIndexBuffer, createUniformBuffer, createVerticesBuffer } from "../../core/command/baseFunction";
+import { I_indexGPUBufferBundle, I_vsGPUBufferBundle } from "../../core/command/DrawCommandGenerator";
+import { checkRebulidBufferForVec3, getAccessorByteStride, getAccessorSize, getAccessorTypeForGPUIndexFormat, getAccessorTypeForGPUVertexFormat } from "./function";
 
 export interface I_GLTFModel extends I_Model {
     type: "gltf" | "glb",
@@ -37,30 +39,16 @@ export async function createGLTFModel(input: I_Model): Promise<GLTFModel> {
     return gltf;
 }
 
+type T_accessorBufferSource = GPUBindGroupEntry | I_vsGPUBufferBundle | I_indexGPUBufferBundle;
 export class GLTFModel extends BaseModel {
-
     modelData: GLTFWithBuffers | GLB;
     filePath: string;
     gltfType: "gltf" | "glb";
+    // scenes: any[] = [];
+    // nodes: any[] = [];
+    modelGltfBuffers: any[] = [];
+    modelAccessors: T_accessorBufferSource[] = [];
 
-    scenes: any[] = [];
-    nodes: any[] = [];
-
-    buffers: any[] = [];
-
-    detectData(): void {
-        throw new Error("Method not implemented.");
-    }
-
-    updateSelf(clock: Clock): void {
-        //1、更新mesh的update，按照node tree
-    }
-    saveJSON() {
-        throw new Error("Method not implemented.");
-    }
-    loadJSON(json: any): void {
-        throw new Error("Method not implemented.");
-    }
     constructor(input: I_GLTFModel) {
         super(input);
         this.gltfType = input.type;
@@ -80,55 +68,150 @@ export class GLTFModel extends BaseModel {
      */
     async initData() {
         if (this.gltfType == "gltf") {
-            this.buffers = (this.modelData as GLTFWithBuffers).buffers
+            this.modelGltfBuffers = (this.modelData as GLTFWithBuffers).buffers
         }
         else if (this.gltfType == "glb") {
-            this.buffers = (this.modelData as GLB).binChunks;
+            this.modelGltfBuffers = (this.modelData as GLB).binChunks;
         }
-
-
+        this.initBufferViews();
+        this.initAccessors();
     }
 
-    getBufferSource(bufferView: any, componentType?: number): BufferSource {
-        console.log(bufferView.byteOffset);
-        if (componentType != undefined) {
-            if (componentType == 5120) {
-                return new Int8Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            }
-            else if (componentType == 5121) {
-                return new Uint8Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            }
-            else if (componentType == 5122) {
-                return new Int16Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            }
-            else if (componentType == 5123) {
-                return new Uint16Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            }
-            else if (componentType == 5125) {
-                return new Uint32Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            }
-            else if (componentType == 5126) {
-                return new Float32Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            }
-        }
-        return new Uint8Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-    }
-    async initBufferViewToGPUBuffer() {
+    /**
+     * 初始化bufferViews,创建GPUBuffer
+     * 1、accessor 中type为：SCALAR|VEC3,且componentType为：5120|5121|5122|5123 ,即（sint8|uint8|sint16|uint16）。需要将其转换为u32x3。
+     */
+    initBufferViews() {
         for (let i in this.modelData.json.bufferViews) {
             let bufferView = this.modelData.json.bufferViews[i];
-            let buffer = this.getBufferSource(bufferView);
-            this.attributeBuffers.push(createVerticesBuffer(this.device, buffer, bufferView.name || i.toString));
-            // if (bufferView.target) {
-            //     if(bufferView.target ==34963){
-            //         buffer = new Uint8Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);                    
-            //     }
+            let buffer = this.modelGltfBuffers[bufferView.buffer].arrayBuffer;
+            // // 检查是否需要新构建buffer
+            // let checkResult = checkRebulidBufferForVec3(bufferView, this.modelData.json.accessors);
+            // if (checkResult.status) {
+
+            //     buffer = newBuffer;
             // }
-            // else {
-            //     buffer = new Uint8Array(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            // }
+            let gpuBuffer = createCommonGPUBuffer(this.device, bufferView.name || i, buffer, bufferView.byteOffset, bufferView.byteLength);
+            this.modelGPUBuffers.push(gpuBuffer);
+        }
+    }
+
+    async initAccessors() {
+        for (let i in this.modelData.json.accessors) {
+            let accessor = this.modelData.json.accessors[i];
+            let bufferView = this.modelData.json.bufferViews[accessor.bufferView];
+            let accessorBufferSource: T_accessorBufferSource;
+            if (bufferView.target) {
+                if (bufferView.target == 34963) {
+                    accessorBufferSource = {
+                        buffer: this.modelGPUBuffers[accessor.bufferView],
+                        format: getAccessorTypeForGPUIndexFormat(accessor),
+                        name: accessor.name || i,
+                        arrayStride: getAccessorByteStride(accessor),
+                        count: accessor.count,
+                        /**
+                         * 从buffer的offset开始读取数据,比如一个大的GPUBuffer，包括了多个vertex attribute和index attribute，还可能包括uniform数据
+                         *  from offset to size，exp:one big GPUBuffer, include vertex attribute and index attribute and uniform data
+                         * default: 0
+                         */
+                        offset: accessor.byteOffset,
+                        /**
+                         * 读取数据的大小，默认=count*arrayStride
+                         * default: count*arrayStride
+                         */
+                        size: accessor.byteLength,
+                    } as I_indexGPUBufferBundle;
+                }
+                else if (bufferView.target == 34962) {
+                    const { format, wgslFormat } = getAccessorTypeForGPUVertexFormat(accessor);
+                    let buffer = this.modelGPUBuffers[accessor.bufferView];
+                    let reBuildBuffer = checkRebulidBufferForVec3(accessor);
+                    if (reBuildBuffer) {
+                        const oldBuffer = this.getBufferSourceForAccessor(accessor);
+                        // 新构建buffer
+                        let countsOfVec3 = oldBuffer.byteLength * 4;
+                        if (accessor.componentType == 5122 || accessor.componentType == 5123) {
+                            countsOfVec3 = oldBuffer.byteLength * 2;
+                        }
+                        let newBuffer = new ArrayBuffer(countsOfVec3);
+                        let newBufferView = new Uint32Array(newBuffer);
+                        for (let j = 0; j < countsOfVec3/4; j++) {
+                            newBufferView[j] = oldBuffer[j];
+                        }
+                        buffer = createCommonGPUBuffer(this.device, bufferView.name || i, newBuffer, 0, countsOfVec3);
+                    }
+                    accessorBufferSource = {
+                        buffer: buffer,
+                        format: format,
+                        wgslFormat: wgslFormat,
+                        name: accessor.name || i,
+                        arrayStride: getAccessorByteStride(accessor),
+                        count: accessor.count,
+                        /**
+                         * 从buffer的offset开始读取数据,比如一个大的GPUBuffer，包括了多个vertex attribute和index attribute，还可能包括uniform数据
+                         *  from offset to size，exp:one big GPUBuffer, include vertex attribute and index attribute and uniform data
+                         * default: 0
+                         */
+                        offset: accessor.byteOffset,
+                        /**
+                         * 读取数据的大小，默认=count*arrayStride
+                         * default: count*arrayStride
+                         */
+                        size: accessor.byteLength,
+                    } as I_vsGPUBufferBundle;
+                }
+            }
+            else {
+
+            }
+            this.modelAccessors.push(accessorBufferSource);
 
         }
     }
+    /**
+     * 获取accessor的数据来源,BufferSource
+     * @param accessor 
+     * @returns BufferSource
+     */
+    getBufferSourceForAccessor(accessor: any): Int8Array | Uint8Array | Int16Array | Uint16Array | Uint32Array | Float32Array {
+        // console.log(bufferView.byteOffset);
+        let bufferView = this.modelData.json.bufferViews[accessor.bufferView];
+        let componentType = accessor.componentType;
+        let byteOffset = accessor.byteOffset || 0 + bufferView.byteOffset;
+        let { length, unitByteSize } = getAccessorSize(accessor);
+        if (componentType != undefined) {
+            if (componentType == 5120) {
+                return new Int8Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, byteOffset, length);
+            }
+            else if (componentType == 5121) {
+                return new Uint8Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, byteOffset, length);
+            }
+            else if (componentType == 5122) {
+                return new Int16Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, byteOffset, length);
+            }
+            else if (componentType == 5123) {
+                return new Uint16Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, byteOffset, length);
+            }
+            else if (componentType == 5125) {
+                return new Uint32Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, byteOffset, length);
+            }
+            else if (componentType == 5126) {
+                return new Float32Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, byteOffset, length);
+            }
+        }
+        return new Uint8Array(this.modelGltfBuffers[bufferView.buffer].arrayBuffer, bufferView.byteOffset, length);
+    }
+    /**
+     * 测试使用
+     * 打印accessor的内容
+     * @param accessor 
+     */
+    printAccessorContent(accessor: any) {
+        let buffer = this.getBufferSourceForAccessor(accessor);
+        console.log(buffer);
+    }
+
+
 
     //被parent的addChild调用
     async init(scene: Scene, parent?: RootGPU, renderID?: number): Promise<number> {
@@ -159,12 +242,19 @@ export class GLTFModel extends BaseModel {
     }
 
 
+    detectData(): void {
+        throw new Error("Method not implemented.");
+    }
 
-    // async addChild(child: RootGPU): Promise<number> {
-
-    // }
-    // removeChild(child: RootOrigin): RootOrigin | false {
-    // }
+    updateSelf(clock: Clock): void {
+        //1、更新mesh的update，按照node tree
+    }
+    saveJSON() {
+        throw new Error("Method not implemented.");
+    }
+    loadJSON(json: any): void {
+        throw new Error("Method not implemented.");
+    }
 }
 
 function add(node: any[], scope: BaseModel) {
