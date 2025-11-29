@@ -61,21 +61,23 @@ let att1: vsAttribute = {
   data: oneTriangleVertexArray,
   format: "float32x3",
   arrayStride: 4 * 3,
-  offset: 0
+  offset: 0,
+  count: 3
 }
 let att2: vsAttribute = {
   data: oneTriangleColorArray,
   format: "float32x3",
   arrayStride: 4 * 3,
-  offset: 0
+  offset: 0,
+  count: 3
 }
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      ["vsAttribute1", att1],
-      ["color1", att2]
-    ]),
+    vertices: {
+      "vsAttribute1": att1,
+      "color1": att2
+    }
   },
   render: {
     vertex: {

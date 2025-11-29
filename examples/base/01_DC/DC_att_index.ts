@@ -87,10 +87,10 @@ let DCManager = new DrawCommandGenerator(inputDC);
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      ["position", oneTriangleVertexArray],
-      ["color", oneTriangleColorArray]
-    ]),
+    vertices:{
+      "position": oneTriangleVertexArray,
+       "color": oneTriangleColorArray
+    },
     indexes: oneTriangleIndexArray
 
   },

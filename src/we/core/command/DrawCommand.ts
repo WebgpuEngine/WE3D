@@ -2,7 +2,7 @@ import { E_renderForDC } from "../base/coreDefine";
 import { E_TransparentType } from "../material/base";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformBufferEntry, I_viewport, IV_BaseCommand, T_uniformGroup } from "./base";
+import { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformArrayBufferEntry, I_viewport, IV_BaseCommand, T_uniformGroup } from "./base";
 import { BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer } from "./baseFunction";
 
@@ -205,8 +205,8 @@ export class DrawCommand extends BaseDrawCommand {
                             });
                     }
                     else {//没有，创建
-                        const label = (perEntry as I_uniformBufferEntry).label;
-                        let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
+                        const label = (perEntry as I_uniformArrayBufferEntry).label;
+                        let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
                         this.uniformBufferList.push(buffer);
                         this.scene.resourcesGPU.set(perEntry, buffer, "uniformBuffer");
                         this.resourcesOfMapList.push({ key: perEntry, value: buffer, type: "uniformBuffer" });

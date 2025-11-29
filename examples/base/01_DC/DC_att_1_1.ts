@@ -8,7 +8,7 @@ declare global {
     DC: any
   }
 }
-let input: IV_Scene = { canvas: "render", reversedZ: false ,modeNDC:true}
+let input: IV_Scene = { canvas: "render", reversedZ: false, modeNDC: true }
 let scene = new Scene(input);
 await scene._init();
 
@@ -83,11 +83,10 @@ let DCManager = new DrawCommandGenerator(inputDC);
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      ["position", oneTriangleVertexArray],
-      ["color", oneTriangleColorArray]
-
-    ]),
+    vertices: {
+      "position": oneTriangleVertexArray,
+      "color": oneTriangleColorArray
+    }
   },
   render: {
     vertex: {

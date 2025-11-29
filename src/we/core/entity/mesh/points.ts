@@ -193,7 +193,7 @@ export class Points extends EntityBundleMaterial {
     //     let bindingNumber = startBinding;
     //     let uniform1: T_uniformGroup = [];
 
-    //     let unifrom10: I_uniformBufferEntry = {
+    //     let unifrom10: I_uniformArrayBufferEntry = {
     //         label: this.Name + " uniform at group(1) binding(0)",
     //         binding: bindingNumber,
     //         size: this.getSizeOfUniformArrayBuffer(),

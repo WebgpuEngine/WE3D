@@ -66,7 +66,12 @@ function createGPUBufferByType(device: GPUDevice, label: string, usage: GPUBuffe
         else if (length != ensureData.size) {
             length = ensureData.size;
         }
-        device.queue.writeBuffer(buffer, 0, ensureData.dataArray, offset, length);
+        if(isArrayBuffer(ensureData.dataArray)){
+            device.queue.writeBuffer(buffer, 0, ensureData.dataArray, offset, length);
+        }
+        else{
+            device.queue.writeBuffer(buffer, 0, (ensureData.dataArray as ArrayBufferView).buffer, offset, length);
+        }
         buffer.unmap();
     }
     return buffer;

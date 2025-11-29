@@ -1,5 +1,5 @@
 import { V_weLinearFormat } from "../base/coreDefine";
-import { I_uniformBufferEntry } from "../command/base";
+import { I_uniformArrayBufferEntry } from "../command/base";
 import { IV_SimpleDrawCommand, SimpleDrawCommand } from "../command/SimpleDrawCommand";
 import { Clock } from "../scene/clock";
 import { SHT_PP_Blur3x3 } from "../shadermanagemnet/postProcess/blur3x3";
@@ -31,7 +31,7 @@ export class Blur3x3 extends BasePostProcess {
         let screenSize = new ArrayBuffer(4 * 2);
         new Float32Array(screenSize).set([this.scene.surface.size.width, this.scene.surface.size.height]);
         
-        let ST_PP_ScreenSize: I_uniformBufferEntry = {
+        let ST_PP_ScreenSize: I_uniformArrayBufferEntry = {
             binding: 0,
             size: 4 * 2,
             data: screenSize,

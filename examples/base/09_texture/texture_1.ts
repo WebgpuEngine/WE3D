@@ -133,11 +133,11 @@ let depthStencil = scene.depthStencil;
 let valueDC: IV_DC = {
   label: "dc0",
   data: {
-    vertices: new Map([
-      ["position", oneTriangleVertexArray],
-      ["color", oneTriangleColorArray],
-      ["uv", oneTriangleUVArray],
-    ]),
+    vertices: {
+      "position": oneTriangleVertexArray,
+      "color": oneTriangleColorArray,
+      "uv": oneTriangleUVArray,
+    },
     // indexes: oneTriangleIndexArray,
     uniforms: [[uniform1, uniform2]],
 

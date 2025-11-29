@@ -18,7 +18,7 @@ import { Clock } from "../scene/clock";
 import { DrawCommand } from "../command/DrawCommand";
 import { BaseCamera } from "../camera/baseCamera";
 import { BaseLight } from "../light/baseLight";
-import { I_uniformBufferEntry } from "../command/base";
+import { I_uniformArrayBufferEntry } from "../command/base";
 import { I_ShaderTemplate } from "../shadermanagemnet/base";
 import { EntityManager } from "./entityManager";
 import { Scene } from "../scene/scene";
@@ -596,9 +596,9 @@ export abstract class BaseEntity extends RootGPU {
      */
     uniformOfTTPF: ArrayBuffer = new ArrayBuffer(this.uniformOfTTPFSize);
     /**TTPF 是使用的 uniform: 主要是目的是更新entity所在的TTP的层数（0-3） 
-     * I_uniformBufferEntry结构使用在createTransparent（）中的TTPF代码部分
+     * I_uniformArrayBufferEntry结构使用在createTransparent（）中的TTPF代码部分
     */
-    unifromTTPF!: I_uniformBufferEntry;
+    unifromTTPF!: I_uniformArrayBufferEntry;
     /**
      * 设置透明材质的TTPF的uniform
      * @param layer  对应RGBA四层

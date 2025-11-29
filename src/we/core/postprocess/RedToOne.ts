@@ -1,5 +1,5 @@
 import { V_weLinearFormat } from "../base/coreDefine";
-import { I_uniformBufferEntry } from "../command/base";
+import { I_uniformArrayBufferEntry } from "../command/base";
 import { IV_SimpleDrawCommand, SimpleDrawCommand } from "../command/SimpleDrawCommand";
 import { Clock } from "../scene/clock";
 import { SHT_PP_RedToOne } from "../shadermanagemnet/postProcess/RedToOne";

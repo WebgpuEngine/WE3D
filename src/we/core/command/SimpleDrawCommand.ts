@@ -1,7 +1,7 @@
 import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../entity/base";
 import { isUniformBufferPart } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
-import { I_uniformBufferEntry, T_uniformGroup } from "./base";
+import { I_uniformArrayBufferEntry, T_uniformGroup } from "./base";
 import { BaseDrawCommand, IV_BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
 
@@ -9,7 +9,7 @@ import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
 /**
  * 简单绘制命令的uniform组条目类型,只由uniform data 和GPUBindGroupEntry
  */
-export type T_uniformGroupEntryOfSimple = GPUBindGroupEntry | I_uniformBufferEntry;
+export type T_uniformGroupEntryOfSimple = GPUBindGroupEntry | I_uniformArrayBufferEntry;
 
 /**
  * 1、不考虑system的情况，如果有system，使用DrawCommand
@@ -279,8 +279,8 @@ export class SimpleDrawCommand extends BaseDrawCommand {
 
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 if (isUniformBufferPart(perEntry)) {
-                    const label = (perEntry as I_uniformBufferEntry).label;
-                    let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
+                    const label = (perEntry as I_uniformArrayBufferEntry).label;
+                    let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
                     this.uniformGPUBuffers.push(buffer);
                     bindGroupEntry.push({
                         binding: perEntry.binding,

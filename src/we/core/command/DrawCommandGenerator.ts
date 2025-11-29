@@ -5,7 +5,7 @@
  */
 
 import type { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, I_viewport, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, I_viewport, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
 import { DrawCommand, IV_DrawCommand } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
@@ -118,7 +118,7 @@ export interface vsAttributeMerge {
     /**顶点数量 
      * count of vertex
     */
-    count: number,
+    count?: number,
     /**单个vertex属性的总长度
      * array stride of vertex attribute
      */
@@ -135,6 +135,9 @@ export interface vsAttributeMerge {
     // offset: number[],
     // /**每个vertex属性的名称 */
     // names: string[]
+}
+export function isVsAttributeMerge(attr: T_vsAttribute): attr is vsAttributeMerge {
+    return (attr as vsAttributeMerge).mergeAttribute !== undefined;
 }
 /**
  * 单个vertex属性的合并格式
@@ -301,7 +304,7 @@ export class DrawCommandGenerator {
                             if (this.resources.has(perEntry, "uniformBuffer")) {
                                 let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
                                 if (buffer) {
-                                    updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferEntry).data)
+                                    updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformArrayBufferEntry).data)
                                 }
                                 else {
                                     console.warn(i, perGroup, perEntry, "获取uiform对应的GPUBuffer资源获取失败");
@@ -319,13 +322,13 @@ export class DrawCommandGenerator {
      * 更新uniform 数据的GPUBuffer
      * 1、立即更新模式。（与每帧的update相同，但可以一帧按需更新多次）
      * 2、TTPF需要使用
-     * @param perEntry I_uniformBufferEntry
+     * @param perEntry I_uniformArrayBufferEntry
      */
-    updateUniformOfGPUBuffer(perEntry: I_uniformBufferEntry) {
+    updateUniformOfGPUBuffer(perEntry: I_uniformArrayBufferEntry) {
         if (this.resources.has(perEntry, "uniformBuffer")) {
             let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
             if (buffer) {
-                updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformBufferEntry).data)
+                updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformArrayBufferEntry).data)
             }
             else {
                 console.warn(perEntry, "获取uiform对应的GPUBuffer资源获取失败");
@@ -477,7 +480,7 @@ export class DrawCommandGenerator {
                     locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
                     //判断是否以及存在顶点GPUBuffer
                     if (!this.resources.has(value, "vertices")) {
-                        let vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =" + format, data.buffer);
+                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =" + format, data.buffer);
                         this.resources.set(value, vertexBuffer, "vertices");
                     }
                     else {
@@ -493,7 +496,7 @@ export class DrawCommandGenerator {
                         }],
                     }
                 }
-                else if ("mergeAttribute" in value) {
+                else if (isVsAttributeMerge(value)) {
                     let mergeAttribute = value.mergeAttribute
                     let arrayStride = value.arrayStride;
                     let data = new Float32Array(value.data);
@@ -510,7 +513,7 @@ export class DrawCommandGenerator {
                         location_i++;//合并属性，每个属性都要增加一个location
                     }
                     if (!this.resources.has(value, "vertices")) {
-                        let vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =mergeAttribute", data.buffer);
+                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =mergeAttribute", data.buffer);
                         this.resources.set(value, vertexBuffer, "vertices");
                     }
                     else {
@@ -680,8 +683,8 @@ export class DrawCommandGenerator {
                                     });
                             }
                             else {//没有，创建
-                                const label = (perEntry as I_uniformBufferEntry).label;
-                                let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformBufferEntry).data);
+                                const label = (perEntry as I_uniformArrayBufferEntry).label;
+                                let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
                                 this.resources.set(perEntry, buffer, "uniformBuffer");
                                 bindGroupEntry.push({
                                     binding: perEntry.binding,
@@ -1115,6 +1118,17 @@ export class DrawCommandGenerator {
         else if (format == "sint32x4") {
             wgsl_value_format = "vec4i";
         }
+        else if (format == "sint8") {
+            wgsl_value_format = "i32";
+        }
+        else if (format == "sint8x2") {
+            wgsl_value_format = "vec2i";
+        }
+        
+        else if (format == "sint8x4") {
+            wgsl_value_format = "vec4i";
+        }
+
         else {
             throw new Error("顶点属性格式不能匹配数据");
         }

@@ -90,7 +90,7 @@ export interface I_drawModeIndexed {
  * 用于创建uniformBuffer的参数
  * 
  */
-export interface I_uniformBufferEntry {
+export interface I_uniformArrayBufferEntry {
     label: string,
     binding: number,//从0开始
 
@@ -129,10 +129,10 @@ export interface I_dynamicTextureEntryForView {
     getResource: () => GPUBindingResource,
 }
 /** 单个bind group的  unifrom 入口的数组格式 
- * I_uniformBufferEntry 是自定义的uniformBuffer，用于创建GPUBuffer
+ * I_uniformArrayBufferEntry 是自定义的uniformBuffer，用于创建GPUBuffer
  * GPUBindGroupEntry 是标准的
  */
-export type T_uniformEntries = GPUBindGroupEntry | I_uniformBufferEntry | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
+export type T_uniformEntries = GPUBindGroupEntry | I_uniformArrayBufferEntry | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
 
 /**  bind group的数组  */
 export type T_uniformGroup = T_uniformEntries[];

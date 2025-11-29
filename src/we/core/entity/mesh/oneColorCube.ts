@@ -1,4 +1,4 @@
-import { I_uniformBufferEntry, T_uniformGroup } from "../../command/base";
+import { I_uniformArrayBufferEntry, T_uniformGroup } from "../../command/base";
 import { VertexColorMaterial } from "../../material/standard/vertexColorMaterial";
 import { I_ShaderTemplate, I_ShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { IV_MeshEntity, Mesh } from "./mesh";
@@ -53,7 +53,7 @@ export class OneColoeCube extends Mesh {
         let bindingNumber = startBinding;
         let uniform1: T_uniformGroup = [];
 
-        let unifrom10: I_uniformBufferEntry = {
+        let unifrom10: I_uniformArrayBufferEntry = {
             label: this.Name + " uniform at group(1) binding(0)",
             binding: bindingNumber,
             size: this.getSizeOfUniformArrayBuffer(),

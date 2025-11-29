@@ -1,4 +1,4 @@
-import { I_uniformBufferEntry } from "../../../src/we/core/command/base";
+import { I_uniformArrayBufferEntry } from "../../../src/we/core/command/base";
 import { DrawCommandGenerator,  IV_DrawCommandGenerator,    IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
@@ -56,14 +56,14 @@ data2F32A[1] = 1.0;
 data2F32A[2] = 0.0;
 data2F32A[3] = 1.0;
 
-let unifrom10: I_uniformBufferEntry = {
+let unifrom10: I_uniformArrayBufferEntry = {
   label: "uniform1",
   binding: 0,
   size: 4 * 4,
   data: data1
 }
 
-let unifrom11: I_uniformBufferEntry = {
+let unifrom11: I_uniformArrayBufferEntry = {
   label: "uniform1",
   binding: 1,
   size: 4 * 4,
@@ -105,10 +105,10 @@ const oneTriangleIndexArray = [
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      ["position", oneTriangleVertexArray],
-      ["color", oneTriangleColorArray]
-    ]),
+    vertices: {
+      position: oneTriangleVertexArray,
+      color: oneTriangleColorArray
+    },
     indexes: oneTriangleIndexArray,
     uniforms: [[unifrom10, unifrom11]],
   },

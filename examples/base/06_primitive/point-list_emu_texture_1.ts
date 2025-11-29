@@ -132,9 +132,8 @@ let DCManager = new DrawCommandGenerator(inputDC);
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      [
-        "mergeAttribute", {
+    vertices: {
+        "mergeAttribute": {
           data: oneTriangleVertexArray,
           mergeAttribute: [
             {
@@ -156,8 +155,7 @@ let valueDC: IV_DC = {
           ],
           arrayStride: 7 * 4,
         }
-      ]
-    ]),
+      },
     vertexStepMode: "instance",
     uniforms: [[uniform1, uniform2]],
   },

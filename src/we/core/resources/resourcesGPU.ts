@@ -1,4 +1,4 @@
-import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformBufferEntry, T_uniformEntries, T_uniformGroup } from "../command/base";
+import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformArrayBufferEntry, T_uniformEntries, T_uniformGroup } from "../command/base";
 import { DrawCommand } from "../command/DrawCommand";
 
 
@@ -110,7 +110,7 @@ export class ResourceManagerOfGPU {
             else if (isUniformGroup(key)) {
                 return this.uniformGroupToBindGroup.has(key);
             }
-            // else if (key instanceof GPUBindGroupEntryImpl || key instanceof I_uniformBufferEntryImpl) {
+            // else if (key instanceof GPUBindGroupEntryImpl || key instanceof I_uniformArrayBufferEntryImpl) {
             //     return this.entriesToEntriesLayout.get(key);
             // }
             else if (isGPUBindGroupEntry(key)) {
@@ -141,7 +141,7 @@ export class ResourceManagerOfGPU {
             else if (isUniformGroup(key)) {
                 return this.uniformGroupToBindGroup.get(key);
             }
-            // else if (key instanceof GPUBindGroupEntryImpl || key instanceof I_uniformBufferEntryImpl) {
+            // else if (key instanceof GPUBindGroupEntryImpl || key instanceof I_uniformArrayBufferEntryImpl) {
             //     return this.entriesToEntriesLayout.get(key);
             // }
             else if (isGPUBindGroupEntry(key)) {
@@ -186,7 +186,7 @@ export class ResourceManagerOfGPU {
             // else if (key instanceof GPUBindGroupEntryImpl) {
             //     this.entriesToEntriesLayout.set(key, value);
             // }
-            // else if (key instanceof I_uniformBufferEntryImpl) {
+            // else if (key instanceof I_uniformArrayBufferEntryImpl) {
             //     this.entriesToEntriesLayout.set(key, value);
             // }
             else if (isGPUBindGroupEntry(key)) {
@@ -382,7 +382,7 @@ class GPUBindGroupEntryImpl implements GPUBindGroupEntry {
     binding!: number;
     resource!: GPUBindingResource;
 }
-class I_uniformBufferEntryImpl implements I_uniformBufferEntry {
+class I_uniformArrayBufferEntryImpl implements I_uniformArrayBufferEntry {
     label!: string;
     binding!: number;
     type?: "uniform" | "storage" | undefined;
@@ -403,16 +403,16 @@ export function isGPUBindGroupEntry(obj: unknown): obj is GPUBindGroupEntry {
     );
 }
 
-export function isUniformBufferPart(obj: unknown): obj is I_uniformBufferEntry {
+export function isUniformBufferPart(obj: unknown): obj is I_uniformArrayBufferEntry {
     return (
         typeof obj === 'object' &&
         obj !== null &&
         'binding' in obj &&
-        typeof (obj as I_uniformBufferEntry).binding === 'number' &&
+        typeof (obj as I_uniformArrayBufferEntry).binding === 'number' &&
         'size' in obj &&
-        typeof (obj as I_uniformBufferEntry).size === 'number' &&
+        typeof (obj as I_uniformArrayBufferEntry).size === 'number' &&
         'data' in obj &&
-        typeof (obj as I_uniformBufferEntry).data === 'object'
+        typeof (obj as I_uniformArrayBufferEntry).data === 'object'
     );
 }
 

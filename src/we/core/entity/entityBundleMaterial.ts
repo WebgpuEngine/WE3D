@@ -9,7 +9,7 @@
  * 3、非共性或功能不相同的，各自实现
  */
 import { E_lifeState, E_renderForDC } from "../base/coreDefine";
-import { I_drawMode, I_drawModeIndexed, I_uniformBufferEntry, T_uniformGroup } from "../command/base";
+import { I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, T_uniformGroup } from "../command/base";
 import { IV_DC } from "../command/DrawCommandGenerator";
 import { BaseGeometry } from "../geometry/baseGeometry";
 import { I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../material/base";
@@ -158,7 +158,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         let bindingNumber = startBinding;
         let uniform1: T_uniformGroup = [];
 
-        let unifrom10: I_uniformBufferEntry = {
+        let unifrom10: I_uniformArrayBufferEntry = {
             label: this.Name + " uniform at group(1) binding(0)",
             binding: bindingNumber,
             size: this.getSizeOfUniformArrayBuffer(),

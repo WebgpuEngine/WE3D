@@ -1,4 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformBufferEntry, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformArrayBufferEntry, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -72,7 +72,7 @@ dataF32A[2] = 1.0;
 dataF32A[3] = 1.0;
 
 
-let unifrom1: I_uniformBufferEntry = {
+let unifrom1: I_uniformArrayBufferEntry = {
   label: "uniform1",
   binding: 0,
   size: 4 * 4,
@@ -150,11 +150,10 @@ const observer = new ResizeObserver(entries => {
     let valueDC: IV_DC = {
       label: "dc1",
       data: {
-        vertices: new Map([
-          ["position", oneTriangleVertexArray],
-          ["color", oneTriangleColorArray],
-
-        ]),
+        vertices: {
+          position: oneTriangleVertexArray,
+          color: oneTriangleColorArray,
+        },
         indexes: oneTriangleIndexArray,
         uniforms: [[unifrom1]],
       },

@@ -1,7 +1,7 @@
 /**
  * 使用 顶点属性中vertexStepMode的instance模式，绘制三个四边形
  */
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, vsAttributeMerge } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -73,36 +73,34 @@ let DCManager = new DrawCommandGenerator(inputDC);
 
 
 
-
+let mergeAttribute :vsAttributeMerge = {
+  data: oneTriangleVertexArray,
+  mergeAttribute: [
+    {
+      name: "position",
+      format: "float32x3",
+      offset: 0,
+    },
+    {
+      name: "color",
+      format: "float32x4",
+      offset: 3 * 4,
+    },
+    {
+      name: "size",
+      format: "float32",
+      offset: 6 * 4,
+    }
+  ],
+  arrayStride: 7 * 4,
+  count: 0
+}
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      [
-        "mergeAttribute", {
-          data: oneTriangleVertexArray,
-          mergeAttribute: [
-            {
-              name: "position",
-              format: "float32x3",
-              offset: 0,
-            },
-            {
-              name: "color",
-              format: "float32x4",
-              offset: 3 * 4,
-
-            },
-            {
-              name: "size",
-              format: "float32",
-              offset: 6 * 4,
-            }
-          ],
-          arrayStride: 7 * 4,
-        }
-      ]
-    ]),
+    vertices: {
+        "mergeAttribute": mergeAttribute,
+    },
     vertexStepMode: "instance",
   },
   render: {

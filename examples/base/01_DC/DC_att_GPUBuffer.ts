@@ -1,4 +1,5 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, vsAttributeMerge } from "../../../src/we/core/command/DrawCommandGenerator";
+import { createVerticesBuffer } from "../../../src/we/core/command/baseFunction";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, I_vsGPUBufferBundle } from "../../../src/we/core/command/DrawCommandGenerator";
 import type { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";
 
@@ -8,7 +9,7 @@ declare global {
     DC: any
   }
 }
-let input: IV_Scene = { canvas: "render", reversedZ: false ,modeNDC:true}
+let input: IV_Scene = { canvas: "render", reversedZ: false, modeNDC: true }
 let scene = new Scene(input);
 await scene._init();
 
@@ -19,30 +20,28 @@ window.scene = scene;
 let shader = `   
       struct OurVertexShaderOutput {
         @builtin(position) position: vec4f,
-        @location(0) color: vec3f,
       };
-  override ddd: f32=0.16;   
+
+      override ddd: f32=0.16;   
+
       @vertex fn vs(
          @location(0) position : vec3f,
-         @location(1) color : vec3f
       ) -> OurVertexShaderOutput {
-
-
         var vsOutput: OurVertexShaderOutput;
         vsOutput.position = vec4f(position,  1.0);
-        vsOutput.color = color;
+
         return vsOutput;
       }
 
-      @fragment fn fs(@location(0) color: vec3f) -> @location(0) vec4f {
-        return vec4f(color,1);
-
+      @fragment fn fs( @builtin(position) position: vec4f) -> @location(0) vec4f {
+        //return position;
+        return vec4f(1,0,0,1);
       }
 `;
 const oneTriangleVertexArray = [
-  0.0, 0.5, 0, 1, 0, 0, 
-  -0.5, -0.5, 0, 0, 1, 0, 
-  0.5, -0.5, 0, 0, 0, 1,
+  0.0, 0.5, 0,
+  -0.5, -0.5, 0,
+  0.5, -0.5, 0,
 ];
 const oneTriangleVertexF32A = new Float32Array(oneTriangleVertexArray);
 
@@ -52,31 +51,21 @@ let inputDC: IV_DrawCommandGenerator = {
 }
 let DCManager = new DrawCommandGenerator(inputDC);
 
- let  mergeAttribute: vsAttributeMerge={
-   data: oneTriangleVertexArray,
-   mergeAttribute: [
-     {
-       name: "position",
-       format: "float32x3",
-       offset: 0,
-     },
-     {
-       name: "color",
-       format: "float32x3",
-       offset: 3 * 4,
-     }
-   ],
-   arrayStride: 6 * 4,
-   count: 3
- }
+let gpuBuffer1=createVerticesBuffer(scene.device, "position", oneTriangleVertexF32A);
 
+let position:I_vsGPUBufferBundle={
+  buffer: gpuBuffer1,
+  format: "float32x3",
+  wgslFormat: "vec3f",
+  name: "position",
+  arrayStride: 12,
+  count: 3
+}
 
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: {
-       "mergeAttribute": mergeAttribute,
-    },
+    vertices: { position}
   },
   render: {
     vertex: {
@@ -91,7 +80,16 @@ let valueDC: IV_DC = {
     drawMode: {
       vertexCount: 3
     },
+    // depthStencil: false,
+
+    // primitive: undefined,
+    // multisample: undefined,
+    // depthStencil: undefined
   },
+  // system: {
+  //   id: 0,
+  //   type: "camera"
+  // },
 }
 
 let dc = DCManager.generateDrawCommand(valueDC);
