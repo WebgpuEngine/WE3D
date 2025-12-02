@@ -413,7 +413,7 @@ export class PBRMaterial extends BaseMaterial {
                         case "$PBR_normal":
                             if (flag_texture_normal) {
                                 replactString = `normal = textureSample(u_normalTexture,u_Sampler,fsInput.uv.xy).rgb;
-                             normal= getNormalFromMap( fsInput.normal ,normal,fsInput.worldPosition,fsInput.uv);`;
+                             normal= getNormalFromMap( fsInput.normal ,normal,fsInput.worldPosition,fsInput.uv.xy);`;
                             }
                             else {
                                 replactString = `normal = normalize(fsInput.normal);`;
