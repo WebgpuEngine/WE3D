@@ -3,7 +3,7 @@ import { T_uniformGroup } from "../command/base";
 import { BaseEntity } from "../entity/baseEntity";
 import { Scene } from "../scene/scene";
 import { I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
-import { I_mipmap } from "../texture/base";
+import { E_TextureChannel, I_mipmap } from "../texture/base";
 
 export enum E_MaterialType {
     /** 颜色材质 */
@@ -133,34 +133,33 @@ export interface IV_BaseMaterialStep2 {
 
 /** 材质中使用的texture类型 */
 export enum E_TextureType {
-    /** 颜色贴图 */
+    /** 颜色贴图 :rgba*/
     color = "color",
-    /** 立方体贴图 */
+    /** 立方体贴图 :rgba*/
     cube = "cube",
-    /** 法线贴图 */
+    /** 法线贴图 :rgb*/
     normal = "normal",
-    /** 金属度贴图 */
+    /** 金属度贴图 :r*/
     specular = "specular",
-    /** 视差贴图 */
+    /** 视差贴图 :r*/
     parallax = "parallax",
-    /** 基础颜色贴图 */
+    /** 基础颜色贴图 :rgb*/
     albedo = "albedo",
-    /** 金属度贴图 */
+    /** 金属度贴图 :r*/
     metallic = "metallic",
-    /** 粗糙度贴图 */
+    /** 粗糙度贴图 :r*/
     roughness = "roughness",
-    /** 环境光遮蔽贴图 */
+    /** 环境光遮蔽贴图 :r */
     ao = "ao",
     // /** 深度贴图 */
     // depthMap = "depthMap",//这个是深度|高度|视差贴图，前面已有parallax
-    /** 视频贴图 */
+    /** 视频贴图 :rgb */
     video = "video",
-    /** 透明度贴图 */
+    /** 透明度贴图 :r*/
     alpha = "alpha",
+    /** 自发光贴图 :rgb*/
+    emissive = "emissive",
 }
-
-
-
 /**
  * 材质的输出Bundle
  * I_singleShaderTemplate_Final中包括dynamic 参数
@@ -213,4 +212,39 @@ export interface I_UniformBundleOfMaterial {
      */
     entry: T_uniformGroup,
     // layout: GPUBindGroupLayoutEntry[]
+}
+/**
+     * -1：不使用
+     * 0：value
+     * 1：texture
+     * 2：vs
+     */
+export enum E_MaterialUniformKind{
+    notUse = -1,
+    value = 0,
+    texture = 1,
+    /**
+     * vs 只适用从vertex shader中传递过来的uniform参数,exp:normal
+     */
+    vs = 2,
+}
+
+export interface I_PBRUniformBundle {
+    /**种类 */
+    kind: E_MaterialUniformKind,
+    /**
+     * uniform 的值,
+     * 1、只在kind=0时使用
+     * 2、按照textureChannel的代表的顺序使用
+     *  f32 使用 array[0]
+     *  vec2 使用 array[0],array[1]
+     *  vec3 使用 array[0],array[1],array[2]
+     *  vec4 使用 array[0],array[1],array[2],array[3]
+     * 3、金属度、粗糙度、AO等只有一个数值的，使用array[0]
+     * 4、albedo 颜色贴图，使用array[0],array[1],array[2]
+     */
+    value: [number, number, number, number],
+    textureName: E_TextureType,
+    textureChannel: E_TextureChannel,
+    rate: [number,number],
 }

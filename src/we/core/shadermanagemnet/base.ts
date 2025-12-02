@@ -325,8 +325,8 @@ export var SHT_refDCG: I_singleShaderTemplate = {
             replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
             check: "uv",
             selectCode: [
-                " let uv= vec2f(0.0,0.0); \n ",
-                " let uv = attributes.uv; \n ",
+                " let uv= vec4f(0.0,0.0,0.0,0.0); \n ",
+                " let uv =vec4f(attributes.uv,0.0,0.0); \n ",
             ],
         },
     ]

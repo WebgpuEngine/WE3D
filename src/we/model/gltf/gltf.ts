@@ -88,7 +88,6 @@ export class GLTFModel extends BaseModel {
             // // 检查是否需要新构建buffer
             // let checkResult = checkRebulidBufferForVec3(bufferView, this.modelData.json.accessors);
             // if (checkResult.status) {
-
             //     buffer = newBuffer;
             // }
             let gpuBuffer = createCommonGPUBuffer(this.device, bufferView.name || i, buffer, bufferView.byteOffset, bufferView.byteLength);

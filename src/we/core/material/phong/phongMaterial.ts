@@ -230,17 +230,17 @@ export class PhongMaterial extends BaseMaterial {
                   //  let viewDir= normalize(invertTBN*(fsInput.worldPosition - defaultCameraPosition));//这里的TBN是通过偏导数求得,故TBN空间内摄像机位置较为方向 ，fs的world position是TBN是原点
                   if (this.inputValues.parallax?.layer) {
 
-                    replaceString += `uv = parallax_occlusion(fsInput.uv, viewDir, ${parallaxScale},u_parallaxTexture, u_Sampler);\n`;
+                    replaceString += `uv = parallax_occlusion(fsInput.uv.xy, viewDir, ${parallaxScale},u_parallaxTexture, u_Sampler);\n`;
                   }
                   else {
-                    replaceString += ` uv = ParallaxMappingBase(fsInput.uv, viewDir, ${parallaxScale},u_parallaxTexture, u_Sampler);\n`;
+                    replaceString += ` uv = ParallaxMappingBase(fsInput.uv.xy, viewDir, ${parallaxScale},u_parallaxTexture, u_Sampler);\n`;
                   }
                   replaceString += ` materialColor = textureSample(u_colorTexture, u_Sampler, uv);\n`;
                   // replaceString = ` materialColor =textureSample(u_colorTexture, u_Sampler, fsInput.uv);\n `;
 
                 }
                 else
-                  replaceString = ` materialColor =textureSample(u_colorTexture, u_Sampler, fsInput.uv);\n `;
+                  replaceString = ` materialColor =textureSample(u_colorTexture, u_Sampler, fsInput.uv.xy);\n `;
               }
               else {
                 replaceString = ` materialColor =vec4f(${this.color[0]},${this.color[1]},${this.color[2]},${this.color[3]}); `;

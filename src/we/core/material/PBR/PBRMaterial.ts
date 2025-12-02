@@ -7,9 +7,9 @@ import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialPBRFS_defer_mergeToVS, SHT_materialPBRFS_defer_MSAA_mergeToVS, SHT_materialPBRFS_mergeToVS, SHT_materialPBRFS_MSAA_info_mergeToVS, SHT_materialPBRFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
-import { I_BaseTexture, T_textureSourceType } from "../../texture/base";
+import { E_TextureChannel, I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_MaterialType, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
+import { E_MaterialType, E_MaterialUniformKind, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, I_PBRUniformBundle, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -31,12 +31,52 @@ enum E_ThisTexturesType {
 }
 type T_ThisTexturesType = Texture | weVec3 | number;
 
+
 export class PBRMaterial extends BaseMaterial {
 
     declare inputValues: IV_PBRMaterial;
     declare textures: {
         [name: string]: T_ThisTexturesType
     };
+    PBRTextureChannel: I_PBRUniformBundle[] = [
+        {
+            kind: E_MaterialUniformKind.value,
+            value: [1, 1, 1, 0],
+            textureName: E_TextureType.albedo,
+            textureChannel: E_TextureChannel.RGB,
+        },
+        {
+            kind: E_MaterialUniformKind.value,
+            value: [1, 0, 0, 0],
+            textureName: E_TextureType.metallic,
+            textureChannel: E_TextureChannel.R,
+        },
+        {
+            kind: E_MaterialUniformKind.value,
+            value: [1, 0, 0, 0],
+            textureName: E_TextureType.roughness,
+            textureChannel: E_TextureChannel.R,
+        },
+        {
+            kind: E_MaterialUniformKind.value,
+            value: [1, 0, 0, 0],
+            textureName: E_TextureType.ao,
+            textureChannel: E_TextureChannel.R,
+        },
+        {
+            kind: E_MaterialUniformKind.vs,
+            value: [1, 1, 1, 0],
+            textureName: E_TextureType.normal,
+            textureChannel: E_TextureChannel.RGB,
+        },
+        {
+            kind: E_MaterialUniformKind.notUse,
+            value: [1, 1, 1, 0],
+            textureName: E_TextureType.color,
+            textureChannel: E_TextureChannel.RGB,
+        },
+
+    ],
     sampler!: GPUSampler;
     uniformPhong: ArrayBuffer = new ArrayBuffer(4 * 4);
     color: weColor4 = [1, 1, 1, 1];
@@ -355,7 +395,7 @@ export class PBRMaterial extends BaseMaterial {
                             }
                             else {//没有颜色纹理时同时没有设定颜色，
                                 // replactString =`materialColor=vec4f(albedo ,1);`;//使用albedo作为颜色,颜色双倍加深
-                                replactString =` materialColor= vec4f(1.0,1.0,1.0,1.0);`;//需要使用白色作为基准数值
+                                replactString = ` materialColor= vec4f(1.0,1.0,1.0,1.0);`;//需要使用白色作为基准数值
                             }
                             break;
                     }

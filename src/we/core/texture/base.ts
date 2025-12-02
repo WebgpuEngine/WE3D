@@ -30,7 +30,7 @@ export interface I_BaseTexture extends I_Update {  /**纹理名称 */
      */
     samplerDescriptor?: GPUSamplerDescriptor,
 
-    mipmap?: I_mipmap 
+    mipmap?: I_mipmap
 
     /**纹理的premultipliedAlpha，只在有透明的情况下有效。
      * 1、如果为true，说明纹理的premultipliedAlpha为true，需要预乘alpha。
@@ -58,6 +58,7 @@ export interface I_BaseTexture extends I_Update {  /**纹理名称 */
      * 纹理的源数据
      */
     source: T_textureSourceType,
+
 }
 
 export interface I_mipmap {
@@ -65,5 +66,25 @@ export interface I_mipmap {
     enable: boolean,
     /**指定mipmap层数，默认自动计算 */
     level?: number,
+}
+
+/**
+ * 纹理的通道
+ */
+export enum E_TextureChannel {
+    // RGB,
+    // RGBA,
+    // R,
+    // G,
+    // B,
+    // A,
+    // RG,
+    // RB,
+    // RA,
+    // GB,
+    // GA,
+    // BA
+    //0,1,2,3,4,5,6
+    R,G,B,A,RGB,RGBA
 }
 

@@ -17,6 +17,14 @@ struct PBRBaseUniform{
     useRoughnessModel: u32,   //是否使用粗糙度纹理:0= uniform roughness, 1=texture
     useAOModel: u32,        //是否使用环境光遮蔽纹理:0= 1, 1=texture,2= uniform ao
 }
+
+struct PBRTextureUniform{
+    kind: i32,
+    textureChannel: i32,
+    value: vec4f,
+}
+@group(1) @binding(2) var<uniform> U_shadowMapMatrix : array<PBRTextureUniform, 1 >;
+
 @fragment
 fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {
     $gbufferCommonValues //初始化GBuffer的通用值

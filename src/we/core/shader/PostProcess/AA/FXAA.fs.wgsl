@@ -45,7 +45,7 @@ fn fs(fsInput: st_quad_output) -> @location(0) vec4f {
     let u_maxSpan: f32 = u_FXAA_values.maxSpan;           
     let u_showEdges: bool = u_FXAA_values.showEdges == 1;       
 
-    let uv: vec2f = fsInput.uv;
+    let uv: vec2f = fsInput.uv.xy;
     let uvOfPos :vec2i = vec2i(floor(vec2f(fsInput.position.xy)));
 
     // -------------------------- 步骤 1：采样 5 个关键像素的颜色与亮度 --------------------------

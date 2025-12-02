@@ -2,7 +2,8 @@
 //color,无输出需求，定义，方便使用
 var color:vec3f = fsInput.color;
 //UV,无输出需求，定义，方便使用
-var uv:vec2f = fsInput.uv;
+var uv:vec2f = fsInput.uv.xy;
+var uv1:vec2f = fsInput.uv.zw;
 //GBuffer的通用值
 var depth:f32 = fsInput.position.z;
 var materialColor:vec4f = vec4f(0);

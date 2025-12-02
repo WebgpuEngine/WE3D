@@ -211,7 +211,7 @@ export class VideoMaterial extends BaseMaterial {
                     if (perOne.name == "materialColor") {
                         if (this.textures[E_TextureType.video].model == "copy") {
                             //texture 默认是 'rgba8unorm-srgb'，已经完成解gamma
-                            code = code.replace(perOne.replace, `materialColor = textureSample(u_videoTexture, u_Sampler, fsInput.uv ); `);
+                            code = code.replace(perOne.replace, `materialColor = textureSample(u_videoTexture, u_Sampler, fsInput.uv.xy ); `);
                         }
                         else {
                             //外部texture 是 'rgba8unorm'，需要解gamma到线性空间

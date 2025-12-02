@@ -2,8 +2,8 @@
 struct VertexShaderOutput {
     @builtin(position) position : vec4f,
     @location(0) normal : vec3f,
-    @location(1) uv : vec2f,
-
+    // @location(1) uv : vec2f,
+    @location(1) uv : vec4f,//如果适用2组uv，则通过这组uv进行传递
     @location(2) color : vec3f,
     @location(3) worldPosition : vec3f,
             //这个是GBuffer的ID buffer
