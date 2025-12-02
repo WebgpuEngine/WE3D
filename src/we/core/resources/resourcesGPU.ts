@@ -1,5 +1,6 @@
 import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformArrayBufferEntry, T_uniformEntries, T_uniformGroup } from "../command/base";
 import { DrawCommand } from "../command/DrawCommand";
+import { Texture } from "../texture/texture";
 
 
 
@@ -79,6 +80,7 @@ export class ResourceManagerOfGPU {
     /**string 可以是URL或texture的名称等 */
     textureOfString: Map<any, GPUTexture> = new Map();
     textureToBindGroupLayoutEntry: Map<GPUTexture, GPUTextureBindingLayout> = new Map();
+    weTextureOfString: Map<string, Texture> = new Map();
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //sampler

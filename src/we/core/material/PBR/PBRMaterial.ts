@@ -44,39 +44,59 @@ export class PBRMaterial extends BaseMaterial {
             value: [1, 1, 1, 0],
             textureName: E_TextureType.albedo,
             textureChannel: E_TextureChannel.RGB,
+            reMap: [0, 1],
         },
         {
             kind: E_MaterialUniformKind.value,
             value: [1, 0, 0, 0],
             textureName: E_TextureType.metallic,
             textureChannel: E_TextureChannel.R,
+            reMap: [0, 1],
         },
         {
             kind: E_MaterialUniformKind.value,
             value: [1, 0, 0, 0],
             textureName: E_TextureType.roughness,
             textureChannel: E_TextureChannel.R,
+            reMap: [0, 1],
         },
         {
             kind: E_MaterialUniformKind.value,
             value: [1, 0, 0, 0],
             textureName: E_TextureType.ao,
             textureChannel: E_TextureChannel.R,
+            reMap: [0, 1],
         },
         {
             kind: E_MaterialUniformKind.vs,
             value: [1, 1, 1, 0],
             textureName: E_TextureType.normal,
             textureChannel: E_TextureChannel.RGB,
+            reMap: [0, 1],
         },
         {
             kind: E_MaterialUniformKind.notUse,
             value: [1, 1, 1, 0],
             textureName: E_TextureType.color,
+            textureChannel: E_TextureChannel.RGBA,
+            reMap: [0, 1],
+        },
+        {
+            kind: E_MaterialUniformKind.notUse,
+            value: [1, 1, 1, 0],
+            textureName: E_TextureType.emissive,
             textureChannel: E_TextureChannel.RGB,
+            reMap: [0, 1],
+        },
+        {
+            kind: E_MaterialUniformKind.notUse,
+            value: [1, 1, 1, 0],
+            textureName: E_TextureType.depthMap,
+            textureChannel: E_TextureChannel.R,
+            reMap: [0, 1],
         },
 
-    ],
+    ];
     sampler!: GPUSampler;
     uniformPhong: ArrayBuffer = new ArrayBuffer(4 * 4);
     color: weColor4 = [1, 1, 1, 1];

@@ -152,7 +152,7 @@ export enum E_TextureType {
     /** 环境光遮蔽贴图 :r */
     ao = "ao",
     // /** 深度贴图 */
-    // depthMap = "depthMap",//这个是深度|高度|视差贴图，前面已有parallax
+    depthMap = "depthMap",//这个是深度|高度|视差贴图，前面已有parallax
     /** 视频贴图 :rgb */
     video = "video",
     /** 透明度贴图 :r*/
@@ -246,5 +246,5 @@ export interface I_PBRUniformBundle {
     value: [number, number, number, number],
     textureName: E_TextureType,
     textureChannel: E_TextureChannel,
-    rate: [number,number],
+    reMap: [number,number],
 }

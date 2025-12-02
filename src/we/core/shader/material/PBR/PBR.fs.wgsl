@@ -18,12 +18,13 @@ struct PBRBaseUniform{
     useAOModel: u32,        //是否使用环境光遮蔽纹理:0= 1, 1=texture,2= uniform ao
 }
 
-struct PBRTextureUniform{
-    kind: i32,
-    textureChannel: i32,
-    value: vec4f,
-}
-@group(1) @binding(2) var<uniform> U_shadowMapMatrix : array<PBRTextureUniform, 1 >;
+// struct PBRTextureUniform{
+//     kind: i32,
+//     textureChannel: i32,
+//     reMap: vec2f,
+//     value: vec4f,
+// }
+// @group(1) @binding(2) var<uniform> U_shadowMapMatrix : array<PBRTextureUniform, 8 >;//数组对应的texture在PBRMaterial.ts中,
 
 @fragment
 fn fs(fsInput : VertexShaderOutput) -> ST_GBuffer {

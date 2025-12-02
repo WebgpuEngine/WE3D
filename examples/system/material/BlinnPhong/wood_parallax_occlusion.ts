@@ -118,7 +118,7 @@ let phongMaterial = new PhongMaterial({
     }
   },
   parallax: {
-    scale: 0.01,
+    scale: 0.21,//0.01
     layer: 10
   }
 });
