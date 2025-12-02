@@ -17,7 +17,7 @@ import { pickupManager } from "../pickup/pickupManager";
 import { PostProcessManager } from "../postprocess/postProcessManager";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
-import { Texture2x2 } from "../texture/Texture2x2";
+import { DefaultTexture } from "../texture/defaultTexture";
 import { TextureManager } from "../texture/textureManager";
 import { AA, eventOfScene, IV_Scene, IJ_Scene, userDefineEventCall, E_ToneMappingType } from "./base";
 import { Clock } from "./clock";
@@ -420,9 +420,9 @@ export class Scene {
 
         this.resourcesGPU = new ResourceManagerOfGPU();
         this.resourcesGPU.device = device;
-        let texture2x2 = new Texture2x2(device);        
-        this.resourcesGPU.textureOfString.set("2x2", texture2x2.texture);
-        this.resourcesGPU.weTextureOfString.set("2x2", texture2x2);
+        let textureDefault = new DefaultTexture(device);        
+        this.resourcesGPU.textureOfString.set("default", textureDefault.texture);
+        this.resourcesGPU.weTextureOfString.set("default", textureDefault);
         this.root = new RootManager(this);
         await this.root.init(this);
         this.renderManager = new RenderManager(this);

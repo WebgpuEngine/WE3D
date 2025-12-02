@@ -2,7 +2,7 @@ import { I_BaseTexture } from "./base";
 import { BaseTexture } from "./baseTexture";
 import { Texture } from "./texture";
 
-export class Texture2x2 extends Texture {
+export class DefaultTexture extends Texture {
 
     constructor(device: GPUDevice) {
         let input: I_BaseTexture = {
@@ -12,7 +12,7 @@ export class Texture2x2 extends Texture {
         super(input, device);
         this.texture = device.createTexture({
             label: 'yellow F on red',
-            size: [2, 2],
+            size: [1, 1],
             format: 'rgba8unorm',
             usage:
                 GPUTextureUsage.TEXTURE_BINDING |
@@ -20,15 +20,12 @@ export class Texture2x2 extends Texture {
         });
         const textureDate = new Uint8Array([
             255, 255, 255, 255,
-            255, 255, 255, 255,
-            255, 255, 255, 255,
-            255, 255, 255, 255,
         ]);
         this.device.queue.writeTexture(
             { texture: this.texture },
             textureDate,
-            { bytesPerRow: 2 * 4 },
-            { width: 2, height: 2 },
+            { bytesPerRow: 1 * 4 },
+            { width: 1, height: 1 },
         );
     }
     updateSelf(): void {

@@ -6,7 +6,6 @@ import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
 import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
 import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
 import { TextureMaterial } from "../../../../src/we/core/material/standard/textureMaterial";
-import { Texture2x2 } from "../../../../src/we/core/texture/Texture2x2";
 
 declare global {
   interface Window {
@@ -47,11 +46,11 @@ let colorMaterial = new ColorMaterial({
   color: [0, 0.5, 0.5, 1]
 });
 
-// let texture2x2 = new Texture2x2(scene.device);//ok
-let texture2x2 = scene.resourcesGPU.weTextureOfString.get("2x2");//ok
+// let DefaultTexture = new DefaultTexture(scene.device);//ok
+let DefaultTexture = scene.resourcesGPU.weTextureOfString.get("default");//ok
 let textureMaterial = new TextureMaterial({
   textures: {
-    color: texture2x2,
+    color: DefaultTexture,
   },
 });
 

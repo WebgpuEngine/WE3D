@@ -333,6 +333,7 @@ export class ResourceManagerOfGPU {
         this.check(this.TT2TTPF);
 
         this.check(this.shaderModuleOfString);
+        this.check(this.weTextureOfString);
 
 
         this.check(this.resources);
@@ -378,6 +379,7 @@ export enum E_resourceKind {
     TT2TTP = "TT2TTP",
     TT2TTPF = "TT2TTPF",
     shaderModuleOfString = "shaderModuleOfString",
+    weTextureOfString = "weTextureOfString",
 }
 
 class GPUBindGroupEntryImpl implements GPUBindGroupEntry {
