@@ -17,6 +17,7 @@ import { pickupManager } from "../pickup/pickupManager";
 import { PostProcessManager } from "../postprocess/postProcessManager";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
+import { DefaultCubeTexture } from "../texture/defaultCubeTexture";
 import { DefaultTexture } from "../texture/defaultTexture";
 import { TextureManager } from "../texture/textureManager";
 import { AA, eventOfScene, IV_Scene, IJ_Scene, userDefineEventCall, E_ToneMappingType } from "./base";
@@ -423,6 +424,9 @@ export class Scene {
         let textureDefault = new DefaultTexture(device);        
         this.resourcesGPU.textureOfString.set("default", textureDefault.texture);
         this.resourcesGPU.weTextureOfString.set("default", textureDefault);
+        let cubeTextureDefault = new DefaultCubeTexture(device);
+        this.resourcesGPU.textureOfString.set("defaultCube", cubeTextureDefault.texture);
+        this.resourcesGPU.weTextureOfString.set("defaultCube", cubeTextureDefault);
         this.root = new RootManager(this);
         await this.root.init(this);
         this.renderManager = new RenderManager(this);

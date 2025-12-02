@@ -9,7 +9,7 @@ import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_s
 import { SHT_materialPBRFS_defer_mergeToVS, SHT_materialPBRFS_defer_MSAA_mergeToVS, SHT_materialPBRFS_mergeToVS, SHT_materialPBRFS_MSAA_info_mergeToVS, SHT_materialPBRFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/pbrMaterial";
 import { E_TextureChannel, I_BaseTexture, T_textureSourceType } from "../../texture/base";
 import { Texture } from "../../texture/texture";
-import { E_MaterialType, E_MaterialUniformKind, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, I_PBRUniformBundle, IV_BaseMaterial } from "../base";
+import { E_MaterialType, E_MaterialUniformKind, E_TextureType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, I_MaterialUniformTextureBundle, IV_BaseMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 
@@ -38,7 +38,7 @@ export class PBRMaterial extends BaseMaterial {
     declare textures: {
         [name: string]: T_ThisTexturesType
     };
-    PBRTextureChannel: I_PBRUniformBundle[] = [
+    PBRTextureChannel: I_MaterialUniformTextureBundle[] = [
         {
             kind: E_MaterialUniformKind.value,
             value: [1, 1, 1, 0],
@@ -88,14 +88,30 @@ export class PBRMaterial extends BaseMaterial {
             textureChannel: E_TextureChannel.RGB,
             reMap: [0, 1],
         },
-        {
-            kind: E_MaterialUniformKind.notUse,
-            value: [1, 1, 1, 0],
-            textureName: E_TextureType.depthMap,
-            textureChannel: E_TextureChannel.R,
-            reMap: [0, 1],
-        },
-
+        //延迟，暂时不考虑depthMap
+        // {
+        //     kind: E_MaterialUniformKind.notUse,
+        //     value: [1, 1, 1, 0],
+        //     textureName: E_TextureType.depthMap,
+        //     textureChannel: E_TextureChannel.R,
+        //     reMap: [0, 1],
+        // },
+        //延迟，暂时不考虑lightMap
+        // {
+        //     kind: E_MaterialUniformKind.notUse,
+        //     value: [1, 1, 1, 0],
+        //     textureName: E_TextureType.lightMap,
+        //     textureChannel: E_TextureChannel.RGB | E_TextureChannel.R,//需要选择是RGB还是R
+        //     reMap: [0, 1],
+        // },
+        //延迟，暂时不考虑EnvMap，在IBL中实现
+        // {
+        //     kind: E_MaterialUniformKind.notUse,
+        //     value: [1, 1, 1, 0],
+        //     textureName: E_TextureType.EnvMap,
+        //     textureChannel: E_TextureChannel.R,
+        //     reMap: [0, 1],
+        // },
     ];
     sampler!: GPUSampler;
     uniformPhong: ArrayBuffer = new ArrayBuffer(4 * 4);

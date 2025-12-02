@@ -135,8 +135,7 @@ export interface IV_BaseMaterialStep2 {
 export enum E_TextureType {
     /** 颜色贴图 :rgba*/
     color = "color",
-    /** 立方体贴图 :rgba*/
-    cube = "cube",
+    
     /** 法线贴图 :rgb*/
     normal = "normal",
     /** 金属度贴图 :r*/
@@ -159,6 +158,16 @@ export enum E_TextureType {
     alpha = "alpha",
     /** 自发光贴图 :rgb*/
     emissive = "emissive",
+    /** 立方体贴图 :rgba*/
+    cube = "cube",
+    lightMap = "lightMap",
+    /**
+     * 需要三个纹理
+     * 辐照度cube
+     * 预滤波cube
+     * BRDFLUT :rgba
+     */
+    EnvMap = "EnvMap",
 }
 /**
  * 材质的输出Bundle
@@ -229,7 +238,7 @@ export enum E_MaterialUniformKind{
     vs = 2,
 }
 
-export interface I_PBRUniformBundle {
+export interface I_MaterialUniformTextureBundle {
     /**种类 */
     kind: E_MaterialUniformKind,
     /**

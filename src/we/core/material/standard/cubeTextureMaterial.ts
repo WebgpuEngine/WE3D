@@ -22,6 +22,7 @@ import { SHT_materialCubePositionTextureFS_mergeToVS, SHT_materialCubePositionTe
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { SHT_materialTextureFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/textureMaterial";
 import { SHT_materialColorFS_MSAA_info_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
+import { Texture } from "../../texture/texture";
 
 export interface IV_CubeTextureMaterial extends IV_TextureMaterial {
     cubeType?: "sky" | "cube"
@@ -43,9 +44,6 @@ export class CubeTextureMaterial extends TextureMaterial {
         if (this.inputValues.textures[E_TextureType.cube] == undefined) {
             throw new Error("CubeTextureMaterial 缺少cubeTexture");
         }
-        if (typeof this.inputValues.textures[E_TextureType.cube] != "string") {
-            throw new Error("CubeTextureMaterial cubeTexture 必须为字符串");
-        }
         if (this.inputValues.samplerFilter == undefined) {
             this.sampler = this.device.createSampler({
                 magFilter: "linear",
@@ -58,14 +56,21 @@ export class CubeTextureMaterial extends TextureMaterial {
                 minFilter: this.inputValues.samplerFilter,
             });
         }
+        if (this.inputValues.textures[E_TextureType.cube] instanceof Texture) {
+            this.textures[E_TextureType.cube] = this.inputValues.textures[E_TextureType.cube];
+        }
+        else if (typeof this.inputValues.textures[E_TextureType.cube] == "string") {
 
-        let textureInstace = new CubeTexture({ source: this.inputValues.textures[E_TextureType.cube] }, this.device, this.scene);
-        await textureInstace.init(this.scene);
-        this.textures[E_TextureType.cube] = textureInstace;
 
+            let textureInstace = new CubeTexture({ source: this.inputValues.textures[E_TextureType.cube] }, this.device, this.scene);
+            await textureInstace.init(this.scene);
+            this.textures[E_TextureType.cube] = textureInstace;
+        }
+        else {
+            throw new Error("CubeTextureMaterial cubeTexture 必须为字符串 或 CubeTexture 实例");
+        }
         // this.countOfTexturesOfFineshed++;
         this._state = E_lifeState.finished;
-
     }
     checkSamplerBindingType() {
         if (this.sampler == undefined) {
@@ -139,7 +144,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         binding++;
 
         ////////////////shader 模板格式化部分
-    
+
         // template = SHT_materialCubeTextureFS_mergeToVS;
         for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
             code += perOne.code;
