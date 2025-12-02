@@ -9,6 +9,7 @@ attributes: st_location,
   $position
   $normal 
   $uv
+  $uv1
   $color
   var vsOutput : VertexShaderOutput;  
   $vsOutput

@@ -1037,6 +1037,7 @@ export class DrawCommandGenerator {
     formatShaderCode(templateFinal: I_ShaderTemplate_Final, refName: string[], locations: string[]): string {
         let groupAndBindingString: string = "";
         let shaderCode: string = "";
+        //合并bindingGroupString 和shaderCode
         for (let i in templateFinal) {
             let perPart = templateFinal[i];
             for (let i_single in perPart) {
@@ -1048,12 +1049,15 @@ export class DrawCommandGenerator {
                 }
             }
         }
+        //反射attribute
         for (let i in SHT_refDCG) {
             if (i == "replace") {
                 for (let perReplace of SHT_refDCG.replace!) {
+                    //替换代码
                     if (perReplace.replaceType == E_shaderTemplateReplaceType.replaceCode) {
                         shaderCode = shaderCode.replace(perReplace.replace!, perReplace.replaceCode!);
                     }
+                    //替换选择代码
                     else if (perReplace.replaceType == E_shaderTemplateReplaceType.selectCode) {
                         if (refName.indexOf(perReplace.check!) != -1) {
                             shaderCode = shaderCode.replace(perReplace.replace, perReplace.selectCode![1]);
@@ -1062,6 +1066,7 @@ export class DrawCommandGenerator {
                             shaderCode = shaderCode.replace(perReplace.replace, perReplace.selectCode![0]);
                         }
                     }
+                    //替换值值
                     else if (perReplace.replaceType == E_shaderTemplateReplaceType.value) {
                         if (perReplace.name == "refName") {
                             let locationString: string = locations.join("\n");

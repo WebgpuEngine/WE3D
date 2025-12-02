@@ -96,7 +96,7 @@ export interface I_singleShaderTemplate_Final {
     binding?: number,
     /** shader模板是否动态 */
     dynamic?: boolean,
-     owner: any,
+    owner: any,
 }
 /**
  * 最终的模板内容
@@ -303,7 +303,7 @@ export var SHT_refDCG: I_singleShaderTemplate = {
             replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
             check: "color",
             selectCode: [
-                " let color= vec3f(0.0,0.0,0.0); \n ",
+                " let color= vec3f(1.0,1.0,1.0); \n ",
                 " let color = attributes.color; \n ",
             ],
         },
@@ -325,8 +325,18 @@ export var SHT_refDCG: I_singleShaderTemplate = {
             replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
             check: "uv",
             selectCode: [
-                " let uv= vec4f(0.0,0.0,0.0,0.0); \n ",
-                " let uv =vec4f(attributes.uv,0.0,0.0); \n ",
+                " var uv= vec4f(0.0,0.0,0.0,0.0); \n ",
+                " var uv =vec4f(attributes.uv,0.0,0.0); \n ",
+            ],
+        },
+        {
+            name: "refName",
+            replace: "$uv1",
+            replaceType: E_shaderTemplateReplaceType.selectCode,                    //replaceType="selectCode",检查是否有属性,并根据check的检查属性进行替换
+            check: "uv1",
+            selectCode: [
+                "",
+                " uv[2]= attributes.uv1[0]; \n uv[3]= attributes.uv1[1]; \n ",
             ],
         },
     ]
