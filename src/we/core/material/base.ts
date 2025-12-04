@@ -4,6 +4,7 @@ import { BaseEntity } from "../entity/baseEntity";
 import { Scene } from "../scene/scene";
 import { I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { E_TextureChannel, I_mipmap } from "../texture/base";
+import { BaseTexture } from "../texture/baseTexture";
 
 export enum E_MaterialType {
     /** 颜色材质 */
@@ -102,6 +103,8 @@ export interface IV_BaseMaterial extends I_Update {
      * 默认不透明：没有此参数
      */
     transparent?: T_TransparentOfMaterial,
+
+    //以下部分为 material 的 default sampler
     /** 
      * 1、简单设置采样器模式，如果有samplerDescriptor设置 ，则忽略此设置 
      * 2、采样器过滤模式，默认为linear
@@ -118,7 +121,7 @@ export interface IV_BaseMaterial extends I_Update {
      */
     samplerBindingType?: GPUSamplerBindingType,
 
-    mipmap?: I_mipmap
+    // mipmap?: I_mipmap
 
 }
 /**三段式初始化的第二步：init */
@@ -135,7 +138,7 @@ export interface IV_BaseMaterialStep2 {
 export enum E_TextureType {
     /** 颜色贴图 :rgba*/
     color = "color",
-    
+
     /** 法线贴图 :rgb*/
     normal = "normal",
     /** 金属度贴图 :r*/
@@ -151,7 +154,7 @@ export enum E_TextureType {
     /** 环境光遮蔽贴图 :r */
     ao = "ao",
     // /** 深度贴图 */
-    depthMap = "depthMap",//这个是深度|高度|视差贴图，前面已有parallax
+    depthMap = "depthmap",//这个是深度|高度|视差贴图，前面已有parallax
     /** 视频贴图 :rgb */
     video = "video",
     /** 透明度贴图 :r*/
@@ -167,7 +170,10 @@ export enum E_TextureType {
      * 预滤波cube
      * BRDFLUT :rgba
      */
-    EnvMap = "EnvMap",
+    envMap = "envmap",
+    irradianceMap = "irradianceMap",
+    perfilteredMap = "perfilteredMap",
+    brdfLUT = "brdfLUT",
 }
 /**
  * 材质的输出Bundle
@@ -228,7 +234,7 @@ export interface I_UniformBundleOfMaterial {
      * 1：texture
      * 2：vs
      */
-export enum E_MaterialUniformKind{
+export enum E_MaterialUniformKind {
     notUse = -1,
     value = 0,
     texture = 1,
@@ -255,5 +261,11 @@ export interface I_MaterialUniformTextureBundle {
     value: [number, number, number, number],
     textureName: E_TextureType,
     textureChannel: E_TextureChannel,
-    reMap: [number,number],
+    extra?: [number, number],
+    texture?: BaseTexture,
+    sampler?: GPUSampler,
+    samplerBindingType?: GPUSamplerBindingType,
+    // reMap: [number,number],
 }
+
+

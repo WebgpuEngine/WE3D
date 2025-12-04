@@ -41,11 +41,11 @@ let camera = new PerspectiveCamera({
 await scene.add(camera);
 
 
-let onelight= new DirectionalLight({
+let onelight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [0, 1, 0],
   intensity: 1,
-  
+
 });
 await scene.add(onelight);
 
@@ -59,8 +59,8 @@ await scene.add(ambientLight);
 
 
 let geometry = new SphereGeometry({
-    widthSegments: 128,
-    heightSegments: 128,
+  widthSegments: 128,
+  heightSegments: 128,
 
 });
 
@@ -68,11 +68,11 @@ let geometry = new SphereGeometry({
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]
 // });
-let PBROption:IV_PBRMaterial={
+let PBROption: IV_PBRMaterial = {
   textures: {
-    albedo:  [1.0, 0.71, 0.29],
-    metallic: 0.91,
-    roughness: 0.31,
+    albedo: { value: [1.0, 0.71, 0.29] },
+    metallic: { value: 0.91 },
+    roughness: { value: 0.31 },
   }
 }
 let pbrMaterial = new PBRMaterial(PBROption);

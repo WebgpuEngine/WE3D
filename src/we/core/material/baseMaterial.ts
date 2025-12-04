@@ -12,6 +12,9 @@ import { E_resourceKind } from "../resources/resourcesGPU";
 import { I_mipmap } from "../texture/base";
 import { Clock } from "../scene/clock";
 import { E_GBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
+import { getSampler } from "../sampler/baseFunction";
+import { Texture } from "../texture/texture";
+import { CubeTexture } from "../texture/cubeTexxture";
 
 
 
@@ -19,7 +22,7 @@ import { E_GBufferNames, V_TransparentGBufferNames } from "../gbuffers/base";
 export abstract class BaseMaterial extends RootGPU {
     declare inputValues: IV_BaseMaterial;
 
-    kind!:E_MaterialType;
+    kind!: E_MaterialType;
 
     /**
      * blending混合的状态interface
@@ -47,7 +50,15 @@ export abstract class BaseMaterial extends RootGPU {
     /**
      * 材质的sampler是否存在，不存在就创建一个。
     */
-    _samplerBindingType: GPUSamplerBindingType = "filtering";
+    // _samplerBindingType: GPUSamplerBindingType = "filtering";
+    defaultSamplerBindingType: GPUSamplerBindingType = "filtering";
+
+    /**默认的sampler */
+    defaultSampler!: GPUSampler;
+    /**默认的2D纹理 */
+    defaultTexture2D!: Texture;
+    /**默认的3D纹理 */
+    defaultTexture3D!: CubeTexture;
 
     /**
      * mipmap设置
@@ -71,7 +82,8 @@ export abstract class BaseMaterial extends RootGPU {
 
 
     /**
-     * 不透明、TO、TT、TTP、TTPF公用的uniform
+     * 不透明、TO、TT、TTP、TTPF公用的uniform(目的：保证所有的uniform绑定槽号是相同的，不变化的)
+     * 
      * 1、bindingNumber 绑定的槽号的通用的计数器。
      *      只在第一次计数，然后不要再增加。
      *      不透明，TO,TT，三个相同，其他TTP、TTPF的特殊的在此数字之后，不需要增加到此计数器
@@ -105,7 +117,7 @@ export abstract class BaseMaterial extends RootGPU {
             throw new Error("samplerDescriptor 必须指定samplerBindingType")
         }
 
-        if (input?.mipmap) this._mipmap = input.mipmap;
+        // if (input?.mipmap) this._mipmap = input.mipmap;
         this._state = E_lifeState.unstart;
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,9 +145,13 @@ export abstract class BaseMaterial extends RootGPU {
     async init(scene: Scene, parent: RootGPU, renderID: number = 0): Promise<number> {
         // this._shadow = (parent as BaseEntity)._shadow;
         this.renderID = renderID
+        this.scene = scene;
+        this.defaultTexture2D = this.scene.resourcesGPU.weTextureOfString.get("default") as Texture;
+        this.defaultTexture3D = this.scene.resourcesGPU.weTextureOfString.get("defaultCube") as CubeTexture;
+        this.defaultSampler = this.checkSampler(this.inputValues);
+        this.resourcesGPU = this.scene.resourcesGPU;
         await super.init(scene, parent, renderID);
 
-        this.resourcesGPU = this.scene.resourcesGPU;
         this.setTO();
         this.scene.materialManager.add(this);
         // this._state == E_lifeState.finished;
@@ -163,7 +179,7 @@ export abstract class BaseMaterial extends RootGPU {
      * @param startBinding number
      * @returns I_materialBundleOutput
      */
-    abstract getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput ;
+    abstract getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput;
     /**
      * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
      * 涉及三个部分：
@@ -450,8 +466,7 @@ export abstract class BaseMaterial extends RootGPU {
             if (this.scene.resourcesGPU.cameraToEntryOfDepthTT.has(renderObject.UUID)) {
                 uniform1 = this.scene.resourcesGPU.cameraToEntryOfDepthTT.get(renderObject.UUID) as I_dynamicTextureEntryForView;
             }
-            else
-                 {
+            else {
                 uniform1 = {
                     label: "colorTT camera depth of " + renderObject.UUID,
                     binding: bindingNumber,
@@ -691,30 +706,42 @@ export abstract class BaseMaterial extends RootGPU {
      * @returns GPUSampler 材质的sampler
      */
     checkSampler(input: IV_BaseMaterial): GPUSampler {
-        let sampler: GPUSampler;
-        if (input.samplerFilter == undefined) {
-            // this.sampler = this.device.createSampler({
-            //     magFilter: "linear",
-            //     minFilter: "linear",
-            // });
-            sampler = this.scene.resourcesGPU.getSampler("linear") as GPUSampler;
-            this._samplerBindingType = "filtering";
-        }
-        else if (input.samplerDescriptor) {
-            if (this.scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.samplerOfString)) {
-                sampler = this.scene.resourcesGPU.get(input.samplerDescriptor.label!, E_resourceKind.samplerOfString) as GPUSampler;
-            }
-            else {
-                sampler = this.device.createSampler(this.inputValues.samplerDescriptor);
-                this.scene.resourcesGPU.set(this.inputValues.samplerDescriptor, sampler, E_resourceKind.samplerOfString);
-                this.mapList.push({ key: input.samplerDescriptor, type: E_resourceKind.samplerOfString });
-            }
-            this._samplerBindingType = input.samplerBindingType!;
-        }
-        else {
-            sampler = this.scene.resourcesGPU.getSampler("nearest") as GPUSampler;//nearest ,这里只用到了简单的linear和nearest
-            this._samplerBindingType = "non-filtering";
-        }
+        // let sampler: GPUSampler;
+        // if (input.samplerFilter == undefined) {
+        //     // this.sampler = this.device.createSampler({
+        //     //     magFilter: "linear",
+        //     //     minFilter: "linear",
+        //     // });
+        //     sampler = this.scene.resourcesGPU.getSampler("linear") as GPUSampler;
+        //     this._samplerBindingType = "filtering";
+        // }
+        // else if (input.samplerFilter) {
+        //     sampler = this.scene.resourcesGPU.getSampler(input.samplerFilter) as GPUSampler;
+        //     if (input.samplerFilter == "nearest")
+        //         this._samplerBindingType = "non-filtering";
+        //     else
+        //         this._samplerBindingType = "filtering";
+        // }
+        // else if (input.samplerDescriptor) {
+        //     if (this.scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.samplerOfString)) {
+        //         sampler = this.scene.resourcesGPU.get(input.samplerDescriptor.label!, E_resourceKind.samplerOfString) as GPUSampler;
+        //     }
+        //     else {
+        //         sampler = this.device.createSampler(this.inputValues.samplerDescriptor);
+        //         this.scene.resourcesGPU.set(this.inputValues.samplerDescriptor, sampler, E_resourceKind.samplerOfString);
+        //         this.mapList.push({ key: input.samplerDescriptor, type: E_resourceKind.samplerOfString });
+        //     }
+        //     this._samplerBindingType = input.samplerBindingType!;
+        // }
+        // else {
+        //     sampler = this.scene.resourcesGPU.getSampler("nearest") as GPUSampler;//nearest ,这里只用到了简单的linear和nearest
+        //     this._samplerBindingType = "non-filtering";
+        // }
+        // if (input.samplerBindingType)
+        //     this._samplerBindingType = input.samplerBindingType!;
+        let { sampler, bindingType } = getSampler(input, this.scene);
+        this.defaultSamplerBindingType = bindingType;
+        this.defaultSampler = sampler;
         return sampler;
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////

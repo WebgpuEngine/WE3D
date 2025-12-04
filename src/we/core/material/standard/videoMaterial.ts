@@ -36,7 +36,6 @@ export interface IV_VideoMaterial extends IV_BaseMaterial {
 export class VideoMaterial extends BaseMaterial {
 
 
-    sampler!: GPUSampler;
     declare inputValues: IV_VideoMaterial;
     // /**是否上下翻转Y轴 */
     // _upsideDownY: boolean;
@@ -71,7 +70,7 @@ export class VideoMaterial extends BaseMaterial {
     }
 
     async readyForGPU(): Promise<any> {
-        this.sampler = this.checkSampler(this.inputValues);
+        this.defaultSampler = this.checkSampler(this.inputValues);
         if (this.inputValues.textures[E_TextureType.video] instanceof VideoTexture) {
             this.textures[E_TextureType.video] = this.inputValues.textures[E_TextureType.video] as VideoTexture;
         }
@@ -168,14 +167,14 @@ export class VideoMaterial extends BaseMaterial {
         //uniform sampler
         let uniformSampler: GPUBindGroupEntry = {
             binding: binding,
-            resource: this.sampler,
+            resource: this.defaultSampler,
         };
         //uniform sampler layout
         let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
             binding: binding,
             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
             sampler: {
-                type: this._samplerBindingType,
+                type: this.defaultSamplerBindingType,
             },
         };
         //添加到resourcesGPU的Map中

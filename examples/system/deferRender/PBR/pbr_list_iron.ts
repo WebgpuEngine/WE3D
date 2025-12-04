@@ -76,9 +76,9 @@ for (let i = 1; i < n; i++) {//X方向，roughness
   for (let j = 1; j < n; j++) { //Y方向，metallic
     let PBROption: IV_PBRMaterial = {
       textures: {
-        albedo: [0.56, 0.57, 0.58],
-        metallic: j / n,
-        roughness: i / n,
+        albedo: { value: [0.56, 0.57, 0.58] },
+        metallic: { value: j / n },
+        roughness: { value: i / n },
       }
     }
     let pbrMaterial = new PBRMaterial(PBROption);

@@ -6,7 +6,7 @@ var uv:vec2f = fsInput.uv.xy;
 var uv1:vec2f = fsInput.uv.zw;
 //GBuffer的通用值
 var depth:f32 = fsInput.position.z;
-var materialColor:vec4f = vec4f(0);
+var materialColor:vec4f = vec4f(1);
 var entityID:u32 = fsInput.entityID;
 var normal:vec3f = fsInput.normal;
 var RMAO:vec3f = vec3f(0,0,0);
@@ -25,4 +25,10 @@ var shadowKind:u32 = 0;
 var acceptlight:u32 = 1;
 var materialKind:u32 = 2;
 var defer_4xU8InF16:u32 = 0;
+//displace map
+var depthmap:f32 = 0;
+//alpha
+var alphamap:f32 = 1;
+//envmap
+var envmap_enable:bool = false;
 //commonGBufferValue.wgsl end

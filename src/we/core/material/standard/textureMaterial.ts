@@ -46,7 +46,6 @@ export class TextureMaterial extends BaseMaterial {
 
 
 
-    sampler!: GPUSampler;
     declare inputValues: IV_TextureMaterial;
     // /**是否上下翻转Y轴 */
     // _upsideDownY: boolean;
@@ -93,27 +92,7 @@ export class TextureMaterial extends BaseMaterial {
     }
 
     async readyForGPU(): Promise<any> {
-        this.sampler = this.checkSampler(this.inputValues);
-        // if (this.inputValues.samplerFilter == undefined) {
-        //     // this.sampler = this.device.createSampler({
-        //     //     magFilter: "linear",
-        //     //     minFilter: "linear",
-        //     // });
-        //     this.sampler = this.scene.resourcesGPU.getSampler("linear");
-        // }
-        // else if(this.inputValues.samplerDescriptor){
-        //     if(this.scene.resourcesGPU.has(this.inputValues.samplerDescriptor,E_resourceKind.samplerOfString)){
-        //         this.sampler = this.scene.resourcesGPU.getSampler(this.inputValues.samplerDescriptor.label!,E_resourceKind.samplerOfString);
-        //     }
-        //     else {
-        //         this.sampler = this.device.createSampler(this.inputValues.samplerDescriptor);
-        //         this.scene.resourcesGPU.setSampler(this.inputValues.samplerDescriptor.label!,this.sampler,E_resourceKind.samplerOfString);
-        //     }
-        // }
-        // else {
-        //     this.sampler = this.scene.resourcesGPU.getSampler(this.inputValues.samplerFilter,"nearest");//nearest ,这里只用到了简单的linear和nearest
-        // }
-
+        this.defaultSampler = this.checkSampler(this.inputValues);
         for (let key in this.inputValues.textures) {
             let texture = this.inputValues.textures[key as keyof IV_TextureMaterial["textures"]]!;
             if (texture instanceof Texture) {
@@ -185,14 +164,14 @@ export class TextureMaterial extends BaseMaterial {
                 //uniform sampler
                 let uniformSampler: GPUBindGroupEntry = {
                     binding: binding,
-                    resource: this.sampler,
+                    resource: this.defaultSampler,
                 };
                 //uniform sampler layout
                 let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
                     binding: binding,
                     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                     sampler: {
-                        type: this._samplerBindingType,
+                        type: this.defaultSamplerBindingType,
                     },
                 };
                 //添加到resourcesGPU的Map中

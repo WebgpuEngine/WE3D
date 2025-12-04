@@ -29,7 +29,11 @@ export interface I_BaseTexture extends I_Update {  /**纹理名称 */
      * 2、在material中设置，会覆盖此类设置。
      */
     samplerDescriptor?: GPUSamplerDescriptor,
-
+    /** 采样器绑定类型，默认是filtering
+     * 如果指定了samplerDescriptor，则必须指定samplerBindingType
+     */
+    samplerBindingType?: GPUSamplerBindingType,
+    
     mipmap?: I_mipmap
 
     /**纹理的premultipliedAlpha，只在有透明的情况下有效。
@@ -61,6 +65,10 @@ export interface I_BaseTexture extends I_Update {  /**纹理名称 */
 
 }
 
+export function isI_BaseTexture(texture: any): texture is I_BaseTexture {
+    return texture && texture.source;
+}
+
 export interface I_mipmap {
     /**是否生成纹理的mipmap*/
     enable: boolean,
@@ -84,7 +92,7 @@ export enum E_TextureChannel {
     // GB,
     // GA,
     // BA
-    //0,1,2,3,4,5,6
-    R,G,B,A,RGB,RGBA
+    //0,1,2,3,4,5,6,7,8,9
+    R, G, B, A, RG, RB, RA, GB, BA, RGB, RGBA,User
 }
 

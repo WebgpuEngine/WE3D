@@ -75,9 +75,9 @@ let geometry = new SphereGeometry({
 // });
 let PBROption:IV_PBRMaterial={
   textures: {
-    albedo:  [1.0, 0.71, 0.29],
-    metallic: 0.91,
-    roughness: 0.31,
+    albedo: { value: [1.0, 0.71, 0.29] },
+    metallic: { value: 0.91 },
+    roughness: { value: 0.31 },
   }
 }
 let pbrMaterial = new PBRMaterial(PBROption);

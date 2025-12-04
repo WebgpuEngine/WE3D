@@ -1,6 +1,7 @@
 import { E_lifeState } from "../base/coreDefine";
 import { commmandType } from "../command/base";
 import { RootGPU } from "../organization/root";
+import { getSampler } from "../sampler/baseFunction";
 import { Clock } from "../scene/clock";
 import { Scene } from "../scene/scene";
 import { I_BaseTexture, T_textureSourceType } from "./base";
@@ -27,7 +28,15 @@ export abstract class BaseTexture extends RootGPU {
 
     textureFormat: GPUTextureFormat = 'rgba8unorm-srgb';
 
-
+    /**
+     * 指定的纹理的采样器，由I_BaseTexture的sampler参数指定。
+     * 默认：没有，使用材质的默认采样器。
+     */
+    sampler: GPUSampler | undefined;
+    /**
+     * 材质的sampler是否存在，不存在就创建一个。
+    */
+    _samplerBindingType: GPUSamplerBindingType | undefined;
 
     /**纹理是否完成，这个是需要处理的（异步数据的加载后，改为true，或没有异步数据加载，在init()中改为true）；
      * constructor中设置为false。 
@@ -35,7 +44,7 @@ export abstract class BaseTexture extends RootGPU {
     */
     _state: E_lifeState = E_lifeState.unstart;
 
-    commands:commmandType[] = [];
+    commands: commmandType[] = [];
 
     constructor(inputValues: I_BaseTexture, device: GPUDevice, scene?: Scene) {
         super()
@@ -59,8 +68,22 @@ export abstract class BaseTexture extends RootGPU {
             this.scene = scene;
             this.setRootENV(scene)
         }
-    }
+        if (scene != undefined) {
+            this.checkSampler(inputValues);
 
+        }
+    }
+    /**
+     * 检查I_BaseTexture的sampler是否存在，不存在，返回使用材质默认的。
+     * @param input I_BaseTexture 纹理的输入参数
+     */
+    checkSampler(input: I_BaseTexture) {
+        if (input.samplerDescriptor == undefined || input.samplerFilter == undefined) {
+            let { sampler, bindingType } = getSampler(input, this.scene);
+            this._samplerBindingType = bindingType;
+            this.sampler = sampler;
+        }
+    }
     registerToManager() {
         if (this.scene == undefined) {
             throw new Error(" scene of texture is undefined");

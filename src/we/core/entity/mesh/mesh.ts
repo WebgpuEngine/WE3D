@@ -71,7 +71,7 @@ export class Mesh extends EntityBundleMaterial {
     attributes: I_EntityAttributes = {
         vertices: {},
         vertexStepMode: "vertex",
-        indexes: [],
+        // indexes: [],
     };
 
 
@@ -105,7 +105,7 @@ export class Mesh extends EntityBundleMaterial {
         else {
             throw new Error("Mesh must have geometry or attribute data");
         }
-        if (input.wireFrame) {
+        if (input.wireFrame &&  Array.isArray(input.wireFrame.indexes)) {//不考虑输入的indexes是GPUBuffer的情况，比如gltf，也就是说只有number[]的情况，可以使用wireframe
             this._wireframe.enable = input.wireFrame.enable;
             if (input.wireFrame.wireFrameOnly) {
                 this._wireframe.wireFrameOnly = true;
@@ -122,7 +122,7 @@ export class Mesh extends EntityBundleMaterial {
             }
             else if (input.attributes.data) {
                 if (input.attributes.data.indexes) {
-                    this._wireframe.indexes = this.createWrieFrame([], input.attributes.data.indexes);
+                    this._wireframe.indexes = this.createWrieFrame([], input.attributes.data.indexes as number[]);
                 }
                 else {
                     let positionTemp;
@@ -132,12 +132,12 @@ export class Mesh extends EntityBundleMaterial {
                     if (attributes["position"] !== undefined) {
                         positionTemp = attributes["position"];
                     }
-                    else {  //没有position属性，就取第一个属性
-                        for (let i in attributes) {
-                            positionTemp = attributes[i];
-                            break;
-                        }
-                    }
+                    // else {  //没有position属性，就取第一个属性
+                    //     for (let i in attributes) {
+                    //         positionTemp = attributes[i];
+                    //         break;
+                    //     }
+                    // }
                     if (positionTemp === undefined) {
                         throw new Error("Mesh constructor: wireFrame must have position attribute");
                     }
@@ -167,6 +167,9 @@ export class Mesh extends EntityBundleMaterial {
             else {
                 throw new Error("Mesh constructor: wireFrame must have geometry or attribute data");
             }
+        }
+        else {
+            this._wireframe.enable = false;//如果没有indexes不是number[]，就不创建线框
         }
         if (input.material == undefined) {
             console.warn("Mesh constructor: material is undefined");
@@ -490,7 +493,7 @@ export class Mesh extends EntityBundleMaterial {
     createWrieFrame(position: number[], indeices: number[]) {
         let list: { [name: string]: number[] };
         list = {};
-        if (indeices.length == 0) {
+        if (indeices.length == 0) {//如果没有索引，就按三角形来创建线框
             let i_index = 0;
             for (let i = 0; i < position.length / 3; i++) {
                 list[i_index++] = [i, i + 1];
@@ -499,7 +502,7 @@ export class Mesh extends EntityBundleMaterial {
 
             }
         }
-        else {
+        else {//如果有索引，就按索引来创建线框
             for (let i = 0; i < indeices.length; i += 3) {
                 let A = indeices[i];
                 let B = indeices[i + 1];

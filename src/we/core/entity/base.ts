@@ -202,7 +202,7 @@ export interface I_EntityAttributes {
     // vertices: Map<string, T_vsAttribute>,
     vertices: { [name in string]: T_vsAttribute },
     vertexStepMode: GPUVertexStepMode,
-    indexes: number[],
+    indexes?: T_indexAttribute,//number[],
 }
 
 /**

@@ -37,7 +37,6 @@ export class PhongMaterial extends BaseMaterial {
   declare textures: {
     [name: string]: Texture
   }
-  sampler!: GPUSampler;
   uniformPhong: ArrayBuffer = new ArrayBuffer(4 * 4);
   color: weColor4 = [1, 1, 1, 1];
   constructor(options: IV_PhongMaterial) {
@@ -68,7 +67,7 @@ export class PhongMaterial extends BaseMaterial {
     throw new Error("Method not implemented.");
   }
   async readyForGPU(): Promise<any> {
-    this.sampler = this.checkSampler(this.inputValues);
+    this.defaultSampler = this.checkSampler(this.inputValues);
     for (let key in this.inputValues.textures) {
       let texture = this.inputValues.textures[key as E_TextureType];
       if (texture && texture instanceof Texture) {
@@ -137,14 +136,14 @@ export class PhongMaterial extends BaseMaterial {
       //uniform sampler
       let uniformSampler: GPUBindGroupEntry = {
         binding: binding,
-        resource: this.sampler,
+        resource: this.defaultSampler,
       };
       //uniform sampler layout
       let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
         binding: binding,
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
         sampler: {
-          type: this._samplerBindingType,
+          type: this.defaultSamplerBindingType,
         },
       };
       //添加到resourcesGPU的Map中

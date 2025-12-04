@@ -78,14 +78,14 @@ console.log(geometry)
 // });
 let PBROption: IV_PBRMaterial = {
   textures: {
-    albedo: { source: "/resource/PBR/rustediron/rustediron2_basecolor.png" },
+    albedo: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_basecolor.png" }},
     // albedo:  [1.0, 0.71, 0.29],
 
-    normal: { source: "/resource/PBR/rustediron/rustediron2_normal.png" },
-    metallic: { source: "/resource/PBR/rustediron/rustediron2_metallic.png" },
+    normal: { textureUrl: { source: "/resource/PBR/rustediron/rustediron2_normal.png" }},
+    metallic: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_metallic.png" }},
     // metallic: 0.91,
 
-    roughness: { source: "/resource/PBR/rustediron/rustediron2_roughness.png" },
+    roughness: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_roughness.png" }},
     // roughness: 0.31,
     
   }

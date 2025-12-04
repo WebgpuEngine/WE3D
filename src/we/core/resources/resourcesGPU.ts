@@ -218,8 +218,12 @@ export class ResourceManagerOfGPU {
                     return this.samplerOfString.get(key);
                 }
                 let linear = this.device.createSampler({
+                    label: "linear",
                     magFilter: "linear",
                     minFilter: "linear",
+                    mipmapFilter: "linear",
+                    addressModeU: "repeat",
+                    addressModeV: "repeat"
                 });
                 this.samplerOfString.set(key, linear);
                 return linear;
@@ -229,11 +233,31 @@ export class ResourceManagerOfGPU {
                     return this.samplerOfString.get(key);
                 }
                 let nearest = this.device.createSampler({
+                    label: "nearest",
                     magFilter: "nearest",
                     minFilter: "nearest",
+                    mipmapFilter: "nearest",
+                    addressModeU: "repeat",
+                    addressModeV: "repeat"
                 });
                 this.samplerOfString.set(key, nearest);
                 return nearest;
+            }
+            else if (key == "cube") {
+                if (this.samplerOfString.has(key)) {
+                    return this.samplerOfString.get(key);
+                }
+                let cube = this.device.createSampler({
+                    label: "cube",
+                    magFilter: "linear",
+                    minFilter: "linear",
+                    mipmapFilter: "linear", // 预滤波贴图需要 mipmap 线性过滤
+                    addressModeU: "clamp-to-edge",
+                    addressModeV: "clamp-to-edge",
+                    addressModeW: "clamp-to-edge" // 立方体贴图的 W 轴
+                });
+                this.samplerOfString.set(key, cube);
+                return cube;
             }
             else {
                 return undefined;

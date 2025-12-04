@@ -44,18 +44,9 @@ export class CubeTextureMaterial extends TextureMaterial {
         if (this.inputValues.textures[E_TextureType.cube] == undefined) {
             throw new Error("CubeTextureMaterial 缺少cubeTexture");
         }
-        if (this.inputValues.samplerFilter == undefined) {
-            this.sampler = this.device.createSampler({
-                magFilter: "linear",
-                minFilter: "linear",
-            });
-        }
-        else {
-            this.sampler = this.device.createSampler({
-                magFilter: this.inputValues.samplerFilter,
-                minFilter: this.inputValues.samplerFilter,
-            });
-        }
+
+        this.defaultSampler = this.checkSampler(this.inputValues);
+
         if (this.inputValues.textures[E_TextureType.cube] instanceof Texture) {
             this.textures[E_TextureType.cube] = this.inputValues.textures[E_TextureType.cube];
         }
@@ -72,14 +63,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         // this.countOfTexturesOfFineshed++;
         this._state = E_lifeState.finished;
     }
-    checkSamplerBindingType() {
-        if (this.sampler == undefined) {
-            this.sampler = this.device.createSampler({
-                magFilter: "linear",
-                minFilter: "linear",
-            });
-        }
-    }
+
     getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
         //    let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
@@ -122,7 +106,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         //uniform sampler
         let uniformSampler: GPUBindGroupEntry = {
             binding: binding,
-            resource: this.sampler,
+            resource: this.defaultSampler,
         };
         //uniform sampler layout
         let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
