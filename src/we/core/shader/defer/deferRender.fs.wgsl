@@ -23,7 +23,7 @@
     let  emissiveIntensity = albedo.a;
     
     var  emissiveRGB = vec3f(0.0);
-    let  emissiveColorRG = decodeF16ToF32x2(albedo.a);
+    let  emissiveColorRG = decodeF16ToF32x2(normal.a);
     emissiveRGB.r = emissiveColorRG.x;
     emissiveRGB.g = emissiveColorRG.y;
 

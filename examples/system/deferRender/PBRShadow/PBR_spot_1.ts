@@ -25,7 +25,7 @@ let input: IV_Scene = {
   backgroudColor: [0, 0., 0., 0.],
   // reversedZ:true,
     deferRender: "color",
-    toneMapping:E_ToneMappingType.acesToSRGB,
+    // toneMapping:E_ToneMappingType.linearToSRGB,
 };
 let scene = await initScene({
   initConfig: input,
@@ -105,7 +105,7 @@ await light1Entity1.addChild(onelight);
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
-       intensity: 0.1
+       intensity: 0.01
 
   }
 )

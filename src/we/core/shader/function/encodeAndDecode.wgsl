@@ -79,7 +79,7 @@ fn decodeF16ToU8x2(data: f32) -> vec2u {
     // 步骤3：转换回 [0.0,1.0] 范围（匹配 RGB8unorm 原始格式）
     return vec2u(r_u8, g_u8);
 }
-//f16->u8x2
+//f16->u8x2->f32x2
 // 输入：从 rgba16float 采样的 f16（范围[0,1]，实际上是 [0,65535]）
 // 输出：解码为 vec2u（每个通道 [0.0, 1.0]，对应 RGB8unorm 格式）
 fn decodeF16ToF32x2(data: f32) -> vec2f {
