@@ -82,10 +82,10 @@ let geometry = new SphereGeometry({
 });
 let PBROption: IV_PBRMaterial = {
   textures: {
-    albedo: { source: "/resource/PBR/rustediron/rustediron2_basecolor.png" },
-    normal: { source: "/resource/PBR/rustediron/rustediron2_normal.png" },
-    metallic: { source: "/resource/PBR/rustediron/rustediron2_metallic.png" },
-    roughness: { source: "/resource/PBR/rustediron/rustediron2_roughness.png" },
+    albedo: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_basecolor.png" }},
+    normal: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_normal.png" }},
+    metallic: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_metallic.png" }},
+    roughness: {textureUrl:{ source: "/resource/PBR/rustediron/rustediron2_roughness.png" }},
   }
 }
 let pbrMaterial = new PBRMaterial(PBROption);
@@ -113,12 +113,12 @@ let planeGeometry = new PlaneGeometry({
 
 let groundMaterialPBROption: IV_PBRMaterial = {
     textures: {
-    albedo: { source: "/resource/PBR/grainy-concrete/grainy-concrete_albedo.png" },
-    normal: { source: "/resource/PBR/grainy-concrete/grainy-concrete_normal-ogl.png" },
+    albedo: {textureUrl:{ source: "/resource/PBR/grainy-concrete/grainy-concrete_albedo.png" }},
+    normal: {textureUrl:{ source: "/resource/PBR/grainy-concrete/grainy-concrete_normal-ogl.png" }},
     metallic:// 0.95,
-    { source: "/resource/PBR/grainy-concrete/grainy-concrete_metallic.png" },
-    roughness: { source: "/resource/PBR/grainy-concrete/grainy-concrete_roughness.png" },
-    ao: { source: "/resource/PBR/grainy-concrete/grainy-concrete_ao.png" },
+    {textureUrl:{ source: "/resource/PBR/grainy-concrete/grainy-concrete_metallic.png" }},
+    roughness: {textureUrl:{ source: "/resource/PBR/grainy-concrete/grainy-concrete_roughness.png" }},
+    ao: {textureUrl:{ source: "/resource/PBR/grainy-concrete/grainy-concrete_ao.png" }},
   }
 }
 let groundMaterial = new PBRMaterial(groundMaterialPBROption);
@@ -134,12 +134,12 @@ await scene.add(groundMesh);
 let groundMaterialPBROption2: IV_PBRMaterial = {
 
   textures: {
-    albedo: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_albedo.png" },
-    normal: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_normal-ogl.png" },
+    albedo: {textureUrl:{ source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_albedo.png" }},
+    normal: {textureUrl:{ source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_normal-ogl.png" }},
     metallic:// 0.95,
-    { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_metallic.png" },
-    roughness: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_roughness.png" },
-    ao: { source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_ao.png" },
+    {textureUrl:{ source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_metallic.png" }},
+    roughness: {textureUrl:{ source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_roughness.png" }},
+    ao: {textureUrl:{ source: "/resource/PBR/laminate-flooring-brown/laminate-flooring-brown_ao.png" }},
   }
 }
 let groundMaterial2 = new PBRMaterial(groundMaterialPBROption2);

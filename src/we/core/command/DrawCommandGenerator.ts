@@ -5,7 +5,7 @@
  */
 
 import type { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, I_viewport, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, I_viewport, T_BindGroupLayout, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
 import { DrawCommand, IV_DrawCommand } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
@@ -161,6 +161,12 @@ export type T_indexAttribute = number[] | I_indexGPUBufferBundle
  * @system  系统参数:camera 或 light
  */
 export interface IV_DC {
+    /**
+     * 是否将shader模型编译为分离的形式
+     * 默认：false，
+     * 如果true，则需要将shader模型编译为分离的形式，即vertex shader和fragment shader分别编译
+     */
+    ShaderModelCompileSplit?: boolean,
     /**是否包括动态资源在binding group中
      * 默认：false，
      * 如果true，则需要动态绑定资源
@@ -196,7 +202,7 @@ export interface IV_DC {
          * 4、如果IV_DC,没有定义system，则uniform不考虑system的BindGroup的问题，即raw模式（NDC）
          */
         uniforms?: T_uniformGroup[],//vs 部分有会 vertex texture
-        unifromLayout?: GPUBindGroupLayoutEntry[][],
+        unifromLayout?: T_BindGroupLayout[],
     },
     render: {
         // code: string,//这里需要进行VS 属性的映射替换
@@ -348,406 +354,12 @@ export class DrawCommandGenerator {
     generateDrawCommand(values: IV_DC) {
         this.inputDC.push(values);//保存每个DC的init参数，为了后续的更新uniform使用（如果其中有update选项）
         //1、buffer资源
-        //1.1、顶点资源
-        let DC_vertexBuffers: GPUBuffer[] = [];//当前DC的顶点列表。之后在DC中passEncoder.setVertexBuffer(parseInt(i), verticesBuffer)使用。
-        let DC_vertexNames: string[] = [];//顶点资源的名称列表，反射code中的内容使用
-        let DC_indexBuffer: GPUBuffer | undefined;//GPUBuffer默认使用uint32的格式。passEncoder.setIndexBuffer(this.indexBuffer, 'uint32');
+        let { DC_vertexBuffers, DC_verticesBufferLayout, DC_localtions, DC_vertexNames, DC_indexBuffer } = this.initVertexPart(values);
 
-        let DC_localtions: string[] = [];//顶点资源的名称列表，反射code中的内容使用
-        let DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
-        let shaderLocation = 0;//最多16个
-        let location_i = 0;
-        if (values.data.vertices) {
-            // for (const [key, value] of values.data.vertices) {
-            for (let key in values.data.vertices) {
-                let value = values.data.vertices[key];
-                let locationString: string = "";
-                let lowKey = key.toLocaleLowerCase();
-                let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                let vertexBuffer: GPUBuffer | undefined;
-                if (Array.isArray(value)) {//标准的数组格式，默认为position等
-                    if (value.length == 0) {
-                        console.warn("顶点属性" + key + "数据为空");
-                    }
-                    let data = new Float32Array(value);//默认:float32
-                    let arrayStride = 4 * 3;
-                    let format: GPUVertexFormat = "float32x3";
-                    switch (lowKey) {
-                        case "position":
-                            arrayStride = 4 * 3;
-                            format = "float32x3";
-                            break;
-                        case "uv":
-                            // case "uv1":
-                            // case "uv2":
-                            arrayStride = 4 * 2;
-                            format = "float32x2";
-                            break;
-                        case "normal":
-                            arrayStride = 4 * 3;
-                            format = "float32x3";
-                            break;
-                        case "color":
-                            arrayStride = 4 * 3;
-                            format = "float32x3";
-                            break;
-                        default:
-                            arrayStride = 4 * 3;
-                            format = "float32x3";
-                            break;
-                    }
-                    let wgsl_value_format = this.getWgslValueFormat(format);
-                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
-
-
-                    //判断是否以及存在顶点GPUBuffer
-                    if (!this.resources.has(value, "vertices")) {
-                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey, data.buffer);
-                        this.resources.set(value, vertexBuffer, "vertices");
-                    }
-                    else {
-                        vertexBuffer = this.resources.get(value, "vertices");
-                    }
-                    //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                    _GPUVertexBufferLayout = {
-                        arrayStride: arrayStride,
-                        attributes: [{
-                            shaderLocation: shaderLocation++,
-                            format: format,
-                            offset: 0,
-                        }],
-                    }
-                }
-                else if ("format" in value && "data" in value) {
-                    let format: GPUVertexFormat = value.format;
-                    let data;//默认:float32
-                    let arrayStride = 4 * 3;
-                    switch (value.format) {//这里只匹配了几种数据，以后视情况而定
-                        case "float32x3":
-                            arrayStride = 4 * 3;
-                            data = new Float32Array(value.data);
-                            break;
-                        case "float32x2":
-                            arrayStride = 4 * 2;
-                            data = new Float32Array(value.data);
-                            break;
-                        case "float32x4":
-                            arrayStride = 4 * 4;
-                            data = new Float32Array(value.data);
-                            break;
-                        case "float32":
-                            arrayStride = 4 * 1;
-                            data = new Float32Array(value.data);
-                            break;
-                        case "uint32":
-                            arrayStride = 4 * 1;
-                            data = new Uint32Array(value.data);
-                            break;
-                        case "uint32x2":
-                            arrayStride = 4 * 2;
-                            data = new Uint32Array(value.data);
-                            break;
-                        case "uint32x3":
-                            arrayStride = 4 * 3;
-                            data = new Uint32Array(value.data);
-                            break;
-                        case "uint32x4":
-                            arrayStride = 4 * 4;
-                            data = new Uint32Array(value.data);
-                            break;
-                        case "sint32":
-                            arrayStride = 4 * 1;
-                            data = new Int32Array(value.data);
-                            break;
-                        case "sint32x2":
-                            arrayStride = 4 * 2;
-                            data = new Int32Array(value.data);
-                            break;
-                        case "sint32x3":
-                            arrayStride = 4 * 3;
-                            data = new Int32Array(value.data);
-                            break;
-                        case "sint32x4":
-                            arrayStride = 4 * 4;
-                            data = new Int32Array(value.data);
-                            break;
-                        default:
-                            arrayStride = 4 * 3;
-                            data = new Float32Array(value.data);
-                            break;
-                    }
-                    let wgsl_value_format = this.getWgslValueFormat(value.format);
-                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
-                    //判断是否以及存在顶点GPUBuffer
-                    if (!this.resources.has(value, "vertices")) {
-                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =" + format, data.buffer);
-                        this.resources.set(value, vertexBuffer, "vertices");
-                    }
-                    else {
-                        vertexBuffer = this.resources.get(value, "vertices");
-                    }
-                    //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                    _GPUVertexBufferLayout = {
-                        arrayStride: arrayStride,
-                        attributes: [{
-                            shaderLocation: shaderLocation++,
-                            format: format,
-                            offset: 0,
-                        }],
-                    }
-                }
-                else if (isVsAttributeMerge(value)) {
-                    let mergeAttribute = value.mergeAttribute
-                    let arrayStride = value.arrayStride;
-                    let data = new Float32Array(value.data);
-                    let attributes: GPUVertexAttribute[] = [];
-                    for (let i in mergeAttribute) {
-                        let item = mergeAttribute[i];
-                        attributes.push({
-                            shaderLocation: shaderLocation++,
-                            format: item.format,
-                            offset: item.offset,
-                        });
-                        let wgsl_value_format = this.getWgslValueFormat(item.format);
-                        locationString += ` @location(${location_i}) ${item.name} : ${wgsl_value_format}  ,`;
-                        location_i++;//合并属性，每个属性都要增加一个location
-                    }
-                    if (!this.resources.has(value, "vertices")) {
-                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =mergeAttribute", data.buffer);
-                        this.resources.set(value, vertexBuffer, "vertices");
-                    }
-                    else {
-                        vertexBuffer = this.resources.get(value, "vertices");
-                    }
-                    _GPUVertexBufferLayout = {
-                        arrayStride: arrayStride,
-                        attributes,
-                    }
-                }
-                else if ("format" in value && value.buffer instanceof GPUBuffer) {
-                    let format = value.format;
-                    let arrayStride = value.arrayStride;
-                    let wgsl_value_format = this.getWgslValueFormat(format);
-                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
-                    vertexBuffer = value.buffer;
-                    _GPUVertexBufferLayout = {
-                        arrayStride: arrayStride,
-                        attributes: [{
-                            shaderLocation: shaderLocation++,
-                            format: format,
-                            offset: 0,
-                        }],
-                    }
-                }
-                else {
-                    console.warn("顶点属性", key, value, " 不能匹配数据");
-                    throw new Error("顶点属性 key, value 不能匹配数据");
-                    continue;
-                }
-                if (values.data.vertexStepMode) {
-                    _GPUVertexBufferLayout.stepMode = values.data.vertexStepMode;
-                }
-
-                DC_verticesBufferLayout.push(_GPUVertexBufferLayout);      //顺序push顶点Buffer的layout
-                DC_localtions.push(locationString);                                  //顺序push顶点名称
-                DC_vertexNames.push(key);                                  //顺序push顶点名称
-
-                if (vertexBuffer) {
-                    DC_vertexBuffers.push(vertexBuffer);             //顺序push顶点Buffer
-                }
-                else {
-                    console.warn("顶点属性", key, value, " 不能匹配数据");
-                    throw new Error("顶点属性 key, value 不能匹配数据");
-                }
-                location_i++;
-            }
-            //1.2、索引资源
-            if (Array.isArray(values.data.indexes)) {
-                if (values.data.indexes && values.data.indexes.length > 0) {
-                    let u32Buffer = new Uint32Array(values.data.indexes);
-                    if (!this.resources.has(values.data.indexes, "indexes")) {
-                        let _indexBuffer = createIndexBuffer(this.device, values.label + " index GPUBuffer", u32Buffer.buffer);
-                        this.resources.set(values.data.indexes, _indexBuffer, "indexes");
-                    }
-                    let index = this.resources.get(values.data.indexes, "indexes");
-                    if (index) {
-                        DC_indexBuffer = index;
-                    }
-                }
-            }
-            else {
-                let indexBundle = values.data.indexes as I_indexGPUBufferBundle;
-                if (indexBundle) {
-                    DC_indexBuffer = indexBundle.buffer;
-                }
-            }
-        }
         //2、bindgroup部分
-        //2.1 、获取 BindGroup 0 以及其layout。camera 和light都从各自的体系获得
-        let DC_bindGroupLayouts: GPUBindGroupLayout[] = [];
-        let DC_bindGroups: GPUBindGroup[] = [];
-        // let DC_bindGroupsDynamic: T_uniformGroup[] = [];
-        // if (values.dynamic && values.dynamic === true) {
-        //     DC_bindGroupsDynamic = values.data.uniforms!;
-        // }
-        let layoutNumber = 0;
-        if (values.system) {
-            let UUID = this.checkUUID(values);
-            if (UUID) {
-                let { bindGroup, bindGroupLayout } = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(UUID, values.system.type);
-                DC_bindGroups.push(bindGroup);
-                DC_bindGroupLayouts.push(bindGroupLayout);
-                layoutNumber++;
-            }
+        let { DC_bindGroups, DC_bindGroupLayouts } = this.initUniformPart(values);
 
-        }
-        if (values.data.uniforms) {
-            for (let i in values.data.uniforms) {
-                if (layoutNumber > 3) break;
-                let perGroup = values.data.uniforms[i];
-
-                //BindGroup，重点1
-                let bindGroup: GPUBindGroup;
-                //BindGroupDesc ,重点1->1.1
-                let bindGroupDesc: GPUBindGroupDescriptor;
-                //BindGroup 的数据入口,主要是buffer的创建需要push,-->1.1.1
-                let bindGroupEntry: GPUBindGroupEntry[] = [];
-
-
-                //BindGroupLayout，重点2
-                let bindGroupLayout: GPUBindGroupLayout;
-                //BindGroup 的layout 描述，重点2->2.1
-                let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                    label: `BGLD(${layoutNumber})@${this.clock.now} ${values.label}`,
-                    // label: values.label +" BGLD: "+ layoutNumber + " time:"+this.clock.now,
-                    entries: []
-                };
-                //BindGroup layout的数据入口  -->2.1.1
-                let bindGroupLayoutEntry: GPUBindGroupLayoutEntry[] = [];
-
-
-                if (!values.dynamic && this.resources.has(perGroup)) {//已经存在bindgroup，比如：同一个mesh中
-                    let bindGroupGet = this.resources.get(perGroup);
-                    if (bindGroupGet) {
-                        bindGroup = bindGroupGet;
-                        let bindGroupLayoutGet = this.resources.get(bindGroup)!;//这里没有进行判断，稍后补上
-                        if (bindGroupLayoutGet) {
-                            bindGroupLayout = bindGroupLayoutGet;
-                        }
-                        else {
-                            throw new Error("bindGroupLayout 不存在");
-                            // console.error("bindGroupLayout 不存在");
-                        }
-                    }
-                    else {
-                        throw new Error("bindGroup 不存在");
-                        // console.error("bindGroup 不存在");
-                    }
-
-                }
-                else {//不在BindGroup 和BindGroupLayout的记录，创建
-                    for (let j in perGroup) {
-                        let perEntry = perGroup[j];
-                        let perBindGroupLayoutEntry: GPUBindGroupLayoutEntry;
-                        //如果传入的参数中有GPUBindGroupLayoutEntry，就从GPUBindGroupLayoutEntry中获取，否则从entriesToEntriesLayout中获取
-                        if (values.data.unifromLayout) {
-                            perBindGroupLayoutEntry = values.data.unifromLayout[i][j];
-                            bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
-                        }
-                        else {
-                            /**
-                             * 获取perEntry的layout
-                             */
-                            perBindGroupLayoutEntry = this.resources.entriesToEntriesLayout.get(perEntry) as GPUBindGroupLayoutEntry;//每个entry的layout
-                            if (perBindGroupLayoutEntry) {
-                                bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
-                            }
-                            else {
-                                console.warn("bindGroupLayoutEntry 不存在", perEntry);
-                                throw new Error("bindGroupLayoutEntry 不存在");
-                            }
-                        }
-                        /**
-                         * 创建 uniform data 的 GPUBuffer 并添加到 bindGroupEntry
-                         * 其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
-                        */
-                        if (isUniformBufferPart(perEntry)) {
-                            if (this.resources.has(perEntry, "uniformBuffer")) {//已有,直接获取，不创建
-                                let buffer = this.resources.get(perEntry, "uniformBuffer");
-                                if (buffer)
-                                    bindGroupEntry.push({
-                                        binding: perEntry.binding,
-                                        resource: {
-                                            buffer
-                                        }
-                                    });
-                            }
-                            else {//没有，创建
-                                const label = (perEntry as I_uniformArrayBufferEntry).label;
-                                let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
-                                this.resources.set(perEntry, buffer, "uniformBuffer");
-                                bindGroupEntry.push({
-                                    binding: perEntry.binding,
-                                    resource: {
-                                        buffer
-                                    }
-                                });
-                            }
-                        }
-                        //动态 external texture,不做map
-                        else if (isDynamicTextureEntryForExternal(perEntry)) {
-                            bindGroupEntry.push({
-                                binding: perEntry.binding,
-                                resource: perEntry.getResource(perEntry.scopy),
-                            });
-                        }
-                        //动态 view texture,不做map
-                        else if (isDynamicTextureEntryForView(perEntry)) {
-                            bindGroupEntry.push({
-                                binding: perEntry.binding,
-                                resource: perEntry.getResource(),
-                            });
-                        }
-                        //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
-                        else {
-                            bindGroupEntry.push(perEntry);
-                        }
-                    }
-
-
-                    //更新BindGroup 的layout 描述的entry部分
-                    bindGroupLayoutDescriptor.entries = bindGroupLayoutEntry;
-                    //创建BindGroupLayout
-                    bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
-                    //初始化BindGroup描述
-                    bindGroupDesc = {
-                        // label: values.label + " BGD:" + layoutNumber + " time:"+this.clock.now,
-                        label: `BGD(${layoutNumber})@${this.clock.now} ${values.label}`,
-                        layout: bindGroupLayout,
-                        entries: bindGroupEntry,
-                    }
-                    //创建BindGroup
-                    bindGroup = this.device.createBindGroup(bindGroupDesc);
-                    ///////////////////
-                    //增加到资源
-                    this.resources.set(perGroup, bindGroup,);
-                    this.resources.set(bindGroup, bindGroupLayout);
-                }
-                DC_bindGroups.push(bindGroup);
-                DC_bindGroupLayouts.push(bindGroupLayout);
-                layoutNumber++;
-            }
-        }
-
-        // //2.2、创建BindGroup和BindGroupLayout
-        // let layout: GPUBindGroupLayout[] = [];
-        // //暂时空，先测试
-        // if (values.system) {
-
-        // }
-
-        //2、反射顶点名称到shader code的顶点属性的占位符中
-
+        //3、反射顶点名称到shader code的顶点属性的占位符中
         //vertex shader
         let moduleVS: GPUShaderModule
         let shadercode: string;
@@ -756,13 +368,23 @@ export class DrawCommandGenerator {
         else {
             shadercode = this.formatShaderCode(values.render.vertex.code, DC_vertexNames, DC_localtions);
         }
+        // 测试输出
         // if (values.transparent)
         //     console.log(shadercode);
+        
+        //4、shadermodel 编译
+        let splitCompile = false;//是否分开编译
+        if (values.ShaderModelCompileSplit !== undefined && values.ShaderModelCompileSplit === true) {
+            splitCompile = true;
+        }
+
         moduleVS = this.device.createShaderModule({
             label: "SHM@" + this.clock.now + " " + values.label,
             code: shadercode,
         });
-        //3、生产GPURenderPipelineDescriptor
+
+
+        
 
         //3.1、GPURenderPipelineDescriptor.vertex部分
         let constansVS = {};
@@ -775,6 +397,7 @@ export class DrawCommandGenerator {
         }
 
         //3.2、GPURenderPipelineDescriptor.fragment部分
+
         let moduleFS = moduleVS;
         let fragment: GPUFragmentState | undefined;
         if (values.render.fragment) {
@@ -829,6 +452,7 @@ export class DrawCommandGenerator {
         }
 
 
+        //4、生产GPURenderPipelineDescriptor
         //3.3、GPURenderPipelineDescriptor.layout 部分
         let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: "PipelineLayout@" + this.clock.now + " " + values.label,
@@ -1129,7 +753,7 @@ export class DrawCommandGenerator {
         else if (format == "sint8x2") {
             wgsl_value_format = "vec2i";
         }
-        
+
         else if (format == "sint8x4") {
             wgsl_value_format = "vec4i";
         }
@@ -1139,5 +763,421 @@ export class DrawCommandGenerator {
         }
         return wgsl_value_format;
     }
+    /**
+     * 初始化顶点资源
+     * 
+     * 1、顶点资源
+     * 2、索引资源
+     * 
+     * @param values 
+     * @returns  { DC_vertexBuffers, DC_verticesBufferLayout, DC_localtions, DC_vertexNames, DC_indexBuffer }
+     */
+    initVertexPart(values: IV_DC): {
+        DC_vertexBuffers: GPUBuffer[],
+        DC_verticesBufferLayout: GPUVertexBufferLayout[],
+        DC_localtions: string[],
+        DC_vertexNames: string[],
+        DC_indexBuffer: GPUBuffer | undefined
+    } {
+        //1、buffer资源
+        let DC_vertexBuffers: GPUBuffer[] = [];//当前DC的顶点列表。之后在DC中passEncoder.setVertexBuffer(parseInt(i), verticesBuffer)使用。
+        let DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
+        let DC_localtions: string[] = [];//顶点资源的名称列表，反射code中的内容使用
+        let DC_vertexNames: string[] = [];//顶点资源的名称列表，反射code中的内容使用
+        let DC_indexBuffer: GPUBuffer | undefined;//GPUBuffer默认使用uint32的格式。passEncoder.setIndexBuffer(this.indexBuffer, 'uint32');
+        //1.1、顶点资源
+
+        let shaderLocation = 0;//最多16个
+        let location_i = 0;
+        if (values.data.vertices) {
+            // for (const [key, value] of values.data.vertices) {
+            for (let key in values.data.vertices) {
+                let value = values.data.vertices[key];
+                let locationString: string = "";
+                let lowKey = key.toLocaleLowerCase();
+                let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
+                let vertexBuffer: GPUBuffer | undefined;
+                if (Array.isArray(value)) {//标准的数组格式，默认为position等
+                    if (value.length == 0) {
+                        console.warn("顶点属性" + key + "数据为空");
+                    }
+                    let data = new Float32Array(value);//默认:float32
+                    let arrayStride = 4 * 3;
+                    let format: GPUVertexFormat = "float32x3";
+                    switch (lowKey) {
+                        case "position":
+                            arrayStride = 4 * 3;
+                            format = "float32x3";
+                            break;
+                        case "uv":
+                            // case "uv1":
+                            // case "uv2":
+                            arrayStride = 4 * 2;
+                            format = "float32x2";
+                            break;
+                        case "normal":
+                            arrayStride = 4 * 3;
+                            format = "float32x3";
+                            break;
+                        case "color":
+                            arrayStride = 4 * 3;
+                            format = "float32x3";
+                            break;
+                        default:
+                            arrayStride = 4 * 3;
+                            format = "float32x3";
+                            break;
+                    }
+                    let wgsl_value_format = this.getWgslValueFormat(format);
+                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
+
+
+                    //判断是否以及存在顶点GPUBuffer
+                    if (!this.resources.has(value, "vertices")) {
+                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey, data.buffer);
+                        this.resources.set(value, vertexBuffer, "vertices");
+                    }
+                    else {
+                        vertexBuffer = this.resources.get(value, "vertices");
+                    }
+                    //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
+                    _GPUVertexBufferLayout = {
+                        arrayStride: arrayStride,
+                        attributes: [{
+                            shaderLocation: shaderLocation++,
+                            format: format,
+                            offset: 0,
+                        }],
+                    }
+                }
+                else if ("format" in value && "data" in value) {
+                    let format: GPUVertexFormat = value.format;
+                    let data;//默认:float32
+                    let arrayStride = 4 * 3;
+                    switch (value.format) {//这里只匹配了几种数据，以后视情况而定
+                        case "float32x3":
+                            arrayStride = 4 * 3;
+                            data = new Float32Array(value.data);
+                            break;
+                        case "float32x2":
+                            arrayStride = 4 * 2;
+                            data = new Float32Array(value.data);
+                            break;
+                        case "float32x4":
+                            arrayStride = 4 * 4;
+                            data = new Float32Array(value.data);
+                            break;
+                        case "float32":
+                            arrayStride = 4 * 1;
+                            data = new Float32Array(value.data);
+                            break;
+                        case "uint32":
+                            arrayStride = 4 * 1;
+                            data = new Uint32Array(value.data);
+                            break;
+                        case "uint32x2":
+                            arrayStride = 4 * 2;
+                            data = new Uint32Array(value.data);
+                            break;
+                        case "uint32x3":
+                            arrayStride = 4 * 3;
+                            data = new Uint32Array(value.data);
+                            break;
+                        case "uint32x4":
+                            arrayStride = 4 * 4;
+                            data = new Uint32Array(value.data);
+                            break;
+                        case "sint32":
+                            arrayStride = 4 * 1;
+                            data = new Int32Array(value.data);
+                            break;
+                        case "sint32x2":
+                            arrayStride = 4 * 2;
+                            data = new Int32Array(value.data);
+                            break;
+                        case "sint32x3":
+                            arrayStride = 4 * 3;
+                            data = new Int32Array(value.data);
+                            break;
+                        case "sint32x4":
+                            arrayStride = 4 * 4;
+                            data = new Int32Array(value.data);
+                            break;
+                        default:
+                            arrayStride = 4 * 3;
+                            data = new Float32Array(value.data);
+                            break;
+                    }
+                    let wgsl_value_format = this.getWgslValueFormat(value.format);
+                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
+                    //判断是否以及存在顶点GPUBuffer
+                    if (!this.resources.has(value, "vertices")) {
+                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =" + format, data.buffer);
+                        this.resources.set(value, vertexBuffer, "vertices");
+                    }
+                    else {
+                        vertexBuffer = this.resources.get(value, "vertices");
+                    }
+                    //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
+                    _GPUVertexBufferLayout = {
+                        arrayStride: arrayStride,
+                        attributes: [{
+                            shaderLocation: shaderLocation++,
+                            format: format,
+                            offset: 0,
+                        }],
+                    }
+                }
+                else if (isVsAttributeMerge(value)) {
+                    let mergeAttribute = value.mergeAttribute
+                    let arrayStride = value.arrayStride;
+                    let data = new Float32Array(value.data);
+                    let attributes: GPUVertexAttribute[] = [];
+                    for (let i in mergeAttribute) {
+                        let item = mergeAttribute[i];
+                        attributes.push({
+                            shaderLocation: shaderLocation++,
+                            format: item.format,
+                            offset: item.offset,
+                        });
+                        let wgsl_value_format = this.getWgslValueFormat(item.format);
+                        locationString += ` @location(${location_i}) ${item.name} : ${wgsl_value_format}  ,`;
+                        location_i++;//合并属性，每个属性都要增加一个location
+                    }
+                    if (!this.resources.has(value, "vertices")) {
+                        vertexBuffer = createVerticesBuffer(this.device, values.label + " vertex GPUBuffer of " + lowKey + " format =mergeAttribute", data.buffer);
+                        this.resources.set(value, vertexBuffer, "vertices");
+                    }
+                    else {
+                        vertexBuffer = this.resources.get(value, "vertices");
+                    }
+                    _GPUVertexBufferLayout = {
+                        arrayStride: arrayStride,
+                        attributes,
+                    }
+                }
+                else if ("format" in value && value.buffer instanceof GPUBuffer) {
+                    let format = value.format;
+                    let arrayStride = value.arrayStride;
+                    let wgsl_value_format = this.getWgslValueFormat(format);
+                    locationString += ` @location(${location_i}) ${key} : ${wgsl_value_format}  ,`;
+                    vertexBuffer = value.buffer;
+                    _GPUVertexBufferLayout = {
+                        arrayStride: arrayStride,
+                        attributes: [{
+                            shaderLocation: shaderLocation++,
+                            format: format,
+                            offset: 0,
+                        }],
+                    }
+                }
+                else {
+                    console.warn("顶点属性", key, value, " 不能匹配数据");
+                    throw new Error("顶点属性 key, value 不能匹配数据");
+                    continue;
+                }
+                if (values.data.vertexStepMode) {
+                    _GPUVertexBufferLayout.stepMode = values.data.vertexStepMode;
+                }
+
+                DC_verticesBufferLayout.push(_GPUVertexBufferLayout);      //顺序push顶点Buffer的layout
+                DC_localtions.push(locationString);                                  //顺序push顶点名称
+                DC_vertexNames.push(key);                                  //顺序push顶点名称
+
+                if (vertexBuffer) {
+                    DC_vertexBuffers.push(vertexBuffer);             //顺序push顶点Buffer
+                }
+                else {
+                    console.warn("顶点属性", key, value, " 不能匹配数据");
+                    throw new Error("顶点属性 key, value 不能匹配数据");
+                }
+                location_i++;
+            }
+            //1.2、索引资源
+            if (Array.isArray(values.data.indexes)) {
+                if (values.data.indexes && values.data.indexes.length > 0) {
+                    let u32Buffer = new Uint32Array(values.data.indexes);
+                    if (!this.resources.has(values.data.indexes, "indexes")) {
+                        let _indexBuffer = createIndexBuffer(this.device, values.label + " index GPUBuffer", u32Buffer.buffer);
+                        this.resources.set(values.data.indexes, _indexBuffer, "indexes");
+                    }
+                    let index = this.resources.get(values.data.indexes, "indexes");
+                    if (index) {
+                        DC_indexBuffer = index;
+                    }
+                }
+            }
+            else {
+                let indexBundle = values.data.indexes as I_indexGPUBufferBundle;
+                if (indexBundle) {
+                    DC_indexBuffer = indexBundle.buffer;
+                }
+            }
+        }
+        return { DC_vertexBuffers, DC_verticesBufferLayout, DC_localtions, DC_vertexNames, DC_indexBuffer };
+    }
+
+    /**
+     * 初始化uniform部分
+     * @param values 
+     * @returns GPUBindGroup[] and GPUBindGroupLayout[]
+     */
+    initUniformPart(values: IV_DC): {
+        DC_bindGroups: GPUBindGroup[],
+        DC_bindGroupLayouts: GPUBindGroupLayout[],
+    } {
+        //2、bindgroup部分
+
+        let DC_bindGroups: GPUBindGroup[] = [];
+        let DC_bindGroupLayouts: GPUBindGroupLayout[] = [];
+        let layoutNumber = 0;
+        //2.1 、获取 BindGroup 0 以及其layout。camera 和light都从各自的体系获得
+        if (values.system) {
+            let UUID = this.checkUUID(values);
+            if (UUID) {
+                let { bindGroup, bindGroupLayout } = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(UUID, values.system.type);
+                DC_bindGroups.push(bindGroup);
+                DC_bindGroupLayouts.push(bindGroupLayout);
+                layoutNumber++;
+            }
+        }
+        //2.2、创建其他uniforms的BindGroup和BindGroupLayout
+        if (values.data.uniforms) {
+            for (let i in values.data.uniforms) {
+                if (layoutNumber > 3) break;
+                let perGroup = values.data.uniforms[i];
+
+                //BindGroup，重点1
+                let bindGroup: GPUBindGroup;
+                //BindGroupDesc ,重点1->1.1
+                let bindGroupDesc: GPUBindGroupDescriptor;
+                //BindGroup 的数据入口,主要是buffer的创建需要push,-->1.1.1
+                let bindGroupEntry: GPUBindGroupEntry[] = [];
+
+
+                //BindGroupLayout，重点2
+                let bindGroupLayout: GPUBindGroupLayout;
+                //BindGroup 的layout 描述，重点2->2.1
+                let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+                    label: `BGLD(${layoutNumber})@${this.clock.now} ${values.label}`,
+                    // label: values.label +" BGLD: "+ layoutNumber + " time:"+this.clock.now,
+                    entries: []
+                };
+                //BindGroup layout的数据入口  -->2.1.1
+                let bindGroupLayoutEntry: GPUBindGroupLayoutEntry[] = [];
+                if (!values.dynamic && this.resources.has(perGroup)) {//已经存在bindgroup，比如：同一个mesh中
+                    let bindGroupGet = this.resources.get(perGroup);
+                    if (bindGroupGet) {
+                        bindGroup = bindGroupGet;
+                        let bindGroupLayoutGet = this.resources.get(bindGroup)!;//这里没有进行判断，稍后补上
+                        if (bindGroupLayoutGet) {
+                            bindGroupLayout = bindGroupLayoutGet;
+                        }
+                        else {
+                            throw new Error("bindGroupLayout 不存在");
+                            // console.error("bindGroupLayout 不存在");
+                        }
+                    }
+                    else {
+                        throw new Error("bindGroup 不存在");
+                        // console.error("bindGroup 不存在");
+                    }
+
+                }
+                else {//不在BindGroup 和BindGroupLayout的记录，创建
+                    for (let j in perGroup) {
+                        let perEntry = perGroup[j];
+                        let perBindGroupLayoutEntry: GPUBindGroupLayoutEntry;
+                        //如果传入的参数中有GPUBindGroupLayoutEntry，就从GPUBindGroupLayoutEntry中获取，否则从entriesToEntriesLayout中获取
+                        if (values.data.unifromLayout) {
+                            perBindGroupLayoutEntry = values.data.unifromLayout[i][j];
+                            bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
+                        }
+                        else {
+                            /**
+                             * 获取perEntry的layout
+                             */
+                            perBindGroupLayoutEntry = this.resources.entriesToEntriesLayout.get(perEntry) as GPUBindGroupLayoutEntry;//每个entry的layout
+                            if (perBindGroupLayoutEntry) {
+                                bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
+                            }
+                            else {
+                                console.warn("bindGroupLayoutEntry 不存在", perEntry);
+                                throw new Error("bindGroupLayoutEntry 不存在");
+                            }
+                        }
+                        /**
+                         * 创建 uniform data 的 GPUBuffer 并添加到 bindGroupEntry
+                         * 其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
+                        */
+                        if (isUniformBufferPart(perEntry)) {
+                            if (this.resources.has(perEntry, "uniformBuffer")) {//已有,直接获取，不创建
+                                let buffer = this.resources.get(perEntry, "uniformBuffer");
+                                if (buffer)
+                                    bindGroupEntry.push({
+                                        binding: perEntry.binding,
+                                        resource: {
+                                            buffer
+                                        }
+                                    });
+                            }
+                            else {//没有，创建
+                                const label = (perEntry as I_uniformArrayBufferEntry).label;
+                                let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
+                                this.resources.set(perEntry, buffer, "uniformBuffer");
+                                bindGroupEntry.push({
+                                    binding: perEntry.binding,
+                                    resource: {
+                                        buffer
+                                    }
+                                });
+                            }
+                        }
+                        //动态 external texture,不做map
+                        else if (isDynamicTextureEntryForExternal(perEntry)) {
+                            bindGroupEntry.push({
+                                binding: perEntry.binding,
+                                resource: perEntry.getResource(perEntry.scopy),
+                            });
+                        }
+                        //动态 view texture,不做map
+                        else if (isDynamicTextureEntryForView(perEntry)) {
+                            bindGroupEntry.push({
+                                binding: perEntry.binding,
+                                resource: perEntry.getResource(),
+                            });
+                        }
+                        //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
+                        else {
+                            bindGroupEntry.push(perEntry);
+                        }
+                    }
+
+                    //更新BindGroup 的layout 描述的entry部分
+                    bindGroupLayoutDescriptor.entries = bindGroupLayoutEntry;
+                    //创建BindGroupLayout
+                    bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
+                    //初始化BindGroup描述
+                    bindGroupDesc = {
+                        // label: values.label + " BGD:" + layoutNumber + " time:"+this.clock.now,
+                        label: `BGD(${layoutNumber})@${this.clock.now} ${values.label}`,
+                        layout: bindGroupLayout,
+                        entries: bindGroupEntry,
+                    }
+                    //创建BindGroup
+                    bindGroup = this.device.createBindGroup(bindGroupDesc);
+                    ///////////////////
+                    //增加到资源
+                    this.resources.set(perGroup, bindGroup,);
+                    this.resources.set(bindGroup, bindGroupLayout);
+                }
+                DC_bindGroups.push(bindGroup);
+                DC_bindGroupLayouts.push(bindGroupLayout);
+                layoutNumber++;
+            }
+        }
+        return { DC_bindGroups, DC_bindGroupLayouts };
+    }
+
 }
 

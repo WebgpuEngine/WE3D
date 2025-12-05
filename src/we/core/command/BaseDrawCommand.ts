@@ -1,6 +1,6 @@
 import { E_renderForDC } from "../base/coreDefine";
 import { Scene } from "../scene/scene";
-import { I_drawMode, I_drawModeIndexed, I_viewport, IV_BaseCommand } from "./base";
+import { I_drawMode, I_drawModeIndexed, I_viewport, IV_BaseCommand, T_BindGroupType } from "./base";
 
 
 /**
@@ -32,11 +32,11 @@ export abstract class BaseDrawCommand {
     label: string;
     // rawUniform!: boolean;
     device!: GPUDevice;
-    renderPassDescriptor!:GPURenderPassDescriptor  | (() => GPURenderPassDescriptor);
+    renderPassDescriptor!: GPURenderPassDescriptor | (() => GPURenderPassDescriptor);
     vertexBuffers: GPUBuffer[] = [];
     indexBuffer!: GPUBuffer;
     indexFormat: GPUIndexFormat = "uint32";
-    bindGroups: GPUBindGroup[] = [];
+    bindGroups: T_BindGroupType[] = [];//GPUBindGroup[] = [];
     pipeline!: GPURenderPipeline;
     inputValues!: IV_BaseDrawCommand;
 
@@ -110,7 +110,8 @@ export abstract class BaseDrawCommand {
         }
 
         for (let i in this.bindGroups) {
-            passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
+            if (this.bindGroups[i] != undefined)
+                passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
         }
 
 
