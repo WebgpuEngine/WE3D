@@ -168,6 +168,9 @@ export class DrawCommand extends BaseDrawCommand {
         return this.cacheFlagPipeline;
     }
 
+    /**
+     * 生成动态bindGroup，由super中的update()根据this.dynamic 调用
+     */
     generateBindGroup() {
         let values = this.inputValues;
         let uniformGroup = this.inputValues.dynamicUniform!.bindGroupsUniform;
@@ -188,53 +191,53 @@ export class DrawCommand extends BaseDrawCommand {
             //BindGroupLayout，重点2
             let bindGroupLayout: GPUBindGroupLayout = bindGroupLayouts![layoutNumber];
 
+            if (perGroup !== undefined && perGroup.length > 0)
+                //创建BindGroup entry
+                for (let perEntry of perGroup) {
 
-            //创建BindGroup entry
-            for (let perEntry of perGroup) {
-
-                //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
-                if (isUniformBufferPart(perEntry)) {
-                    if (this.scene.resourcesGPU.has(perEntry, "uniformBuffer")) {//已有,直接获取，不创建
-                        let buffer = this.scene.resourcesGPU.get(perEntry, "uniformBuffer");
-                        if (buffer)
+                    //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
+                    if (isUniformBufferPart(perEntry)) {
+                        if (this.scene.resourcesGPU.has(perEntry, "uniformBuffer")) {//已有,直接获取，不创建
+                            let buffer = this.scene.resourcesGPU.get(perEntry, "uniformBuffer");
+                            if (buffer)
+                                bindGroupEntry.push({
+                                    binding: perEntry.binding,
+                                    resource: {
+                                        buffer
+                                    }
+                                });
+                        }
+                        else {//没有，创建
+                            const label = (perEntry as I_uniformArrayBufferEntry).label;
+                            let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
+                            this.uniformBufferList.push(buffer);
+                            this.scene.resourcesGPU.set(perEntry, buffer, "uniformBuffer");
+                            this.resourcesOfMapList.push({ key: perEntry, value: buffer, type: "uniformBuffer" });
                             bindGroupEntry.push({
                                 binding: perEntry.binding,
                                 resource: {
                                     buffer
                                 }
                             });
+                        }
                     }
-                    else {//没有，创建
-                        const label = (perEntry as I_uniformArrayBufferEntry).label;
-                        let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
-                        this.uniformBufferList.push(buffer);
-                        this.scene.resourcesGPU.set(perEntry, buffer, "uniformBuffer");
-                        this.resourcesOfMapList.push({ key: perEntry, value: buffer, type: "uniformBuffer" });
+                    else if (isDynamicTextureEntryForExternal(perEntry)) {
                         bindGroupEntry.push({
                             binding: perEntry.binding,
-                            resource: {
-                                buffer
-                            }
+                            resource: perEntry.getResource(perEntry.scopy),
                         });
                     }
+                    else if (isDynamicTextureEntryForView(perEntry)) {
+                        bindGroupEntry.push({
+                            binding: perEntry.binding,
+                            resource: perEntry.getResource(),
+                        });
+                    }
+                    //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
+                    else {
+                        bindGroupEntry.push(perEntry);
+                    }
                 }
-                else if (isDynamicTextureEntryForExternal(perEntry)) {
-                    bindGroupEntry.push({
-                        binding: perEntry.binding,
-                        resource: perEntry.getResource(perEntry.scopy),
-                    });
-                }
-                else if (isDynamicTextureEntryForView(perEntry)) {
-                    bindGroupEntry.push({
-                        binding: perEntry.binding,
-                        resource: perEntry.getResource(),
-                    });
-                }
-                //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
-                else {
-                    bindGroupEntry.push(perEntry);
-                }
-            }
 
             //初始化BindGroup描述
             let bindGroupDesc: GPUBindGroupDescriptor = {

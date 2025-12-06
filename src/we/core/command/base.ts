@@ -134,11 +134,12 @@ export interface I_dynamicTextureEntryForView {
  */
 export type T_uniformEntries = GPUBindGroupEntry | I_uniformArrayBufferEntry | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
 
+export type  T_uniformOneGroup = T_uniformEntries[];
 /**  bind group的数组  
  * 1、undefined 表示没有uniform group
  * 2、[] 表示空的uniform group.未验证
 */
-export type T_uniformGroup = T_uniformEntries[] | [] |undefined;
+export type T_uniformGroup = T_uniformOneGroup | [] |undefined;
 
 /** bind group layout的数组  
  * 1、undefined 表示没有uniform group layout 

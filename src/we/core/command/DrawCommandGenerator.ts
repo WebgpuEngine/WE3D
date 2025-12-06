@@ -161,12 +161,7 @@ export type T_indexAttribute = number[] | I_indexGPUBufferBundle
  * @system  系统参数:camera 或 light
  */
 export interface IV_DC {
-    /**
-     * 是否将shader模型编译为分离的形式
-     * 默认：false，
-     * 如果true，则需要将shader模型编译为分离的形式，即vertex shader和fragment shader分别编译
-     */
-    ShaderModelCompileSplit?: boolean,
+
     /**是否包括动态资源在binding group中
      * 默认：false，
      * 如果true，则需要动态绑定资源
@@ -305,21 +300,22 @@ export class DrawCommandGenerator {
                 }
                 else systemFlag = false
                 for (let perGroup of i.data.uniforms) {
-                    for (let perEntry of perGroup)
-                        if ("data" in perEntry && "update" in perEntry && perEntry.update === true) {//需要更新,只更新数据
-                            if (this.resources.has(perEntry, "uniformBuffer")) {
-                                let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
-                                if (buffer) {
-                                    updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformArrayBufferEntry).data)
+                    if (perGroup != undefined && perGroup.length > 0)//判断是当前的bindgroup否有uniform
+                        for (let perEntry of perGroup)
+                            if ("data" in perEntry && "update" in perEntry && perEntry.update === true) {//需要更新,只更新数据
+                                if (this.resources.has(perEntry, "uniformBuffer")) {
+                                    let buffer: GPUBuffer = this.resources.get(perEntry, "uniformBuffer");
+                                    if (buffer) {
+                                        updataOneUniformBuffer(this.device, buffer, (perEntry as I_uniformArrayBufferEntry).data)
+                                    }
+                                    else {
+                                        console.warn(i, perGroup, perEntry, "获取uiform对应的GPUBuffer资源获取失败");
+                                    }
                                 }
                                 else {
-                                    console.warn(i, perGroup, perEntry, "获取uiform对应的GPUBuffer资源获取失败");
+                                    console.warn(i, perGroup, perEntry, "查询uiform对应的GPUBuffer资源获取失败");
                                 }
                             }
-                            else {
-                                console.warn(i, perGroup, perEntry, "查询uiform对应的GPUBuffer资源获取失败");
-                            }
-                        }
                 }
             }
         }
@@ -350,173 +346,20 @@ export class DrawCommandGenerator {
      * @param values 
      * @returns 
      */
-
     generateDrawCommand(values: IV_DC) {
         this.inputDC.push(values);//保存每个DC的init参数，为了后续的更新uniform使用（如果其中有update选项）
         //1、buffer资源
-        let { DC_vertexBuffers, DC_verticesBufferLayout, DC_localtions, DC_vertexNames, DC_indexBuffer } = this.initVertexPart(values);
+        let { DC_vertexBuffers, DC_indexBuffer, DC_vertexNames, DC_localtions, DC_verticesBufferLayout } = this.initVertexPart(values);
 
         //2、bindgroup部分
         let { DC_bindGroups, DC_bindGroupLayouts } = this.initUniformPart(values);
 
-        //3、反射顶点名称到shader code的顶点属性的占位符中
-        //vertex shader
-        let moduleVS: GPUShaderModule
-        let shadercode: string;
-        if (typeof values.render.vertex.code === "string")
-            shadercode = values.render.vertex.code;
-        else {
-            shadercode = this.formatShaderCode(values.render.vertex.code, DC_vertexNames, DC_localtions);
-        }
-        // 测试输出
-        // if (values.transparent)
-        //     console.log(shadercode);
-        
-        //4、shadermodel 编译
-        let splitCompile = false;//是否分开编译
-        if (values.ShaderModelCompileSplit !== undefined && values.ShaderModelCompileSplit === true) {
-            splitCompile = true;
-        }
+        //3、shadermodel 编译
 
-        moduleVS = this.device.createShaderModule({
-            label: "SHM@" + this.clock.now + " " + values.label,
-            code: shadercode,
-        });
+        let { vertex, fragment } = this.initShaderModel(values, DC_vertexNames, DC_localtions, DC_verticesBufferLayout);
 
-
-        
-
-        //3.1、GPURenderPipelineDescriptor.vertex部分
-        let constansVS = {};
-        if (values.render.vertex.constants) { constansVS = values.render.vertex.constants; }
-        let vertex: GPUVertexState = {
-            module: moduleVS,
-            entryPoint: values.render.vertex.entryPoint,
-            buffers: DC_verticesBufferLayout,
-            constants: constansVS,
-        }
-
-        //3.2、GPURenderPipelineDescriptor.fragment部分
-
-        let moduleFS = moduleVS;
-        let fragment: GPUFragmentState | undefined;
-        if (values.render.fragment) {
-            let targets: GPUColorTargetState[] = [];
-            if (values.render.fragment.targets) {
-                targets = values.render.fragment.targets;//使用传入参数
-            }
-            else if (values.system && values.render.fragment.targets == undefined) {//获取camera CATs
-                let UUID = this.checkUUID(values);
-                if (UUID) {
-                    if (this.MSAA) {
-                        if (values.system.MSAA != undefined)
-                            targets = this.scene.getColorAttachmentTargets(UUID, values.system.type, values.system.MSAA);
-                        else
-                            throw new Error("MSAA渲染,需要在system中指定MSAA");
-                    }
-                    else
-                        targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
-                }
-                else
-                    // console.error("获取UUID失败");
-                    this.errorUUID();
-            }
-            //透明处理,alpha blend
-            if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
-                for (let i = 0; i < values.transparent.blend.length; i++) {
-                    targets[i].blend = values.transparent.blend[i];
-                }
-            }
-            let constansFS = {};
-            if (values.render.fragment.code) {
-                if (typeof values.render.fragment.code === "string") {
-                    moduleFS = this.device.createShaderModule({
-                        code: values.render.fragment.code,
-                    })
-                }
-                else {
-                    //todo moduleFS  
-                }
-            }
-            else {
-                moduleFS = moduleVS;
-            }
-            if (values.render.fragment?.constants) { constansFS = values.render.fragment.constants; }
-
-            fragment = {
-                module: moduleFS,
-                entryPoint: values.render.fragment.entryPoint,
-                targets,
-                constants: constansFS,
-            }
-        }
-
-
-        //4、生产GPURenderPipelineDescriptor
-        //3.3、GPURenderPipelineDescriptor.layout 部分
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: "PipelineLayout@" + this.clock.now + " " + values.label,
-            bindGroupLayouts: DC_bindGroupLayouts,
-        }
-        let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-        let descriptor: GPURenderPipelineDescriptor = {
-            label: "Pipeline@" + this.clock.now + " " + values.label,
-            vertex,
-            layout: pipelineLayout,
-        }
-        //3.4、GPURenderPipelineDescriptor.其他部分
-        if (fragment) descriptor.fragment = fragment;
-        if (values.render.primitive) descriptor.primitive = values.render.primitive;
-        if (this.MSAA && values.system && values.system.MSAA == "MSAA") {
-            descriptor.multisample = {
-                count: 4,
-            }
-        }
-
-        //TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
-        if (values.render.depthStencil !== false) {
-            if (values.render.depthStencil) descriptor.depthStencil = values.render.depthStencil;
-            else {
-                if (values.transparent)//透明渲染，使用透明模板
-                    descriptor.depthStencil = this.scene.depthMode.depthStencilTT;
-                else {
-                    if (this.MSAA) {
-                        if (values.system && values.system.MSAA == "MSAAinfo") {//MSAAinfo 渲染，使用深度模板(开启测试，不写入) 
-                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAAinfo;
-                        }
-                        else {//MSAA 渲染，使用深度模板(开启测试，写入) 
-                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;
-                        }
-                    }
-                    else {//非MSAA渲染，使用深度模板(开启测试，写入) 
-                        descriptor.depthStencil = this.scene.depthMode.depthStencil;
-                    }
-                }
-            }
-        }
-
-        // if (values.system && !values.render.depthStencil) {
-        //     if (values.render.depthStencil) descriptor.depthStencil = values.render.depthStencil;
-        // }
-
-
-
-        //3.6 生产pipeline
-        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-        // let pipeline: GPURenderPipeline;
-        // if (this.resources.renderPipelineDescriptor.has(descriptor)) {
-        //     const pl = this.resources.renderPipelineDescriptor.get(descriptor);
-        //     if (pl)
-        //         pipeline = pl;
-        //     else {
-        //         pipeline = this.device.createRenderPipeline(descriptor);
-        //         this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
-        //     }
-        // }
-        // else {
-        //     pipeline = this.device.createRenderPipeline(descriptor);
-        //     this.resources.renderPipelineDescriptor.set(descriptor, pipeline);
-        // }
+        //4、pipeline 部分
+        let pipeline = this.initPipeLine(values, vertex, fragment, DC_bindGroupLayouts);
 
         //4、GPURenderPassDescriptor
         let renderPassDescriptor = () => {
@@ -529,12 +372,12 @@ export class DrawCommandGenerator {
             else if (values.renderPassDescriptor != undefined && typeof values.renderPassDescriptor == "function") {
                 renderPassDescriptor = values.renderPassDescriptor();
             }
-            //2.5 增加一个MSAA 的NDC
+            //3\ 增加一个MSAA 的NDC
             else if (this.scene.finalTarget.NDC == true && values.system?.MSAA) {
                 // if (values.system?.MSAA)
                 renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
             }
-            //3、如果没有rpd描述，且有system。
+            //4、如果没有rpd描述，且有system。
             else if (values.system && values.renderPassDescriptor == undefined) {
                 let UUID = this.checkUUID(values);
                 if (UUID) {
@@ -551,7 +394,7 @@ export class DrawCommandGenerator {
                     this.errorUUID();// throw new Error("获取UUID失败");
                 }
             }
-            //4、NDC，raw模式
+            //5、NDC，raw模式
             else {
                 renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
             }
@@ -570,7 +413,8 @@ export class DrawCommandGenerator {
             renderPassDescriptor,
             // dynamic: values.dynamic || false,
         }
-        //为了适配动态增加光源后的阴影贴图的动态更新。
+        //5.1 为了适配动态增加光源后的阴影贴图的动态更新。
+        //在BaseDrawCommand.doEncoder()中，会动态绑定system0
         if (values.system) {
             let UUID = this.checkUUID(values);
             if (UUID) {
@@ -580,19 +424,23 @@ export class DrawCommandGenerator {
                 }
             }
         }
+        //5.2 传输ID
         if (values.IDS) {
             commandOption.IDS = values.IDS;
         }
+        //5.3 传输transparentType。（20251206 未在DC中发现具有使用情况，应该是早期参数，暂时保留）
         if (values.transparent) {
             if (values.transparent.type) {
                 commandOption.transparentType = values.transparent.type;
             }
         }
+        //5.4 viewport
         if (values.render.viewport) commandOption.viewport = values.render.viewport;
         let camera = this.getCamera(values);
         if (camera) {
             commandOption.viewport = camera.viewport;
         }
+        //5.5 动态bindGroup情况，如果dynamicUniform参数，DC会根据dynamicUniform参数，动态绑定bindGroup。
         if (values.dynamic && values.dynamic === true) {
             let layoutNumber = 0;
             if (values.system) {
@@ -604,13 +452,14 @@ export class DrawCommandGenerator {
                 layoutNumber: layoutNumber,
             };
         }
-
+        //5.6 indexBuffer
         if (DC_indexBuffer) {
             commandOption.indexBuffer = DC_indexBuffer;
             if ("buffer" in values.data.indexes!) {
                 commandOption.indexFormat = values.data.indexes.format;
             }
         }
+        //5.7 创建DC
         let drawCommand = new DrawCommand(commandOption);
         return drawCommand;
     }
@@ -635,7 +484,11 @@ export class DrawCommandGenerator {
     errorUUID() {
         throw new Error("获取UUID失败");
     }
-
+    /**
+     * 检查UUID,如果没有UUID，根据system.type，返回默认相机的UUID。
+     * @param values IV_DC
+     * @returns  string | false
+     */
     checkUUID(values: IV_DC): string | false {
         if (values.system) {
             let UUID = values.system.UUID;
@@ -652,13 +505,13 @@ export class DrawCommandGenerator {
         return false
     }
     /**
-     * 格式化（替换）shader代码
+     * VS反射attribute属性到WGSL的结构体中，并按照SHT格式化vs shader代码.
      * @param templateFinal  shader模板
      * @param refName 反射的变量名
      * @param locations 反射的变量location
      * @returns 
      */
-    formatShaderCode(templateFinal: I_ShaderTemplate_Final, refName: string[], locations: string[]): string {
+    refVSShaderCode(templateFinal: I_ShaderTemplate_Final, refName: string[], locations: string[]): string {
         let groupAndBindingString: string = "";
         let shaderCode: string = "";
         //合并bindingGroupString 和shaderCode
@@ -774,10 +627,10 @@ export class DrawCommandGenerator {
      */
     initVertexPart(values: IV_DC): {
         DC_vertexBuffers: GPUBuffer[],
-        DC_verticesBufferLayout: GPUVertexBufferLayout[],
-        DC_localtions: string[],
+        DC_indexBuffer: GPUBuffer | undefined,
         DC_vertexNames: string[],
-        DC_indexBuffer: GPUBuffer | undefined
+        DC_localtions: string[],
+        DC_verticesBufferLayout: GPUVertexBufferLayout[],
     } {
         //1、buffer资源
         let DC_vertexBuffers: GPUBuffer[] = [];//当前DC的顶点列表。之后在DC中passEncoder.setVertexBuffer(parseInt(i), verticesBuffer)使用。
@@ -1014,7 +867,7 @@ export class DrawCommandGenerator {
                 }
             }
         }
-        return { DC_vertexBuffers, DC_verticesBufferLayout, DC_localtions, DC_vertexNames, DC_indexBuffer };
+        return { DC_vertexBuffers, DC_indexBuffer, DC_vertexNames, DC_localtions, DC_verticesBufferLayout };
     }
 
     /**
@@ -1044,9 +897,20 @@ export class DrawCommandGenerator {
         //2.2、创建其他uniforms的BindGroup和BindGroupLayout
         if (values.data.uniforms) {
             for (let i in values.data.uniforms) {
-                if (layoutNumber > 3) break;
+                if (layoutNumber > 3) {
+                    console.warn("uniforms 最多只能有4个BindGroup");
+                    break;
+                }
                 let perGroup = values.data.uniforms[i];
-
+                if (perGroup == undefined || perGroup.length == 0) {
+                    console.warn("uniforms 组", i, "为空");
+                    continue;
+                }
+                if (values.data.unifromLayout)
+                    if (values.data.unifromLayout[i] == undefined || values.data.unifromLayout[i].length == 0) {
+                        console.warn("uniforms layoiut 组[", i, "]的layout为空,与uniform组不匹配");
+                        continue;
+                    }
                 //BindGroup，重点1
                 let bindGroup: GPUBindGroup;
                 //BindGroupDesc ,重点1->1.1
@@ -1090,7 +954,7 @@ export class DrawCommandGenerator {
                         let perBindGroupLayoutEntry: GPUBindGroupLayoutEntry;
                         //如果传入的参数中有GPUBindGroupLayoutEntry，就从GPUBindGroupLayoutEntry中获取，否则从entriesToEntriesLayout中获取
                         if (values.data.unifromLayout) {
-                            perBindGroupLayoutEntry = values.data.unifromLayout[i][j];
+                            perBindGroupLayoutEntry = values.data.unifromLayout[i]![j];         //使用断言，判断在前面已经判断了layout不为空
                             bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
                         }
                         else {
@@ -1177,6 +1041,188 @@ export class DrawCommandGenerator {
             }
         }
         return { DC_bindGroups, DC_bindGroupLayouts };
+    }
+    /**shadermodel 编译
+     * 1、反射顶点名称到shader code的顶点属性的占位符中
+     * 2、编译VS shader code 到 shader module
+     * 3、如果有fragment shader，编译shader module
+     * 4、创建GPURenderPipelineDescriptor的vertex部分和fragment部分
+     * @param values 
+     * @param DC_vertexNames 
+     * @param DC_localtions 
+     */
+    initShaderModel(values: IV_DC, DC_vertexNames: string[], DC_localtions: string[], DC_verticesBufferLayout: GPUVertexBufferLayout[]): {
+        vertex: GPUVertexState,
+        fragment: GPUFragmentState | undefined,
+    } {
+        // 3.1 反射顶点名称到shader code的顶点属性的占位符中
+        //vertex shader
+        let moduleVS: GPUShaderModule
+        let shadercode: string;
+        if (typeof values.render.vertex.code === "string")
+            shadercode = values.render.vertex.code;
+        else {
+            shadercode = this.refVSShaderCode(values.render.vertex.code, DC_vertexNames, DC_localtions);
+        }
+        // 测试输出
+        // if (values.transparent)
+        //     console.log(shadercode);
+
+        //3.2、VS shadermodel 编译
+        moduleVS = this.device.createShaderModule({
+            label: "SHM@" + this.clock.now + " " + values.label,
+            code: shadercode,
+        });
+        //3.3 GPURenderPipelineDescriptor.vertex部分
+        let constansVS = {};
+        if (values.render.vertex.constants) { constansVS = values.render.vertex.constants; }
+        let vertex: GPUVertexState = {
+            module: moduleVS,
+            entryPoint: values.render.vertex.entryPoint,
+            buffers: DC_verticesBufferLayout,
+            constants: constansVS,
+        }
+        //3.4 GPURenderPipelineDescriptor.fragment部分
+        let moduleFS: GPUShaderModule;
+        let fragment: GPUFragmentState | undefined;
+        if (values.render.fragment) {
+            // 3.4.1 判断是否是混合shader
+            if (values.render.fragment.code == undefined) {
+                moduleFS = moduleVS;
+            }
+            else {
+                let codeFS: string;
+                let flagFS = "fsCode@";
+                //如果是字符串,则直接赋值
+                if (typeof values.render.fragment.code === "string")
+                    codeFS = values.render.fragment.code;
+                //如果是I_ShaderTemplate_Final,则需要根据material 生成代码
+                else {
+                    let FS_SHT = (values.render.fragment.code as I_ShaderTemplate_Final).material;
+                    if (FS_SHT) {
+                        codeFS = FS_SHT.groupAndBindingString + FS_SHT.templateString;
+                    }
+                    else {
+                        throw new Error("fragment code SHT模板中material不能为空");
+                    }
+                    flagFS = "fsSHT@"
+                }
+                moduleFS = this.device.createShaderModule({
+                    label: flagFS + this.clock.now + " " + values.label,
+                    code: codeFS,
+                })
+            }
+            //3.4.2 配置targets
+            let targets: GPUColorTargetState[] = [];
+            //如果没有指定targets,则使用默认的targets
+            if (values.render.fragment.targets) {
+                targets = values.render.fragment.targets;//使用传入参数
+            }
+            //如果没有指定targets,则使用默认的targets
+            else if (values.system && values.render.fragment.targets == undefined) {//获取camera CATs
+                let UUID = this.checkUUID(values);
+                if (UUID) {
+                    if (this.MSAA) {
+                        if (values.system.MSAA != undefined)
+                            targets = this.scene.getColorAttachmentTargets(UUID, values.system.type, values.system.MSAA);
+                        else
+                            throw new Error("MSAA渲染,需要在system中指定MSAA");
+                    }
+                    else
+                        targets = this.scene.getColorAttachmentTargets(UUID, values.system.type);
+                }
+                else
+                    // console.error("获取UUID失败");
+                    this.errorUUID();
+            }
+            //3.4.3 透明处理,alpha blend
+            if (values.transparent?.type == E_TransparentType.alpha && values.transparent.blend) {
+                for (let i = 0; i < values.transparent.blend.length; i++) {
+                    targets[i].blend = values.transparent.blend[i];
+                }
+            }
+            // if (values.render.fragment.code) {
+            //     if (typeof values.render.fragment.code === "string") {
+            //         moduleFS = this.device.createShaderModule({
+            //             code: values.render.fragment.code,
+            //         })
+            //     }
+            //     else {
+            //         //todo moduleFS  
+            //     }
+            // }
+            // else {
+            //     moduleFS = moduleVS;
+            // }
+            let constansFS = {};
+            //3.4.4 配置constants
+            if (values.render.fragment?.constants) { constansFS = values.render.fragment.constants; }
+            //3.4.5 配置entryPoint
+            fragment = {
+                module: moduleFS,
+                entryPoint: values.render.fragment.entryPoint,
+                targets,
+                constants: constansFS,
+            }
+        }
+
+        return { vertex, fragment };
+    }
+    initPipeLine(values: IV_DC, vertex: GPUVertexState, fragment: GPUFragmentState | undefined, DC_bindGroupLayouts: GPUBindGroupLayout[]): GPURenderPipeline {
+        //1、创建GPURenderPipelineDescriptor
+        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+            label: "PipelineLayout@" + this.clock.now + " " + values.label,
+            bindGroupLayouts: DC_bindGroupLayouts,
+        }
+        //2、创建GPUPipelineLayout
+        let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
+        let descriptor: GPURenderPipelineDescriptor = {
+            label: "Pipeline@" + this.clock.now + " " + values.label,
+            vertex,
+            layout: pipelineLayout,
+        }
+        //3、GPURenderPipelineDescriptor.其他部分
+        if (fragment) descriptor.fragment = fragment;
+        if (values.render.primitive) descriptor.primitive = values.render.primitive;
+        if (this.MSAA && values.system && values.system.MSAA == "MSAA") {
+            descriptor.multisample = {
+                count: 4,
+            }
+        }
+        //4、TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        if (values.render.depthStencil !== false) {
+            //如果有depthStencil输入，就使用它
+            if (values.render.depthStencil) {
+                descriptor.depthStencil = values.render.depthStencil;
+            }
+            else {
+                if (values.transparent)//透明渲染，使用透明模板
+                    descriptor.depthStencil = this.scene.depthMode.depthStencilTT;
+                else {
+                    //MSAA渲染，分成两种情况
+                    if (this.MSAA) {
+                        //MSAAinfo 渲染，使用深度模板(开启测试，不写入) 
+                        if (values.system && values.system.MSAA == "MSAAinfo") {
+                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAAinfo;
+                        }
+                        //MSAA 渲染，使用深度模板(开启测试，写入) 
+                        else {
+                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;
+                        }
+                    }
+                    //非MSAA渲染，使用深度模板(开启测试，写入) 
+                    else {
+                        descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                    }
+                }
+            }
+        }
+
+
+        //3.6 生产pipeline
+        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
+
+        return pipeline;
     }
 
 }

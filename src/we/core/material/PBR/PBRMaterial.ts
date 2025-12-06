@@ -2,7 +2,7 @@ import { identity } from "muigui/dist/0.x/libs/utils";
 import { E_lifeState, weColor4, weVec3 } from "../../base/coreDefine";
 import { isWeColor3, isWeVec3 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { T_uniformGroup } from "../../command/base";
+import { T_uniformEntries, T_uniformGroup, T_uniformOneGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
@@ -108,27 +108,27 @@ type validPBRTextureTypeString =
 
 type vialidPBRTextureType = keyof IV_PBRMaterial["textures"];
 
-export interface IV_PBRMaterial_old extends IV_BaseMaterial {
-    textures: {
-        [E_TextureType.albedo]: I_BaseTexture | Texture | weVec3,
-        [E_TextureType.metallic]: I_BaseTexture | Texture | number,
-        [E_TextureType.roughness]: I_BaseTexture | Texture | number,
-        [E_TextureType.ao]?: I_BaseTexture | Texture | number,
-        [E_TextureType.normal]?: I_BaseTexture | Texture,
-        [E_TextureType.color]?: I_BaseTexture | Texture | weVec3,
-        [E_TextureType.emissive]?: I_BaseTexture | Texture | weVec3,
-        [E_TextureType.depthMap]?: I_BaseTexture | Texture,
-        [E_TextureType.alpha]?: I_BaseTexture | Texture | number,
-        /**
-         * string ： url配置文件(url.json)
-         *  1、irradianceMap：文件url数组
-         *  2、perfilteredMap：文件url数组
-         *  3、brdfLUT:文件url
-         *  4、cubeMap：       名称+   '_px.jpg', '_nx.jpg','_py.jpg', '_ny.jpg','_pz.jpg','_nz.jpg',
-         */
-        // [E_TextureType.EnvMap]?: string | I_EnvMap,
-    },
-}
+// export interface IV_PBRMaterial_old extends IV_BaseMaterial {
+//     textures: {
+//         [E_TextureType.albedo]: I_BaseTexture | Texture | weVec3,
+//         [E_TextureType.metallic]: I_BaseTexture | Texture | number,
+//         [E_TextureType.roughness]: I_BaseTexture | Texture | number,
+//         [E_TextureType.ao]?: I_BaseTexture | Texture | number,
+//         [E_TextureType.normal]?: I_BaseTexture | Texture,
+//         [E_TextureType.color]?: I_BaseTexture | Texture | weVec3,
+//         [E_TextureType.emissive]?: I_BaseTexture | Texture | weVec3,
+//         [E_TextureType.depthMap]?: I_BaseTexture | Texture,
+//         [E_TextureType.alpha]?: I_BaseTexture | Texture | number,
+//         /**
+//          * string ： url配置文件(url.json)
+//          *  1、irradianceMap：文件url数组
+//          *  2、perfilteredMap：文件url数组
+//          *  3、brdfLUT:文件url
+//          *  4、cubeMap：       名称+   '_px.jpg', '_nx.jpg','_py.jpg', '_ny.jpg','_pz.jpg','_nz.jpg',
+//          */
+//         // [E_TextureType.EnvMap]?: string | I_EnvMap,
+//     },
+// }
 
 enum E_ThisTexturesType {
     "texture" = "texture",
@@ -303,18 +303,18 @@ export class PBRMaterial extends BaseMaterial {
         this.kind = E_MaterialType.PBR;
         this.textures = {};
     }
-    getAttributeOfThisTextures(texture: T_ThisTexturesType): E_ThisTexturesType {
-        if (texture instanceof Texture) {
-            return E_ThisTexturesType.texture;
-        }
-        else if (isWeVec3(texture)) {
-            return E_ThisTexturesType.weVec3;
-        }
-        else if (typeof texture == "number") {
-            return E_ThisTexturesType.number;
-        }
-        throw new Error("texture type error");
-    }
+    // getAttributeOfThisTextures(texture: T_ThisTexturesType): E_ThisTexturesType {
+    //     if (texture instanceof Texture) {
+    //         return E_ThisTexturesType.texture;
+    //     }
+    //     else if (isWeVec3(texture)) {
+    //         return E_ThisTexturesType.weVec3;
+    //     }
+    //     else if (typeof texture == "number") {
+    //         return E_ThisTexturesType.number;
+    //     }
+    //     throw new Error("texture type error");
+    // }
     async readyForGPU(): Promise<any> {
         // this.defaultSampler = this.checkSampler(this.inputValues);
         for (let key in this.inputValues.textures) {
@@ -550,86 +550,86 @@ export class PBRMaterial extends BaseMaterial {
             }
         }
     }
-    /**
-     * 获取当前材质是否绑定了纹理
-     * @returns {
-        flag_texture_albedo: boolean,
-        flag_texture_metallic: boolean,
-        flag_texture_roughness: boolean,
-        flag_texture_ao: boolean,
-        flag_texture_normal: boolean,
-        flag_texture_color: boolean,
-    }       
-     */
-    getFlagTexture(): {
-        flag_texture_albedo: boolean,
-        flag_texture_metallic: boolean,
-        flag_texture_roughness: boolean,
-        flag_texture_ao: boolean,
-        flag_texture_normal: boolean,
-        flag_texture_color: boolean,
-    } {
-        let flag_texture_albedo = false;
-        let flag_texture_metallic = false;
-        let flag_texture_roughness = false;
-        let flag_texture_ao = false;
-        let flag_texture_normal = false;
-        let flag_texture_color = false;
-        //循环绑定纹理
-        for (let i in this.textures) {
-            if (i == E_TextureType.albedo)
-                if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                    flag_texture_albedo = true;
-                }
-                else {
-                    flag_texture_albedo = false;
-                }
-            else if (i == E_TextureType.metallic)
-                if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                    flag_texture_metallic = true;
-                }
-                else {
-                    flag_texture_metallic = false;
-                }
-            else if (i == E_TextureType.roughness)
-                if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                    flag_texture_roughness = true;
-                }
-                else {
-                    flag_texture_roughness = false;
-                }
-            else if (i == E_TextureType.ao) {
-                if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                    flag_texture_ao = true;
-                }
-                else {
-                    flag_texture_ao = false;
-                }
-            }
-            else if (i == E_TextureType.normal)
-                if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                    flag_texture_normal = true;
-                }
-                else {
-                    flag_texture_normal = false;
-                }
-            else if (i == E_TextureType.color)
-                if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-                    flag_texture_color = true;
-                }
-                else {
-                    flag_texture_color = false;
-                }
-        }
-        return {
-            flag_texture_albedo,
-            flag_texture_metallic,
-            flag_texture_roughness,
-            flag_texture_ao,
-            flag_texture_normal,
-            flag_texture_color,
-        }
-    }
+    // /**
+    //  * 获取当前材质是否绑定了纹理
+    //  * @returns {
+    //     flag_texture_albedo: boolean,
+    //     flag_texture_metallic: boolean,
+    //     flag_texture_roughness: boolean,
+    //     flag_texture_ao: boolean,
+    //     flag_texture_normal: boolean,
+    //     flag_texture_color: boolean,
+    // }       
+    //  */
+    // getFlagTexture(): {
+    //     flag_texture_albedo: boolean,
+    //     flag_texture_metallic: boolean,
+    //     flag_texture_roughness: boolean,
+    //     flag_texture_ao: boolean,
+    //     flag_texture_normal: boolean,
+    //     flag_texture_color: boolean,
+    // } {
+    //     let flag_texture_albedo = false;
+    //     let flag_texture_metallic = false;
+    //     let flag_texture_roughness = false;
+    //     let flag_texture_ao = false;
+    //     let flag_texture_normal = false;
+    //     let flag_texture_color = false;
+    //     //循环绑定纹理
+    //     for (let i in this.textures) {
+    //         if (i == E_TextureType.albedo)
+    //             if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+    //                 flag_texture_albedo = true;
+    //             }
+    //             else {
+    //                 flag_texture_albedo = false;
+    //             }
+    //         else if (i == E_TextureType.metallic)
+    //             if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+    //                 flag_texture_metallic = true;
+    //             }
+    //             else {
+    //                 flag_texture_metallic = false;
+    //             }
+    //         else if (i == E_TextureType.roughness)
+    //             if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+    //                 flag_texture_roughness = true;
+    //             }
+    //             else {
+    //                 flag_texture_roughness = false;
+    //             }
+    //         else if (i == E_TextureType.ao) {
+    //             if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+    //                 flag_texture_ao = true;
+    //             }
+    //             else {
+    //                 flag_texture_ao = false;
+    //             }
+    //         }
+    //         else if (i == E_TextureType.normal)
+    //             if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+    //                 flag_texture_normal = true;
+    //             }
+    //             else {
+    //                 flag_texture_normal = false;
+    //             }
+    //         else if (i == E_TextureType.color)
+    //             if (this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
+    //                 flag_texture_color = true;
+    //             }
+    //             else {
+    //                 flag_texture_color = false;
+    //             }
+    //     }
+    //     return {
+    //         flag_texture_albedo,
+    //         flag_texture_metallic,
+    //         flag_texture_roughness,
+    //         flag_texture_ao,
+    //         flag_texture_normal,
+    //         flag_texture_color,
+    //     }
+    // }
     /**
      * 通用部分的uniform绑定
      * @param startBinding 
@@ -642,7 +642,7 @@ export class PBRMaterial extends BaseMaterial {
         else {
             let groupAndBindingString: string = "";
             let binding: number = startBinding;
-            let uniform1: T_uniformGroup = [];
+            let uniform1: T_uniformOneGroup = [];
             let code: string = "";
             ///////////group binding
             {/////uniform 
@@ -714,58 +714,7 @@ export class PBRMaterial extends BaseMaterial {
                     }
                 }
             }
-            // {   ////group bindgin sampler 字符串
-            //     groupAndBindingString += ` @group(1) @binding(${binding}) var u_Sampler : sampler; \n `;
-            //     //uniform sampler
-            //     let uniformSampler: GPUBindGroupEntry = {
-            //         binding: binding,
-            //         resource: this.defaultSampler,
-            //     };
-            //     //uniform sampler layout
-            //     let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
-            //         binding: binding,
-            //         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            //         sampler: {
-            //             type: this.defaultSamplerBindingType,
-            //         },
-            //     };
-            //     //添加到resourcesGPU的Map中
-            //     this.scene.resourcesGPU.set(uniformSampler, uniformSamplerLayout);
-            //     this.mapList.push({ key: uniformSampler, type: "GPUBindGroupLayoutEntry" });
-            //     //push到uniform1队列
-            //     uniform1.push(uniformSampler);
-            //     //+1
-            //     binding++;
-            // }
-            // {//循环绑定纹理
-            //     for (let i in this.textures) {
-            //         if (this.textures[i] instanceof Texture && this.getAttributeOfThisTextures(this.textures[i]) == E_ThisTexturesType.texture) {
-            //             //uniform texture
-            //             let uniformTexture: GPUBindGroupEntry = {
-            //                 binding: binding,
-            //                 resource: this.textures[i].texture.createView(),
-            //             };
-            //             //uniform texture layout
-            //             let uniformTextureLayout: GPUBindGroupLayoutEntry = {
-            //                 binding: binding,
-            //                 visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-            //                 texture: this.textures[i].defaultTextureLayout(),
-            //                 // texture: {
-            //                 //     sampleType: "float",
-            //                 //     viewDimension: "2d",
-            //                 // },
-            //             };
-            //             //添加到resourcesGPU的Map中
-            //             this.scene.resourcesGPU.set(uniformTexture, uniformTextureLayout);
-            //             this.mapList.push({ key: uniformTexture, type: "GPUBindGroupLayoutEntry" });
-            //             //push到uniform1队列
-            //             uniform1.push(uniformTexture);
 
-            //             groupAndBindingString += `@group(1) @binding(${binding}) var u_${i}Texture: texture_2d<f32>;\n`;//u_${i}是texture的名字，指定的三种情况，texture，specularTexture，normalTexture
-            //             binding++;
-            //         }
-            //     }
-            // }
             this.unifromEntryBundle_Common = {
                 bindingNumber: binding,
                 groupAndBindingString: groupAndBindingString,
@@ -783,23 +732,26 @@ export class PBRMaterial extends BaseMaterial {
     getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number = 0): I_materialBundleOutput {
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformEntries[]  = [];
         let code: string = "";
 
         {//获取固定uniform序列
             let uniformBundle = this.getUniformEntryBundleOfCommon(startBinding);
-            uniform1.push(...uniformBundle.entry);
+            // uniform1.push(...uniformBundle.entry;);
+            for (let perOne of uniformBundle.entry!) {
+                uniform1.push(perOne);
+            }
             binding = uniformBundle.bindingNumber;
             groupAndBindingString += uniformBundle.groupAndBindingString;
         }
         { ////////////////shader 模板格式化部分
-            let flags = this.getFlagTexture();
-            let flag_texture_albedo = flags.flag_texture_albedo;
-            let flag_texture_metallic = flags.flag_texture_metallic;
-            let flag_texture_roughness = flags.flag_texture_roughness;
-            let flag_texture_ao = flags.flag_texture_ao;
-            let flag_texture_normal = flags.flag_texture_normal;
-            let flag_texture_color = flags.flag_texture_color;
+            // let flags = this.getFlagTexture();
+            // let flag_texture_albedo = flags.flag_texture_albedo;
+            // let flag_texture_metallic = flags.flag_texture_metallic;
+            // let flag_texture_roughness = flags.flag_texture_roughness;
+            // let flag_texture_ao = flags.flag_texture_ao;
+            // let flag_texture_normal = flags.flag_texture_normal;
+            // let flag_texture_color = flags.flag_texture_color;
             //add 
             for (let perOne of template.material!.add as I_shaderTemplateAdd[]) {
                 code += perOne.code;
