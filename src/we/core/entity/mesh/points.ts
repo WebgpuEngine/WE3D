@@ -186,12 +186,12 @@ export class Points extends EntityBundleMaterial {
     // /**
     //  * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
     //  * @param startBinding 
-    //  * @returns uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
+    //  * @returns uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final 
     //  */
     // getUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate, startBinding: number = 0, wireFrame: boolean = false): I_EntityBundleOfUniformAndShaderTemplateFinal {
     //     //uniform 部分
     //     let bindingNumber = startBinding;
-    //     let uniform1: T_uniformGroup = [];
+    //     let uniform1: T_uniformGroups = [];
 
     //     let unifrom10: I_uniformArrayBufferEntry = {
     //         label: this.Name + " uniform at group(1) binding(0)",
@@ -235,7 +235,7 @@ export class Points extends EntityBundleMaterial {
     //     //     uniform1.push(...uniformsMaterial.uniformGroup);
     //     //     shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
     //     // }
-    //     let uniformGroups: T_uniformGroup[] = [uniform1];
+    //     let uniformGroups: T_uniformGroups[] = [uniform1];
 
     //     return { bindingNumber, uniformGroups, shaderTemplateFinal };
     // }

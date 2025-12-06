@@ -1,6 +1,6 @@
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import { I_DrawCommandIDs, I_uniformArrayBufferEntry, IV_BaseCommand, T_uniformGroup } from "./base";
+import { I_DrawCommandIDs, I_uniformArrayBufferEntry, IV_BaseCommand, T_uniformGroups } from "./base";
 import { createUniformBuffer } from "./baseFunction";
 import { I_DynamicUniformOfDrawCommand } from "./DrawCommand";
 
@@ -33,11 +33,11 @@ export interface IV_ComputeCommand extends IV_BaseCommand {
     /**
      * 绑定的uniform buffer
      * 1、GPUBindGroup[]：直接绑定的uniform buffer
-     * 2、T_uniformGroup[]：需要根据T_uniformGroup创建GPUBindGroup，然后再绑定。
+     * 2、T_uniformGroups[]：需要根据T_uniformGroups创建GPUBindGroup，然后再绑定。
      *    A、如果时静态的数据，直接创建GPUBindGroup，然后绑定。
      *    B、如果时动态的数据，需要在update中更新数据，然后再创建GPUBindGroup，然后绑定。
      */
-    uniform?: GPUBindGroup[] | T_uniformGroup[],//[GPUBindGroupEntry[]],
+    uniform?: GPUBindGroup[] | T_uniformGroups[],//[GPUBindGroupEntry[]],
     /**
      * ID组
      */
@@ -114,7 +114,7 @@ export class ComputeCommand {
             input.uniform.every((item) => {
                 return Array.isArray(item) && item.every((subItem) => "binding" in subItem)
             })) {
-            this.bindGroups = this.createUniformGroups(input.uniform as T_uniformGroup[]);
+            this.bindGroups = this.createUniformGroups(input.uniform as T_uniformGroups[]);
         }
         else {
             this.bindGroups = input.uniform as GPUBindGroup[];
@@ -170,7 +170,7 @@ export class ComputeCommand {
      * 
      * @returns localUniformGroups
      */
-    createUniformGroups(unifromGroupSource: T_uniformGroup[]): GPUBindGroup[] {
+    createUniformGroups(unifromGroupSource: T_uniformGroups[]): GPUBindGroup[] {
         let device = this.device;
         let pipeline = this.pipeline;
         let bindGroup: GPUBindGroup[] = [];

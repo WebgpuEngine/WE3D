@@ -1,6 +1,6 @@
 import { E_lifeState, weColor4 } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_uniformArrayBufferEntry, T_uniformGroup } from "../../command/base";
+import { I_uniformArrayBufferEntry, T_uniformGroups } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { getOpacity_GBufferOfUniformOfDefer } from "../../gbuffers/base";
 import { Clock } from "../../scene/clock";
@@ -95,7 +95,7 @@ export class PhongMaterial extends BaseMaterial {
     // let template: I_ShaderTemplate;
     let groupAndBindingString: string = "";
     let binding: number = startBinding;
-    let uniform1: T_uniformGroup = [];
+    let uniform1: T_uniformGroups = [];
     let code: string = "";
     ///////////group binding
     ////group binding  texture 字符串
@@ -295,7 +295,7 @@ export class PhongMaterial extends BaseMaterial {
   getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
     return this.getOpaqueCodeFS(SHT_materialPhongFS_defer_mergeToVS, startBinding);
   }
-  getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+  getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroups; } {
     throw new Error("Method not implemented.");
   }
   getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {

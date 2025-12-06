@@ -16,7 +16,7 @@ import { Texture } from "../../texture/texture";
 import { T_textureSourceType } from "../../texture/base";
 import { E_MaterialType, E_TextureType, E_TransparentType, I_BundleOfMaterialForMSAA, I_materialBundleOutput, IV_BaseMaterial } from "../base";
 import { E_lifeState } from "../../base/coreDefine";
-import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base";
+import { I_dynamicTextureEntryForView, T_uniformGroups } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialTexture_TT_FS_mergeToVS, SHT_materialTexture_TTP_FS_mergeToVS, SHT_materialTexture_TTPF_FS_mergeToVS, SHT_materialTextureFS_mergeToVS, SHT_materialTextureFS_MSAA_mergeToVS } from "../../shadermanagemnet/material/textureMaterial";
@@ -119,7 +119,7 @@ export class TextureMaterial extends BaseMaterial {
     getUniformEntryBundleOfCommon(startBinding: number): {
         bindingNumber: number,
         groupAndBindingString: string,
-        entry: T_uniformGroup,
+        entry: T_uniformGroups,
     } {
         if (this.unifromEntryBundle_Common != undefined) {
             return this.unifromEntryBundle_Common;
@@ -127,7 +127,7 @@ export class TextureMaterial extends BaseMaterial {
         else {
             let binding = startBinding;
             let groupAndBindingString = "";
-            let uniform1: T_uniformGroup = [];
+            let uniform1: T_uniformGroups = [];
             let layout: GPUBindGroupLayoutEntry[] = [];
 
             {////group binding  texture 字符串
@@ -205,7 +205,7 @@ export class TextureMaterial extends BaseMaterial {
         // let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         {//获取固定uniform序列
             let uniformBundle = this.getUniformEntryBundleOfCommon(binding);
@@ -279,7 +279,7 @@ export class TextureMaterial extends BaseMaterial {
         let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         {//获取固定uniform序列
             let uniformBundle = this.getUniformEntryBundleOfCommon(binding);
@@ -321,7 +321,7 @@ export class TextureMaterial extends BaseMaterial {
         let template = SHT_materialTexture_TTPF_FS_mergeToVS;
         let bindingNumber: number = startBinding;
         let groupAndBindingString = "";
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         // let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         if (renderObject instanceof BaseCamera) {

@@ -1,4 +1,4 @@
-import { T_uniformGroup } from "../../../src/we/core/command/base";
+import { T_uniformGroups } from "../../../src/we/core/command/base";
 import { ComputeCommand, IV_ComputeCommand } from "../../../src/we/core/command/ComputeCommand";
 import { IV_Scene } from "../../../src/we/core/scene/base";
 import { Scene } from "../../../src/we/core/scene/scene";

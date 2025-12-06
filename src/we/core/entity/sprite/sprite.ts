@@ -4,7 +4,7 @@
  */
 import { E_lifeState, E_renderForDC, I_Update } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, T_uniformGroup } from "../../command/base";
+import { I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, T_uniformGroups } from "../../command/base";
 import { IV_DC } from "../../command/DrawCommandGenerator";
 import { BaseLight } from "../../light/baseLight";
 import { BaseMaterial } from "../../material/baseMaterial";
@@ -162,12 +162,12 @@ export class Sprite extends EntityBundleMaterial {
     // /**
     //  * 获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
     //  * @param startBinding 
-    //  * @returns uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
+    //  * @returns uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final 
     //  */
-    oldgetUniformAndShaderTemplateFinal(startBinding: number = 0, wireFrame: boolean = false): { uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final } {
+    oldgetUniformAndShaderTemplateFinal(startBinding: number = 0, wireFrame: boolean = false): { uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final } {
         //uniform 部分
         let bindingNumber = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
 
         let unifrom10: I_uniformArrayBufferEntry = {
             label: this.Name + " uniform at group(1) binding(0)",
@@ -209,7 +209,7 @@ export class Sprite extends EntityBundleMaterial {
             uniform1.push(...uniformsMaterial.uniformGroup);
             shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
         }
-        let uniformGroups: T_uniformGroup[] = [uniform1];
+        let uniformGroups: T_uniformGroups[] = [uniform1];
 
         return { uniformGroups, shaderTemplateFinal };
     }

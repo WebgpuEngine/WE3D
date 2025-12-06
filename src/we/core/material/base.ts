@@ -1,5 +1,5 @@
 import { I_Update } from "../base/coreDefine";
-import { T_uniformGroup } from "../command/base";
+import { T_uniformGroups } from "../command/base";
 import { BaseEntity } from "../entity/baseEntity";
 import { Scene } from "../scene/scene";
 import { I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
@@ -181,7 +181,7 @@ export enum E_TextureType {
  */
 export interface I_materialBundleOutput {
     bindingNumber: number,
-    uniformGroup: T_uniformGroup,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
+    uniformGroup: T_uniformGroups,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
     singleShaderTemplateFinal: I_singleShaderTemplate_Final,
 }
 export interface I_BundleOfMaterialForMSAA {
@@ -196,7 +196,7 @@ export interface I_BundleOfMaterialForMSAA {
  */
 export interface I_PartBundleOfUniform_TT {
     bindingNumber: number,
-    uniformGroup: T_uniformGroup,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
+    uniformGroup: T_uniformGroups,//这里与mesh的uniformGroup是不同的，是一个bind group，而不是多个
     groupAndBindingString: string,
 }
 /**
@@ -225,7 +225,7 @@ export interface I_UniformBundleOfMaterial {
      * 3、TTP会用（判断是否透明）
      * 4、TTPF会用（输出color，进行Blend）
      */
-    entry: T_uniformGroup,
+    entry: T_uniformGroups,
     // layout: GPUBindGroupLayoutEntry[]
 }
 /**

@@ -1,7 +1,7 @@
 import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../entity/base";
 import { isUniformBufferPart } from "../resources/resourcesGPU";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate } from "../shadermanagemnet/base";
-import { I_uniformArrayBufferEntry, T_uniformGroup } from "./base";
+import { I_uniformArrayBufferEntry, T_uniformGroups } from "./base";
 import { BaseDrawCommand, IV_BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
 
@@ -9,7 +9,7 @@ import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
 /**
  * 简单绘制命令的uniform组条目类型,只由uniform data 和GPUBindGroupEntry
  */
-export type T_uniformGroupEntryOfSimple = GPUBindGroupEntry | I_uniformArrayBufferEntry;
+export type T_uniformGroupsEntryOfSimple = GPUBindGroupEntry | I_uniformArrayBufferEntry;
 
 /**
  * 1、不考虑system的情况，如果有system，使用DrawCommand
@@ -41,7 +41,7 @@ export interface IV_SimpleDrawCommand extends IV_BaseDrawCommand {
         SHT_Final?: I_ShaderTemplate_Final,
     },
     ColorTargetStat: GPUColorTargetState[],
-    uniforms?: T_uniformGroupEntryOfSimple[][];
+    uniforms?: T_uniformGroupsEntryOfSimple[][];
     /**
      * 绘制数据，position,uv,normal,color,indexes
      * 非必须，比如quad
@@ -219,7 +219,7 @@ export class SimpleDrawCommand extends BaseDrawCommand {
                 };
             }
         }
-        let uniformGroups: T_uniformGroup[] = [];//参见deferRender.fs.wgsl
+        let uniformGroups: T_uniformGroups[] = [];//参见deferRender.fs.wgsl
         return { bindingNumber, uniformGroups, shaderTemplateFinal };
     }
     /**

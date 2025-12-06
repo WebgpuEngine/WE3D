@@ -5,7 +5,7 @@
  */
 
 import type { Scene } from "../scene/scene";
-import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, I_viewport, T_BindGroupLayout, T_rpdInfomationOfMSAA, T_uniformGroup } from "./base";
+import type { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, I_viewport, T_BindGroupLayout, T_rpdInfomationOfMSAA, T_uniformGroups } from "./base";
 import { createIndexBuffer, createUniformBuffer, createVerticesBuffer, updataOneUniformBuffer } from "./baseFunction";
 import { DrawCommand, IV_DrawCommand } from "./DrawCommand";
 import { E_renderForDC } from "../base/coreDefine";
@@ -196,7 +196,7 @@ export interface IV_DC {
          * 3、entity的bindGroup占用bindGroup1的位置；
          * 4、如果IV_DC,没有定义system，则uniform不考虑system的BindGroup的问题，即raw模式（NDC）
          */
-        uniforms?: T_uniformGroup[],//vs 部分有会 vertex texture
+        uniforms?: T_uniformGroups[],//vs 部分有会 vertex texture
         unifromLayout?: T_BindGroupLayout[],
     },
     render: {

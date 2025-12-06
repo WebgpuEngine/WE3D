@@ -3,7 +3,7 @@ import { I_Update, E_renderForDC } from "../base/coreDefine";
 import { Scene } from "../scene/scene";
 import { Rotation, RotationArray } from "../math/baseDefine";
 import { T_indexAttribute, T_vsAttribute, vsAttribute, vsAttributeMerge } from "../command/DrawCommandGenerator";
-import { I_drawMode, I_drawModeIndexed, T_uniformGroup } from "../command/base";
+import { I_drawMode, I_drawModeIndexed, T_uniformGroups } from "../command/base";
 import { I_ShaderTemplate_Final } from "../shadermanagemnet/base";
 import { BaseLight } from "../light/baseLight";
 import { BaseMaterial } from "../material/baseMaterial";
@@ -211,7 +211,7 @@ export interface I_EntityAttributes {
  */
 export interface I_EntityBundleOfUniformAndShaderTemplateFinal {
     bindingNumber: number,
-    uniformGroups: T_uniformGroup[],
+    uniformGroups: T_uniformGroups[],
     shaderTemplateFinal: I_ShaderTemplate_Final
 }
 

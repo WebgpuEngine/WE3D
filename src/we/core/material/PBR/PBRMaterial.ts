@@ -2,7 +2,7 @@ import { identity } from "muigui/dist/0.x/libs/utils";
 import { E_lifeState, weColor4, weVec3 } from "../../base/coreDefine";
 import { isWeColor3, isWeVec3 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { T_uniformEntries, T_uniformGroup, T_uniformOneGroup } from "../../command/base";
+import { T_uniformEntries, T_uniformGroups, T_uniformOneGroup } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
@@ -635,7 +635,7 @@ export class PBRMaterial extends BaseMaterial {
      * @param startBinding 
      * @returns 
      */
-    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroups; } {
         if (this.unifromEntryBundle_Common != undefined) {
             return this.unifromEntryBundle_Common;
         }

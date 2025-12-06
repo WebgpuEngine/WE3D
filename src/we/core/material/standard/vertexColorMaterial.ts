@@ -1,6 +1,6 @@
 import { E_lifeState } from "../../base/coreDefine";
 import { BaseCamera } from "../../camera/baseCamera";
-import { T_uniformGroup } from "../../command/base";
+import { T_uniformGroups } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
@@ -39,7 +39,7 @@ export class VertexColorMaterial extends BaseMaterial {
     getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
         // let template = SHT_materialColorFS_mergeToVS;
 
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         let color: string = ` output.color = vec4f(fsInput.color,1); \n`;
 
@@ -72,7 +72,7 @@ export class VertexColorMaterial extends BaseMaterial {
     getOpacity_DeferColor(startBinding: number): I_materialBundleOutput {
         throw new Error("Method not implemented.");
     }
-    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroups; } {
         throw new Error("Method not implemented.");
     }
     getFS_TT(renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {

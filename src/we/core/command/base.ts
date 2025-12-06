@@ -139,7 +139,7 @@ export type  T_uniformOneGroup = T_uniformEntries[];
  * 1、undefined 表示没有uniform group
  * 2、[] 表示空的uniform group.未验证
 */
-export type T_uniformGroup = T_uniformOneGroup | [] |undefined;
+export type T_uniformGroups = T_uniformOneGroup | [] |undefined;
 
 /** bind group layout的数组  
  * 1、undefined 表示没有uniform group layout 

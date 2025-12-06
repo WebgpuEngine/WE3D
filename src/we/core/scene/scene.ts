@@ -2,7 +2,7 @@ import { V_lightNumber, limitsOfWE, E_renderForDC, V_weLinearFormat, V_shadowMap
 import { copyTextureToTexture } from "../base/coreFunction";
 import { BaseCamera } from "../camera/baseCamera";
 import { CameraManager } from "../camera/cameraManager";
-import { I_bindGroupAndGroupLayout, T_rpdInfomationOfMSAA, T_uniformGroup } from "../command/base";
+import { I_bindGroupAndGroupLayout, T_rpdInfomationOfMSAA, T_uniformGroups } from "../command/base";
 import { CamreaControl } from "../control/cameracCntrol";
 import { EntityManager } from "../entity/entityManager";
 import { InputManager } from "../input/inputManager";
@@ -845,7 +845,7 @@ export class Scene {
                 generate = false;
             }
         }
-        let systemUniform: T_uniformGroup;
+        let systemUniform: T_uniformGroups;
         let entriesGroupLayout: GPUBindGroupLayoutEntry[] = []
         let entriesGroup: GPUBindGroupEntry[] = [];
         if (generate) {

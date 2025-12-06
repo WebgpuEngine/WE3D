@@ -1,4 +1,4 @@
-import { I_uniformArrayBufferEntry, T_uniformGroup } from "../../command/base";
+import { I_uniformArrayBufferEntry, T_uniformGroups } from "../../command/base";
 import { VertexColorMaterial } from "../../material/standard/vertexColorMaterial";
 import { I_ShaderTemplate, I_ShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { IV_MeshEntity, Mesh } from "./mesh";
@@ -51,7 +51,7 @@ export class OneColoeCube extends Mesh {
     getUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate,startBinding: number = 0, wireFrame: boolean = false): I_EntityBundleOfUniformAndShaderTemplateFinal {
         //uniform 部分
         let bindingNumber = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
 
         let unifrom10: I_uniformArrayBufferEntry = {
             label: this.Name + " uniform at group(1) binding(0)",
@@ -100,7 +100,7 @@ export class OneColoeCube extends Mesh {
             uniform1.push(...uniformsMaterial.uniformGroup);
             shaderTemplateFinal.material = uniformsMaterial.singleShaderTemplateFinal;
         }
-        let uniformGroups: T_uniformGroup[] = [uniform1];
+        let uniformGroups: T_uniformGroups[] = [uniform1];
 
         return { uniformGroups, shaderTemplateFinal, bindingNumber };
     }

@@ -1,4 +1,4 @@
-import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformArrayBufferEntry, T_uniformEntries, T_uniformGroup } from "../command/base";
+import type { I_dynamicTextureEntryForExternal, I_dynamicTextureEntryForView, I_uniformArrayBufferEntry, T_uniformEntries, T_uniformGroups } from "../command/base";
 import { DrawCommand } from "../command/DrawCommand";
 import { Texture } from "../texture/texture";
 
@@ -30,7 +30,7 @@ export class ResourceManagerOfGPU {
     /////////////////////////////////////////////////////////////////////////////////////////
     // uniform[]-->BindGroup-->BindGroupLayout,DCG使用，目的：同一个MESH的DrawCommand使用同一个BindGroup
     /**uniformGrpu 对应的 BindGrouop */
-    uniformGroupToBindGroup: Map<T_uniformGroup, GPUBindGroup> = new Map();//需要人工释放资源
+    uniformGroupToBindGroup: Map<T_uniformGroups, GPUBindGroup> = new Map();//需要人工释放资源
     /** bindGroup 对应的layout */
     bindGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map();//需要人工释放资源
 
@@ -444,7 +444,7 @@ export function isUniformBufferPart(obj: unknown): obj is I_uniformArrayBufferEn
     );
 }
 
-export function isUniformGroup(obj: unknown): obj is T_uniformGroup {
+export function isUniformGroup(obj: unknown): obj is T_uniformGroups {
     return (
         Array.isArray(obj) &&
         obj.every(isUniformBufferPart || isGPUBindGroupEntry)

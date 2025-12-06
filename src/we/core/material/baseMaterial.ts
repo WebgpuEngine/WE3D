@@ -4,7 +4,7 @@ import { RootGPU } from "../organization/root";
 import { E_lifeState } from "../base/coreDefine";
 import { I_ShadowMapValueOfDC } from "../entity/base";
 import { IV_BaseMaterial, I_PartBundleOfUniform_TT, T_TransparentOfMaterial, I_materialBundleOutput, E_TransparentType, I_AlphaTransparentOfMaterial, I_TransparentOptionOfMaterial, I_UniformBundleOfMaterial, I_BundleOfMaterialForMSAA, E_MaterialType } from "./base";
-import { commmandType, I_dynamicTextureEntryForView, T_uniformGroup } from "../command/base";
+import { commmandType, I_dynamicTextureEntryForView, T_uniformGroups } from "../command/base";
 import { I_ShaderTemplate, I_singleShaderTemplate_Final } from "../shadermanagemnet/base";
 import { Scene } from "../scene/scene";
 import { BaseCamera } from "../camera/baseCamera";
@@ -255,7 +255,7 @@ export abstract class BaseMaterial extends RootGPU {
     abstract getUniformEntryBundleOfCommon(startBinding: number): {
         bindingNumber: number,
         groupAndBindingString: string,
-        entry: T_uniformGroup,
+        entry: T_uniformGroups,
     }
     /**
      * 获取当前材质的TTPF的输出uniform bundle 。（在common uniform bundle之后）
@@ -270,7 +270,7 @@ export abstract class BaseMaterial extends RootGPU {
         else {//uniform ID纹理
             let bindingNumber = startBinding;
             let groupAndBindingString = "";
-            let uniform1: T_uniformGroup = [];
+            let uniform1: T_uniformGroups = [];
             let layout: GPUBindGroupLayoutEntry[] = [];
             let uniforIDTexture: I_dynamicTextureEntryForView = {
                 label: this.Name + " texture ID at group(1) binding(" + bindingNumber + ")",
@@ -419,7 +419,7 @@ export abstract class BaseMaterial extends RootGPU {
     getFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC, startBinding: number): I_materialBundleOutput {
         let groupAndBindingString = "";
         //生成 bind group相关内容
-        let uniform: T_uniformGroup = [];
+        let uniform: T_uniformGroups = [];
         let bindingNumber = startBinding;
         let template: I_ShaderTemplate;
         let code: string = "";
@@ -446,7 +446,7 @@ export abstract class BaseMaterial extends RootGPU {
     getUniformEntryOfCamera_TTP(renderObject: BaseCamera, _bindingNumber: number): I_PartBundleOfUniform_TT {
         let bindingNumber = _bindingNumber;
         let groupAndBindingString = "";
-        let uniformRoot: T_uniformGroup = [];
+        let uniformRoot: T_uniformGroups = [];
 
         {//获取固定uniform序列
             let uniformBundle = this.getUniformEntryBundleOfCommon(bindingNumber);

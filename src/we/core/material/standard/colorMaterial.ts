@@ -1,7 +1,7 @@
 import { weColor4, E_lifeState } from "../../base/coreDefine";
 import { isWeColor4 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_dynamicTextureEntryForView, T_uniformGroup } from "../../command/base";
+import { I_dynamicTextureEntryForView, T_uniformGroups } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
@@ -98,7 +98,7 @@ export class ColorMaterial extends BaseMaterial {
      */
     getOpaqueCodeFS(template: I_ShaderTemplate, _startBinding: number): I_materialBundleOutput {
         // let template = SHT_materialColorFS_mergeToVS;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         let replaceValue: string = ` output.color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         // let replaceValue: string = ` output.color = vec4f(fsInput.uv.xy,1,1); \n`;
@@ -156,7 +156,7 @@ export class ColorMaterial extends BaseMaterial {
     getFS_TT(_renderObject: BaseCamera | I_ShadowMapValueOfDC, _startBinding: number): I_materialBundleOutput {
         let template = SHT_materialColor_TT_FS_mergeToVS;
 
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         let replaceValue: string = ` output.color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         // let replaceValue: string = ` output.color = vec4f(fsInput.uv.xy,1,1); \n`;
@@ -187,7 +187,7 @@ export class ColorMaterial extends BaseMaterial {
         let bindingNumber = startBinding;
 
         let groupAndBindingString = "";
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         let replaceValue: string = ` color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         if (renderObject instanceof BaseCamera) {
@@ -260,7 +260,7 @@ export class ColorMaterial extends BaseMaterial {
      * @param startBinding 
      * @returns 
      */
-    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroups; } {
         this.unifromEntryBundle_Common = {
             bindingNumber: startBinding,
             groupAndBindingString: "",

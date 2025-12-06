@@ -2,7 +2,7 @@ import { identity } from "muigui/dist/0.x/libs/utils";
 import { E_lifeState, weColor4, weVec3 } from "../../base/coreDefine";
 import { isWeColor3, isWeVec3 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { T_uniformGroup } from "../../command/base";
+import { T_uniformGroups } from "../../command/base";
 import { I_ShadowMapValueOfDC } from "../../entity/base";
 import { E_resourceKind } from "../../resources/resourcesGPU";
 import { Clock } from "../../scene/clock";
@@ -445,14 +445,14 @@ export class PBRMaterial extends BaseMaterial {
      * @param startBinding 
      * @returns 
      */
-    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroup; } {
+    getUniformEntryBundleOfCommon(startBinding: number): { bindingNumber: number; groupAndBindingString: string; entry: T_uniformGroups; } {
         if (this.unifromEntryBundle_Common != undefined) {
             return this.unifromEntryBundle_Common;
         }
         else {
             let groupAndBindingString: string = "";
             let binding: number = startBinding;
-            let uniform1: T_uniformGroup = [];
+            let uniform1: T_uniformGroups = [];
             let code: string = "";
             ///////////group binding
             ////group bindgin sampler 字符串
@@ -522,7 +522,7 @@ export class PBRMaterial extends BaseMaterial {
     getOpaqueCodeFS(template: I_ShaderTemplate, startBinding: number): I_materialBundleOutput {
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
 
         {//获取固定uniform序列

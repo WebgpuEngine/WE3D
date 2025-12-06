@@ -1,6 +1,6 @@
 import Layout from "muigui/dist/0.x/layout/Layout";
 import { E_renderForDC, V_weLinearFormat } from "../base/coreDefine";
-import { commmandType, T_uniformGroup } from "../command/base";
+import { commmandType, T_uniformGroups } from "../command/base";
 import { DrawCommand, IV_DrawCommand } from "../command/DrawCommand";
 import { I_EntityBundleOfUniformAndShaderTemplateFinal } from "../entity/base";
 import { E_GBufferNames } from "../gbuffers/base";
@@ -221,7 +221,7 @@ export class DeferDrawCommandGenerator implements IV_DeferDrawCommand {
                 };
             }
         }
-        let uniformGroups: T_uniformGroup[] = [];//参见deferRender.fs.wgsl
+        let uniformGroups: T_uniformGroups[] = [];//参见deferRender.fs.wgsl
         return { bindingNumber, uniformGroups, shaderTemplateFinal };
     }
     formatShaderCode(template: I_singleShaderTemplate): string {

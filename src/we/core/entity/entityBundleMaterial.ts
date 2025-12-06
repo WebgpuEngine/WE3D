@@ -9,7 +9,7 @@
  * 3、非共性或功能不相同的，各自实现
  */
 import { E_lifeState, E_renderForDC } from "../base/coreDefine";
-import { I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, T_uniformGroup } from "../command/base";
+import { I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, T_uniformGroups } from "../command/base";
 import { IV_DC } from "../command/DrawCommandGenerator";
 import { BaseGeometry } from "../geometry/baseGeometry";
 import { I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../material/base";
@@ -151,12 +151,12 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     /**
      * 获取VS 部分uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
      * @param startBinding 
-     * @returns uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
+     * @returns uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final 
      */
     getUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate, startBinding: number = 0, wireFrame: boolean = false): I_EntityBundleOfUniformAndShaderTemplateFinal {
         //uniform 部分
         let bindingNumber = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
 
         let unifrom10: I_uniformArrayBufferEntry = {
             label: this.Name + " uniform at group(1) binding(0)",
@@ -195,7 +195,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             }
         }
 
-        let uniformGroups: T_uniformGroup[] = [uniform1];
+        let uniformGroups: T_uniformGroups[] = [uniform1];
 
         return { bindingNumber: bindingNumber, uniformGroups, shaderTemplateFinal };
     }

@@ -2,7 +2,7 @@ import { E_renderForDC } from "../base/coreDefine";
 import { E_TransparentType } from "../material/base";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformArrayBufferEntry, I_viewport, IV_BaseCommand, T_uniformGroup } from "./base";
+import { I_DrawCommandIDs, I_drawMode, I_drawModeIndexed, I_PipelineStructure, I_uniformArrayBufferEntry, I_viewport, IV_BaseCommand, T_uniformGroups } from "./base";
 import { BaseDrawCommand } from "./BaseDrawCommand";
 import { createUniformBuffer } from "./baseFunction";
 
@@ -20,7 +20,7 @@ export interface I_DynamicUniformOfDrawCommand {
      * 有system，从1开始，共3个
      * 没有system，从0开始，共4个
      */
-    bindGroupsUniform: T_uniformGroup[],
+    bindGroupsUniform: T_uniformGroups[],
     /**
      * bind group layout 索引，从几开始（有system，从1开始，没有system，从0开始）
      */

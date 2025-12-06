@@ -11,7 +11,7 @@
  *    B、opacity,整体透明度
  */
 import { E_lifeState } from "../../base/coreDefine";
-import { T_uniformGroup } from "../../command/base";
+import { T_uniformGroups } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { BaseCamera } from "../../camera/baseCamera";
@@ -68,7 +68,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         //    let template: I_ShaderTemplate;
         let groupAndBindingString: string = "";
         let binding: number = startBinding;
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         ///////////group binding
         ////group binding  texture 字符串

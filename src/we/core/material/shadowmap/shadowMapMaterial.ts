@@ -1,7 +1,7 @@
 import { Color4, E_lifeState } from "../../base/coreDefine";
 import { isWeColor3, isWeColor4 } from "../../base/coreFunction";
 import { BaseCamera } from "../../camera/baseCamera";
-import { I_uniformArrayBufferEntry, T_uniformEntries, T_uniformGroup } from "../../command/base";
+import { I_uniformArrayBufferEntry, T_uniformEntries, T_uniformGroups } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderTemplateReplaceType, I_ShaderTemplate_Final, I_shaderTemplateAdd, I_shaderTemplateReplace, I_singleShaderTemplate_Final } from "../../shadermanagemnet/base";
 import { SHT_materialColorFS_mergeToVS } from "../../shadermanagemnet/material/colorMaterial";
@@ -38,7 +38,7 @@ export class ShadowMapMaterial extends BaseMaterial {
     getOpaqueCodeFS(_startBinding: number): I_materialBundleOutput {
         let template = SHT_materialColorFS_mergeToVS;
 
-        let uniform1: T_uniformGroup = [];
+        let uniform1: T_uniformGroups = [];
         let code: string = "";
         let replaceValue: string = ` output.color = vec4f(${this.red}, ${this.green}, ${this.blue}, ${this.alpha}); \n`;
         // let replaceValue: string = ` output.color = vec4f(fsInput.uv.xy,1,1); \n`;

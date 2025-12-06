@@ -1,6 +1,6 @@
 import { V_weLinearFormat } from "../base/coreDefine"
 import { BaseCamera } from "../camera/baseCamera"
-import { T_uniformGroup } from "../command/base"
+import { T_uniformGroups } from "../command/base"
 import { Scene } from "../scene/scene"
 
 /**GBuffer的 GPUTexture集合 
@@ -245,7 +245,7 @@ export interface I_TransparentGBufferGroup {
 export interface I_GBufferBundle {
     binding: number,
     groupAndBindingString: string,
-    uniformGroup: T_uniformGroup,
+    uniformGroup: T_uniformGroups,
 }
 
 /**

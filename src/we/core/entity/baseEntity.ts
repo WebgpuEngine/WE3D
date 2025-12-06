@@ -271,7 +271,7 @@ export abstract class BaseEntity extends RootGPU {
      * 2、shaderTemplateFinal：shader模板输出，包括了shader代码和groupAndBindingString。
      * 3、enity 和material的uniform layout 到ResourceGPU的Map操作
      * @param startBinding 
-     * @returns  uniformGroups: T_uniformGroup[], shaderTemplateFinal: I_ShaderTemplate_Final 
+     * @returns  uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final 
      */
     abstract getUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate, startBinding: number): I_EntityBundleOfUniformAndShaderTemplateFinal
 
