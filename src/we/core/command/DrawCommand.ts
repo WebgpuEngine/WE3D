@@ -127,10 +127,13 @@ export class DrawCommand extends BaseDrawCommand {
         }
         else if (option.mergeID !== undefined) {
             let viewport = this.scene.cameraManager.getCameraByUUID(option.mergeID).viewport;
-            let minDepth = viewport.minDepth == undefined ? 0 : viewport.minDepth;
-            let maxDepth = viewport.maxDepth == undefined ? 1 : viewport.maxDepth;
-
-            passEncoder.setViewport(viewport.x, viewport.y, viewport.width, viewport.height, minDepth, maxDepth);
+            if (viewport != undefined) {
+                let minDepth = 0;
+                let maxDepth = 1;
+                minDepth = viewport.minDepth == undefined ? 0 : viewport.minDepth;
+                maxDepth = viewport.maxDepth == undefined ? 1 : viewport.maxDepth;
+                passEncoder.setViewport(viewport.x, viewport.y, viewport.width, viewport.height, minDepth, maxDepth);
+            }
         }
         // 无值：NDC等
         if (this.traget == undefined) {
