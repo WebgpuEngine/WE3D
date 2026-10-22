@@ -1,7 +1,7 @@
 # 实施记录 · WE3D 工程化补齐
 
 > 生成时间：2026-10-22　｜　状态：持续推进中
-> 详细方案：`design/engineering-plan.md`（本文件只做「计划 → 实施 → 验证」的跟踪，不重复展开细节）
+> 详细方案：`./engineering-plan.md`（本文件只做「计划 → 实施 → 验证」的跟踪，不重复展开细节）
 > 工作原则：**每一步先确认、再实施**；先让构建变绿 → 建回归基线 → 加单测 → 再修错误。
 
 ## 状态图例
@@ -30,7 +30,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | Phase | 名称 | 目标 | 状态 | 详细方案 |
 | --- | --- | --- | --- | --- |
 | 0 | 约定与文档 | AGENTS.md + 方案文档就位 | ✅ 已完成 | [engineering-plan §Phase0](./engineering-plan.md#phase-0--约定与文档) |
-| 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ⬜ 未开始 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
+| 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ⬜ 未开始 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
 | 3 | Vitest 单测 | 无 GPU 依赖冒烟用例 | ⬜ 未开始 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
 | 4 | Playwright 回归 | 示例截图基线，提交前必跑 | ⬜ 未开始 | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
@@ -45,30 +45,35 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 - **计划要点**
   - 写 `AGENTS.md`：目录约定、AI 工作约定、开发流程、发布约定、脚本速查。
-  - 本方案存入 `design/engineering-plan.md`。
-  - 根 `README.md` 仅作说明文档。
+  - 本方案存入 `design/engineering/engineering-plan.md`。
+  - 根 `README.md` 仅作说明文档（设计入口为 `AGENTS.md`）。
 - **实施记录**
   - `AGENTS.md` 已存在且目录约定齐备（9 项全部覆盖）。
   - `examples` 的「提交前必跑」规则写在「三、开发流程约定」第 1 条（2026-10-22 复核确认：保持现状不改）。
-  - `design/engineering-plan.md` 已落地。
-  - 本文件 `design/implementation-log.md` 于 2026-10-22 建立，承接跟踪职责。
-- **验收**：`AGENTS.md` 与 `engineering-plan.md` 均就位；本跟踪文档建立。
+  - 「三、开发流程约定」新增第 4 条 Playwright 回归约定（标注 Phase 4 落地后启用）。
+  - 「二、AI 工作约定」第 1 条修正：「设计入口」为 `AGENTS.md`；`README.md` 仅为整个项目的说明文档。
+  - 工程化计划/记录于 2026-10-22 由 `design/` 迁移至 `design/engineering/`（`engineering-plan.md`、`implementation-log.md`），并新增 `phase1-build-green.md`。
+- **验收**：`AGENTS.md` 与 `engineering-plan.md` 均就位；本跟踪文档建立并迁移完成。
 - **验证**：人工复核对照 9 项目录约定，全部命中。
 - **备注**：上轮曾尝试整体执行被终止，本轮起改为逐 Phase 确认后实施。
 
 ---
 
-### Phase 1 — 让构建变绿（P0-0）　⬜ 未开始
+### Phase 1 — 让构建变绿（P0-0）　✅ 已完成
 
+- **现状分析**：详见 `./phase1-build-green.md`。
+  - `tsc --noEmit` 当前仅 **1 个**错误：`GBuffers.ts(9,269) TS2305` —— 导入不存在的 `V_TransparentGBufferNames`（`base.ts:123` 已注释该导出；该符号在 `GBuffers.ts` 仅出现在注释代码中）。
+  - 偏差：`tsconfig.json`/`tsconfig.examples.json` 已拆分但 `noUnusedLocals/Parameters=false`（未使用检查移交 ESLint）；`scripts/fix-unused-declarations.mjs` 不存在（步骤删除，移交 Phase 2）。
 - **计划要点**
-  - 拆分 tsconfig：`tsconfig.json` 仅 `include:["src"]` 且 `noUnusedLocals/Parameters=true`（门禁）；`tsconfig.examples.json` 放宽未使用检查。
-  - 运行 `scripts/fix-unused-declarations.mjs` 清理 `src/we` 的 unused（TS6133/6192/6196）。
-  - 修复唯一真实类型错误：`GBuffers.ts:9` 导入不存在的 `V_TransparentGBufferNames`。
+  - 删除 `GBuffers.ts:9` 导入中的 `V_TransparentGBufferNames`（连同前导逗号）。
+  - 保持 `noUnusedLocals/Parameters=false`，未使用检查移交 Phase 2 ESLint。
   - 目标：`src` 的 `tsc --noEmit` 收敛到 0。
-- **验收**：`npm run build`（tsc src 门禁）通过，0 错误。
-- **实施记录**：（待确认后填写）
-- **验证**：（待确认后填写）
-- **备注**：
+- **验收**：`npx tsc --noEmit` 输出 0 错误。
+- **实施记录**
+  - 2026-10-22 编辑 `src/we/core/gbuffers/GBuffers.ts:9`，从 import 解构列表中删除不存在的 `V_TransparentGBufferNames`（该符号在 `base.ts:123` 已被注释，且在 `GBuffers.ts` 仅出现于注释代码，删除无功能影响）。
+  - 确认两处计划偏差落地：`noUnusedLocals/Parameters` 保持 `false`（未使用检查移交 Phase 2 ESLint）；`scripts/fix-unused-declarations.mjs` 步骤删除（移交 Phase 2 `lint:fix`）。
+- **验证**：`npx tsc --noEmit` 输出错误数 = **0**（修复前为 1，即 `GBuffers.ts(9,269) TS2305`）。
+- **备注**：tsc 门禁基线已建立（0 错误）；后续 CI 以「错误数不增加」为初始基线（见 Phase 7）。
 
 ---
 
@@ -79,6 +84,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - `eslint.config.js`（flat），ignores 排除 `examples/`、`docs/`、`src/@loaders.gl/`、`node_modules`，范围 `src/we`。
   - `.prettierrc` + `.prettierignore`（排除 examples 海量文件、`.wgsl`、`docs/`、`public/`）。
   - 脚本：`lint` / `lint:fix` / `format` / `format:check`。
+  - 承接 Phase 1 移交：未使用检查由类型感知 `no-unused-vars` 承担。
 - **验收**：`npm run lint` 在 `src/we` 上可运行；`lint:fix` 可自动修复。
 - **实施记录**：（待确认后填写）
 - **验证**：（待确认后填写）
@@ -107,7 +113,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - `playwright.config.ts`：`webServer` 启动 vite，遍历 `examples/files.json` 的 `.html`，加载→等渲染稳定→截图。
   - 基线存 `test-results/baseline/`，首跑生成后提交 git；`test:baseline` 脚本。
   - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为「加载无 console 报错」断言。
-  - 约定文档化：`AGENTS.md`「三、开发流程约定」第 1 条已写「提交前必跑示例」。
+  - 约定文档化：`AGENTS.md`「三、开发流程约定」第 1、4 条已写「提交前必跑示例」。
 - **验收**：基线生成并提交；后续跑示例可比对。
 - **实施记录**：（待确认后填写）
 - **验证**：（待确认后填写）
@@ -156,7 +162,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ### Phase 8 — 错误修复落位（依托 Phase3/4 保护，分批）　⬜ 未开始
 
-- **计划要点**（依据 `design/workbuddy/core/04`）
+- **计划要点**（依据 `../workBuddy/core/04`）
   1. **P0-1** `root.ts` destroy key bug（显存泄漏）
   2. **P0-4** `||`→`??`（rightHand/alphaCutoff/metallicFactor/roughnessFactor/texCoord）
   3. **P0-8** `checkGPUBufferSize` 余量 + `unmap()` 调用
@@ -175,3 +181,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | --- | --- | --- |
 | 2026-10-22 | 建立本文件 | 承接 `engineering-plan.md` 的跟踪职责；确认 AGENTS.md 目录约定保持现状 |
 | 2026-10-22 | AGENTS.md 增补 | 「三、开发流程约定」新增第 4 条 Playwright 回归约定（标注 Phase 4 落地后启用） |
+| 2026-10-22 | AGENTS.md 修正 | 「二、AI 工作约定」第 1 条：「设计入口」改为 `AGENTS.md`；`README.md` 仅为整个项目的说明文档（非设计入口） |
+| 2026-10-22 | 目录迁移 | 工程化计划/记录由 `design/` 迁至 `design/engineering/`（`engineering-plan.md`、`implementation-log.md`）；新增 `phase1-build-green.md` |
+| 2026-10-22 | Phase 1 完成 | 修 `GBuffers.ts:9` 删除不存在导入；`tsc --noEmit` 归零（1→0）；确认两处计划偏差落地 |
+| 2026-10-22 | AGENTS.md 增补 | 「六、Git 提交约定」：commit 格式 `月日 具体内容`（MMDD）；禁止 AI/工具自动合并分支，合并仅人工手动 |

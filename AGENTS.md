@@ -18,7 +18,7 @@
 
 ## 二、AI 工作约定
 
-1. **设计入口**：根目录 `README.md` 是 AI 设计入口文档。
+1. **设计入口**：本文件 `AGENTS.md` 是 AI / 协作者进入仓库的第一份指引（目录约定、开发流程、发布约定均以此为准）。根目录 `README.md` 是**整个项目的说明文档**（非设计入口）。
 2. **设计产出**：所有设计、方案、约定类文件保存到 `design/` 目录。
 3. **工程化门禁范围**：`ESLint` / `tsc` 门禁仅覆盖 `src/we`（不含 `examples/`、`docs/`、`src/@loaders.gl/`），避免大范围误伤。
 
@@ -55,3 +55,8 @@
 | `npm run docs:build` | 重建 `docs/`（typedoc） |
 | `npm run examples:generate` | 重新生成 `examples/files.json` 索引 |
 | `npm run test:baseline` | 生成 Playwright 截图基线（提交 git） |
+
+## 六、Git 提交约定
+
+- **commit 信息格式**：`月日 具体内容`（例：`1022 修复 GBuffers 导入不存在符号导致 tsc 报错`）。月日取两位月 + 两位日（`MMDD`）。
+- **不主动合并分支**：AI / 工具**不得自动执行分支合并**；分支合并（如 feature → main）一律由人工**手动**进行。

@@ -6,7 +6,7 @@
  */
 
 import { V_weLinearFormat } from "../base/coreDefine";
-import { E_GBufferNames, getColorAttachmentTargetsOfForward, getColorAttachmentTargetsOfMSAA, getColorAttachmentTargetsOfMSAAinfo, getColorAttachmentTargetsOfToneMapping, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_MsaaGBufferNames, V_TransparentGBufferNames } from "./base";
+import { E_GBufferNames, getColorAttachmentTargetsOfForward, getColorAttachmentTargetsOfMSAA, getColorAttachmentTargetsOfMSAAinfo, getColorAttachmentTargetsOfToneMapping, I_GBuffer, I_GBufferGroup, I_TransparentGBufferGroup, V_ForwardGBufferNames, V_MsaaGBufferNames } from "./base";
 
 
 export interface IV_GBuffer {
