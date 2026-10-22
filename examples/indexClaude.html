@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <title>WE3D Examples</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="gallery.css">
+</head>
+
+<body>
+
+    <div id="panel">
+        <div id="header">
+            <h1>
+                <span class="logo">WE3D</span>
+                <span class="section">examples</span>
+            </h1>
+            <div id="expandButton">&#9776;</div>
+        </div>
+
+        <div id="panelScrim"></div>
+
+        <div id="contentWrapper">
+            <div id="inputWrapper">
+                <input placeholder="Search examples..." type="text" id="filterInput" autocorrect="off"
+                    autocapitalize="off" spellcheck="false" />
+                <div id="clearSearchButton">&times;</div>
+            </div>
+            <div id="stats"></div>
+            <div id="content">
+                <img id="previewsToggler" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='%23c8d6e5' viewBox='0 0 16 16'%3E%3Cpath d='M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z'/%3E%3C/svg%3E" />
+            </div>
+        </div>
+    </div>
+
+    <iframe id="viewer" name="viewer" allow="fullscreen;"></iframe>
+
+    <script>
+
+    const panel = document.getElementById('panel');
+    const content = document.getElementById('content');
+    const viewer = document.getElementById('viewer');
+    const filterInput = document.getElementById('filterInput');
+    const clearSearchButton = document.getElementById('clearSearchButton');
+    const expandButton = document.getElementById('expandButton');
+    const panelScrim = document.getElementById('panelScrim');
+    const previewsToggler = document.getElementById('previewsToggler');
+    const statsEl = document.getElementById('stats');
+
+    const links = {};
+    const validRedirects = new Map();
+    const fragment = document.createDocumentFragment();
+
+    let selected = null;
+    let totalCount = 0;
+
+    // Category color palette
+    const CATEGORY_COLORS = [
+        '#0f9bf2', '#e94560', '#0be881', '#f9ca24', '#6c5ce7',
+        '#00cec9', '#fd79a8', '#e17055', '#00b894', '#a29bfe',
+        '#fab1a0', '#55efc4', '#74b9ff', '#ff7675', '#fdcb6e',
+        '#9b59b6', '#1abc9c', '#e74c3c', '#3498db', '#2ecc71'
+    ];
+
+    function getCategoryColor(category) {
+        let hash = 0;
+        for (let i = 0; i < category.length; i++) {
+            hash = category.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
+    }
+
+    init();
+
+    async function init() {
+        const files = await (await fetch('files.json')).json();
+        const tags = await (await fetch('tags.json')).json();
+
+        for (const key in files) {
+            const category = files[key];
+
+            const header = document.createElement('h2');
+            header.textContent = key;
+            header.setAttribute('data-category', key);
+            fragment.appendChild(header);
+
+            for (let i = 0; i < category.length; i++) {
+                const file = category[i];
+                const link = createLink(file, key, tags[file]);
+                fragment.appendChild(link);
+                links[file] = link;
+                validRedirects.set(file, file + '.html');
+                totalCount++;
+            }
+        }
+
+        content.appendChild(fragment);
+        statsEl.textContent = totalCount + ' examples';
+
+        // Restore from URL hash
+        if (window.location.hash !== '') {
+            const file = window.location.hash.substring(1);
+            if (validRedirects.has(file)) {
+                selectFile(file);
+                updateLinkScroll();
+                viewer.src = validRedirects.get(file);
+                viewer.style.display = 'unset';
+            }
+        }
+
+        if (selected === null) {
+            panel.classList.add('open');
+            viewer.srcdoc = getPlaceholderHTML();
+            viewer.style.display = 'unset';
+        }
+
+        // Restore search
+        filterInput.value = extractQuery();
+        if (filterInput.value !== '') {
+            panel.classList.add('searchFocused');
+            updateFilter(files, tags);
+        }
+
+        // Events
+        filterInput.onfocus = () => panel.classList.add('searchFocused');
+        filterInput.onblur = () => {
+            if (filterInput.value === '') panel.classList.remove('searchFocused');
+        };
+
+        clearSearchButton.onclick = () => {
+            filterInput.value = '';
+            updateFilter(files, tags);
+            filterInput.focus();
+        };
+
+        filterInput.addEventListener('input', () => updateFilter(files, tags));
+
+        expandButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            panel.classList.toggle('open');
+            updateLinkScroll();
+        });
+
+        panelScrim.onclick = (e) => {
+            e.preventDefault();
+            panel.classList.toggle('open');
+        };
+
+        previewsToggler.onclick = (e) => {
+            e.preventDefault();
+            content.classList.toggle('minimal');
+        };
+    }
+
+    function createLink(file, category, tags) {
+        const color = getCategoryColor(category);
+        const displayName = getName(file);
+        const initial = displayName.charAt(0).toUpperCase();
+
+        const template = `
+            <div class="card">
+                <a href="${file}.html" target="viewer">
+                    <div class="cover" style="background: linear-gradient(135deg, ${color}22, ${color}44)">
+                        <span>${initial}</span>
+                    </div>
+                    <div class="title">${displayName}</div>
+                </a>
+            </div>
+        `;
+
+        const link = createElementFromHTML(template);
+
+        link.querySelector('a[target="viewer"]').addEventListener('click', function (event) {
+            if (event.button !== 0 || event.ctrlKey || event.altKey || event.metaKey) return;
+            selectFile(file);
+        });
+
+        return link;
+    }
+
+    function selectFile(file) {
+        if (selected !== null && links[selected]) {
+            links[selected].classList.remove('selected');
+        }
+
+        links[file].classList.add('selected');
+        window.location.hash = file;
+        viewer.focus();
+        viewer.style.display = 'unset';
+        panel.classList.remove('open');
+        selected = file;
+    }
+
+    function escapeRegExp(string) {
+        string = string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return '(?=.*' + string.split(' ').join(')(?=.*') + ')';
+    }
+
+    function updateFilter(files, tags) {
+        let v = filterInput.value.trim();
+        v = v.replace(/[\s_]+/gi, ' ');
+
+        if (v !== '') {
+            window.history.replaceState({}, '', '?q=' + v + window.location.hash);
+        } else {
+            window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+        }
+
+        const exp = new RegExp(escapeRegExp(v), 'gi');
+
+        for (const key in files) {
+            const section = files[key];
+            for (let i = 0; i < section.length; i++) {
+                filterExample(section[i], exp, tags);
+            }
+        }
+
+        layoutList(files);
+    }
+
+    function filterExample(file, exp, tags) {
+        const link = links[file];
+        // Match Three.js: search against the full file identifier with underscores replaced.
+        // For WE3D, strip the top-level category dir to avoid noise (e.g. "system" matching all).
+        const parts = file.split('/');
+        let target = parts.slice(1).join('/').replace(/_+/g, ' ');
+        if (file in tags) target += ' ' + tags[file].join(' ');
+        const res = target.match(exp);
+
+        if (res && res.length > 0) {
+            link.classList.remove('hidden');
+        } else {
+            link.classList.add('hidden');
+        }
+    }
+
+    function getName(file) {
+        const parts = file.split('/');
+        if (parts.length >= 3) {
+            return parts.slice(-2).join(' / ');
+        }
+        return parts[parts.length - 1];
+    }
+
+    function layoutList(files) {
+        let visibleCount = 0;
+
+        for (const key in files) {
+            let collapsed = true;
+            const section = files[key];
+
+            for (let i = 0; i < section.length; i++) {
+                if (!links[section[i]].classList.contains('hidden')) {
+                    collapsed = false;
+                    visibleCount++;
+                }
+            }
+
+            const element = document.querySelector('h2[data-category="' + key + '"]');
+            if (element) {
+                element.classList.toggle('hidden', collapsed);
+            }
+        }
+
+        statsEl.textContent = filterInput.value
+            ? visibleCount + ' / ' + totalCount + ' examples'
+            : totalCount + ' examples';
+    }
+
+    function extractQuery() {
+        const search = window.location.search;
+        if (search.indexOf('?q=') !== -1) {
+            return decodeURI(search.slice(3));
+        }
+        return '';
+    }
+
+    function createElementFromHTML(htmlString) {
+        const div = document.createElement('div');
+        div.innerHTML = htmlString.trim();
+        return div.firstChild;
+    }
+
+    function updateLinkScroll() {
+        if (selected !== null && links[selected]) {
+            const link = links[selected];
+            content.scrollTop = link.offsetTop - content.offsetTop - (content.clientHeight - link.offsetHeight) / 2;
+        }
+    }
+
+    function getPlaceholderHTML() {
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; background: #0a0a1a; }
+        body {
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #576574; user-select: none;
+        }
+        .logo { font-size: 48px; font-weight: 800; color: #0f9bf2; letter-spacing: -2px; }
+        .sub { font-size: 14px; }
+        .hint { font-size: 12px; color: #2c3e50; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="logo">WE3D</div>
+    <div class="sub">WebGPU Engine 3D</div>
+    <div class="hint">Select an example from the sidebar</div>
+</body>
+</html>`;
+    }
+
+    </script>
+</body>
+
+</html>

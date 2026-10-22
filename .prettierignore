@@ -1,0 +1,24 @@
+# 依赖与产物
+node_modules/
+dist/
+coverage/
+
+# 文档产物
+docs/
+doc/node_modules/
+
+# 示例（约定：不纳入工程化门禁，单独维护）
+examples/
+
+# 待废弃临时目录
+src/@loaders.gl/
+
+# 着色器源（非 JS/TS，格式化无意义且可能破坏缩进）
+**/*.wgsl
+
+# 基线截图
+test-results/
+playwright-report/
+
+# 锁文件
+package-lock.json

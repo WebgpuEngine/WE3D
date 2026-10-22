@@ -17,8 +17,9 @@
     "noEmit": true,
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    /* 未使用检查交由 ESLint(类型感知 no-unused-vars) 门禁，避免把“仅用于类型位置的导入”误判为错误 */
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
@@ -32,7 +33,10 @@
     "sourceMap": true,
   },
   "include": [
-    "src",
-    "examples",
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/@loaders.gl"
   ]
 }
