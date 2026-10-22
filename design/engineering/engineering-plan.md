@@ -54,7 +54,7 @@
 ### Phase 6 — Lib 打包与 npm 发布（方案 A）
 - `vite.config.ts` 增加 `build.lib`：`entry` = `src/we/export/main.ts`、`formats:['es']`、`fileName`，并接入 `vite-plugin-dts` 输出 `.d.ts` 到 `dist`。
 - `package.json`：`name:"we3d"`、升级 `version`、`type:module`、`main/module/types/exports`→`dist`、`files:["dist"]`、移除 `private`。
-- 处理 `@loaders.gl/*` 本地依赖：发布前改回公共版 `4.3.4`（依迁移文档）或移除。
+- 处理 `@loaders.gl/*` 本地依赖：后期将相关 glTF 功能整体迁移到 `gltfTransform` 包，迁移完成后随旧依赖一并移除；**迁移前所有 `@loaders.gl` 相关问题不处理**。
 - 脚本 `build:lib` + `prepublishOnly`（lint+test+build+typedoc）。
 
 ### Phase 7 — CI（GitHub Actions）

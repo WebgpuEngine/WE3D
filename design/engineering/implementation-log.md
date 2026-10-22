@@ -185,3 +185,4 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 2026-10-22 | 目录迁移 | 工程化计划/记录由 `design/` 迁至 `design/engineering/`（`engineering-plan.md`、`implementation-log.md`）；新增 `phase1-build-green.md` |
 | 2026-10-22 | Phase 1 完成 | 修 `GBuffers.ts:9` 删除不存在导入；`tsc --noEmit` 归零（1→0）；确认两处计划偏差落地 |
 | 2026-10-22 | AGENTS.md 增补 | 「六、Git 提交约定」：commit 格式 `月日 具体内容`（MMDD）；禁止 AI/工具自动合并分支，合并仅人工手动 |
+| 2026-10-22 | 决策记录 | `@loaders.gl` 相关 glTF 功能后期整体迁移到 `gltfTransform`；所有 `@loaders.gl` 问题不处理，待迁移后整体移除（同步更新 phase-1-备忘 §3.5 与 engineering-plan §Phase6） |
