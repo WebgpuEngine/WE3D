@@ -19,8 +19,8 @@
 ### 1. `format` 执行（Phase 2 步骤 6，已延后）
 - 状态：⏸ 已延后
 - 关联：`implementation-log.md` §Phase 2 备注·偏差2
-- 说明：`npm run format` / `format:check` 脚本已于 `df28473` 补齐，但按约定**延后至「项目验证正确后」单独执行**（`prettier --write .` 改动面大，避免与 lint/bug 修复叠加排错）。属 Phase 2 收尾遗留的边角项。
-- 触发条件：examples 冒烟验证通过后，单独跑 `npm run format` + `npm run format:check`，并单独提交。
+- 说明：`npm run format` / `format:check` 脚本已于 `df28473` 补齐，但按约定**延后至「Phase 4 — Playwright 示例回归完成」后单独执行**（`prettier --write .` 改动面大，避免与 lint/bug 修复叠加排错）。属 Phase 2 收尾遗留的边角项。
+- 触发条件：完成 **Phase 4 — Playwright 示例回归**（`test:baseline` 建立并跑通）之后，单独跑 `npm run format` + `npm run format:check`，并单独提交。
 
 ### 2. examples 冒烟验证（提交前必跑，未做）
 - 状态：⬜ 未开始
