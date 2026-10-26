@@ -44,5 +44,12 @@ export default tseslint.config(
       'no-empty': 'off',
       'no-constant-condition': ['error', { checkLoops: false }],
     },
+  },
+  {
+    // Playwright e2e 规格与配置：测试文件允许 any（如 window 断言）
+    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   }
 );

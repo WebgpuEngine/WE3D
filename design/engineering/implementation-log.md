@@ -33,7 +33,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ✅ 已完成 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
 | 3 | Vitest 单测 | 无 GPU 依赖冒烟用例 | 🔵 进行中 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
-| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（方案拟定） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
+| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（环境已搭，批量待指令） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ⬜ 未开始 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ⬜ 未开始 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
 | 7 | CI | GitHub Actions 门禁 + 发布 | ⬜ 未开始 | [engineering-plan §Phase7](./engineering-plan.md#phase-7--cigithub-actions) |
@@ -126,20 +126,25 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 4 — Playwright 示例回归　🔵 进行中（方案拟定）
+### Phase 4 — Playwright 示例回归　🔵 进行中（环境已搭，批量待指令）
 
 - **计划要点**（详细方案见 `./phase4-playwright-e2e.md`）
-  - 安装 `@playwright/test` + `playwright` + chromium 浏览器。
-  - `playwright.config.ts`：`webServer` 启动 vite，遍历 `examples/files.json` 的 `.html`，加载→等 canvas 挂载→截图 + console 断言。
-  - 基线存 `e2e/baseline/`（位置待确认），首跑生成后提交 git；补 `test:baseline` / `test:e2e` 脚本。
-  - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为「加载无 console 报错」断言。
+  - 安装 `@playwright/test` + `playwright` + chromium 浏览器（**已完成**，v1.64.1 / Chromium 156）。
+  - `playwright.config.ts`：`webServer` 启动 vite；env 自检用**原生 WebGPU 三角形 fixture**（不依赖 WE3D），**批量示例读取独立的 `e2e/examples-e2e.json`**（不复用 `examples/files.json`），加载→等 canvas 挂载→截图 + console 断言。
+  - 基线存 `e2e/baseline/`（用户 2026-10-26 确认）；首跑由 `test:baseline` 生成后提交 git；已补 `test:baseline` / `test:e2e` 脚本。
+  - headless WebGPU 需 `--enable-unsafe-webgpu` + `--enable-features=Vulkan,UseSkiaRenderer`；**本机构建机实测不可用 → 降级 console 断言**（事项4）。
   - 约定文档化：`AGENTS.md`「三、开发流程约定」第 1、4 条已写「提交前必跑示例」。
-  - **节奏（用户 2026-10-26 决策）**：先以 1 个基础示例落地 E2E（同时承接 examples 冒烟验证），再**分批导入**——每批给出目标目录 + 示例清单，**经用户批准后再实施**；需改动/修正的示例单独标记、不静默修改（示例量大、工作量较大）。
-- **验收**：基线生成并提交；后续跑示例可比对；首个基础示例在 Playwright 下跑通 WebGPU。
-- **实施记录**：2026-10-26 形成详细方案 `./phase4-playwright-e2e.md`（含配置、脚本、分批节奏、待确认事项），**待用户审核后实施，尚未执行**。
-- **验证**：（待确认后填写）
+  - **节奏（用户 2026-10-26 决策）**：先以 1 个基础示例（原生 WebGPU 三角形）落地 E2E（同时承接 examples 冒烟验证），再**分批导入**——按目录 + 功能（HTML span 标签）分批，每批清单经用户批准后再实施；需改动/修正的示例单独标记、不静默修改（示例量大、工作量较大）。
+- **验收**：基线生成并提交（WebGPU 环境）；后续跑示例可比对；首个基础示例（env 三角形）e2e 链已跑通（构建机降级为 console 断言）。
+- **实施记录**
+  - 2026-10-26 形成详细方案 `./phase4-playwright-e2e.md`（含配置、脚本、清单设计、阈值方法、分批方式、降级策略、执行进度），用户确认 5 项事项（1.1 原生三角形 / 1.2 独立 json / 1.3 全量扫描待裁 / 2 阈值 / 3 目录+功能分批 / 4 降级 / 5 基线目录）。
+  - 配置落地：`playwright.config.ts`、`e2e/fixtures/webgpu-triangle.html`、`e2e/env-webgpu.spec.ts`、`e2e/examples.spec.ts`（批量链，未执行）、`scripts/generate-e2e-examples.mjs`；`package.json` 加 `test:e2e`/`test:baseline`；`.gitignore` 补忽略；chromium 已安装。
+  - 清单：`e2e/examples-e2e.json` 由脚本全量扫描 `examples/` 生成，**10 分类 / 349 url**（待用户裁剪为每类一个）。
+  - 实测：env 用例 e2e 已跑通 → 构建机 headless WebGPU 不可用，用例降级为 skip + 仅 console 断言；截图基线待 WebGPU 环境 `test:baseline` 生成。
+- **验证**：`npx playwright test e2e/env-webgpu.spec.ts` → 1 passed（降级 skip）；chromium 启动正常；vite webServer 复用正常。截图基线回归待 WebGPU 环境补。
 - **备注**
   - 原 `pending-work.md` 第 2 条「examples 冒烟验证」**已并入本阶段作为步骤 2**（2026-10-26 用户决策），备忘中改为「已并入 Phase 4」并指向本方案；不再单独跟踪。
+  - 限制：本构建机 headless Chromium 无 `navigator.gpu`（多 flags 组合均 `NO_NAV_GPU`），故像素级回归需在支持 WebGPU 的环境完成；本机仅 console 断言级。执行5（批量 e2e + 系统检查 + 文档闭环）**待用户发出「批量测试」指令**后实施。
 
 ---
 

@@ -16,6 +16,11 @@ dist-ssr
 # Vitest 覆盖率报告产物
 coverage
 
+# Playwright 瞬时产物（基线 e2e/baseline/ 需提交，不忽略）
+test-results/
+playwright-report/
+blob-report/
+
 
 public/models/gltf/model
 !src/@loaders.gl/*

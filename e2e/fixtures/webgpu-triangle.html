@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8" />
+    <title>WE3D Env — WebGPU Colored Triangle</title>
+    <style>
+        html, body { margin: 0; background: #101820; }
+        #gpu { display: block; width: 800px; height: 600px; }
+    </style>
+</head>
+<body>
+    <!-- 与 WE3D 无关的纯 WebGPU 环境自检用例：单一背景色 + 彩色三角形，用于验证
+         WebGPU 运行环境与项目配置的基础正确性（不引入任何 WE3D 代码）。 -->
+    <canvas id="gpu" width="800" height="600"></canvas>
+    <script>
+        (async () => {
+            const canvas = document.getElementById('gpu');
+            if (!navigator.gpu) {
+                console.error('WE3D_ENV: WebGPU not supported');
+                window.__envReady = 'nowebgpu';
+                return;
+            }
+            const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) {
+                console.error('WE3D_ENV: no GPU adapter');
+                window.__envReady = 'noadapter';
+                return;
+            }
+            const device = await adapter.requestDevice();
+            const ctx = canvas.getContext('webgpu');
+            const format = navigator.gpu.getPreferredCanvasFormat();
+            ctx.configure({ device, format, alphaMode: 'opaque' });
+
+            const module = device.createShaderModule({
+                code: `
+                    struct VSOut {
+                        @builtin(position) pos: vec4f,
+                        @location(0) color: vec3f,
+                    };
+                    @vertex fn vs(@builtin(vertex_index) i: u32) -> VSOut {
+                        var p = array<vec2f, 3>(
+                            vec2f(0.0, 0.5),
+                            vec2f(-0.5, -0.5),
+                            vec2f(0.5, -0.5)
+                        );
+                        var c = array<vec3f, 3>(
+                            vec3f(1.0, 0.0, 0.0),
+                            vec3f(0.0, 1.0, 0.0),
+                            vec3f(0.0, 0.0, 1.0)
+                        );
+                        var o: VSOut;
+                        o.pos = vec4f(p[i], 0.0, 1.0);
+                        o.color = c[i];
+                        return o;
+                    }
+                    @fragment fn fs(in: VSOut) -> @location(0) vec4f {
+                        return vec4f(in.color, 1.0);
+                    }
+                `,
+            });
+
+            const pipeline = device.createRenderPipeline({
+                layout: 'auto',
+                vertex: { module, entryPoint: 'vs' },
+                fragment: { module, entryPoint: 'fs', targets: [{ format }] },
+                primitive: { topology: 'triangle-list' },
+            });
+
+            const encoder = device.createCommandEncoder();
+            const view = ctx.getCurrentTexture().createView();
+            const pass = encoder.beginRenderPass({
+                colorAttachments: [{
+                    view,
+                    clearValue: { r: 0.063, g: 0.094, b: 0.125, a: 1 },
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }],
+            });
+            pass.setPipeline(pipeline);
+            pass.draw(3);
+            pass.end();
+            device.queue.submit([encoder.finish()]);
+
+            console.log('WE3D_ENV: triangle rendered');
+            window.__envReady = true;
+        })();
+    </script>
+</body>
+</html>
