@@ -47,8 +47,8 @@
 ### 6. WE3D 单元测试完整体系后期由人工补齐（本次仅搭脚手架）
 - 状态：🔵 脚手架已建 / 主体待人工
 - 关联：`implementation-log.md` §Phase 3
-- 说明：2026-10-26 已搭 Vitest 基础体系（`vitest.config.ts` + `package.json` 的 `test`/`test:run` + `src/we/core/math/math.test.ts` 样例，4 测试通过）。**完整的 WE3D 单元测试用例体系由人工后续补齐**。
-- 备注：本次未加 `coverage` 脚本（缺 `@vitest/coverage-*` 提供者），待后续按需补；测试置于 `src/**/*.test.ts`（非独立 `test/` 目录），与计划微调。
+- 说明：2026-10-26 已搭 Vitest 基础体系（`vitest.config.ts` + `package.json` 的 `test`/`test:run`/`coverage` + `src/we/core/math/math.test.ts` 样例，4 测试通过，coverage 报告可生成）。**完整的 WE3D 单元测试用例体系由人工后续补齐**。
+- 备注：`coverage` 脚本已于 2026-10-26 补上（含 `@vitest/coverage-v8` 提供者）；测试置于 `src/**/*.test.ts`（非独立 `test/` 目录），与计划微调。
 
 ## 二、变更记录
 | 日期 | 动作 | 说明 |

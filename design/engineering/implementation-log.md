@@ -114,13 +114,14 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 脚本：`test` / `test:run` / `coverage`。
 - **验收**：`npm run test` 通过；关键路径有冒烟用例。
 - **实施记录**
-  - 2026-10-26 搭建 Vitest 基础体系：`vitest.config.ts`（`environment: node`，`include: src/**/*.test.ts`）；`package.json` 增加 `test`/`test:run`（均 = `vitest run`）。
+  - 2026-10-26 搭建 Vitest 基础体系：`vitest.config.ts`（`environment: node`，`include: src/**/*.test.ts`）；`package.json` 增加 `test`/`test:run`（均 = `vitest run`）与 `coverage`（= `vitest run --coverage`），并安装 `@vitest/coverage-v8@^2.1.9` 提供者；`vitest.config.ts` 配置 `coverage.provider: 'v8'` 且范围限定 `src/we`（排除测试与本地 fork）。
   - 样例用例 `src/we/core/math/math.test.ts`：测试 `clamp`/`mod`（`baseFunction.ts`）与 `generateBox3`/`computeAABB`（`Box.ts`），**4 测试全部通过**，证明 Vitest 可在 node 下运行项目代码。
   - 完整用例体系（数学 `weMat3/weVec3`、`Box3/Sphere`、ID 生成；修复回归 `checkGPUBufferSize`；mock `navigator.gpu` 冒烟等）**由人工后续补齐**（见备注）。
-- **验证**：`npm run test` → 1 文件 / 4 测试通过；`npx tsc --noEmit` 0 错误、ESLint 0 错误（测试文件纳入 `src/we` 门禁）。
+- **验证**：`npm run test` → 1 文件 / 4 测试通过；`npm run coverage` → v8 覆盖率报告生成；`npx tsc --noEmit` 0 错误、ESLint 0 错误、`npm run build` 通过（测试文件纳入 `src/we` 门禁）。
 - **备注**
   - 偏差：计划原拟独立 `test/` 目录 + `include: test/**/*.test.ts`；实际按用户要求将测试置于 `src/**/*.test.ts`（与源码同树），已相应调整配置。
-  - 未加 `coverage` 脚本：缺 `@vitest/coverage-*` 提供者，待后续按需补。
+  - `coverage` 脚本已于 2026-10-26 补上（随 `@vitest/coverage-v8` 安装），与计划脚本清单（`test`/`test:run`/`coverage`）一致。
+  - 注：安装该依赖触发 npm 全树 reconcile（node_modules/lock 被重整），`.gitignore` 已补 `coverage` 忽略规则；`yarn.lock` 被意外改动 2013 行且**未提交**（非本次意图）。
   - 主线推进：Phase 3 脚手架已就位，但**完整单测用例体系由人工补齐**，本阶段不阻断验收。
 
 ---
