@@ -100,7 +100,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 - **验证**：`npx eslint .` 输出 **0 problems**；`npx tsc --noEmit` 输出 **0 错误**（修复前亦为 0）；`npm run build`（tsc + Vite lib 打包）通过。
 - **备注**
   - 偏差1：步骤 1 的 `lint`/`lint:fix`/`format`/`format:check` 脚本**未加入** `package.json`（本分支 scripts 仍仅 `dev`/`build`/`preview`/`examples:generate`）。门禁实际以 `npx eslint .` / `npx tsc --noEmit` 直跑完成；AGENTS.md「提交前自检」引用的 `npm run lint`/`npm run test`/`npm run docs:build` 目前在本分支均不可用（`test`/`docs:build` 脚本亦缺失）。建议后续补全脚本（属收尾，不阻塞本 Phase 验收）。
-  - 偏差2：步骤 6 `format` 按约定延后至「项目验证正确后」单独执行，本次未执行（与计划一致）。
+  - 偏差2：步骤 6 `format` 按约定延后至「项目验证正确后」单独执行，本次未执行（与计划一致）；`format`/`format:check` 脚本已于 `df28473` 补齐，待项目验证正确后执行（见 `pending-work.md`）。
   - 注：原计划估算的 1870/338 数字基于未收窄配置；实际 `files` 收窄到 `src/we` 后门禁范围更小，剩余 230 错误已全部清零。
 
 ---
