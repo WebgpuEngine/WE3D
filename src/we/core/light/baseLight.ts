@@ -87,7 +87,7 @@ export interface I_optionBaseLight extends I_Update {
 /**
  * 光源的uniform的尺寸，ArrayBuffer的大小(byte) 
  */
-export var lightStructSize = 112;//20240104 change 96->112,add some about shadow 
+export let lightStructSize = 112;//20240104 change 96->112,add some about shadow 
 // export var lightStructSizeOfShadowMapMVP = 80;//20240104 change 96->112,add some about shadow` 
 // export var lightStructSizeForRenderOfBindGroup = 80;//20240104 change 96->112,add some about ` 
 
@@ -330,7 +330,7 @@ export abstract class BaseLight extends NodeObject {
     //     this.device.queue.writeBuffer(this.GPUBufferOfMVP, 0, this.bufferOfMVP);
     // }
 
-    async updateSelf(clock: Clock) {
+    async updateSelf(_clock: Clock) {
         this._buffer = this.updateStructBuffer();
         this.MVP = this.updateMVP(this.scene);
         // let scope=this;
@@ -492,7 +492,7 @@ export abstract class BaseLight extends NodeObject {
      * @param node 节点
      * @returns 是否在BVH中可见
      */
-    getVisibleInBVH(node: NodeObject, mergeID: string): boolean {
+    getVisibleInBVH(_node: NodeObject, _mergeID: string): boolean {
         return true;
     }
 }

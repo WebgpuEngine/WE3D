@@ -369,10 +369,10 @@ export class Interpolator {
         // console.log(clock.now, this.timer.currentKeyFrameIndex, this.timer.totalTime, this.timer.timeCurrent)
         // console.log("position", this.parent.parent.Position[0], ",", this.timer.totalTime, this.timer.timeCurrent);
         if (this.timer.currentKeyFrameIndex >= 81) {
-            const abc = 1;
+            const _abc = 1;
         }
         if (this.timer.currentKeyFrameIndex == -1) {
-            const abc = 1;
+            const _abc = 1;
         }
 
     }
@@ -511,7 +511,7 @@ export class Interpolator {
                 (tCub - tSq) * a;
             if (Number.isNaN(result[0])) {
                 // console.log(`cubicSpline, prevKey:${prevKey}, nextKey:${nextKey}, keyDelta:${keyDelta}, t:${t}, stride:${stride}, result:${result}`);
-                const abc = 1;
+                const _abc = 1;
             }
         }
         this.output = result;

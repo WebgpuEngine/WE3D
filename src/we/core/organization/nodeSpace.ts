@@ -291,7 +291,7 @@ export abstract class NodeSpace extends RootGPU {
     // updateMatrix(_m4?: Mat4, _opera: "copy" | "multiply" = "copy"): Mat4 {
     updateMatrix(): Mat4 {
         if (this.Name === "0") {
-            const abc = 1;
+            const _abc = 1;
         }
         // 1、如果提供了初始化矩阵，直接复制
         if (this._matrix !== undefined) {

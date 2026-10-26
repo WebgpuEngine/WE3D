@@ -560,7 +560,7 @@ export abstract class BaseMaterial extends RootGPU {
         materialType: E_materialTypeForBindGroup = E_materialTypeForBindGroup.opacityForward,
         /**MSAA的需要camera的GBuffer中的texture作为uniform输入，需要指定mergeID。         */
         mergeID: string,
-        renderPassName: E_renderPassName,
+        _renderPassName: E_renderPassName,
     ): GPUBindGroup {
         if (materialType == E_materialTypeForBindGroup.opacityForward ||
             materialType == E_materialTypeForBindGroup.opacityDefer ||
@@ -640,7 +640,7 @@ export abstract class BaseMaterial extends RootGPU {
      * @param startBinding 
      * @returns I_materialBundleOutput  不包含光影的GBuffer，但GBuffer的输出中需要按照延迟渲染的约定进行。
      */
-    getOpacity_DeferColor(startBinding?: number): I_materialBundleOutput {
+    getOpacity_DeferColor(_startBinding?: number): I_materialBundleOutput {
         return this.composeShaderBundle(this.shtOfMaterialType[E_materialTypeForBindGroup.opacityDefer]!, E_materialTypeForBindGroup.opacityDefer);
     }
 
@@ -704,7 +704,7 @@ export abstract class BaseMaterial extends RootGPU {
      * @param input IV_BaseMaterial 材质的输入参数
      * @returns GPUSampler 材质的sampler
      */
-    checkSampler(input: IV_BaseMaterial): GPUSampler {
+    checkSampler(_input: IV_BaseMaterial): GPUSampler {
         const { sampler, bindingType } = getSampler({}, this.scene);
         this.defaultSamplerBindingType = bindingType;
         this.defaultSampler = sampler;

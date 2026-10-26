@@ -225,7 +225,7 @@ export class Mesh extends EntityBundleMaterial {
             //     aliasName: string,
             // }
         },
-        vsOnly: boolean = false,
+        _vsOnly: boolean = false,
         scope?: Mesh
     ): IV_DC {
         if (scope == undefined) scope = this;
@@ -368,7 +368,7 @@ export class Mesh extends EntityBundleMaterial {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 }

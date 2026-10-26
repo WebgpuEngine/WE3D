@@ -48,11 +48,11 @@ export class CircleGeometry extends BaseGeometry {
     /** copy code from threejs */
     init(input: optionCircleGeometry) {
 
-        const thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
-        const index = 0;
-        const grid = [];
-        const vertex = vec3.create();
-        const normal = vec3.create();
+        const _thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
+        const _index = 0;
+        const _grid = [];
+        const _vertex = vec3.create();
+        const _normal = vec3.create();
         // buffers
 
         // let indices = [];

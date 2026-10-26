@@ -148,12 +148,12 @@ export class CubeTextureMaterial extends TextureMaterial {
 
 
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
     }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 

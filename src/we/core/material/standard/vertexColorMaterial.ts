@@ -3,7 +3,7 @@ import { T_uniformEntries } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { E_shaderRegisterAlianName } from "../../SHR/include";
 import {
-    E_MaterialType, E_materialTypeForBindGroup, I_materialBundleOutput,
+    E_MaterialType, E_materialTypeForBindGroup,
     IV_BaseMaterial, IV_BaseStandardMaterial, materialAddBindGroupLayoutOfMSAA,
     materialAddBindGroupOfMSAA, materialAddGroupBindStringOfMSAA
 } from "../base";
@@ -82,13 +82,13 @@ export class VertexColorMaterial extends BaseStandardMaterial {
     //     throw new Error("Method not implemented.");
     // }
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 

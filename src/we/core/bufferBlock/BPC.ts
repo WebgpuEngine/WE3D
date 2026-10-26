@@ -195,7 +195,7 @@ export class BlockPointerCoordinator {
         else {
             const sizeOfFourL = byteSize + (4 - byteSize % 4);//BOL大小必须是4的倍数
             //匹配lastFree最大的BOL
-            for (const [id, bol] of this.BOLs[type]) {
+            for (const [_id, bol] of this.BOLs[type]) {
                 //rebuilding状态原则上不会和分配状态冲突，因为在不同的执行阶段。
                 if (bol.state == E_BOLState.released || bol.state == E_BOLState.close || bol.state == E_BOLState.rebuilding) {
                     continue;
@@ -277,8 +277,8 @@ export class BlockPointerCoordinator {
          *      B、删除BOL内指针：pointerIdList 和 pointerOffsetMap
          *      C、按需 调用rebuild()
      */
-    update(clock: Clock) {
-        for (const [id, bol] of this.BOLs.all) {
+    update(_clock: Clock) {
+        for (const [_id, bol] of this.BOLs.all) {
             if (bol.checkRebuild()) {
                 bol.rebuild();
             }

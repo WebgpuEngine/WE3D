@@ -35,10 +35,10 @@ export class PolyhedronGeometry extends BaseGeometry {
     init(input: optionPolyhedronGeometry) {
         // let indices = this.buffer.indeices;
         const vertices = this.buffer.position;
-        let normals = this.buffer.normal;
+        let _normals = this.buffer.normal;
         // let uvs = this.buffer.uv;
-        const vertices_ = input.vertices;
-        const indices_ = input.indices;
+        const _vertices_ = input.vertices;
+        const _indices_ = input.indices;
         const radius = input.radius;
         const detail = input.detail ?? 0;
 
@@ -64,7 +64,7 @@ export class PolyhedronGeometry extends BaseGeometry {
             this.normalizeNormals(); // smooth normals
 
         }
-        normals = vertices.slice();
+        _normals = vertices.slice();
 
         this.createWrieFrame();
         this._already = true;

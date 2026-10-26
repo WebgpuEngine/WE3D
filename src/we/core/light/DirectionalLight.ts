@@ -25,7 +25,7 @@ export class DirectionalLight extends BaseLight {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
     /**
@@ -55,9 +55,9 @@ export class DirectionalLight extends BaseLight {
                 /** 第三行,Z轴 */
                 const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const _position = new Float32Array(matrix.buffer, 4 * 12, 4);
 
-                const dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.Direction as Vec3));
+                const _dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.Direction as Vec3));
                 if ((this.Direction as Vec3)[0] == 0 && (this.Direction as Vec3)[1] == 1 && (this.Direction as Vec3)[2] == 0) {
                     vec3.copy((this.Direction as Vec3), back);
                     vec3.copy(vec3.create(1, 0, 0), right);

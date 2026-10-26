@@ -100,7 +100,7 @@ export abstract class AtmosphereRenderBase implements I_FeatureModule {
         };
         return this.rpd;
     }
-    update(clock?: Clock): void {
+    update(_clock?: Clock): void {
         if (this.state == false) {
             if ((this.colorTexture == undefined || this.depthTexture == undefined) &&
                 this.scene.cameraManager.getGBufferTextureByUUID(this.scene.defaultCamera.UUID, E_GBufferNames.color)) {

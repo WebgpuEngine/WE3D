@@ -387,7 +387,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         }
     }
     /**更新所有光源的入口 */
-    update(clock: Clock) {
+    update(_clock: Clock) {
         this.checkDestroy();
         this.beforUpdate();
         // this.updateLights(clock);//更新所有光源属性
@@ -406,7 +406,7 @@ export class LightsManager extends ECSManager<BaseLight> {
     * @returns 光源的GPUBuffer,大小=16 + 16 +(this.list.length ||1) * lightStructSize,
     */
     async updateSystemUniformBufferForlights() {
-        const stageName: string = "default";
+        const _stageName: string = "default";
         const size = lightStructSize;
         // let lightNumber = lightNumber;
         const lightRealNumberOfSystem = this.list.length;//this.getLightNumbers();
@@ -638,7 +638,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         return false;
     }
     getLightByMergeID(mergeID: string): BaseLight | boolean {
-        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id } = this.getIdAndMatrixIndexByMergeID(mergeID);
         return this.getLightByID(id);
     }
 
@@ -696,9 +696,8 @@ export class LightsManager extends ECSManager<BaseLight> {
         }
         else {
             // createBindGroupLayout
-            let groupDesc: GPUBindGroupDescriptor;
             const bindLayout = pipeline.getBindGroupLayout(0);
-            groupDesc = {
+            const groupDesc: GPUBindGroupDescriptor = {
                 label: "global Group bind to 0 ,light MVP (for shadow map )",
                 layout: bindLayout,
                 entries:
@@ -765,8 +764,7 @@ export class LightsManager extends ECSManager<BaseLight> {
                 };
                 const bindGroupLayout: GPUBindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
 
-                let groupDesc: GPUBindGroupDescriptor;
-                groupDesc = {
+                const groupDesc: GPUBindGroupDescriptor = {
                     label: "global Group bind to 0 ,light MVP (for shadow map ),light is " + mergeID,
                     layout: bindGroupLayout,
                     entries:

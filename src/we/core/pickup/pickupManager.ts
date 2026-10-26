@@ -49,7 +49,7 @@ export class pickupManager extends ECSManager<Pickup> {
             perOne.onResize();
         }
     }
-    async update(clock: Clock): Promise<void> {
+    async update(_clock: Clock): Promise<void> {
         this.checkDestroy();
         for (const perOne of this.list) {
             await perOne.update();

@@ -62,7 +62,7 @@ export async function WePhongMaterial(param: IV_PhongMaterial, scene: Scene) {
 
 /** phong材质 */
 export class PhongMaterial extends BaseStandardMaterial {
-  updateSelf(clock: Clock): void {
+  updateSelf(_clock: Clock): void {
     // throw new Error("Method not implemented.");
   }
   _writeUniformCommon(): void {

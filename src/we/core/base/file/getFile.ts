@@ -1,4 +1,4 @@
-export async function weGetResource(param: string): Promise<any> {
+export async function weGetResource(_param: string): Promise<any> {
 
 }
 export async function weGetImageByUrl(param: string): Promise<ImageBitmap> {

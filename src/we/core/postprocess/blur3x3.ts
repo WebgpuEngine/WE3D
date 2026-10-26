@@ -70,7 +70,7 @@ export class Blur3x3 extends BasePostProcess {
     }
 
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
 

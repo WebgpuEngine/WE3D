@@ -155,7 +155,7 @@ export class HDRTexture extends BaseTexture {
 
         return this._state;
     }
-    override async initSamplerAndLayout(input: I_BaseTexture) {
+    override async initSamplerAndLayout(_input: I_BaseTexture) {
         if (this.scene.webGPUFeaturesSupported.includes("float32-filterable")) {
             this.samplerLayout.type = 'filtering';
             this.sampler = this.scene.resourcesGPU.getSampler("linear");

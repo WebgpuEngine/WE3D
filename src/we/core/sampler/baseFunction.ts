@@ -19,7 +19,7 @@ export function getSampler(
     } {
     let sampler: GPUSampler;
     let samplerBindingType: GPUSamplerBindingType;
-    const owner = false;
+    const _owner = false;
 
     if (input.samplerDescriptor) {
         if (scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.samplerOfString)) {

@@ -41,7 +41,7 @@ export class VideoTexture extends BaseTexture {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
     /**
@@ -78,7 +78,7 @@ export class VideoTexture extends BaseTexture {
     }
 
 
-    async initTextureAndLayout(input: I_BaseTexture): Promise<any> {
+    async initTextureAndLayout(_input: I_BaseTexture): Promise<any> {
         const source = this.inputValues.source;
         this._state = E_lifeState.initializing;
 

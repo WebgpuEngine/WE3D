@@ -16,7 +16,7 @@ export class AtmosphereIntegrate extends Atmosphere {
     async onResize(): Promise<void> {
         // throw new Error("Method not implemented.");
     }
-    update(clock: Clock): void {
+    update(_clock: Clock): void {
         this.renderIntegrate.update();
     }
 }

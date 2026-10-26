@@ -26,7 +26,7 @@ export class CubeTexture extends Texture {
         this._upsideDownY = false;
     }
 
-    override async initTextureAndLayout(input: I_BaseTexture): Promise<any> {
+    override async initTextureAndLayout(_input: I_BaseTexture): Promise<any> {
         const scope = this;
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {

@@ -236,13 +236,13 @@ export class ColorMaterial extends BaseStandardMaterial {
     //     }
     // }
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 

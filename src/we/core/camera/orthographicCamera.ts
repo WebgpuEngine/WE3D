@@ -24,7 +24,7 @@ export class OrthographicCamera extends BaseCamera {
     saveJSON() {
         throw new Error('Method not implemented.');
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error('Method not implemented.');
     }
 

@@ -40,7 +40,7 @@ export class OrbitCameraControl extends ArcballCameraControl {
     }
 
 
-    update(deltaTime: number): boolean {
+    update(_deltaTime: number): boolean {
         if (this.upAxisAngle.bottom > this.upAxisAngle.top) {
             throw new Error("top角度必须小于bottom角度");
         }

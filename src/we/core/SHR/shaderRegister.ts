@@ -1,6 +1,5 @@
 import {
     WGSL_Include,
-    WGSL_Replace,
     WGSL_ShaderCode,
     WGSL_AliasShaderCode,
     T_SHR_RenderMode,
@@ -157,7 +156,7 @@ export class ShaderRegister {
                 }
                 const includeFile = this.splitBySpace(lineTrimWithOutFirstSpace);
                 let fileName = includeFile[1].replaceAll("\"", "");
-                fileName = fileName.replace("\'", "");
+                fileName = fileName.replace("'", "");
                 newLines.push(this.getInclude(fileName));
                 continue;
             }
@@ -367,7 +366,7 @@ export class ShaderRegister {
         }
     }
     /** #reflection attributes */
-    reflectionAttributes(vsCode: string, refName: string[], locations: string[]): string {
+    reflectionAttributes(vsCode: string, refName: string[], _locations: string[]): string {
         if (vsCode.includes("#reflection attributes")) {
             const addonCode: string[] = [];
             for (const i in WGSL_reflection_attributes) {
@@ -389,7 +388,7 @@ export class ShaderRegister {
         }
     }
     /** #reflection morphTarget */
-    reflectionMorphTarget(vsCode: string, refName: string[], locations: string[]): string {
+    reflectionMorphTarget(vsCode: string, refName: string[], _locations: string[]): string {
         if (vsCode.includes("#reflection morphTarget")) {
             const positions: string[] = [];
             for (let i = 0; i < refName.length; i++) {

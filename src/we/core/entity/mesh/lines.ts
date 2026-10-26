@@ -61,7 +61,7 @@ export class Lines extends EntityBundleMaterial {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 

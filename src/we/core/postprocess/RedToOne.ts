@@ -72,7 +72,7 @@ export class PP_RedToOne extends BasePostProcess {
         this.commands = [];
         this.init();
     }
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
 

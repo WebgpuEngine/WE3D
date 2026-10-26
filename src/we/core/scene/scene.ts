@@ -610,7 +610,7 @@ export class Scene {
                         alphaMode: this.premultipliedAlpha ? "premultiplied" : "opaque", //'premultiplied',//预乘透明度
                         usage
                     });
-                } catch (error) {//如果V_weLinearFormat失败，尝试this.presentationFormat
+                } catch (_error) {//如果V_weLinearFormat失败，尝试this.presentationFormat
                     /**
                      * todo:20260503
                      * GBuffers 未匹配this.presentationFormat，而是使用V_weLinearFormat
@@ -711,7 +711,7 @@ export class Scene {
         await this.obServerSize();
     }
 
-    load(config: IJ_Scene) {
+    load(_config: IJ_Scene) {
 
     }
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -864,7 +864,7 @@ export class Scene {
             if (scope.flags.realTimeRender) {//是否开启实时更新
                 //时间更新
                 const timerNow = Date.now();
-                const timerLast = timerNow;
+                const _timerLast = timerNow;
                 scope.clock.update();
                 await scope.onBeforeUpdate();
                 await scope.pickup();//pickup 在当前帧的update开始之前
@@ -1235,7 +1235,7 @@ export class Scene {
                 throw new Error("获取RPD失败");
         }
     }
-    getRenderPassDescriptorOfTransparent(UUID: string, kind: E_renderForDC): GPURenderPassDescriptor {
+    getRenderPassDescriptorOfTransparent(UUID: string, _kind: E_renderForDC): GPURenderPassDescriptor {
         const rdp = this.cameraManager.getRpdOfTransparentByUUID(UUID);
         if (rdp)
             return rdp;

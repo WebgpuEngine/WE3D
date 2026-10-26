@@ -11,7 +11,7 @@ import { IV_NodeSpace } from "../organization/nodeSpace";
 import { Clock } from "../scene/clock";
 
 export abstract class PhysicalModel extends BaseModel {
-    initInstance(parent: NodeObject, attachValue?: IV_NodeSpace): Promise<NodeObject> {
+    initInstance(_parent: NodeObject, _attachValue?: IV_NodeSpace): Promise<NodeObject> {
         throw new Error("Method not implemented.");
     }
     detachData(): void {
@@ -20,7 +20,7 @@ export abstract class PhysicalModel extends BaseModel {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
     readyForGPU(): Promise<any> {
@@ -29,7 +29,7 @@ export abstract class PhysicalModel extends BaseModel {
     _destroy(): void {
         throw new Error("Method not implemented.");
     }
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         throw new Error("Method not implemented.");
     }
 

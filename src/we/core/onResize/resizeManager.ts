@@ -8,7 +8,7 @@ export interface I_Resize extends I_UUID{
 }
 
 export class ResizeManager extends ECSManager<I_Resize> {
-    update(clock: Clock): void {
+    update(_clock: Clock): void {
          this.checkDestroy();
          for (const perOne of this.list) {
             perOne.onResize();

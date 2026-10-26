@@ -278,7 +278,7 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * 
      * @param clock 
      */
-    update(clock: Clock): void {
+    update(_clock: Clock): void {
         this.checkDestroy();
         //最前面
         // this.pickupClick();cleanRegisterEvent() 

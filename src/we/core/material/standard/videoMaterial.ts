@@ -236,13 +236,13 @@ export class VideoMaterial extends BaseStandardMaterial {
 
 
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         // this.textures[E_TextureType.video].updateSelf();
     }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 

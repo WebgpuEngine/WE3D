@@ -139,7 +139,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 
      * 数据队列都是规定的DC，onResize是会全部重建，所以还是每帧push
      */
-    async update(clock: Clock) {
+    async update(_clock: Clock) {
         this.checkDestroy();
         this.cameraPositionAndinvertVP.update();
         for (const camera of this.list) {
@@ -407,10 +407,10 @@ export class CameraManager extends ECSManager<BaseCamera> {
         return this.GBufferManager.GBuffer[UUID].forward.GBuffer[E_GBufferNames.depth];
     }
     //////////////////////////////////get TTP   部分
-    getTTUniformTexture(name: string): GPUTexture {
+    getTTUniformTexture(_name: string): GPUTexture {
         throw new Error("getTTUniformTexture 未实现");
     }
-    getTTRenderTexture(name: string): GPUTexture {
+    getTTRenderTexture(_name: string): GPUTexture {
         throw new Error("getTTRenderTexture 未实现");
     }
 

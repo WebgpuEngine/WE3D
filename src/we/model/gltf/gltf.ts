@@ -62,7 +62,7 @@ export async function createGLTFModel(input: I_Model,
         afterGltfInit?: (gltf: GLTFModel) => void,
     }
 ): Promise<GLTFModel> {
-    let type: "gltf" | "glb";
+    let _type: "gltf" | "glb";
     const gltf = new GLTFModel(input);
     const DataLoader = new GltfDataAtLoaders(input.url, input.scene.device, gltf);
     await DataLoader.init();
@@ -205,7 +205,7 @@ export class GLTFModel extends BaseModel {
         const skinAnimations: SkinAnimation[] = [];
         for (const bundle of this.meshAndSkinBundle) {
             const node = this.instanceNodes.get(nodeOfScene)!.nodes.get(bundle.nodeID);
-            const mesh = node?.Entity;
+            const _mesh = node?.Entity;
             const skin = this.DataLoader.getSkin(bundle.skinID);
 
             const jointsNodes = skin.joints;
@@ -388,7 +388,7 @@ export class GLTFModel extends BaseModel {
     async readyForGPU(): Promise<any> {
         //已经在new时传入了GPUDevice，不需要再进行ready工作。
     }
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         //1、更新mesh的update，按照node tree
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -785,15 +785,15 @@ export class GLTFModel extends BaseModel {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //未实现
                 // 扩展未实现
-                const extensions = perMaterialData.extensions;
+                const _extensions = perMaterialData.extensions;
                 // extras未实现
-                const extras = perMaterialData.extras;
+                const _extras = perMaterialData.extras;
 
 
 
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                const name = perMaterialData.name || i;
+                const _name = perMaterialData.name || i;
                 const normalTextureData = perMaterialData.normalTexture;
                 let normalForPbr: I_TextureForPBR | undefined = undefined;
                 if (normalTextureData != undefined) {
@@ -1536,7 +1536,7 @@ export class GLTFModel extends BaseModel {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 }

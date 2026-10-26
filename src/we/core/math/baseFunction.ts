@@ -29,7 +29,7 @@ export function WERandomInt(min: number, max: number): number {
 
 const weIDs: Set<number> = new Set();
 const weUUIDs = new Set();
-const weNodeIDs = new Set();
+const _weNodeIDs = new Set();
 /**
  * generate ID
  * @returns ID : number
@@ -216,7 +216,7 @@ export function convertPositionsWithIndicesToPositionNonIndex(positions: number[
         positionNonIndex.push(positions[i * 3 + 0]);
         positionNonIndex.push(positions[i * 3 + 1]);
         positionNonIndex.push(positions[i * 3 + 2]);
-       const abc=1;
+       const _abc=1;
     }
     return positionNonIndex;
 }
@@ -229,7 +229,7 @@ export function convertPositionsWithIndicesToPositionNonIndex(positions: number[
 export function computeNormalsArrayFromPositionsNoIndex(positions: number[]): number[] {
     // 1. 初始化法线数组为 0
     const normals: number[] = new Array(positions.length).fill(0);
-    const stride = 3; // 每个顶点 3 个分量（x,y,z）
+    const _stride = 3; // 每个顶点 3 个分量（x,y,z）
 
     // 2. 遍历所有三角面，计算面法线并累加到顶点
     for (let i = 0; i < positions.length; i += 3 * 3) {

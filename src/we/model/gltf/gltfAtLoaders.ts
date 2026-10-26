@@ -54,10 +54,10 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         }
     }
     async init(): Promise<GLTFWithBuffers | GLB> {
-        let type: "gltf" | "glb";
+        let _type: "gltf" | "glb";
         let data: GLTFWithBuffers | GLB;
         if (this.url.indexOf(".gltf") != -1) {
-            type = "gltf";
+            _type = "gltf";
             data = await load(this.url, GLTFLoader,
                 {
                     draco: {
@@ -77,7 +77,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
                 });
         }
         else if (this.url.indexOf(".glb") > -1) {
-            type = "glb";
+            _type = "glb";
             data = await load(this.url, GLTFLoader,
                 {
                     draco: {
@@ -497,7 +497,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
                         i_sparse);
                 }
                 // 构建对应的GPUBuffer
-                const byteOffset = 0;//sparse数据对应的Arraybuffer是新建的，从0开始
+                const _byteOffset = 0;//sparse数据对应的Arraybuffer是新建的，从0开始
                 gpuBuffer = this.createGPUBuffer(accessorID, bufferAttribute);
             }
             // 构建对应的GPUBufferBundle
@@ -537,13 +537,13 @@ export class GltfDataAtLoaders extends ModelDataLoader {
             accessorBufferSource = this.getAccessorForArray(accessorID);
 
         } else if (useFor == E_accessorUseFor.indexLineLoop) {
-            const countsOfList = accessor.count * 2;
+            const _countsOfList = accessor.count * 2;
             const arrayIndexLineLoop = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
             const newIndexBuffer = BaseFunction.convertLineIndexLoopToList(arrayIndexLineLoop, accessor.count);
             accessorBufferSource = [...newIndexBuffer];
         }
         else if (useFor == E_accessorUseFor.indexTriangleFan) {
-            const countsOfList = (accessor.count - 2) * 3;
+            const _countsOfList = (accessor.count - 2) * 3;
             const arrayIndexTriangleFan = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
             const newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(arrayIndexTriangleFan, accessor.count);
             accessorBufferSource = [...newIndexBuffer];

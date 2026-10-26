@@ -308,7 +308,7 @@ export abstract class BaseTexture extends RootGPU {
         const commandBuffer = encoder.finish();
         device.queue.submit([commandBuffer]);
     };
-    update(clock: Clock, updateSelftFN: boolean = true): boolean {
+    update(clock: Clock, _updateSelftFN: boolean = true): boolean {
 
         if (this.inputValues.update) {
             this.inputValues.update(this);

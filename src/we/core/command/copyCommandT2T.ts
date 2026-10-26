@@ -21,7 +21,7 @@ export class CopyCommandT2T extends CopyCommand {
         return this.copy(commandEncoder);
     }
     copy(commandEncoder: GPUCommandEncoder) {
-        let commandBuffer: GPUCommandBuffer;
+        let _commandBuffer: GPUCommandBuffer;
         if (this.input.A instanceof GPUTexture && this.input.B instanceof GPUTexture) {
             commandEncoder.copyTextureToTexture(
                 {

@@ -782,7 +782,7 @@ export class RenderManager {
      * @param list I_renderDrawOfQuad  有camera聚合的命令的列表
      * @param renderPassName E_renderPassName
      */
-    renderComplexQuad(list: I_renderDrawOfQuad, renderPassName: E_renderPassName) {
+    renderComplexQuad(list: I_renderDrawOfQuad, _renderPassName: E_renderPassName) {
         for (const id in list) {
             const perSetOfCommand = list[id];
             // let rpd: GPURenderPassDescriptor = this.scene.getRenderPassDescriptor(id, E_renderForDC.camera);
@@ -818,7 +818,7 @@ export class RenderManager {
     /** 执行命令集合
      * 1、命令集合为数组
      */
-    doCommand(list: commmandType[], renderPassName: E_renderPassName) {
+    doCommand(list: commmandType[], _renderPassName: E_renderPassName) {
         for (const perCommand of list) {
             if (perCommand instanceof SimpleDrawCommand) {
                 perCommand.doWithRPD(this.commandEncoder);

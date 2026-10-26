@@ -39,7 +39,7 @@ export class PrefilteredCubemap extends BaseTexture {
                 // 1. 读取文件二进制
                 const response = await fetch(source);
                 const bufffer = await response.arrayBuffer();
-                const u8buffer = new Uint8Array(bufffer);
+                const _u8buffer = new Uint8Array(bufffer);
 
                 const result = this.parseCmgenKtx1Cubemap(bufffer);
                 width = result.width;
@@ -106,7 +106,7 @@ export class PrefilteredCubemap extends BaseTexture {
 
         return this._state;
     }
-    override async initSamplerAndLayout(input: I_BaseTexture) {
+    override async initSamplerAndLayout(_input: I_BaseTexture) {
         this.sampler = this.device.createSampler({
             // 立方图强制 clamp，杜绝接缝
             addressModeU: "clamp-to-edge",
@@ -165,16 +165,16 @@ export class PrefilteredCubemap extends BaseTexture {
         * 0 ~ 63：完整 KTX1 头部（含 bytesOfKeyValueData，偏移 60~63）
         */
         // 只读取关键字段，其余跳过
-        const glTypeSize = view.getUint32(16, true);
+        const _glTypeSize = view.getUint32(16, true);
         const _glType = view.getUint32(20, true);
         const _glFormat = view.getUint32(24, true);
         const glInternalFormat = view.getUint32(28, true);
-        const glBaseInternalFormat = view.getUint32(32, true);
+        const _glBaseInternalFormat = view.getUint32(32, true);
 
         const pixelWidth = view.getUint32(36, true);
         const pixelHeight = view.getUint32(40, true);
-        const pixelDepth = view.getUint32(44, true); //立方图固定 0
-        const numberOfArrayElements = view.getUint32(48, true); //非数组立方图
+        const _pixelDepth = view.getUint32(44, true); //立方图固定 0
+        const _numberOfArrayElements = view.getUint32(48, true); //非数组立方图
 
         const faceCount = view.getUint32(52, true); //标准 6 面 Cubemap
         const mipLevelCount = view.getUint32(56, true); //Mip层数

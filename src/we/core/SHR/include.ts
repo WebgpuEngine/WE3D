@@ -97,7 +97,7 @@ export type T_SHR_RenderMode = "forward" | "defer" | "Msaa" | "MsaaInfo" | "blen
 /**include代码 ：基础代码
  * 1、为vs、fs的wgsl代码服务，提供include资源
 */
-export var WGSL_Include: Record<string, string> = {
+export let WGSL_Include: Record<string, string> = {
     "colorSpace/toneMapping.wgsl": include_toneMappingWGSL,
 
     "entity/bindgroup_entiy_base.wgsl": include_bindgroup_entiy_base_wgsl,
@@ -143,7 +143,7 @@ export var WGSL_Include: Record<string, string> = {
  * 2、在WGSL文件中的形式如：#tag gbuffers
  * 
 */
-export var WGSL_V_Gbuffers_struct: Record<T_SHR_RenderMode, string> = {
+export let WGSL_V_Gbuffers_struct: Record<T_SHR_RenderMode, string> = {
     "forward": tag_st_GBuffer_wgsl,
     "defer": tag_st_GBuffer_wgsl,
     "Msaa": tag_st_MSAA_GBuffer_wgsl,
@@ -154,7 +154,7 @@ export var WGSL_V_Gbuffers_struct: Record<T_SHR_RenderMode, string> = {
  * 1、为fs的wgsl代码服务，提供选择性include GBufer output 结构体的定义
  * 2、在WGSL文件中的形式如：#tag gbuffers_output
 */
-export var WGSL_V_Gbuffers_output: Record<T_SHR_RenderMode, string> = {
+export let WGSL_V_Gbuffers_output: Record<T_SHR_RenderMode, string> = {
     "forward": tag_gbuffer_output_wgsl,
     "defer": tag_gbuffer_output_wgsl,
     "Msaa": tag_MSAA_gbuffer_output_wgsl,
@@ -162,13 +162,13 @@ export var WGSL_V_Gbuffers_output: Record<T_SHR_RenderMode, string> = {
     "blend": tag_blend_gbuffer_output_wgsl,
 }
 /**replace代码 */
-export var WGSL_Replace: Record<string, string> = {
+export let WGSL_Replace: Record<string, string> = {
     "test1": " ",
 }
 /**主shader代码
  * 1、为WGSL_AliasShaderCode中的code部分的string赋值
  */
-export var WGSL_ShaderCode: Record<string, string> = {
+export let WGSL_ShaderCode: Record<string, string> = {
     "entity/mesh/main.vs.wgsl": meshMain_wgsl,
     "entity/shadowmap/main.vs.wgsl": shadowmapMain_wgsl,
     // "entity/line/main.vs.wgsl": lineMain_wgsl,
@@ -213,7 +213,7 @@ export interface I_aliasShaderCode {
  * 1、对外输出的shader名称,名称与E_shaderRegisterAlianName中的名称一致
  * 2、material中的渲染模式部分 ，如：material.color.xxx 是在SHR中注册的别名
 */
-export var WGSL_AliasShaderCode: Record<string, I_aliasShaderCode> = {
+export let WGSL_AliasShaderCode: Record<string, I_aliasShaderCode> = {
 
     "toneMapping": {
         type: "vs+fs",
@@ -495,7 +495,7 @@ export enum E_shaderRegisterAlianName {
     "postProcess.redToOne" = "postProcess.redToOne",
 }
 /** 反射attribute属性预定义 */
-export var WGSL_reflection_attributes: Record<string, string[]> = {
+export let WGSL_reflection_attributes: Record<string, string[]> = {
     "position": [
         " let position= vec3f(0.0,0.0,0.0); \n ",
         " let position = attributes.position; \n ",

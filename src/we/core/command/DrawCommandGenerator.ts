@@ -664,9 +664,8 @@ export class DrawCommandGenerator {
                         locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
 
-                        let vertexBuffer: GPUBuffer;
                         //动态顶点：使用GPUBuffer
-                        vertexBuffer = createVerticesBuffer(this.device, `${values.IDS?.ID}->${lowKey}`, data.buffer);
+                        const vertexBuffer: GPUBuffer = createVerticesBuffer(this.device, `${values.IDS?.ID}->${lowKey}`, data.buffer);
                         if (values.system?.parent) values.system.parent.vertexPointers[lowKey] = { gpuBuffer: vertexBuffer };
                         vertexBufferEntry = {
                             name: lowKey,
@@ -729,8 +728,10 @@ export class DrawCommandGenerator {
                     locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
 
-                    if (values.system?.parent && values.system?.parent.vertexPointers[lowKey]) {
-                        pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
+                    const sysParent = values.system?.parent;
+                    const vp = sysParent?.vertexPointers[lowKey];
+                    if (sysParent && vp) {
+                        pointerOfVertex = vp.pointer!;
                     }
                     else {
                         const pointerParams: I_pointerCreateParams = {
@@ -798,7 +799,7 @@ export class DrawCommandGenerator {
                             viewType = "f32";
                             break;
                     }
-                    const arrayBufferType: T_pointerDataType = "f32";
+                    const _arrayBufferType: T_pointerDataType = "f32";
                     const arrarBufferUnitLength = 4;
                     switch (lowKey) {
                         case "position":
@@ -833,8 +834,10 @@ export class DrawCommandGenerator {
                             console.warn("顶点属性" + lowKey + "的类型" + arrayBuffertype + "未被支持.按照float32x3处理");
                             break;
                     }
-                    if (values.system?.parent && values.system?.parent.vertexPointers[lowKey]) {
-                        pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
+                    const sysParent = values.system?.parent;
+                    const vp = sysParent?.vertexPointers[lowKey];
+                    if (sysParent && vp) {
+                        pointerOfVertex = vp.pointer!;
                     }
                     else {
                         const pointerParams: I_pointerCreateParams = {
@@ -869,7 +872,7 @@ export class DrawCommandGenerator {
                 //I_vsAttribute格式。有更多详细的数据说明，来约定顶点数据，例如format,arrayStride,offset等
                 else if ("format" in value && "data" in value) {
                     const format: GPUVertexFormat = value.format;
-                    let data;//默认:float32
+                    let _data;//默认:float32
                     const datakind: number = 4;//默认:float32|uint32|sint32
                     let arrayStride = 4 * 3;
                     switch (value.format) {//这里只匹配了几种数据，以后视情况而定
@@ -929,8 +932,10 @@ export class DrawCommandGenerator {
                     const wgsl_value_format = this.getWgslValueFormat(value.format);
                     locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
-                    if (values.system?.parent && values.system?.parent.vertexPointers[lowKey]) {
-                        pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
+                    const sysParent = values.system?.parent;
+                    const vp = sysParent?.vertexPointers[lowKey];
+                    if (sysParent && vp) {
+                        pointerOfVertex = vp.pointer!;
                     }
                     else {
                         const pointerParams: I_pointerCreateParams = {
@@ -980,8 +985,10 @@ export class DrawCommandGenerator {
                         locationString += ` @location(${location_i}) ${item.name.toLowerCase()} : ${wgsl_value_format}  ,`;
                         location_i++;//合并属性，每个属性都要增加一个location
                     }
-                    if (values.system?.parent && values.system?.parent.vertexPointers[lowKey]) {
-                        pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
+                    const sysParent = values.system?.parent;
+                    const vp = sysParent?.vertexPointers[lowKey];
+                    if (sysParent && vp) {
+                        pointerOfVertex = vp.pointer!;
                     }
                     else {
                         const pointerParams: I_pointerCreateParams = {
@@ -1089,8 +1096,10 @@ export class DrawCommandGenerator {
                     // let md5OfIndicesOfArray = MD5.hex(values.data.indices);
                     if (values.data.indices && values.data.indices.length > 0) {
 
-                        if (values.system?.parent && values.system?.parent.vertexPointers["index" + wireFrame]) {
-                            index = values.system?.parent.vertexPointers["index" + wireFrame].pointer!;
+                        const sysParent = values.system?.parent;
+                        const vp = sysParent?.vertexPointers["index" + wireFrame];
+                        if (sysParent && vp) {
+                            index = vp.pointer!;
                         }
                         else {
                             // if (!this.resources.hasIndices(md5OfIndicesOfArray)) {
@@ -1169,7 +1178,7 @@ export class DrawCommandGenerator {
             layoutNumber = 1;
 
             if (values.system?.parent) {
-                const { bindGroup, bindGroupLayout } = values.system?.parent.getBindGroupAndBindGroupLayout();
+                const { bindGroupLayout } = values.system.parent.getBindGroupAndBindGroupLayout();
                 DC_bindGroups[layoutNumber] = undefined;
                 DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
 
@@ -1430,7 +1439,7 @@ export class DrawCommandGenerator {
         fragmentName: string,
     } {
         //VS location 输出插值模式
-        const locationInterpolateString = "";
+        const _locationInterpolateString = "";
         // if (values.system?.parent) {
         //     locationInterpolateString = values.system?.parent.getStringOfLocationInterpolate();
         // }
@@ -1556,9 +1565,6 @@ export class DrawCommandGenerator {
                 targets,
                 constants: constansFS,
             }
-        }
-        else {
-            const abc = 1;
         }
         return { vertex, fragment, vertexName: md5OfVScode, fragmentName: md5OfFScode };
     }

@@ -74,13 +74,13 @@ export class CylinderGeometry extends BaseGeometry {
     /** copy code from threejs */
     init(input: optionCylinderGeometry) {
 
-        const thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
+        const _thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
 
         // buffers
-        const indices = this.buffer.indeices;
-        const vertices = this.buffer.position;
-        const normals = this.buffer.normal;
-        const uvs = this.buffer.uv;
+        const _indices = this.buffer.indeices;
+        const _vertices = this.buffer.position;
+        const _normals = this.buffer.normal;
+        const _uvs = this.buffer.uv;
 
 
         // generate vertices, normals and uvs
@@ -108,7 +108,7 @@ export class CylinderGeometry extends BaseGeometry {
         const uvs = this.buffer.uv;
         const materialStep = this.buffer.materialStep;
 
-        const normal: xyz = {
+        const _normal: xyz = {
             x: 0,
             y: 0,
             z: 0

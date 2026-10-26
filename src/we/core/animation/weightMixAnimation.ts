@@ -93,7 +93,7 @@ export class WeightMixAnimation extends BaseAnimation {
         }
         super.play(playAnimation);
     }
-    update(clock: Clock): void {
+    update(_clock: Clock): void {
 
     }
     /**
@@ -104,9 +104,9 @@ export class WeightMixAnimation extends BaseAnimation {
     weightsUpdate(weghtsGroup: I_AnimationWeightForMergePlay): void {
         const group = weghtsGroup.animation;
 
-        const weightList: number[][] = [];
+        const _weightList: number[][] = [];
         let targetStride: number = 0;
-        let target: string = "";
+        let _target: string = "";
         if (group.length == 0) {
             console.warn("AnimationManager: weightsUpdate: group is empty");
             return;
@@ -114,7 +114,7 @@ export class WeightMixAnimation extends BaseAnimation {
         else {
             if (group[0] instanceof BaseAnimation) {
                 targetStride = group[0].interpolator.sampler.targetStride;
-                target = group[0].interpolator.sampler.target;
+                _target = group[0].interpolator.sampler.target;
                 const output: number[] = [];
                 for (const perOne of group as BaseAnimation[]) {
                     const perOutput = perOne.interpolator.output;

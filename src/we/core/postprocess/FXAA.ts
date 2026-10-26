@@ -103,7 +103,7 @@ export class FXAA extends BasePostProcess {
         const SDC1 = new SimpleDrawCommand(inputSDC);
         this.commands.push(SDC1);
     }
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
     updateFXAAValues(values?: I_FXAAValues) {

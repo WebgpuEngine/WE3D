@@ -226,7 +226,7 @@ export function computeNormalsFromPositionsAndIndices(positions: Float32Array, i
 export function computeNormalsFromPositionsNoIndex(positions: Float32Array): Float32Array {
     // 1. 初始化法线数组为 0
     const normals = new Float32Array(positions.length);
-    const stride = 3; // 每个顶点 3 个分量（x,y,z）
+    const _stride = 3; // 每个顶点 3 个分量（x,y,z）
 
     // 2. 遍历所有三角面，计算面法线并累加到顶点
     for (let i = 0; i < positions.length; i += 3 * 3) {

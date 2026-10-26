@@ -117,7 +117,7 @@ export class AnimationGroup implements I_UUID {
         }
         this.playState = E_PlayState.playing;
     }
-    stop(clock: Clock): void {
+    stop(_clock: Clock): void {
         for (const perOne of this.list) {
             perOne.stop();
         }
@@ -128,7 +128,7 @@ export class AnimationGroup implements I_UUID {
         }
         this.playState = E_PlayState.stoped;
     }
-    pause(clock: Clock): void {
+    pause(_clock: Clock): void {
         for (const perOne of this.list) {
             perOne.pause();
         }
@@ -139,7 +139,7 @@ export class AnimationGroup implements I_UUID {
         }
         this.playState = E_PlayState.pause;
     }
-    reset(clock: Clock): void {
+    reset(_clock: Clock): void {
         for (const perOne of this.list) {
             perOne.reset();
         }

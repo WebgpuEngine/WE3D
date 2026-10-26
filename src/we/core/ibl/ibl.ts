@@ -139,7 +139,7 @@ export class IBL {
 
         this.initBindGroup();
     }
-    reInit(input: IV_IBL) {
+    reInit(_input: IV_IBL) {
         if (this.bufferGPU) this.bufferGPU.destroy();
         if (this.prefilteredCubeMap) this.prefilteredCubeMap.destroy();
 

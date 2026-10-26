@@ -22,7 +22,7 @@ export class Texture extends BaseTexture {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 
@@ -32,7 +32,7 @@ export class Texture extends BaseTexture {
         super(input, device, scene);
         this.inputValues = input;
     }
-    async initTextureAndLayout(input: IV_Texture): Promise<any> {
+    async initTextureAndLayout(_input: IV_Texture): Promise<any> {
         const source = this.inputValues.source;
         //GPUTexture
         if (source instanceof GPUTexture) {

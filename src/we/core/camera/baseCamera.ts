@@ -481,11 +481,11 @@ export abstract class BaseCamera extends NodeObject {
    * 
    * @param clock 
    */
-  updateSelf(clock: Clock): void {
+  updateSelf(_clock: Clock): void {
     //1、更新控制器或根据worldPosition更新属性
     if (this._control) {
       //有控制器情况，会隐性调用updateByPositionDirection（）或者updateByPositionYawPitch（）更新MV矩阵和MVP[]
-      const result = this._control.update(this.scene.clock.deltaTime);
+      const _result = this._control.update(this.scene.clock.deltaTime);
     }
     else {
       const lookat = this.LookAt;
@@ -625,7 +625,7 @@ export abstract class BaseCamera extends NodeObject {
    */
   updateBufferOfSystemMVP() {
     const mvp = this.MVP;
-    let MVP: GPUBuffer;
+    let _MVP: GPUBuffer;
     const MVP_buffer = this.bufferOf_ST_SystemMVP;
 
     if (mvp.length == 3) {
@@ -671,7 +671,7 @@ export abstract class BaseCamera extends NodeObject {
    * @param node 节点
    * @returns 是否在BVH中可见
    */
-  getVisibleInBVH(node: NodeObject): boolean {
+  getVisibleInBVH(_node: NodeObject): boolean {
     return true;
   }
 

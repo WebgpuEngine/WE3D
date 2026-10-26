@@ -127,7 +127,7 @@ export class NodeObject extends NodeSpace {
     override _destroy(): void {
         // throw new Error("Method not implemented.");
     }
-    override updateSelf(clock: Clock): void {
+    override updateSelf(_clock: Clock): void {
         // throw new Error("Method not implemented.");
     }
     /** BVH空间类型 */
@@ -416,7 +416,7 @@ export class NodeObject extends NodeSpace {
      * @param renderID 
      * @returns 
      */
-    async init(scene: Scene, parent?: NodeObject, renderID?: number): Promise<any> {
+    async init(scene: Scene, parent?: NodeObject, _renderID?: number): Promise<any> {
         super.init(scene);
         if (parent) {
             this.Parent = parent;

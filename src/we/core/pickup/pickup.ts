@@ -217,7 +217,7 @@ export class Pickup extends BaseInputControl {
         return result;
     }
 
-    receiveInput(event: Event, type: E_InputEvent): boolean {
+    receiveInput(event: Event, _type: E_InputEvent): boolean {
         this._event = event;
         switch ((event as PointerEvent).pointerType) {
             case "mouse":

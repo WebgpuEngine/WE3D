@@ -17,10 +17,10 @@ export class AmbientLight extends BaseLight {
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
-    updateMVP(scene: Scene): Mat4[] {
+    updateMVP(_scene: Scene): Mat4[] {
         throw new Error("Method not implemented.");
     }
 

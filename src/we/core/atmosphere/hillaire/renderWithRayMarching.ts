@@ -209,7 +209,7 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
         this.generateBindGroup();
         //DC
         if (this.scene.finalTarget.NDC == true) {
-            const inputDC: IV_DrawCommandGenerator = {
+            const _inputDC: IV_DrawCommandGenerator = {
                 scene: this.scene,
                 parent: this,
             }
@@ -275,7 +275,7 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
             }
             this.pipeline = this.device.createRenderPipeline(descriptor);
 
-            const rpd = this.getRpd();
+            const _rpd = this.getRpd();
             const valueDC: IV_DynBindGroupDrawCommand = {
                 baseInfo: {
                     parent: this,

@@ -590,7 +590,7 @@ export abstract class BaseEntity extends NodeSpace {
      *      A、检查storage pointer的更新
      * @param clock 时钟
      */
-    preUpdate(clock: Clock) {
+    preUpdate(_clock: Clock) {
         //注销状态或注销中
         if (this._isDestroy) return;
         this.flagOutsideInstanceCountChange = false;
@@ -748,7 +748,7 @@ export abstract class BaseEntity extends NodeSpace {
      * 
      * this.flagUpdateForPerInstance 影响是否单独更新每个instance，使用用户更新的update（）的结果，或连续的结果
      */
-    updateUniformCommonEntity(clock: Clock, updateParent: boolean = true): void {
+    updateUniformCommonEntity(clock: Clock, _updateParent: boolean = true): void {
         if (this.bufferPointers.uniformCommonEntity !== undefined) {
             const st_entityValues = this.bufferPointers.uniformCommonEntity.cpuBuffer;
             const offset = this.bufferPointers.uniformCommonEntity.offset;

@@ -269,13 +269,13 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
     }
 
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
         this.writeUniformVolume();
     }
     saveJSON() {
         throw new Error("Method not implemented.");
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error("Method not implemented.");
     }
 

@@ -415,7 +415,7 @@ export class ResourceManagerOfGPU {
      * @param key 
      * @param kind 
      */
-    registerResource(key: any, kind: E_resourceKind) {
+    registerResource(_key: any, _kind: E_resourceKind) {
 
     }
     /**
@@ -493,11 +493,11 @@ export enum E_resourceKind {
     storageBuffer = "storageBuffer",
 }
 
-class GPUBindGroupEntryImpl implements GPUBindGroupEntry {
+class _GPUBindGroupEntryImpl implements GPUBindGroupEntry {
     binding!: number;
     resource!: GPUBindingResource;
 }
-class I_uniformArrayBufferEntryImpl implements I_uniformArrayBufferEntry {
+class _I_uniformArrayBufferEntryImpl implements I_uniformArrayBufferEntry {
     label!: string;
     binding!: number;
     type?: "uniform" | "storage" | undefined;

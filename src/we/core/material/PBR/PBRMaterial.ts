@@ -724,7 +724,7 @@ export class PBRMaterial extends BaseMaterial {
                         textureInstace = result;
                         generate = false;
                     }
-                } catch (error) {
+                } catch (_error) {
                     generate = true;
                 }
             }
@@ -907,7 +907,7 @@ export class PBRMaterial extends BaseMaterial {
     //     throw new Error("Method not implemented.");
     // }
 
-    updateSelf(clock: Clock): void {
+    updateSelf(_clock: Clock): void {
     }
     // saveJSON() {
     //     throw new Error("Method not implemented.");

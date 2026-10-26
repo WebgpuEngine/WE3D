@@ -311,7 +311,7 @@ export class BlockOffsetLength implements I_UUID {
     }
     /** 生成更新偏移量和长度的映射表
      */
-    generateUpdateOffsetAndLenght(clock: Clock) {
+    generateUpdateOffsetAndLenght(_clock: Clock) {
         this.updateOffsetAndLenght = [];
         //上一个有效的偏移量
         let lastOffset = 0;
@@ -410,7 +410,7 @@ export class BlockOffsetLength implements I_UUID {
             }
         }
     }
-    updateForce(clock: Clock) {
+    updateForce(_clock: Clock) {
         this.device.queue.writeBuffer(this.gpuBuffer, 0, this.cpuBuffer);
     }
     /**
