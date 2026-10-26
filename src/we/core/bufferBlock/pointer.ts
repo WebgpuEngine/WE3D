@@ -462,12 +462,11 @@ export class Pointers {
     /** 重置指针大小 */
     resizePointer(pointerID: number, byteLength: number): I_pointerStruct | false {
         const pointerOld = this.pointers.get(pointerID);
-        let params: I_pointerCreateParams;
         if (!pointerOld) {
             console.warn("指针不存在");
             return false;
         }
-        params = {
+        const params: I_pointerCreateParams = {
             name: pointerOld.name,
             byteSize: byteLength,
             type: pointerOld.type,

@@ -1,9 +1,6 @@
 import { Pointers, T_pointerDataType, T_pointerDataView } from "./pointer";
 
 export class WatchableBufferView {
-    #arrayBuffer!: ArrayBuffer;
-    #offset!: number;
-    #byteLength!: number;
     #view!: T_pointerDataView;
     viewType: T_pointerDataType;
     parent: Pointers;
@@ -19,7 +16,6 @@ export class WatchableBufferView {
         this.parent = input.parent;
         this.pointerID = input.pointerID;
         this.viewType = input.viewType;
-        this.updateAttribute(input.arrayBuffer, input.offset, input.byteLength);
         this.#view = this.generateView(input.arrayBuffer, input.viewType, input.offset, input.byteLength);
     }
     generateView(arrayBuffer: ArrayBuffer, viewType: T_pointerDataType, offset: number = 0, byteLength?: number) {
@@ -52,11 +48,6 @@ export class WatchableBufferView {
             throw new Error("viewType not support");
         }
         return view;
-    }
-    updateAttribute(arrayBuffer: ArrayBuffer, offset: number, byteLength: number) {
-        this.#arrayBuffer = arrayBuffer;
-        this.#offset = offset;
-        this.#byteLength = byteLength;
     }
     // 写入：一定会触发监听
     set(index: number, value: number) {

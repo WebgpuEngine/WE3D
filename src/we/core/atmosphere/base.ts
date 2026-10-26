@@ -67,7 +67,7 @@ export interface I_AtomSphereMie extends I_AttomSphereBaseLayerParams {
  *     A、[0.000650, 0.001881, 0.000085] ，https://github.com/JolifantoBambla/webgpu-sky-atmosphere
  *     B、
  *          σ_aO,R =4.2×10−6 , σ_aO,G =1.8×10 −6 , σ_aO,B =9.6×10 −6 
- *          σ_eO​ (h)=max(σ_aO,R​ ,σ_aO,G​ ,σ_aO,B​ )⋅k O​ (h)（单通道消光近似） 
+ *          σ_eO (h)=max(σ_aO,R ,σ_aO,G ,σ_aO,B )⋅k O (h)（单通道消光近似） 
  * 3、高度：臭氧最大浓度高度30km
  * 4、吸收
  *     A、vec3f(2.04e-5, 4.97e-5, 1.95e-6) //臭氧吸收系数：绿吸收最强,https://www.shadertoy.com/view/wlBXWK

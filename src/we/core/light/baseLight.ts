@@ -87,7 +87,7 @@ export interface I_optionBaseLight extends I_Update {
 /**
  * 光源的uniform的尺寸，ArrayBuffer的大小(byte) 
  */
-export let lightStructSize = 112;//20240104 change 96->112,add some about shadow 
+export const lightStructSize = 112;//20240104 change 96->112,add some about shadow 
 // export var lightStructSizeOfShadowMapMVP = 80;//20240104 change 96->112,add some about shadow` 
 // export var lightStructSizeForRenderOfBindGroup = 80;//20240104 change 96->112,add some about ` 
 

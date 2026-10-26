@@ -129,7 +129,6 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * 11、dblclick事件注册
      */
     init() {
-        const scope = this;
 
         // this.canvas.addEventListener('contextmenu', (e) => {
         //     // 1. 阻止默认右键菜单（核心）
@@ -140,29 +139,29 @@ export class InputManager extends ECSManager<BaseInputControl> {
         // });
 
 
-        const keyDown = (event: KeyboardEvent) => { scope.keyDown(scope, event); }                    //keydown事件
+        const keyDown = (event: KeyboardEvent) => { this.keyDown(event); }                    //keydown事件
         document.addEventListener('keydown', keyDown);                                                //keydown事件注册
         this.event.push({ target: window, type: "keyDown", callback: keyDown, option: undefined }); //keydown事件注册
 
-        const keyUp = (event: KeyboardEvent) => { scope.keyUp(scope, event); }
+        const keyUp = (event: KeyboardEvent) => { this.keyUp(event); }
         document.addEventListener('keyup', keyUp);
         this.event.push({ target: window, type: "keyUp", callback: keyUp, option: undefined });
 
-        const pointerDown = (event: PointerEvent) => { scope.pointerDown(scope, event); }
-        this.canvas.addEventListener('pointerdown', (event) => this.pointerDown(this, event));
+        const pointerDown = (event: PointerEvent) => { this.pointerDown(event); }
+        this.canvas.addEventListener('pointerdown', (event) => this.pointerDown(event));
         this.event.push({ target: this.canvas, type: "pointerDown", callback: pointerDown, option: undefined });
 
 
-        const pointerUp = (event: PointerEvent) => { scope.pointerUp(scope, event); }
+        const pointerUp = (event: PointerEvent) => { this.pointerUp(event); }
         this.canvas.addEventListener('pointerup', pointerUp);
         this.event.push({ target: this.canvas, type: "pointerUp", callback: pointerUp, option: undefined });
 
-        const pointerMove = (event: PointerEvent) => { scope.pointerMove(scope, event); }
+        const pointerMove = (event: PointerEvent) => { this.pointerMove(event); }
         this.canvas.addEventListener('pointermove', pointerMove);
         this.event.push({ target: this.canvas, type: "pointerMove", callback: pointerMove, option: undefined });
         const whellOption = { passive: false };
 
-        const wheel = (event: WheelEvent) => { scope.wheel(scope, event); }
+        const wheel = (event: WheelEvent) => { this.wheel(event); }
         this.canvas.addEventListener('wheel', wheel, whellOption);
         this.event.push({ target: this.canvas, type: "wheel", callback: wheel, option: whellOption });
 
@@ -289,13 +288,13 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * 1、由init()注册到window对象
      * 2、调用由window对象触发的事件
      * 3、调用所有注册的键盘事件控制器的keyDown方法
-     * @param scope input manager 实例
+     * @param this input manager 实例
      * @param event 键盘事件
      */
-    keyDown(scope: InputManager, event: KeyboardEvent) {
-        for (const i in scope.registerEventList[E_InputEvent.keydown]) {  //遍历keydown的"优先级"层,三层：优先广播，独占，最后广播
-            for (const j in scope.registerEventList[E_InputEvent.keydown][i as E_InputPriority]) {//遍历当前优先级内的所有注册的"控制器"。例如：arcball，wasd
-                const item = scope.registerEventList[E_InputEvent.keydown][i as E_InputPriority][j];//input 控制器
+    keyDown(this: InputManager, event: KeyboardEvent) {
+        for (const i in this.registerEventList[E_InputEvent.keydown]) {  //遍历keydown的"优先级"层,三层：优先广播，独占，最后广播
+            for (const j in this.registerEventList[E_InputEvent.keydown][i as E_InputPriority]) {//遍历当前优先级内的所有注册的"控制器"。例如：arcball，wasd
+                const item = this.registerEventList[E_InputEvent.keydown][i as E_InputPriority][j];//input 控制器
                 const flagStop = item.receiveInput(event, E_InputEvent.keydown);  //调用控制器的keyDown方法，返回是否停止后续处理
                 if (j == E_InputPriority.intercept) //独占优先级
                     if (flagStop) { //如果独占优先级的控制器返回true，停止后续处理
@@ -306,10 +305,10 @@ export class InputManager extends ECSManager<BaseInputControl> {
         // event.preventDefault();
         // event.stopPropagation();
     }
-    keyUp(scope: InputManager, event: KeyboardEvent) {
-        for (const i in scope.registerEventList[E_InputEvent.keyup]) {
-            for (const j in scope.registerEventList[E_InputEvent.keyup][i as E_InputPriority]) {
-                const item = scope.registerEventList[E_InputEvent.keyup][i as E_InputPriority][j];
+    keyUp(this: InputManager, event: KeyboardEvent) {
+        for (const i in this.registerEventList[E_InputEvent.keyup]) {
+            for (const j in this.registerEventList[E_InputEvent.keyup][i as E_InputPriority]) {
+                const item = this.registerEventList[E_InputEvent.keyup][i as E_InputPriority][j];
                 const flagStop = item.receiveInput(event, E_InputEvent.keyup);
                 if (j == E_InputPriority.intercept)
                     if (flagStop) {
@@ -323,13 +322,13 @@ export class InputManager extends ECSManager<BaseInputControl> {
     /**
      * 处理鼠标事件pointerDown
      * 1、点击canvas时，会主动获取焦点
-     * @param scope input manager 实例
+     * @param this input manager 实例
      * @param event 鼠标事件
      */
-    pointerDown(scope: InputManager, event: PointerEvent) {
-        for (const i in scope.registerEventList[E_InputEvent.pointerdown]) {
-            for (const j in scope.registerEventList[E_InputEvent.pointerdown][i as E_InputPriority]) {
-                const item = scope.registerEventList[E_InputEvent.pointerdown][i as E_InputPriority][j];
+    pointerDown(this: InputManager, event: PointerEvent) {
+        for (const i in this.registerEventList[E_InputEvent.pointerdown]) {
+            for (const j in this.registerEventList[E_InputEvent.pointerdown][i as E_InputPriority]) {
+                const item = this.registerEventList[E_InputEvent.pointerdown][i as E_InputPriority][j];
                 const flagStop = item.receiveInput(event, E_InputEvent.pointerdown);
                 if (j == E_InputPriority.intercept)
                     if (flagStop) {
@@ -343,10 +342,10 @@ export class InputManager extends ECSManager<BaseInputControl> {
         event.preventDefault();
         event.stopPropagation();
     }
-    pointerUp(scope: InputManager, event: PointerEvent) {
-        for (const i in scope.registerEventList[E_InputEvent.pointerup]) {
-            for (const j in scope.registerEventList[E_InputEvent.pointerup][i as E_InputPriority]) {
-                const item = scope.registerEventList[E_InputEvent.pointerup][i as E_InputPriority][j];
+    pointerUp(this: InputManager, event: PointerEvent) {
+        for (const i in this.registerEventList[E_InputEvent.pointerup]) {
+            for (const j in this.registerEventList[E_InputEvent.pointerup][i as E_InputPriority]) {
+                const item = this.registerEventList[E_InputEvent.pointerup][i as E_InputPriority][j];
                 const flagStop = item.receiveInput(event, E_InputEvent.pointerup);
                 if (j == E_InputPriority.intercept)
                     if (flagStop) {
@@ -358,10 +357,10 @@ export class InputManager extends ECSManager<BaseInputControl> {
         event.preventDefault();
         event.stopPropagation();
     }
-    pointerMove(scope: InputManager, event: PointerEvent) {
-        for (const i in scope.registerEventList[E_InputEvent.pointermove]) {
-            for (const j in scope.registerEventList[E_InputEvent.pointermove][i as E_InputPriority]) {
-                const item = scope.registerEventList[E_InputEvent.pointermove][i as E_InputPriority][j];
+    pointerMove(this: InputManager, event: PointerEvent) {
+        for (const i in this.registerEventList[E_InputEvent.pointermove]) {
+            for (const j in this.registerEventList[E_InputEvent.pointermove][i as E_InputPriority]) {
+                const item = this.registerEventList[E_InputEvent.pointermove][i as E_InputPriority][j];
                 const flagStop = item.receiveInput(event, E_InputEvent.pointermove);
                 if (j == E_InputPriority.intercept)
                     if (flagStop) {
@@ -370,10 +369,10 @@ export class InputManager extends ECSManager<BaseInputControl> {
             }
         }
     }
-    wheel(scope: InputManager, event: WheelEvent) {
-        for (const i in scope.registerEventList[E_InputEvent.wheel]) {
-            for (const j in scope.registerEventList[E_InputEvent.wheel][i as E_InputPriority]) {
-                const item = scope.registerEventList[E_InputEvent.wheel][i as E_InputPriority][j];
+    wheel(this: InputManager, event: WheelEvent) {
+        for (const i in this.registerEventList[E_InputEvent.wheel]) {
+            for (const j in this.registerEventList[E_InputEvent.wheel][i as E_InputPriority]) {
+                const item = this.registerEventList[E_InputEvent.wheel][i as E_InputPriority][j];
                 const flagStop = item.receiveInput(event, E_InputEvent.wheel);
                 if (j == E_InputPriority.intercept)
                     if (flagStop) {

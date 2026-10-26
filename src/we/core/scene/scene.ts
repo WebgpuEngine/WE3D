@@ -683,21 +683,21 @@ export class Scene {
      * 监听画布大小变化
      */
     async obServerSize() {
-        const scope = this;
+
         const observer = new ResizeObserver(entries => {
             for (const entry of entries) {
                 //即使在100%的比例，devicePixcel得到的size还是大于contentRect，在pickup时，定位会不准
                 // const width = entry.devicePixelContentBoxSize[0].inlineSize;
                 // const height = entry.devicePixelContentBoxSize[0].blockSize;
-                const dpr = scope.getDPR();
+                const dpr = this.getDPR();
                 const width = Math.ceil(entry.contentRect.width * dpr);
                 const height = Math.ceil(entry.contentRect.height * dpr);
-                if (width != scope.surface.size.width || height != scope.surface.size.height) {
-                    scope.aspect = width / height;
-                    scope.flags.reSize.width = width;
-                    scope.flags.reSize.height = height;
+                if (width != this.surface.size.width || height != this.surface.size.height) {
+                    this.aspect = width / height;
+                    this.flags.reSize.width = width;
+                    this.flags.reSize.height = height;
                     // console.log(width, height, this.canvas.width, this.canvas.height);
-                    scope.flags.reSize.status = true;
+                    this.flags.reSize.status = true;
                 }
                 break;
             }
@@ -858,25 +858,25 @@ export class Scene {
     }
 
     run() {
-        const scope = this;
+
         this.clock.update();
-        async function perFrameRun() {
-            if (scope.flags.realTimeRender) {//是否开启实时更新
+        const perFrameRun = async () => {
+            if (this.flags.realTimeRender) {//是否开启实时更新
                 //时间更新
                 const timerNow = Date.now();
                 const _timerLast = timerNow;
-                scope.clock.update();
-                await scope.onBeforeUpdate();
-                await scope.pickup();//pickup 在当前帧的update开始之前
-                await scope.update();
-                await scope.onAfterUpdate();
-                await scope.onBeforeRender();
-                scope.render();
-                await scope.onAfterRender();
-                // await scope.renderToneMappingAndMSAA();//test 
-                await scope.showGBuffersVisualize();
-                await scope.renderToSurface();
-                await scope.cleanUp();
+                this.clock.update();
+                await this.onBeforeUpdate();
+                await this.pickup();//pickup 在当前帧的update开始之前
+                await this.update();
+                await this.onAfterUpdate();
+                await this.onBeforeRender();
+                this.render();
+                await this.onAfterRender();
+                // await this.renderToneMappingAndMSAA();//test 
+                await this.showGBuffersVisualize();
+                await this.renderToSurface();
+                await this.cleanUp();
                 requestAnimationFrame(perFrameRun);
             }
         }

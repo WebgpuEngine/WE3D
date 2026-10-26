@@ -64,11 +64,11 @@ export class Texture extends BaseTexture {
     }
 
     async generateTextureByString(res: string) {
-        const scope = this;
+
         // let response = await fetch(res);
         // let imageBitmap = await createImageBitmap(await response.blob());
         const imageBitmap = await weGetImageByUrl(res);
-        await scope.generateTextureByImageSource(imageBitmap);
+        await this.generateTextureByImageSource(imageBitmap);
         // const response =
         // await new Promise((resolve) => {
         //     resolve(fetch(res));
@@ -83,7 +83,7 @@ export class Texture extends BaseTexture {
         //             console.log("未能获取,不是imageBitmap格式:", res)
         //             return;
         //         };
-        //         scope.generateTextureByImageSource(imageBitmap);
+        //         this.generateTextureByImageSource(imageBitmap);
         //     }
         // )
     };
@@ -97,7 +97,6 @@ export class Texture extends BaseTexture {
             width = source.displayWidth;
             height = source.displayHeight;
         }
-        const scope = this;
 
         let premultipliedAlpha = false;
         if (this.inputValues.premultipliedAlpha != undefined)//有input.premultipliedAlpha
@@ -130,7 +129,7 @@ export class Texture extends BaseTexture {
         if (this.texture.mipLevelCount > 1) {
             this.generateMips(this.texture);
         }
-        scope._state = E_lifeState.finished;
+        this._state = E_lifeState.finished;
     }
     updateSelf(): void {
 

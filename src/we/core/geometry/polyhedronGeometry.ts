@@ -170,7 +170,6 @@ export class PolyhedronGeometry extends BaseGeometry {
     }
     applyRadius(radius: number) {
         const vertexBuffer = this.buffer.position;
-        const uvBuffer = this.buffer.uv;
         const vertex: xyz = {
             x: 0,
             y: 0,

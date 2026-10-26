@@ -17,7 +17,7 @@ export interface light_shadowMapMatrix {
  * 
  * todo：根据显卡实际情况，可以申请扩大
  */
-export let maxTextureArrayLayers = 256;
+export const maxTextureArrayLayers = 256;
 
 /**每个light的MVP和texture，一一对应 */
 export interface light_DepthTextureAndMVP {

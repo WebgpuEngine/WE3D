@@ -40,7 +40,7 @@ export interface I_GBufferName {
 }
 
 /**MSAA GBuffer*/
-export let V_MsaaGBufferNames: I_GBufferName = {
+export const V_MsaaGBufferNames: I_GBufferName = {
     // [E_GBufferNames.depth]: {
     //     "format": "depth32float",
     //     "label": "GBuffer depth attachment:",
@@ -56,7 +56,7 @@ export let V_MsaaGBufferNames: I_GBufferName = {
  * 预定义的forward GBuffer变量
  * 注意：这个顺序需要与shader中的“st_gbuffer.fs.wgsl”的约定顺序一致。（depth 除外）
  */
-export let V_ForwardGBufferNames: I_GBufferName = {
+export const V_ForwardGBufferNames: I_GBufferName = {
     [E_GBufferNames.depth]: {
         "format": V_weDepthFormat,
         "label": "GBuffer depth attachment",

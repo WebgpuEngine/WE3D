@@ -93,8 +93,7 @@ export abstract class BaseGeometry {
  * 创建线框数据结构
  */
     createWrieFrame() {
-        let list: { [name: string]: number[] };
-        list = {};
+        const list: { [name: string]: number[] } = {};
         if (this.buffer.indeices.length == 0) {
             let i_index = 0;
             for (let i = 0; i < this.buffer.position.length / 3; i++) {

@@ -220,7 +220,7 @@ export class Pickup extends BaseInputControl {
     receiveInput(event: Event, _type: E_InputEvent): boolean {
         this._event = event;
         switch ((event as PointerEvent).pointerType) {
-            case "mouse":
+            case "mouse": {
                 this.eventValues.mouseValue.buttons = (event as PointerEvent).buttons;
                 this.eventValues.mouseValue.downOrUP = "up";
                 this.eventValues.mouseValue.ctrlKey = (event as PointerEvent).ctrlKey;
@@ -240,6 +240,7 @@ export class Pickup extends BaseInputControl {
                 }
                 // console.log(mouse.x, mouse.y, this.pickupKey.x, this.pickupKey.y,rect.x,rect.y);
                 break;
+            }
             case "touch":
                 this.eventValues.mouseValue.buttons = 0;
                 // this._pointer = event as PointerEvent;

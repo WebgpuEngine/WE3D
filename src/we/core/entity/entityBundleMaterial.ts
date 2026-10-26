@@ -650,9 +650,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             // }
         },
         vsOnly: boolean = false,
-        scope?: EntityBundleMaterial
+        scope: EntityBundleMaterial = this
     ): IV_DC {
-        if (scope == undefined) scope = this;
         // if (scope.boundingBox == undefined)
         //     scope.generateBoxAndSphere();
         let boundingBoxMaxSize = scope.getBoundingBoxMaxSize();//生成 shader 中的cubeVecUV使用
@@ -762,7 +761,6 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             {//MSAA 部分,输出MSAA DC队列
                 const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.MSAA }, false, this);
                 valueDC.system!.MSAA = "MSAA";
-                valueDC.label = valueDC.label;
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
                 // this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
                 this.renderPassArray[E_renderPassName.MSAA].push(dc);
@@ -770,7 +768,6 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             {//info forward 部分,输出info forward DC队列
                 const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.inforForward }, false, this);
                 valueDC.system!.MSAA = "MSAAinfo";
-                valueDC.label = valueDC.label;
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
             }
         }
@@ -786,10 +783,6 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             //材质的shader 模板输出，
             {
                 const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterial }, false, this);
-                if (this.deferColor)
-                    valueDC.label = valueDC.label;
-                else
-                    valueDC.label = valueDC.label;
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
             }
         }

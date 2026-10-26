@@ -187,9 +187,8 @@ export class Interpolator {
             case E_AnimationTargetType.position:
             case E_AnimationTargetType.rotation:
             case E_AnimationTargetType.scale:
-            // case E_AnimationTargetType.morphTarget:
+            // falls through
             case E_AnimationTargetType.weights:
-
                 // stride = 3;
                 // if (this.sampler.target == E_AnimationTargetType.rotation) {
                 //     stride = 4;

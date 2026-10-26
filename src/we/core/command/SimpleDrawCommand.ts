@@ -293,7 +293,6 @@ export class SimpleDrawCommand extends BaseCommand {
         // }
         for (const perGroup of uniformGroup) {
             //BindGroup
-            let bindGroup: GPUBindGroup;
             //BindGroup 的数据入口,主要是buffer的创建需要push
             const bindGroupEntry: GPUBindGroupEntry[] = [];
 
@@ -325,7 +324,7 @@ export class SimpleDrawCommand extends BaseCommand {
                 entries: bindGroupEntry,
             }
             //创建BindGroup
-            bindGroup = this.device.createBindGroup(bindGroupDesc);
+            const bindGroup: GPUBindGroup = this.device.createBindGroup(bindGroupDesc);
             ///////////////////
             //增加到资源
             this.bindGroups[layoutNumber] = bindGroup;

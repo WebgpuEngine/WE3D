@@ -88,25 +88,25 @@ export function weColorToColorOfF32<T extends weColor3 | weColor4>(color: T): T 
 
 
 /**texture的alphaT为0的float的zero值 */
-export let V_textureAlphaZero = 0.001
+export const V_textureAlphaZero = 0.001
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //shadowMapSize
 /**shadow map的大小 */
-export let V_shadowMapSize = 1024.0;//写成float格式，方便在全局查找，避免重复的过多
+export const V_shadowMapSize = 1024.0;//写成float格式，方便在全局查找，避免重复的过多
 // export var V_shadowMapSizeDirection = 2048.0;//写成float格式，方便在全局查找，避免重复的过多
 
 /** 最大的light数量 */
-export let V_lightNumber = 8;//在scene.ts中的getWGSLOfSystemShader()进行了shader的替换。
+export const V_lightNumber = 8;//在scene.ts中的getWGSLOfSystemShader()进行了shader的替换。
 
-export let V_layerOfShadowMapTransparnet = 3;
+export const V_layerOfShadowMapTransparnet = 3;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //HDR and color space 
 
-export let V_weLinearFormat: GPUTextureFormat = "rgba16float";
+export const V_weLinearFormat: GPUTextureFormat = "rgba16float";
 export const V_weShadowMapFormat: GPUTextureFormat = "depth32float";
 export const V_weDepthFormat: GPUTextureFormat = "depth32float";
 

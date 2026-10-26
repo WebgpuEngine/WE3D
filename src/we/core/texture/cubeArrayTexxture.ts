@@ -28,7 +28,7 @@ export class CubeArrayTexture extends Texture {
     }
 
     async readyForGPU(): Promise<any> {
-        const scope = this;
+
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
             this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
@@ -72,7 +72,7 @@ export class CubeArrayTexture extends Texture {
                 const imageBitmap = allImages[i];
                 this.device.queue.copyExternalImageToTexture(
                     { source: imageBitmap, flipY: this._upsideDownY },
-                    { texture: scope.texture, origin: [0, 0, i], premultipliedAlpha: premultipliedAlpha },
+                    { texture: this.texture, origin: [0, 0, i], premultipliedAlpha: premultipliedAlpha },
                     [imageBitmap.width, imageBitmap.height]
                 );
             }
@@ -87,7 +87,7 @@ export class CubeArrayTexture extends Texture {
         }
         this.setTextureLayoutsampleType("float");
         this.setTextureLayoutDimension("cube")
-        scope._state = E_lifeState.finished;
+        this._state = E_lifeState.finished;
         return this._state;
     }
 

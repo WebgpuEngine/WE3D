@@ -1,7 +1,6 @@
 
 export function    createWrieFrame(position: number[], indeices: number[]) {
-        let list: { [name: string]: number[] };
-        list = {};
+        const list: { [name: string]: number[] } = {};
         if (indeices.length == 0) {
             let i_index = 0;
             for (let i = 0; i < position.length / 3; i++) {

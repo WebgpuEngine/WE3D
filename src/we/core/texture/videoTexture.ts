@@ -124,7 +124,7 @@ export class VideoTexture extends BaseTexture {
 
 
     async generateTextureByString(res: string): Promise<E_lifeState> {
-        const scope = this;
+
         const options: I_VideoOption = {
             // crossOrigin : "anonymous",
             // src : res,
@@ -134,7 +134,7 @@ export class VideoTexture extends BaseTexture {
         this.video = await weGetVidoeByUrl(res, options);
         this.video.autoplay = true;  //这个必须
         await this.video.play();
-        const ready = await scope.generateTextureBySource(this.video);
+        const ready = await this.generateTextureBySource(this.video);
         return ready;
     }
 
@@ -214,15 +214,15 @@ export class VideoTexture extends BaseTexture {
 
     /**
      * 动态纹理，this范围会变化
-     * @param scope 包含video的对象
+     * @param this 包含video的对象
      * @returns 
      */
-    getExternalTexture(scope: any): GPUExternalTexture {
-        const source: HTMLVideoElement | VideoFrame = scope.video as HTMLVideoElement | VideoFrame;
+    getExternalTexture(this: any): GPUExternalTexture {
+        const source: HTMLVideoElement | VideoFrame = this.video as HTMLVideoElement | VideoFrame;
         // if (source instanceof HTMLVideoElement || source instanceof VideoFrame)
-        // scope.texture = scope.device.importExternalTexture({ source })
+        // this.texture = this.device.importExternalTexture({ source })
 
-        return scope.device.importExternalTexture({ source: source })
+        return this.device.importExternalTexture({ source: source })
 
     }
 

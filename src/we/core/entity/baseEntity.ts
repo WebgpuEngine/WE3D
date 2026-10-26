@@ -345,7 +345,7 @@ export abstract class BaseEntity extends NodeSpace {
             this.scene.pointers.releasePointer(perPointer.pointerID);
         }
         for (const i in this.vertexPointers) {
-            if (!this.vertexPointers[i as keyof typeof this.vertexPointers].pointer != undefined) {
+            if (this.vertexPointers[i as keyof typeof this.vertexPointers].pointer != undefined) {
                 const perPointer: I_pointerStruct = this.vertexPointers[i as keyof typeof this.vertexPointers].pointer!;
                 // console.log("===entity destroy release pointer", perPointer.pointerID);
                 this.scene.pointers.releasePointer(perPointer.pointerID);

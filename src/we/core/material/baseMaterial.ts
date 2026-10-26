@@ -788,8 +788,9 @@ export abstract class BaseMaterial extends RootGPU {
     // abstract getBlend(): GPUBlendState | undefined;
     getBlend(): GPUBlendState[] {
 
-        if (this._transparentMode.alphaOfTransparent && this._transparentMode.alphaParams?.blendParams?.blend) {
-            return [this._transparentMode.alphaParams?.blendParams?.blend!];
+        const blend = this._transparentMode.alphaParams?.blendParams?.blend;
+        if (this._transparentMode.alphaOfTransparent && blend) {
+            return [blend];
         }
         else {
             throw new Error("透明材质的blend状态不能为空");

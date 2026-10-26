@@ -76,7 +76,6 @@ export class SpotLight extends BaseLight {
             const spshere = scene.getBoundingSphere();
 
             if (spshere) {
-                let projectionMatrix;
                 // if (this.inputValues.isLookAt === undefined || this.inputValues.isLookAt === true) {
                 // //lookat                  
                 // //   let m4 = mat4.lookAt(this.worldPosition, vec3.add(this.worldPosition, this.inputValues.direction!), vec3.create(0, 1, 0));//正交的测试
@@ -154,7 +153,7 @@ export class SpotLight extends BaseLight {
                 // }
                 //p0 sphere 原点
                 const p0 = vec4.transformMat4(vec4.create(spshere.position[0], spshere.position[1], spshere.position[2], 1), mat4.invert(matrix));
-                projectionMatrix = mat4.perspective(this.inputValues.angleOut! * 2.1, 1, 0.25, p0[2] + spshere.radius * 2 + this.epsilon);//todo,分析：near ,需要大于0.5，否则会被裁掉
+                const projectionMatrix = mat4.perspective(this.inputValues.angleOut! * 2.1, 1, 0.25, p0[2] + spshere.radius * 2 + this.epsilon);//todo,分析：near ,需要大于0.5，否则会被裁掉
                 if (this.scene.reversedZ.isReversedZ) {
                     const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,

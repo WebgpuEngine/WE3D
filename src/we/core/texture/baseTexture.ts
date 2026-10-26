@@ -487,11 +487,11 @@ export abstract class BaseTexture extends RootGPU {
                 break;
             case "bc5-rg-unorm":
             case "bc5-rg-snorm":
-
             case "bc6h-rgb-ufloat":
             case "bc6h-rgb-float":
             case "bc7-rgba-unorm":
             case "bc7-rgba-unorm-srgb":
+            // falls through
                 bytesPerBlock = 16;
                 blockLength = 4;
                 break;

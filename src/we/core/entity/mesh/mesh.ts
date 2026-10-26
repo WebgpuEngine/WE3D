@@ -226,9 +226,8 @@ export class Mesh extends EntityBundleMaterial {
             // }
         },
         _vsOnly: boolean = false,
-        scope?: Mesh
+        scope: Mesh = this
     ): IV_DC {
-        if (scope == undefined) scope = this;
         const drawMode: I_drawModeIndexed = {
             indexCount: 0,
             instanceCount: 1,
@@ -335,8 +334,7 @@ export class Mesh extends EntityBundleMaterial {
      */
     createWrieFrame(position: number[], indeices: number[]) {
 
-        let list: { [name: string]: number[] };
-        list = {};
+        const list: { [name: string]: number[] } = {};
         if (indeices.length == 0) {//如果没有索引，就按三角形来创建线框
             let i_index = 0;
             for (let i = 0; i < position.length / 3; i++) {

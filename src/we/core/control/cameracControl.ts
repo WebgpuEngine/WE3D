@@ -49,7 +49,7 @@ export interface InputForCamera {
     readonly pointer: PointerEvent | MouseEvent | TouchEvent | undefined;
     readonly key: KeyboardEvent | undefined;
 }
-export type InputHandlerForCamera = (scope: any) => InputForCamera;
+export type InputHandlerForCamera = (this: any) => InputForCamera;
 
 export interface IV_CamreaControl {
     // window: Window,
@@ -82,7 +82,7 @@ export abstract class CamreaControl extends BaseInputControl {
     _pointer: PointerEvent | MouseEvent | TouchEvent | undefined;
     _key: KeyboardEvent | undefined;
 
-    event: Array<{ target: any, type: string, callback: (scope: any) => void, option: any }> = [];
+    event: Array<{ target: any, type: string, callback: (this: any) => void, option: any }> = [];
 
     // inputHandler: InputHandlerForCamera;
 
@@ -124,27 +124,27 @@ export abstract class CamreaControl extends BaseInputControl {
      * @returns 
      */
     getInputValue(): InputForCamera {
-        const scope = this;
+
         const out = {
-            digital: scope._digital,
+            digital: this._digital,
             analog: {
-                x: scope._analog.x,
-                y: scope._analog.y,
-                zoom: scope._analog.zoom,
-                touching: scope.eventValues.mouseValue.downOrUP === "down",//是否正在拖动
+                x: this._analog.x,
+                y: this._analog.y,
+                zoom: this._analog.zoom,
+                touching: this.eventValues.mouseValue.downOrUP === "down",//是否正在拖动
             },
-            pointer: scope._pointer,
-            key: scope._key,
+            pointer: this._pointer,
+            key: this._key,
         };
         // if(analog.x && analog.y ){
         //     console.log(analog)
         // }
         // Clear the analog values, as these accumulate.
-        scope._analog.x = 0;
-        scope._analog.y = 0;
-        scope._analog.zoom = 0;
-        // scope._pointer = this._pointer;
-        // scope._key = undefined;
+        this._analog.x = 0;
+        this._analog.y = 0;
+        this._analog.zoom = 0;
+        // this._pointer = this._pointer;
+        // this._key = undefined;
         return out;
     }
     clean(): void {
@@ -369,7 +369,7 @@ export abstract class CamreaControl extends BaseInputControl {
         this._isDestroy = destroy;
     }
     // createInputHandler(window: Window, canvas: HTMLCanvasElement): InputHandlerForCamera {
-    //     let scope = this;
+    //     let this = this;
     //     /**digital 是给wasd使用的 */
     //     this._digital = {
     //         forward: false,
@@ -388,8 +388,8 @@ export abstract class CamreaControl extends BaseInputControl {
     //     };
     //     let mouseDown = false;
 
-    //     const setDigital = (scope: CamreaControl, e: KeyboardEvent, value: boolean) => {
-    //         scope._key = e;
+    //     const setDigital = (this: CamreaControl, e: KeyboardEvent, value: boolean) => {
+    //         this._key = e;
     //         switch (e.code) {
     //             case 'KeyW':
     //             case 'ArrowUp':
@@ -430,8 +430,8 @@ export abstract class CamreaControl extends BaseInputControl {
     //         }
     //     };
 
-    //     let keyDownEvent = function (e: KeyboardEvent) { setDigital(scope, e, true); }
-    //     let keyUpEvent = (e: KeyboardEvent) => setDigital(scope, e, false);
+    //     let keyDownEvent = function (e: KeyboardEvent) { setDigital(this, e, true); }
+    //     let keyUpEvent = (e: KeyboardEvent) => setDigital(this, e, false);
     //     this.event.push({ target: window, type: "keyDown", callback: keyDownEvent, option: undefined });
     //     this.event.push({ target: window, type: "keyUp", callback: keyUpEvent, option: undefined });
 
@@ -439,19 +439,19 @@ export abstract class CamreaControl extends BaseInputControl {
     //     window.addEventListener('keyup', keyUpEvent);
 
     //     let pointerDown = (e: PointerEvent) => {
-    //         scope._pointer = e;
+    //         this._pointer = e;
     //         mouseDown = true;
     //     };
     //     let pointerUp = (e: PointerEvent) => {
-    //         scope._pointer = e;
+    //         this._pointer = e;
     //         mouseDown = false;
     //     };
     //     let pointerMove = (e: PointerEvent) => {
-    //         scope._pointer = e;
+    //         this._pointer = e;
     //         mouseDown = e.pointerType == 'mouse' ? (e.buttons & 1) !== 0 : true;
     //         if (mouseDown) {
-    //             scope._analog.x += e.movementX;
-    //             scope._analog.y += e.movementY;
+    //             this._analog.x += e.movementX;
+    //             this._analog.y += e.movementY;
     //         }
     //     };
     //     let pointerWheel = (e: WheelEvent) => {
@@ -459,7 +459,7 @@ export abstract class CamreaControl extends BaseInputControl {
     //         // if (mouseDown) {
     //         // The scroll value varies substantially between user agents / browsers.
     //         // Just use the sign.
-    //         scope._analog.zoom += Math.sign(e.deltaY);
+    //         this._analog.zoom += Math.sign(e.deltaY);
     //         // console.log(analog.zoom)
     //         e.preventDefault();
     //         e.stopPropagation();
@@ -478,31 +478,31 @@ export abstract class CamreaControl extends BaseInputControl {
     //     canvas.addEventListener('pointermove', pointerMove);
     //     canvas.addEventListener('wheel', pointerWheel, whellOption);
 
-    //     return (_scope) => {
+    //     return (_this) => {
 
-    //         // if(scope._pointer){
-    //         //     console.log("control output",scope._pointer);
+    //         // if(this._pointer){
+    //         //     console.log("control output",this._pointer);
     //         // }
     //         const out = {
-    //             digital: scope._digital,
+    //             digital: this._digital,
     //             analog: {
-    //                 x: scope._analog.x,
-    //                 y: scope._analog.y,
-    //                 zoom: scope._analog.zoom,
+    //                 x: this._analog.x,
+    //                 y: this._analog.y,
+    //                 zoom: this._analog.zoom,
     //                 touching: mouseDown,
     //             },
-    //             pointer: scope._pointer,
-    //             key: scope._key,
+    //             pointer: this._pointer,
+    //             key: this._key,
     //         };
     //         // if(analog.x && analog.y ){
     //         //     console.log(analog)
     //         // }
     //         // Clear the analog values, as these accumulate.
-    //         scope._analog.x = 0;
-    //         scope._analog.y = 0;
-    //         scope._analog.zoom = 0;
-    //         // scope._pointer = undefined;
-    //         // scope._key = undefined;
+    //         this._analog.x = 0;
+    //         this._analog.y = 0;
+    //         this._analog.zoom = 0;
+    //         // this._pointer = undefined;
+    //         // this._key = undefined;
     //         return out;
     //     };
     // }

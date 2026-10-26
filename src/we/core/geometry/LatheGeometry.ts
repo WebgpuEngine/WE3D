@@ -86,8 +86,10 @@ export class LatheGeometry extends BaseGeometry {
 					prevNormal.y = normal.y;
 					prevNormal.z = normal.z;
 					// prevNormal.copy( normal );
-                    const normal_1 = vec3.normalize([normal.x, normal.y, normal.z]);
-                    normal.x,normal.y,normal.z = normal_1[0],normal_1[1],normal_1[2];  
+                    {
+                        const normal_1 = vec3.normalize([normal.x, normal.y, normal.z]);
+                        normal.x,normal.y,normal.z = normal_1[0],normal_1[1],normal_1[2];
+                    }
 					// normal.normalize();
 
 					initNormals.push( normal.x, normal.y, normal.z );
@@ -118,8 +120,10 @@ export class LatheGeometry extends BaseGeometry {
 					normal.x += prevNormal.x;
 					normal.y += prevNormal.y;
 					normal.z += prevNormal.z;
-                    const normal_2 = vec3.normalize([normal.x, normal.y, normal.z]);
-                    normal.x,normal.y,normal.z = normal_2[0],normal_2[1],normal_2[2];  
+                    {
+                        const normal_2 = vec3.normalize([normal.x, normal.y, normal.z]);
+                        normal.x,normal.y,normal.z = normal_2[0],normal_2[1],normal_2[2];
+                    }
 					// normal.normalize();
 
 					initNormals.push( normal.x, normal.y, normal.z );

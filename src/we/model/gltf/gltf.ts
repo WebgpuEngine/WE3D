@@ -1019,7 +1019,6 @@ export class GLTFModel extends BaseModel {
                         primitiveMode = 4;
                     }
                     const name = (meshSource.name ?? i) + ` ${j}`;
-                    let inputEntity: IV_MeshEntity | IV_PointsEntity | IV_LinesEntity;  //enity 属性
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     //material part
                     let cullMode: GPUCullMode = "back";
@@ -1129,7 +1128,7 @@ export class GLTFModel extends BaseModel {
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     // input entity and new entity
                     // let { uniforms, unifromLayout } = this.getUniformBundleOfEntity(meshSource);
-                    inputEntity = {
+                    const inputEntity: IV_MeshEntity | IV_PointsEntity | IV_LinesEntity = {
                         name: name,
                         attributes: {
                             data: {
