@@ -33,7 +33,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ✅ 已完成 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
 | 3 | Vitest 单测 | 无 GPU 依赖冒烟用例 | 🔵 进行中 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
-| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | ⬜ 未开始 | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
+| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（方案拟定） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ⬜ 未开始 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ⬜ 未开始 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
 | 7 | CI | GitHub Actions 门禁 + 发布 | ⬜ 未开始 | [engineering-plan §Phase7](./engineering-plan.md#phase-7--cigithub-actions) |
@@ -126,18 +126,20 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 4 — Playwright 示例回归　⬜ 未开始
+### Phase 4 — Playwright 示例回归　🔵 进行中（方案拟定）
 
-- **计划要点**
-  - 安装 `@playwright/test` + `playwright`。
-  - `playwright.config.ts`：`webServer` 启动 vite，遍历 `examples/files.json` 的 `.html`，加载→等渲染稳定→截图。
-  - 基线存 `test-results/baseline/`，首跑生成后提交 git；`test:baseline` 脚本。
+- **计划要点**（详细方案见 `./phase4-playwright-e2e.md`）
+  - 安装 `@playwright/test` + `playwright` + chromium 浏览器。
+  - `playwright.config.ts`：`webServer` 启动 vite，遍历 `examples/files.json` 的 `.html`，加载→等 canvas 挂载→截图 + console 断言。
+  - 基线存 `e2e/baseline/`（位置待确认），首跑生成后提交 git；补 `test:baseline` / `test:e2e` 脚本。
   - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为「加载无 console 报错」断言。
   - 约定文档化：`AGENTS.md`「三、开发流程约定」第 1、4 条已写「提交前必跑示例」。
-- **验收**：基线生成并提交；后续跑示例可比对。
-- **实施记录**：（待确认后填写）
+  - **节奏（用户 2026-10-26 决策）**：先以 1 个基础示例落地 E2E（同时承接 examples 冒烟验证），再**分批导入**——每批给出目标目录 + 示例清单，**经用户批准后再实施**；需改动/修正的示例单独标记、不静默修改（示例量大、工作量较大）。
+- **验收**：基线生成并提交；后续跑示例可比对；首个基础示例在 Playwright 下跑通 WebGPU。
+- **实施记录**：2026-10-26 形成详细方案 `./phase4-playwright-e2e.md`（含配置、脚本、分批节奏、待确认事项），**待用户审核后实施，尚未执行**。
 - **验证**：（待确认后填写）
-- **备注**：
+- **备注**
+  - 原 `pending-work.md` 第 2 条「examples 冒烟验证」**已并入本阶段作为步骤 2**（2026-10-26 用户决策），备忘中改为「已并入 Phase 4」并指向本方案；不再单独跟踪。
 
 ---
 

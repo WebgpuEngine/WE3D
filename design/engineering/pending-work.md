@@ -22,11 +22,11 @@
 - 说明：`npm run format` / `format:check` 脚本已于 `df28473` 补齐，但按约定**延后至「Phase 4 — Playwright 示例回归完成」后单独执行**（`prettier --write .` 改动面大，避免与 lint/bug 修复叠加排错）。属 Phase 2 收尾遗留的边角项。
 - 触发条件：完成 **Phase 4 — Playwright 示例回归**（`test:baseline` 建立并跑通）之后，单独跑 `npm run format` + `npm run format:check`，并单独提交。
 
-### 2. examples 冒烟验证（提交前必跑，未做）
-- 状态：⬜ 未开始
-- 关联：AGENTS.md「三、开发流程约定」第 1 条
-- 说明：Phase 2 改动触及运行时逻辑（`scene.ts` 的 `perFrameRun` 改为箭头函数、`inputManager.ts` 方法签名/调用重构、`baseEntity`/`baseMaterial` 等 8 处 bug 修复）。尚未跑 `examples/` 验证渲染 / 输入无回归。属提交前门禁的零散验证项。
-- 做法：`npm run dev` 启动后加载关键示例，确认无 console 报错与功能回退。
+### 2. examples 冒烟验证（已并入 Phase 4，不再单独跟踪）
+- 状态：🔀 已并入主线
+- 关联：`phase4-playwright-e2e.md` 步骤 2；`implementation-log.md` §Phase 4
+- 说明：原作为零散验证项记录。2026-10-26 用户决策将其**并入 Phase 4 — Playwright 示例回归**作为其中一步（示例极多、许多需 playwright 跑且部分需修正，二者合一更合理）。故不再于本备忘单独跟踪，归口主线 Phase 4。
+- 落地点：Phase 4 步骤 2「首个基础示例 E2E」即其落地形式。
 
 ### 3. 远程仓库 URL 更新（✅ 已完成）
 - 状态：✅ 已完成（2026-10-26）
