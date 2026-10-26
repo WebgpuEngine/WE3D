@@ -1,6 +1,5 @@
 import { AtmosphereRenderBase } from "../renderBase";
 import { AtmosphereIntegrate } from "./atmosphereIntegrate";
-import { shader_atmosphere_wlBXWK } from "./baseIntergrate";
 
 export class RenderIntegrateAtmoSphere extends AtmosphereRenderBase {
     getConstants(): Record<string, number> | undefined {

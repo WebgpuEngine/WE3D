@@ -1,6 +1,6 @@
 
 import { getSampler } from "../../sampler/baseFunction";
-import { E_TransparentType, I_AlphaTransparentOfMaterial, IV_BaseStandardMaterial } from "../base";
+import {   IV_BaseStandardMaterial } from "../base";
 import { BaseMaterial } from "../baseMaterial";
 
 export abstract class BaseStandardMaterial extends BaseMaterial {
@@ -22,7 +22,7 @@ export abstract class BaseStandardMaterial extends BaseMaterial {
      * @returns GPUSampler 材质的sampler
      */
     override checkSampler(input: IV_BaseStandardMaterial): GPUSampler {
-        let { sampler, bindingType } = getSampler(input, this.scene);
+        const { sampler, bindingType } = getSampler(input, this.scene);
         this.defaultSamplerBindingType = bindingType;
         this.defaultSampler = sampler;
         return sampler;

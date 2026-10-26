@@ -1,4 +1,3 @@
-import { I_Update } from "../base/coreDefine";
 import { InputManager } from "../input/inputManager";
 import { Scene } from "../scene/scene";
 import { Pickup } from "./pickup";

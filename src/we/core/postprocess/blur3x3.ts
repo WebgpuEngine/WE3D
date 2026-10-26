@@ -17,7 +17,7 @@ export class Blur3x3 extends BasePostProcess {
     init() {
         this.defaultPushCopyCommand();
 
-        let rpd: GPURenderPassDescriptor = {
+        const rpd: GPURenderPassDescriptor = {
             colorAttachments: [
                 {
                     // view: this.finalTarget.createView(),
@@ -28,26 +28,26 @@ export class Blur3x3 extends BasePostProcess {
                 }
             ],
         };
-        let screenSize = new ArrayBuffer(4 * 2);
+        const screenSize = new ArrayBuffer(4 * 2);
         new Float32Array(screenSize).set([this.scene.surface.size.width, this.scene.surface.size.height]);
 
-        let ST_PP_ScreenSize: I_uniformArrayBufferEntry = {
+        const ST_PP_ScreenSize: I_uniformArrayBufferEntry = {
             binding: 0,
             size: 4 * 2,
             data: screenSize,
             label: "Screen Size",
         };
-        let texture1: GPUBindGroupEntry = {
+        const texture1: GPUBindGroupEntry = {
             binding: 1,
             resource: this.scene.finalTarget.colorPostProcess!.createView(),
         }
-        let uniforms = [[
+        const uniforms = [[
             ST_PP_ScreenSize,
             texture1,
         ]]
         // let SHT = SHT_PP_Blur3x3;
-        let code = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName["postProcess.blur3x3"]);
-        let inputSDC: IV_SimpleDrawCommand = {
+        const code = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName["postProcess.blur3x3"]);
+        const inputSDC: IV_SimpleDrawCommand = {
             scene: this.scene,
             drawMode: {
                 vertexCount: 4
@@ -65,7 +65,7 @@ export class Blur3x3 extends BasePostProcess {
             // device: this.scene.device,
             label: "PP Blur 3x3"
         };
-        let SDC1 = new SimpleDrawCommand(inputSDC);
+        const SDC1 = new SimpleDrawCommand(inputSDC);
         this.commands.push(SDC1);
     }
 

@@ -6,7 +6,7 @@
 
 import { Scene } from "../scene/scene";
 import { isDynamicTextureEntryForExternal, isDynamicTextureEntryForView, isUniformBufferPart, type I_DrawCommandIDs, type I_uniformArrayBufferEntry, type I_viewport, type T_BindGroupLayout, type T_drawMode, type T_rpdInfomationOfMSAA, type T_uniformGroups } from "./base";
-import { createVerticesBuffer, getTypedArrayType, isGPUBindGroup, isGPUBindGroupLayout, isGPUBindGroupLayoutEntry } from "./baseFunction";
+import { createVerticesBuffer, getTypedArrayType, isGPUBindGroup, isGPUBindGroupLayout } from "./baseFunction";
 import { DrawCommand, I_DrawInputValueMaterial, IV_DrawCommand } from "./DrawCommand";
 import { E_renderForDC, TypedArray, weVec3 } from "../base/coreDefine";
 import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
@@ -297,23 +297,23 @@ export class DrawCommandGenerator {
     generateDrawCommand(values: IV_DC): BaseDrawCommand {
         this.inputDC.push(values);//保存每个DC的init参数，为了后续的更新uniform使用（如果其中有update选项）
         //1、buffer资源
-        let { DC_vertexBuffers, DC_indexBuffer, DC_vertexNames, DC_localtions, DC_verticesBufferLayout } = this.initVertexPart(values);
+        const { DC_vertexBuffers, DC_indexBuffer, DC_vertexNames, DC_localtions, DC_verticesBufferLayout } = this.initVertexPart(values);
 
         //2、bindgroup部分
-        let { DC_bindGroups, DC_bindGroupLayouts } = this.initUniformPart(values);
+        const { DC_bindGroups, DC_bindGroupLayouts } = this.initUniformPart(values);
 
         //3、shaderModule 编译
 
-        let { vertex, fragment, vertexName, fragmentName } = this.initShaderModule(values, DC_vertexNames, DC_localtions, DC_verticesBufferLayout);
+        const { vertex, fragment, vertexName, fragmentName } = this.initShaderModule(values, DC_vertexNames, DC_localtions, DC_verticesBufferLayout);
 
         //4、pipeline 部分
-        let pipeline = this.initPipeLine(values, { vs: vertex, name: vertexName }, { fs: fragment, name: fragmentName }, DC_bindGroupLayouts);
+        const pipeline = this.initPipeLine(values, { vs: vertex, name: vertexName }, { fs: fragment, name: fragmentName }, DC_bindGroupLayouts);
 
 
 
 
         //5、传参，生产DC
-        let commandOption: IV_DrawCommand = {
+        const commandOption: IV_DrawCommand = {
             device: this.device,
             scene: this.scene,
             label: values.label,
@@ -355,12 +355,12 @@ export class DrawCommandGenerator {
                 type: values.system.type,
             };
             //6 创建DC
-            let drawCommand = new DrawCommand(commandOption);
+            const drawCommand = new DrawCommand(commandOption);
             return drawCommand;
         }
         else {
             //4、GPURenderPassDescriptor
-            let renderPassDescriptor = () => {
+            const renderPassDescriptor = () => {
                 let renderPassDescriptor: GPURenderPassDescriptor;
                 //1、如果有rpd描述。
                 if (values.renderPassDescriptor != undefined) {
@@ -400,7 +400,7 @@ export class DrawCommandGenerator {
             }
             commandOption.drawInfo.renderPassDescriptor = renderPassDescriptor;
             //6 创建DC
-            let drawCommand = new BaseDrawCommand(commandOption);
+            const drawCommand = new BaseDrawCommand(commandOption);
             return drawCommand;
         }
     }
@@ -586,7 +586,7 @@ export class DrawCommandGenerator {
     } {
         //1、buffer资源
         // 20260114修改为 I_VertexBufferEntry
-        let DC_vertexBuffers: (I_pointerStruct | I_VertexBufferEntry)[] = [];//当前DC的顶点列表。之后在DC中passEncoder.setVertexBuffer(parseInt(i), verticesBuffer)使用。
+        const DC_vertexBuffers: (I_pointerStruct | I_VertexBufferEntry)[] = [];//当前DC的顶点列表。之后在DC中passEncoder.setVertexBuffer(parseInt(i), verticesBuffer)使用。
         /** GPUVertexBufferLayout格式样本：
           {
             "arrayStride": 12,
@@ -600,19 +600,19 @@ export class DrawCommandGenerator {
             "stepMode": "vertex"
            }
          */
-        let DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
-        let DC_localtions: string[] = [];//顶点资源的名称列表，反射code中的内容使用，在WGSL中结构体：VertexShaderOutput中使用；exp：" @location(0) position : vec3f  ,"
-        let DC_vertexNames: string[] = [];//顶点资源的名称列表，反射code中的内容使用；exp："position"
+        const DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
+        const DC_localtions: string[] = [];//顶点资源的名称列表，反射code中的内容使用，在WGSL中结构体：VertexShaderOutput中使用；exp：" @location(0) position : vec3f  ,"
+        const DC_vertexNames: string[] = [];//顶点资源的名称列表，反射code中的内容使用；exp："position"
         let DC_indexBuffer: (I_pointerStruct | I_VertexBufferEntry) | undefined;//GPUBuffer默认使用uint32的格式。passEncoder.setIndexBuffer(this.indexBuffer, 'uint32');
         //1.1、顶点资源
         let shaderLocation = 0;//最多16个
         let location_i = 0;
         if (values.data.vertices) {
             // for (const [key, value] of values.data.vertices) {
-            for (let key in values.data.vertices) {
-                let value = values.data.vertices[key];
+            for (const key in values.data.vertices) {
+                const value = values.data.vertices[key];
                 let locationString: string = "";
-                let lowKey = key.toLocaleLowerCase();
+                const lowKey = key.toLocaleLowerCase();
                 let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                 // let vertexBuffer: GPUBufferBinding;
                 let pointerOfVertex: I_pointerStruct;
@@ -625,7 +625,7 @@ export class DrawCommandGenerator {
                         if (value.length == 0) {
                             console.warn("顶点属性" + key + "数据为空");
                         }
-                        let data = new Float32Array(value);//默认:float32
+                        const data = new Float32Array(value);//默认:float32
                         let arrayStride = 4 * 3;
                         let format: GPUVertexFormat = "float32x3";
                         switch (lowKey) {
@@ -660,7 +660,7 @@ export class DrawCommandGenerator {
                                 format = "float32x3";
                                 break;
                         }
-                        let wgsl_value_format = this.getWgslValueFormat(format);
+                        const wgsl_value_format = this.getWgslValueFormat(format);
                         locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
 
@@ -725,7 +725,7 @@ export class DrawCommandGenerator {
                             format = "float32x3";
                             break;
                     }
-                    let wgsl_value_format = this.getWgslValueFormat(format);
+                    const wgsl_value_format = this.getWgslValueFormat(format);
                     locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
 
@@ -733,7 +733,7 @@ export class DrawCommandGenerator {
                         pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
                     }
                     else {
-                        let pointerParams: I_pointerCreateParams = {
+                        const pointerParams: I_pointerCreateParams = {
                             name: lowKey + " " + values.label,
                             byteSize: value.length * 4,
                             type: E_BOLBufferType.VS,
@@ -770,7 +770,7 @@ export class DrawCommandGenerator {
                     let arrayStride = 4 * 3;
                     let format: GPUVertexFormat = "float32x3";
                     // if (!this.resources.hasVertex(md5OfVertexOfArray)) {
-                    let arrayBuffertype = getTypedArrayType(value);
+                    const arrayBuffertype = getTypedArrayType(value);
                     let viewType: T_pointerDataType;
                     switch (arrayBuffertype) {
                         case "Float32Array":
@@ -798,8 +798,8 @@ export class DrawCommandGenerator {
                             viewType = "f32";
                             break;
                     }
-                    let arrayBufferType: T_pointerDataType = "f32";
-                    let arrarBufferUnitLength = 4;
+                    const arrayBufferType: T_pointerDataType = "f32";
+                    const arrarBufferUnitLength = 4;
                     switch (lowKey) {
                         case "position":
                             arrayStride = 4 * 3;
@@ -837,7 +837,7 @@ export class DrawCommandGenerator {
                         pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
                     }
                     else {
-                        let pointerParams: I_pointerCreateParams = {
+                        const pointerParams: I_pointerCreateParams = {
                             name: lowKey + " " + values.label,
                             byteSize: value.length * arrarBufferUnitLength,
                             type: E_BOLBufferType.VS,
@@ -868,9 +868,9 @@ export class DrawCommandGenerator {
                 }
                 //I_vsAttribute格式。有更多详细的数据说明，来约定顶点数据，例如format,arrayStride,offset等
                 else if ("format" in value && "data" in value) {
-                    let format: GPUVertexFormat = value.format;
+                    const format: GPUVertexFormat = value.format;
                     let data;//默认:float32
-                    let datakind: number = 4;//默认:float32|uint32|sint32
+                    const datakind: number = 4;//默认:float32|uint32|sint32
                     let arrayStride = 4 * 3;
                     switch (value.format) {//这里只匹配了几种数据，以后视情况而定
                         case "float32x3":
@@ -926,14 +926,14 @@ export class DrawCommandGenerator {
                             // data = new Float32Array(value.data);
                             break;
                     }
-                    let wgsl_value_format = this.getWgslValueFormat(value.format);
+                    const wgsl_value_format = this.getWgslValueFormat(value.format);
                     locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
                     if (values.system?.parent && values.system?.parent.vertexPointers[lowKey]) {
                         pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
                     }
                     else {
-                        let pointerParams: I_pointerCreateParams = {
+                        const pointerParams: I_pointerCreateParams = {
                             name: lowKey + " " + values.label,
                             byteSize: value.data.length * datakind,
                             type: E_BOLBufferType.VS,
@@ -964,19 +964,19 @@ export class DrawCommandGenerator {
                 }
                 //I_vsAttributeMerge合并属性，例如position和normal合并到一个顶点属性中
                 else if (isI_vsAttributeMerge(value)) {
-                    let mergeAttribute = value.mergeAttribute
-                    let arrayStride = value.arrayStride;
+                    const mergeAttribute = value.mergeAttribute
+                    const arrayStride = value.arrayStride;
                     // let data = new Float32Array(value.data);
-                    let attributes: GPUVertexAttribute[] = [];
-                    let stepMode = values.data.vertexStepMode?.[location_i] || undefined;//存储合并属性的stepMode，多个使用相同的stepMode
-                    for (let i in mergeAttribute) {
-                        let item = mergeAttribute[i];
+                    const attributes: GPUVertexAttribute[] = [];
+                    const stepMode = values.data.vertexStepMode?.[location_i] || undefined;//存储合并属性的stepMode，多个使用相同的stepMode
+                    for (const i in mergeAttribute) {
+                        const item = mergeAttribute[i];
                         attributes.push({
                             shaderLocation: shaderLocation++,
                             format: item.format,
                             offset: item.offset,
                         });
-                        let wgsl_value_format = this.getWgslValueFormat(item.format);
+                        const wgsl_value_format = this.getWgslValueFormat(item.format);
                         locationString += ` @location(${location_i}) ${item.name.toLowerCase()} : ${wgsl_value_format}  ,`;
                         location_i++;//合并属性，每个属性都要增加一个location
                     }
@@ -984,7 +984,7 @@ export class DrawCommandGenerator {
                         pointerOfVertex = values.system?.parent.vertexPointers[lowKey].pointer!;
                     }
                     else {
-                        let pointerParams: I_pointerCreateParams = {
+                        const pointerParams: I_pointerCreateParams = {
                             name: lowKey + " " + values.label,
                             byteSize: value.data.length * 4,
                             type: E_BOLBufferType.VS,
@@ -1019,9 +1019,9 @@ export class DrawCommandGenerator {
                 else if (isVSGPUBufferBundle(value)) {
                     if (values.system?.parent) values.system.parent.vertexPointers[lowKey] = { gpuBuffer: value };
 
-                    let format = value.format;
-                    let arrayStride = value.arrayStride;
-                    let wgsl_value_format = this.getWgslValueFormat(format);
+                    const format = value.format;
+                    const arrayStride = value.arrayStride;
+                    const wgsl_value_format = this.getWgslValueFormat(format);
                     locationString += this.formatLocationStringOfAttribute(values, location_i, lowKey, wgsl_value_format);
 
                     // vertexBuffer = value.buffer;
@@ -1069,8 +1069,8 @@ export class DrawCommandGenerator {
                 //索引资源为动态模式，且数据为数组类型
                 if (values.dynamic?.vs) {
                     if (Array.isArray(values.data.indices)) {
-                        let data = new Uint32Array(values.data.indices);//默认:u32
-                        let index = createVerticesBuffer(this.device, `${values.IDS?.ID}->indices`, data);
+                        const data = new Uint32Array(values.data.indices);//默认:u32
+                        const index = createVerticesBuffer(this.device, `${values.IDS?.ID}->indices`, data);
                         if (index) {
                             DC_indexBuffer = {
                                 name: "indices " + values.label,
@@ -1084,7 +1084,7 @@ export class DrawCommandGenerator {
                 }
                 //索引资源为数组
                 else if (Array.isArray(values.data.indices)) {
-                    let wireFrame = values.label.toLowerCase().includes("wireframe") ? "Wireframe" : "Mesh";
+                    const wireFrame = values.label.toLowerCase().includes("wireframe") ? "Wireframe" : "Mesh";
                     let index: I_pointerStruct;
                     // let md5OfIndicesOfArray = MD5.hex(values.data.indices);
                     if (values.data.indices && values.data.indices.length > 0) {
@@ -1094,7 +1094,7 @@ export class DrawCommandGenerator {
                         }
                         else {
                             // if (!this.resources.hasIndices(md5OfIndicesOfArray)) {
-                            let pointerParams: I_pointerCreateParams = {
+                            const pointerParams: I_pointerCreateParams = {
                                 name: "indices " + values.label,
                                 byteSize: values.data.indices.length * 4,
                                 type: E_BOLBufferType.VS,
@@ -1120,7 +1120,7 @@ export class DrawCommandGenerator {
                 }
                 //索引资源为GPUBufferBundle
                 else {
-                    let indexBundle = values.data.indices as I_indexGPUBufferBundle;
+                    const indexBundle = values.data.indices as I_indexGPUBufferBundle;
                     if (indexBundle) {
                         DC_indexBuffer = {
                             name: indexBundle.name,
@@ -1169,7 +1169,7 @@ export class DrawCommandGenerator {
             layoutNumber = 1;
 
             if (values.system?.parent) {
-                let { bindGroup, bindGroupLayout } = values.system?.parent.getBindGroupAndBindGroupLayout();
+                const { bindGroup, bindGroupLayout } = values.system?.parent.getBindGroupAndBindGroupLayout();
                 DC_bindGroups[layoutNumber] = undefined;
                 DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
 
@@ -1180,7 +1180,7 @@ export class DrawCommandGenerator {
                     }
                     if (values.label.toLowerCase().includes("wireframe")) {
                         if ((values.system?.parent as Mesh)._materialWireframe) {
-                            let bindGroupLayout = (values.system?.parent as Mesh)._materialWireframe.getBindGroupLayout(values.system.material.type);
+                            const bindGroupLayout = (values.system?.parent as Mesh)._materialWireframe.getBindGroupLayout(values.system.material.type);
                             DC_bindGroups[layoutNumber] = undefined;
                             DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
                             // layoutNumber++;
@@ -1188,7 +1188,7 @@ export class DrawCommandGenerator {
                     }
                     else {
                         if ((values.system?.parent as EntityBundleMaterial)._material) {
-                            let bindGroupLayout = (values.system?.parent as EntityBundleMaterial)._material.getBindGroupLayout(values.system.material.type);
+                            const bindGroupLayout = (values.system?.parent as EntityBundleMaterial)._material.getBindGroupLayout(values.system.material.type);
                             DC_bindGroups[layoutNumber] = undefined;
                             DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
                             // layoutNumber++;
@@ -1215,14 +1215,14 @@ export class DrawCommandGenerator {
         else if (values.data.uniforms) {
             DC_bindGroups = [];
             DC_bindGroupLayouts = [];
-            for (let i in values.data.uniforms) {
+            for (const i in values.data.uniforms) {
                 //如果bindGroupLayout数量超过4个，就跳出循环
                 if (layoutNumber > 3) {
                     console.warn("uniforms 最多只能有4个BindGroup");
                     break;
                 }
 
-                let perGroup = values.data.uniforms[i];
+                const perGroup = values.data.uniforms[i];
                 //如果uniforms为空，就跳过
                 if (perGroup == undefined || (Array.isArray(perGroup) && perGroup.length == 0)) {
                     // console.warn("uniforms 组", i, "为空");
@@ -1243,20 +1243,20 @@ export class DrawCommandGenerator {
                 //BindGroupDesc ,重点1->1.1
                 let bindGroupDesc: GPUBindGroupDescriptor;
                 //BindGroup 的数据入口,主要是buffer的创建需要push,-->1.1.1
-                let bindGroupEntry: GPUBindGroupEntry[] = [];
+                const bindGroupEntry: GPUBindGroupEntry[] = [];
 
 
 
                 //BindGroupLayout，重点2
                 let bindGroupLayout: GPUBindGroupLayout;
                 //BindGroup 的layout 描述，重点2->2.1
-                let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+                const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
                     label: `BGLD(${i})(${layoutNumber}) ${values.label}@${this.clock.now}`,
                     // label: values.label +" BGLD: "+ layoutNumber + " time:"+this.clock.now,
                     entries: []
                 };
                 //BindGroup layout的数据入口  -->2.1.1
-                let bindGroupLayoutEntry: GPUBindGroupLayoutEntry[] = [];
+                const bindGroupLayoutEntry: GPUBindGroupLayoutEntry[] = [];
 
                 //如果是GPUBindGroup，就直接使用
                 if (isGPUBindGroup(perGroup)) {
@@ -1270,7 +1270,7 @@ export class DrawCommandGenerator {
                     //如果没有layout，就从resources中获取
                     else {
                         if (this.resources.hasBindGroupLayout(bindGroup)) {
-                            let bindGroupLayoutGet = this.resources.getBindGroupLayout(bindGroup);//是否有对应的layout
+                            const bindGroupLayoutGet = this.resources.getBindGroupLayout(bindGroup);//是否有对应的layout
                             if (bindGroupLayoutGet) {
                                 bindGroupLayout = bindGroupLayoutGet;
                             }
@@ -1303,8 +1303,8 @@ export class DrawCommandGenerator {
                 //     }
                 // }
                 else {//创建
-                    for (let j in perGroup) {//遍历每组group的每个entry
-                        let perEntry = perGroup[j];
+                    for (const j in perGroup) {//遍历每组group的每个entry
+                        const perEntry = perGroup[j];
                         let perBindGroupLayoutEntry: GPUBindGroupLayoutEntry;
                         //有对应的layout
                         if (values.data.unifromLayout != undefined)// && isGPUBindGroupLayoutEntry(values.data.unifromLayout[i])) {
@@ -1339,7 +1339,7 @@ export class DrawCommandGenerator {
                         */
                         if (isUniformBufferPart(perEntry)) {
                             if (this.resources.hasUniform(perEntry)) {//已有,直接获取，不创建
-                                let buffer = this.resources.getUniform(perEntry);
+                                const buffer = this.resources.getUniform(perEntry);
                                 if (buffer)
                                     bindGroupEntry.push({
                                         binding: perEntry.binding,
@@ -1348,8 +1348,8 @@ export class DrawCommandGenerator {
                             }
                             else {//没有，创建
                                 const label = (perEntry as I_uniformArrayBufferEntry).label;
-                                let offsetSize = Math.ceil(perEntry.size / 256) * 256;
-                                let pointerParams: I_pointerCreateParams = {
+                                const offsetSize = Math.ceil(perEntry.size / 256) * 256;
+                                const pointerParams: I_pointerCreateParams = {
                                     name: label,
                                     byteSize: offsetSize,//uniform data 的bytesize大小
                                     type: E_BOLBufferType.uniform,
@@ -1360,7 +1360,7 @@ export class DrawCommandGenerator {
                                         },
                                     }
                                 };
-                                let pointer = this.pointers.createPointer(pointerParams);
+                                const pointer = this.pointers.createPointer(pointerParams);
                                 this.resources.setUniform(perEntry, pointer);
                                 bindGroupEntry.push({
                                     binding: perEntry.binding,
@@ -1430,7 +1430,7 @@ export class DrawCommandGenerator {
         fragmentName: string,
     } {
         //VS location 输出插值模式
-        let locationInterpolateString = "";
+        const locationInterpolateString = "";
         // if (values.system?.parent) {
         //     locationInterpolateString = values.system?.parent.getStringOfLocationInterpolate();
         // }
@@ -1446,7 +1446,7 @@ export class DrawCommandGenerator {
         }
         else
             shadercode = this.scene.shaderRegister.reflection(values.render.vertex.code, DC_vertexNames, DC_localtions);
-        let md5OfVScode = MD5(shadercode);
+        const md5OfVScode = MD5(shadercode);
 
         //3.2、VS shaderModule 编译
         if (this.resources.shaderModuleOfString.has(md5OfVScode)) {
@@ -1465,7 +1465,7 @@ export class DrawCommandGenerator {
         //3.3 GPURenderPipelineDescriptor.vertex部分
         let constansVS = {};
         if (values.render.vertex.constants) { constansVS = values.render.vertex.constants; }
-        let vertex: GPUVertexState = {
+        const vertex: GPUVertexState = {
             module: moduleVS,
             entryPoint: values.render.vertex.entryPoint,
             buffers: DC_verticesBufferLayout,
@@ -1481,7 +1481,7 @@ export class DrawCommandGenerator {
                 moduleFS = moduleVS;
             }
             else {
-                let codeFS: string = values.render.fragment.code;
+                const codeFS: string = values.render.fragment.code;
                 md5OfFScode = MD5(codeFS);
 
                 if (this.resources.shaderModuleOfString.has(md5OfFScode)) {
@@ -1558,7 +1558,7 @@ export class DrawCommandGenerator {
             }
         }
         else {
-            let abc = 1;
+            const abc = 1;
         }
         return { vertex, fragment, vertexName: md5OfVScode, fragmentName: md5OfFScode };
     }
@@ -1573,14 +1573,14 @@ export class DrawCommandGenerator {
         let depthStencilFlag = "";
         let cacheFlag: string[] = [];
         //1、创建GPURenderPipelineDescriptor
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: values.label,
             // label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: DC_bindGroupLayouts,
         }
         //2、创建GPUPipelineLayout
-        let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-        let descriptor: GPURenderPipelineDescriptor = {
+        const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const descriptor: GPURenderPipelineDescriptor = {
             label: values.label,
             vertex: vertex.vs,
             layout: pipelineLayout,
@@ -1648,13 +1648,13 @@ export class DrawCommandGenerator {
             depthStencilFlag,
             multisampleFlag,
         ]
-        let nameOfCacheFlag = cacheFlag.toString();
+        const nameOfCacheFlag = cacheFlag.toString();
         if (this.resources.pipeline.has(nameOfCacheFlag)) {
             return this.resources.pipeline.get(nameOfCacheFlag)!;
         }
 
         //3.6 生产pipeline
-        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
+        const pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
         this.resources.pipeline.set(nameOfCacheFlag, pipeline);
         return pipeline;
     }

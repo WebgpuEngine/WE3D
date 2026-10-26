@@ -76,8 +76,8 @@ export abstract class AtmosphereRenderBase implements I_FeatureModule {
 
 
     copyColorCommand() {
-        let size = this.scene.surface.size;
-        let copyToColorTexture = new CopyCommandT2T(
+        const size = this.scene.surface.size;
+        const copyToColorTexture = new CopyCommandT2T(
             {
                 A: this.colorTexture,
                 B: this.copyColorTexture,

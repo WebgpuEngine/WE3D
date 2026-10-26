@@ -101,8 +101,8 @@ export class Skeleton {
     }
     update(_clock: Clock) {
         this.check();
-        for (let i in this.joints) {
-            let perJoint = this.joints[i];
+        for (const i in this.joints) {
+            const perJoint = this.joints[i];
             mat4.multiply(perJoint.matrixWorld, this.inverseBindMatrices[i], this.outputMatrices[i]);
 
         }

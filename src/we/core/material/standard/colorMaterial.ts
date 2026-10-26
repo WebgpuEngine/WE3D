@@ -66,7 +66,7 @@ export class ColorMaterial extends BaseStandardMaterial {
             //使用透明度值
             else if (input.transparentMode == "blend" && input.alphaTransparent?.blendParams?.opacity !== undefined && input.alphaTransparent?.blendParams?.opacity !== 1.0) {
                 blendMode = true;
-                let opacity = input.alphaTransparent.blendParams.opacity;
+                const opacity = input.alphaTransparent.blendParams.opacity;
                 this._color = [
                     this._color[0] * opacity,
                     this._color[1] * opacity,
@@ -132,8 +132,8 @@ export class ColorMaterial extends BaseStandardMaterial {
 
     getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [];
-        let uniformBufferLayout: GPUBindGroupLayoutEntry = {
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [];
+        const uniformBufferLayout: GPUBindGroupLayoutEntry = {
             binding: binding++,
             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
             buffer: {
@@ -142,7 +142,7 @@ export class ColorMaterial extends BaseStandardMaterial {
         };
         layoutEntries.push(uniformBufferLayout);
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -150,8 +150,8 @@ export class ColorMaterial extends BaseStandardMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [];
-        let uniformBuffer: GPUBindGroupEntry = {
+        const uniformEntries: T_uniformEntries[] = [];
+        const uniformBuffer: GPUBindGroupEntry = {
             binding: binding++,
             resource: this.uniformPointerCommon.gpuBufferView,
             // resource: this.uniformPointer.gpuBufferView,
@@ -164,7 +164,7 @@ export class ColorMaterial extends BaseStandardMaterial {
         uniformEntries.push(uniformBuffer);
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -179,7 +179,7 @@ export class ColorMaterial extends BaseStandardMaterial {
         @group(${this.bindGroupNumber}) @binding(${binding++}) var<uniform> u_common_base: st_material_base_info;
         `;
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }

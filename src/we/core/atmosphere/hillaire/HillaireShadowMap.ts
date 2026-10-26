@@ -37,7 +37,7 @@ export class HillaireShadowMap {
             size: this.shadowMapVP.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
-        let matrix = mat4.identity();
+        const matrix = mat4.identity();
         this.shadowMapVPView.set(matrix, 0);
         this.shadowMapVPView.set(matrix, 16);
         this.shadowCmpSampler = this.device.createSampler({
@@ -76,12 +76,12 @@ export class HillaireShadowMap {
         let shadowMap: GPUTextureView = this.defaultShadowMapGPUTextureView;//默认的占位1*1的阴影图
         if (this.hillaireAtmosphere.sunShadowMap && id === 0) {
             // getShadowMapDepthTextureView_ByIdAndMatrixID
-            let id = this.hillaireAtmosphere.lights[0].directionalLight.ID;
+            const id = this.hillaireAtmosphere.lights[0].directionalLight.ID;
             shadowMap = this.scene.lightsManager.getShadowMapDepthTextureView_ByIdAndMatrixID(id, 0);
         }
         if (this.hillaireAtmosphere.moonShadowMap && id === 1) {
             // getShadowMapDepthTextureView_ByIdAndMatrixID
-            let id = this.hillaireAtmosphere.lights[1].directionalLight.ID;
+            const id = this.hillaireAtmosphere.lights[1].directionalLight.ID;
             shadowMap = this.scene.lightsManager.getShadowMapDepthTextureView_ByIdAndMatrixID(id, 0);
         }
         return shadowMap;

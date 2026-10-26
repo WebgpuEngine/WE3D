@@ -60,7 +60,7 @@ export class AnimationGroup implements I_UUID {
         this.scene = values.scene;
         this.manager = values.scene.animationGroupManager;
         if (values.name) this.Name = values.name;
-        for (let perOne of values.animations) {
+        for (const perOne of values.animations) {
             this.add(perOne);
         }
         this.manager.add(this);
@@ -82,7 +82,7 @@ export class AnimationGroup implements I_UUID {
             this.removeSkinAnimation(animation);
             return;
         }
-        let index = this.list.indexOf(animation);
+        const index = this.list.indexOf(animation);
         if (index != -1) {
             this.list.splice(index, 1);
         }
@@ -95,7 +95,7 @@ export class AnimationGroup implements I_UUID {
     }
     removeSkinAnimation(animation: SkinAnimation): void {
         if (this.listSkins != undefined) {
-            let index = this.listSkins.indexOf(animation);
+            const index = this.listSkins.indexOf(animation);
             if (index != -1) {
                 this.listSkins.splice(index, 1);
             }
@@ -104,47 +104,47 @@ export class AnimationGroup implements I_UUID {
     // checkParent
     play(playAnimation?: I_AnimationPlayParams | "loop" | number): void {
 
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             if (perOne)
                 perOne.play(playAnimation);
             else
                 console.warn("动画组中存在空动画");
         }
         if (this.listSkins != undefined) {
-            for (let perSkin of this.listSkins) {
+            for (const perSkin of this.listSkins) {
                 perSkin.play();
             }
         }
         this.playState = E_PlayState.playing;
     }
     stop(clock: Clock): void {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             perOne.stop();
         }
         if (this.listSkins != undefined) {
-            for (let perSkin of this.listSkins) {
+            for (const perSkin of this.listSkins) {
                 perSkin.stop();
             }
         }
         this.playState = E_PlayState.stoped;
     }
     pause(clock: Clock): void {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             perOne.pause();
         }
         if (this.listSkins != undefined) {
-            for (let perSkin of this.listSkins) {
+            for (const perSkin of this.listSkins) {
                 perSkin.pause();
             }
         }
         this.playState = E_PlayState.pause;
     }
     reset(clock: Clock): void {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             perOne.reset();
         }
         if (this.listSkins != undefined) {
-            for (let perSkin of this.listSkins) {
+            for (const perSkin of this.listSkins) {
                 perSkin.reset();
             }
         }
@@ -160,7 +160,7 @@ export class AnimationGroup implements I_UUID {
         {
             let state = 0;//记录停止的动画数量
             //更新所有动画,累计停止的动画数量
-            for (let perOne of this.list) {
+            for (const perOne of this.list) {
                 if (perOne.playState == E_PlayState.stoped) {
                     state++;
                 }

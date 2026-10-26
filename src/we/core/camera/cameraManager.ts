@@ -71,7 +71,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
         this.list.push(camera);
         this.cameraPositionAndinvertVP.add(camera);
         //2、初始化GBuffer
-        let gbuffersOption: IV_GBuffer = {
+        const gbuffersOption: IV_GBuffer = {
             device: this.device,
             MSAA: this.MSAA,
             surfaceSize: {
@@ -114,7 +114,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      */
     remove(camera: BaseCamera) {
         this.cameraPositionAndinvertVP.remove(camera);
-        let index = this.list.indexOf(camera);
+        const index = this.list.indexOf(camera);
         if (index != -1) {
             this.list.splice(index, 1);
         }
@@ -142,9 +142,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
     async update(clock: Clock) {
         this.checkDestroy();
         this.cameraPositionAndinvertVP.update();
-        for (let camera of this.list) {
-            let UUID = camera.UUID;
-            for (let perToneMappingCommand of this.toneMappingDCG.dcArray[UUID].toneMapping) {
+        for (const camera of this.list) {
+            const UUID = camera.UUID;
+            for (const perToneMappingCommand of this.toneMappingDCG.dcArray[UUID].toneMapping) {
                 this.scene.renderManager.push({
                     command: perToneMappingCommand,
                     kind: E_renderPassName.toneMapping,
@@ -153,7 +153,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
             }
             // this.scene.renderManager.push(this.cameraDrawCommandOfFinalStep[UUID].defer!, E_renderPassName.defer, UUID);
             if (this.deferRender === true) {
-                for (let perCommand of this.deferDCG.dcArray[UUID]) {
+                for (const perCommand of this.deferDCG.dcArray[UUID]) {
                     this.scene.renderManager.push({
                         command: perCommand,
                         kind: E_renderPassName.defer,
@@ -165,8 +165,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
     }
     async onResize() {
         this.device.queue.onSubmittedWorkDone();
-        let width = this.scene.surface.size.width;
-        let height = this.scene.surface.size.height;
+        const width = this.scene.surface.size.width;
+        const height = this.scene.surface.size.height;
 
         if (this.deferRender === true) {
             this.deferDCG.clear();
@@ -174,10 +174,10 @@ export class CameraManager extends ECSManager<BaseCamera> {
         // 清除最终目标纹理DC
         this.toneMappingDCG.clear();
         // 重新创建GBuffer
-        for (let UUID in this.GBufferManager.GBuffer) {
-            let camera = this.getCameraByUUID(UUID) as BaseCamera;
+        for (const UUID in this.GBufferManager.GBuffer) {
+            const camera = this.getCameraByUUID(UUID) as BaseCamera;
             // 重新创建GBuffer
-            let gbuffersOption: IV_GBuffer = {
+            const gbuffersOption: IV_GBuffer = {
                 device: this.device,
                 MSAA: this.MSAA,
                 surfaceSize: {
@@ -211,7 +211,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
             // this.GBufferManager.reInitCommonTransparentGBuffer();
         }
         // 更新所有相机的投影矩阵，aspect变化
-        for (let camera of this.list) {
+        for (const camera of this.list) {
             if (camera instanceof PerspectiveCamera) {
                 camera.aspect = this.scene.aspect;
                 camera.updateProjectionMatrix();
@@ -263,7 +263,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @returns 相机
      */
     getCameraByUUID(uuid: string): BaseCamera {
-        let camera = this.list.find(camera => camera.UUID == uuid);
+        const camera = this.list.find(camera => camera.UUID == uuid);
         if (camera) {
             return camera;
         }

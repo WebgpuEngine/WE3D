@@ -5,7 +5,6 @@
  *    A、动画组中的动画必须相同
  *    B、如果是骨骼动画，要求骨骼必须相同。
  */
-import { AnimationGroup } from "./animationGroup";
 
 /**todo */
 export class WeightMixAnimationGroup  {

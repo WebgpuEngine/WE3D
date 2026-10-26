@@ -68,7 +68,7 @@ export class CubeTextureMaterial extends TextureMaterial {
             this.textures[E_TextureType.cube] = this.inputValues.texture;
         }
         else if (typeof this.inputValues.texture == "string") {
-            let textureInstace = new CubeTexture({ source: this.inputValues.texture }, this.device, this.scene);
+            const textureInstace = new CubeTexture({ source: this.inputValues.texture }, this.device, this.scene);
             await textureInstace.init(this.scene);
             this.textures[E_TextureType.cube] = textureInstace;
         }
@@ -82,7 +82,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         this._state = E_lifeState.finished;
     } getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [
             {
                 binding: binding++,
                 visibility: GPUShaderStage.FRAGMENT,
@@ -101,7 +101,7 @@ export class CubeTextureMaterial extends TextureMaterial {
             }
         ];
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -109,7 +109,7 @@ export class CubeTextureMaterial extends TextureMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [
+        const uniformEntries: T_uniformEntries[] = [
             {
                 binding: binding++,
                 resource: this.textures[E_TextureType.cube].texture.createView({ dimension: 'cube', })
@@ -122,7 +122,7 @@ export class CubeTextureMaterial extends TextureMaterial {
 
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -138,7 +138,7 @@ export class CubeTextureMaterial extends TextureMaterial {
                 @group(${this.bindGroupNumber}) @binding(${binding++}) var u_Sampler : sampler;
                 `;
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }

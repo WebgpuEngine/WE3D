@@ -82,7 +82,7 @@ export abstract class CamreaControl extends BaseInputControl {
     _pointer: PointerEvent | MouseEvent | TouchEvent | undefined;
     _key: KeyboardEvent | undefined;
 
-    event: Array<{ target: any, type: string, callback: (scope: any) => void, option: any }> = new Array();
+    event: Array<{ target: any, type: string, callback: (scope: any) => void, option: any }> = [];
 
     // inputHandler: InputHandlerForCamera;
 
@@ -124,7 +124,7 @@ export abstract class CamreaControl extends BaseInputControl {
      * @returns 
      */
     getInputValue(): InputForCamera {
-        let scope = this;
+        const scope = this;
         const out = {
             digital: scope._digital,
             analog: {

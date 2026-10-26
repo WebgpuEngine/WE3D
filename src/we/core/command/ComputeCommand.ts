@@ -118,9 +118,9 @@ export class ComputeCommand {
      * @returns GPURenderPipeline
      */
     createPipeline(input: IV_ComputeCommand) {
-        let label = this.inputValues.label;
-        let device = this.device;
-        let pipelineValue = input.computeInfo.pipeline as I_ComputePipelineInitValues;
+        const label = this.inputValues.label;
+        const device = this.device;
+        const pipelineValue = input.computeInfo.pipeline as I_ComputePipelineInitValues;
 
         let pipelineLayout: GPUPipelineLayout | "auto";
         if (pipelineValue.pipelineLayout! === "auto") {
@@ -134,7 +134,7 @@ export class ComputeCommand {
             pipelineLayout = pipelineValue.pipelineLayout as GPUPipelineLayout;
         }
 
-        let descriptor: GPUComputePipelineDescriptor = {
+        const descriptor: GPUComputePipelineDescriptor = {
             label: label,
             layout: pipelineLayout,
             compute: {
@@ -157,24 +157,24 @@ export class ComputeCommand {
      * @returns localUniformGroups
      */
     createUniformGroups(unifromGroupSource: (T_uniformEntries[])[]): GPUBindGroup[] {
-        let device = this.device;
-        let pipeline = this.pipeline;
-        let bindGroup: GPUBindGroup[] = [];
+        const device = this.device;
+        const pipeline = this.pipeline;
+        const bindGroup: GPUBindGroup[] = [];
 
         // let unifromGroupSource = this.input.uniforms as unifromGroup[];
-        for (let i in unifromGroupSource) {
-            let perGroup = unifromGroupSource[i];
+        for (const i in unifromGroupSource) {
+            const perGroup = unifromGroupSource[i];
 
-            let bindGroupEntry: GPUBindGroupEntry[] = [];
-            for (let j in perGroup) {
-                let perEntry = perGroup[j];
+            const bindGroupEntry: GPUBindGroupEntry[] = [];
+            for (const j in perGroup) {
+                const perEntry = perGroup[j];
                 /**
                  * 创建 uniform data 的 GPUBuffer 并添加到 bindGroupEntry
                  * 其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 */
                 if (isUniformBufferPart(perEntry)) {
                     const label = (perEntry as I_uniformArrayBufferEntry).label;
-                    let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
+                    const buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
                     bindGroupEntry.push({
                         binding: perEntry.binding,
                         resource: {
@@ -189,7 +189,7 @@ export class ComputeCommand {
             }
 
             const bindLayout = pipeline.getBindGroupLayout(parseInt(i));
-            let groupDesc: GPUBindGroupDescriptor = {
+            const groupDesc: GPUBindGroupDescriptor = {
                 label: this.label + " bind group " + i,
                 layout: bindLayout,
                 entries: bindGroupEntry,
@@ -229,25 +229,25 @@ export class ComputeCommand {
     doDispatch(passEncoder: GPUComputePassEncoder) {
         // 从parent中获取bindGroup
         if (this.inputValues.baseInfo?.parent && typeof this.inputValues.baseInfo.parent.getBindGroups === 'function') {
-            let bindGroups = this.inputValues.baseInfo.parent.getBindGroups();
-            for (let i in bindGroups) {
-                let perGroup = bindGroups[i]
+            const bindGroups = this.inputValues.baseInfo.parent.getBindGroups();
+            for (const i in bindGroups) {
+                const perGroup = bindGroups[i]
                 passEncoder.setBindGroup(parseInt(i), perGroup); //每次绑定group，buffer已经在GPU memory 中
             }
         }
         // 从this.bindGroups中获取bindGroup
         else {
-            for (let i in this.bindGroups) {
-                let perGroup = this.bindGroups[i]
+            for (const i in this.bindGroups) {
+                const perGroup = this.bindGroups[i]
                 passEncoder.setBindGroup(parseInt(i), perGroup); //每次绑定group，buffer已经在GPU memory 中
             }
         }
-        let [x = 1, y = 1, z = 1] = [...this.inputValues.computeInfo.dispatchCount];
+        const [x = 1, y = 1, z = 1] = [...this.inputValues.computeInfo.dispatchCount];
         passEncoder.dispatchWorkgroups(x, y, z);
     }
 
     async submit() {
-        let commandBuffer = this.update();
+        const commandBuffer = this.update();
         this.device.queue.submit([commandBuffer]);
         if (this.inputValues.computeInfo.afterUpdate) {
             await this.inputValues.computeInfo.afterUpdate!(this)

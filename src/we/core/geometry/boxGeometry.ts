@@ -76,8 +76,8 @@ export class BoxGeometry extends BaseGeometry {
         this.groupStart = 0;
 
 
-        let { width, height, depth, widthSegments, heightSegments, depthSegments } = this.parameters;
-        let x = 0, y = 1, z = 2;
+        const { width, height, depth, widthSegments, heightSegments, depthSegments } = this.parameters;
+        const x = 0, y = 1, z = 2;
 
         this.buildPlane(z, y, x, - 1, - 1, depth, height, width, depthSegments, heightSegments, 0); // px
         this.buildPlane(z, y, x, 1, - 1, depth, height, - width, depthSegments, heightSegments, 1); // nx
@@ -98,11 +98,11 @@ export class BoxGeometry extends BaseGeometry {
         // indices: number[], vertices: number[], normals: number[], uvs: number[],
         // numberOfVertices: number, groupStart: number
     ) {
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
-        let materialStep = this.buffer.materialStep;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
+        const materialStep = this.buffer.materialStep;
 
         // let numberOfVertices = this.numberOfVertices;
         // let groupStart = this.groupStart;

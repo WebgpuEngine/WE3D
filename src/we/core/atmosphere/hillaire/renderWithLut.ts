@@ -15,7 +15,7 @@ export class HillaireRenderWithLut extends RenderHillaire {
         }
     }
     generateBindGroup0() {
-        let layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "renderSkyWithLut",
             entries: [
                 {
@@ -111,7 +111,7 @@ export class HillaireRenderWithLut extends RenderHillaire {
         this.bindGroups[0] = bindGroup;
     }
     generateBindGroup1() {
-        let layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "renderSkyWithLut_1",
             entries: [
                 {
@@ -191,8 +191,8 @@ export class HillaireRenderWithLut extends RenderHillaire {
         // this.generateBindGroup1();//DC 需要的绑定组
         this.generateBindGroup();
         if (this.scene.finalTarget.NDC == true) {
-            let DCG = this.scene.DCG;
-            let valueDC: IV_DC = {
+            const DCG = this.scene.DCG;
+            const valueDC: IV_DC = {
                 label: "renderSkyWithLut",
                 data: {
                     uniforms: this.bindGroups,
@@ -214,43 +214,43 @@ export class HillaireRenderWithLut extends RenderHillaire {
                     },
                 },
             }
-            let dc = DCG.generateDrawCommand(valueDC);
+            const dc = DCG.generateDrawCommand(valueDC);
             this.commands.push(dc);
         }
         else {
             this.commands.push(this.copyColorCommand());
-            let pipelineLayout = this.device.createPipelineLayout({
+            const pipelineLayout = this.device.createPipelineLayout({
                 label: "renderSkyWithLut",
                 bindGroupLayouts: this.bindGroupLayout,
             });
-            let moduleVS = this.device.createShaderModule({
+            const moduleVS = this.device.createShaderModule({
                 label: "renderSkyWithLut vs",
                 code: shader_three_point_vs,
             });
-            let moduleFS = this.device.createShaderModule({
+            const moduleFS = this.device.createShaderModule({
                 label: "renderSkyWithLut fs",
                 code: shaderRenderWithLUT,
                 // code: this.getBindGroupString() + shaderRenderWithLUT,
             });
-            let vertex: GPUVertexState = {
+            const vertex: GPUVertexState = {
                 module: moduleVS,
                 entryPoint: "vs",
                 // constants: constansVS,
             }
-            let fragment: GPUFragmentState = {
+            const fragment: GPUFragmentState = {
                 module: moduleFS,
                 entryPoint: "fragment",
                 targets: [{ format: this.scene.colorFormatOfLinearSpace }],
                 constants: this.getConstants(),
             }
-            let descriptor: GPURenderPipelineDescriptor = {
+            const descriptor: GPURenderPipelineDescriptor = {
                 label: "renderSkyWithLut",
                 vertex: vertex,
                 fragment: fragment,
                 layout: pipelineLayout,
             }
             this.pipeline = this.device.createRenderPipeline(descriptor);
-            let valueDC: IV_DynBindGroupDrawCommand = {
+            const valueDC: IV_DynBindGroupDrawCommand = {
                 baseInfo: {
                     parent: this,
                 },
@@ -265,7 +265,7 @@ export class HillaireRenderWithLut extends RenderHillaire {
                     renderPassDescriptor: () => this.getRpd(),
                 },
             };
-            let dc = new DynBindGroupDrawCommand(valueDC);
+            const dc = new DynBindGroupDrawCommand(valueDC);
             this.commands.push(dc);
         }
     }

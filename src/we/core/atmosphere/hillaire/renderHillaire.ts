@@ -7,7 +7,7 @@ export abstract class RenderHillaire extends AtmosphereRenderBase {
         super(parent);
     }
     getConstants(): Record<string, number> | undefined {
-        let constants: Record<string, number> = {};
+        const constants: Record<string, number> = {};
         if (this.parent.atmosphereParams.FROM_KM_SCALE != undefined) {
             constants["FROM_KM_SCALE"] = this.parent.atmosphereParams.FROM_KM_SCALE;
         }

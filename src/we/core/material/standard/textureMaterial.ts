@@ -75,7 +75,7 @@ export class TextureMaterial extends BaseStandardMaterial {
         };
     }
     _destroy() {
-        for (let key in this.textures) {
+        for (const key in this.textures) {
             this.textures[key].destroy();
         }
         this.textures = {};
@@ -85,12 +85,12 @@ export class TextureMaterial extends BaseStandardMaterial {
     async readyForGPU(): Promise<any> {
         this.writeUniformCommon();
         this.defaultSampler = this.checkSampler(this.inputValues);
-        let texture = this.inputValues.texture;
+        const texture = this.inputValues.texture;
         if (texture instanceof BaseTexture) {
             this.textures[E_TextureType.color] = texture;
         }
         else {
-            let textureInstace = new Texture({ source: texture }, this.device, this.scene);
+            const textureInstace = new Texture({ source: texture }, this.device, this.scene);
             await textureInstace.init(this.scene);
             this.textures[E_TextureType.color] = textureInstace;
         }
@@ -167,7 +167,7 @@ export class TextureMaterial extends BaseStandardMaterial {
 
     getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [
             {
                 binding: binding++,
                 visibility: GPUShaderStage.FRAGMENT,
@@ -198,7 +198,7 @@ export class TextureMaterial extends BaseStandardMaterial {
             }
         ];
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -206,7 +206,7 @@ export class TextureMaterial extends BaseStandardMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [
+        const uniformEntries: T_uniformEntries[] = [
             {
                 binding: binding++,
                 resource: this.uniformPointerCommon.gpuBufferView,
@@ -229,7 +229,7 @@ export class TextureMaterial extends BaseStandardMaterial {
 
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -246,7 +246,7 @@ export class TextureMaterial extends BaseStandardMaterial {
             @group(${this.bindGroupNumber}) @binding(${binding++}) var u_Sampler : sampler;
             `;
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }

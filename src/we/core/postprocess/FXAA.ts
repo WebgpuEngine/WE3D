@@ -53,7 +53,7 @@ export class FXAA extends BasePostProcess {
     }
     initFXAA() {
         this.defaultPushCopyCommand();
-        let rpd: GPURenderPassDescriptor = {
+        const rpd: GPURenderPassDescriptor = {
             colorAttachments: [
                 {
                     view: this.scene.finalTarget.color!.createView(),
@@ -64,26 +64,26 @@ export class FXAA extends BasePostProcess {
             ],
         };
         this.updateFXAAValues(this.FXAA_Values);
-        let uniformFXAA: GPUBindGroupEntry = {
+        const uniformFXAA: GPUBindGroupEntry = {
             binding: 0,
             resource: this.FXAA_GPUBuffer,
         };
-        let texture1: GPUBindGroupEntry = {
+        const texture1: GPUBindGroupEntry = {
             binding: 1,
             resource: this.scene.finalTarget.colorPostProcess!.createView(),
         }
-        let sampler: GPUBindGroupEntry = {
+        const sampler: GPUBindGroupEntry = {
             binding: 2,
             resource: this.FXX_Sampler,
         }
-        let uniforms = [[
+        const uniforms = [[
             uniformFXAA,
             texture1,
             sampler,
         ]]
         // let SHT = SHT_PP_FXAA;
-        let code = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName["postProcess.FXAA"]);
-        let inputSDC: IV_SimpleDrawCommand = {
+        const code = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName["postProcess.FXAA"]);
+        const inputSDC: IV_SimpleDrawCommand = {
             scene: this.scene,
             drawMode: {
                 vertexCount: 4
@@ -100,7 +100,7 @@ export class FXAA extends BasePostProcess {
             renderPassDescriptor: rpd,
             label: "FXAA"
         };
-        let SDC1 = new SimpleDrawCommand(inputSDC);
+        const SDC1 = new SimpleDrawCommand(inputSDC);
         this.commands.push(SDC1);
     }
     updateSelf(clock: Clock): void {

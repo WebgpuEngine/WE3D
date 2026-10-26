@@ -19,7 +19,7 @@ import {
     IV_BaseStandardMaterial,
     materialAddBindGroupLayoutOfMSAA, materialAddBindGroupOfMSAA, materialAddGroupBindStringOfMSAA
 } from "../base";
-import { E_lifeState, weVec3 } from "../../base/coreDefine";
+import { E_lifeState } from "../../base/coreDefine";
 import { T_uniformEntries } from "../../command/base";
 import { Clock } from "../../scene/clock";
 import { BaseStandardMaterial } from "./baseStandard";
@@ -150,7 +150,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
         };
     }
     _destroy() {
-        for (let key in this.textures) {
+        for (const key in this.textures) {
             this.textures[key].destroy();
         }
         this.textures = {};
@@ -166,12 +166,12 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
 
         this.writeUniformCommon();
         this.defaultSampler = this.checkSampler(this.inputValues);
-        let texture = this.inputValues.texture;
+        const texture = this.inputValues.texture;
         if (texture instanceof BaseTexture) {
             this.textures[E_TextureType.color] = texture;
         }
         else {
-            let textureInstace = new Texture({ source: texture }, this.device, this.scene);
+            const textureInstace = new Texture({ source: texture }, this.device, this.scene);
             await textureInstace.init(this.scene);
             this.textures[E_TextureType.color] = textureInstace;
         }
@@ -183,7 +183,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
 
     getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [
             {
                 binding: binding++,
                 visibility: GPUShaderStage.FRAGMENT,
@@ -211,7 +211,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
             }
         ];
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -219,7 +219,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [
+        const uniformEntries: T_uniformEntries[] = [
             {
                 binding: binding++,
                 resource: this.uniformPointerCommon.gpuBufferView,
@@ -240,7 +240,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
 
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -253,7 +253,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
         let binding: number = 4;
         let groupAndBindingString: string = "";//bindgroup 字符串在shader中;固定的前4个；
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }

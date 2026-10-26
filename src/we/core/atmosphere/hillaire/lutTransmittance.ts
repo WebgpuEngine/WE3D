@@ -7,7 +7,7 @@ export class HillaireLutTransmittance extends HillaireLutBase {
     generateCommands() {
         //////////////////////////////////////////////////////////////
         //bindgroup  and layout 
-        let layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "lutTrans",
             entries: [
                 {
@@ -44,16 +44,16 @@ export class HillaireLutTransmittance extends HillaireLutBase {
         };
         const bindGroup = this.scene.device.createBindGroup(bindGroupDescriptor);
         //1、创建GPURenderPipelineDescriptor
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: "lutTransPipelineLayout",
             // label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: [layout],
         }
         //2、创建GPUPipelineLayout
-        let pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //3、创建ComputeCommand
-        let options: IV_ComputeCommand = {
+        const options: IV_ComputeCommand = {
             label: "lutTrans",
             device: this.device,
             computeInfo: {
@@ -70,7 +70,7 @@ export class HillaireLutTransmittance extends HillaireLutBase {
             },
         }
 
-        let DC = new ComputeCommand(options);
+        const DC = new ComputeCommand(options);
         this.commands.push(DC);
         //DC.submit()
     }

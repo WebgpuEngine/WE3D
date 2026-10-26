@@ -1,4 +1,4 @@
-import { mat4, Mat4, vec3, Vec3, vec4 } from "wgpu-matrix";
+import { mat4, Mat4, vec3 } from "wgpu-matrix";
 import { E_lightType, I_optionBaseLight } from "./baseLight";
 import { BaseLight } from "./baseLight";
 import { Scene } from "../scene/scene";
@@ -45,7 +45,7 @@ export class PointLight extends BaseLight {
     // }
     updateMVP(scene: Scene): Mat4[] {
 
-        let MVPS = [];
+        const MVPS = [];
         if (this.Shadow) {
 
             //1、计算光源的包围盒（衰减距离或世界包围球）
@@ -87,7 +87,7 @@ export class PointLight extends BaseLight {
             }
             let far = this.scene.cameraManager.defaultCamera.inpuValues.far;
             // let far = 0;
-            let near = 0.25;//this.epsilon;
+            const near = 0.25;//this.epsilon;
             if (this.inputValues.distance && this.inputValues.distance != 0) {
                 far = this.inputValues.distance!;
             }
@@ -97,18 +97,18 @@ export class PointLight extends BaseLight {
             // console.log(near, far)
             //+x
             {
-                let matrix = new Float32Array([
+                const matrix = new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
                 ]);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
 
 
@@ -120,9 +120,9 @@ export class PointLight extends BaseLight {
                  * 
                  * backdir =+Z
                  */
-                let backdir = vec3.create(-1, 0, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                let upDir = vec3.create(0, 1, 0);
-                let rightDir = vec3.create(0, 0, 1);
+                const backdir = vec3.create(-1, 0, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                const upDir = vec3.create(0, 1, 0);
+                const rightDir = vec3.create(0, 0, 1);
 
                 vec3.copy(backdir, back);
                 vec3.copy(rightDir, right);
@@ -130,7 +130,7 @@ export class PointLight extends BaseLight {
 
                 const projectionMatrix = mat4.perspective(Math.PI / 2, 1, near, far);
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,
@@ -144,25 +144,25 @@ export class PointLight extends BaseLight {
             }
             //-x
             {
-                let matrix = new Float32Array([
+                const matrix = new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
                 ]);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
 
 
                 // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
-                let backdir = vec3.create(1, 0, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                let upDir = vec3.create(0, 1, 0);
-                let rightDir = vec3.create(0, 0, -1);
+                const backdir = vec3.create(1, 0, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                const upDir = vec3.create(0, 1, 0);
+                const rightDir = vec3.create(0, 0, -1);
 
                 vec3.copy(backdir, back);
                 vec3.copy(rightDir, right);
@@ -170,7 +170,7 @@ export class PointLight extends BaseLight {
 
                 const projectionMatrix = mat4.perspective(Math.PI / 2, 1, near, far);
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,
@@ -184,25 +184,25 @@ export class PointLight extends BaseLight {
 
             //+y
             {
-                let matrix = new Float32Array([
+                const matrix = new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
                 ]);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
 
 
                 // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
-                let backdir = vec3.create(0, 0, 1);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                let upDir = vec3.create(0, 1, 0);
-                let rightDir = vec3.create(1, 0, 0);
+                const backdir = vec3.create(0, 0, 1);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                const upDir = vec3.create(0, 1, 0);
+                const rightDir = vec3.create(1, 0, 0);
 
                 vec3.copy(backdir, back);
                 vec3.copy(rightDir, right);
@@ -210,7 +210,7 @@ export class PointLight extends BaseLight {
 
                 const projectionMatrix = mat4.perspective(Math.PI / 2, 1, near, far);
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,
@@ -223,25 +223,25 @@ export class PointLight extends BaseLight {
             }
             //-y
             {
-                let matrix = new Float32Array([
+                const matrix = new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
                 ]);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
 
 
                 // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
-                let backdir = vec3.create(0, 0, -1);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                let upDir = vec3.create(0, 1, 0);
-                let rightDir = vec3.create(-1, 0, 0);
+                const backdir = vec3.create(0, 0, -1);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                const upDir = vec3.create(0, 1, 0);
+                const rightDir = vec3.create(-1, 0, 0);
 
                 vec3.copy(backdir, back);
                 vec3.copy(rightDir, right);
@@ -249,7 +249,7 @@ export class PointLight extends BaseLight {
 
                 const projectionMatrix = mat4.perspective(Math.PI / 2, 1, near, far);
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,
@@ -262,25 +262,25 @@ export class PointLight extends BaseLight {
             }
             //+z
             {
-                let matrix = new Float32Array([
+                const matrix = new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
                 ]);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
 
 
                 // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
-                let backdir = vec3.create(0, -1, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                let upDir = vec3.create(0, 0, 1);
-                let rightDir = vec3.create(1, 0, 0);
+                const backdir = vec3.create(0, -1, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                const upDir = vec3.create(0, 0, 1);
+                const rightDir = vec3.create(1, 0, 0);
 
                 vec3.copy(backdir, back);
                 vec3.copy(rightDir, right);
@@ -288,7 +288,7 @@ export class PointLight extends BaseLight {
 
                 const projectionMatrix = mat4.perspective(Math.PI / 2, 1, near, far);
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,
@@ -301,25 +301,25 @@ export class PointLight extends BaseLight {
             }
             //-z
             {
-                let matrix = new Float32Array([
+                const matrix = new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
                 ]);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
 
 
                 // let dir = vec3.normalize(vec3.sub(this.inputValues.direction!, vec3.create(0, 0, 0)));//摄像机是position-lookat,光的摄像机方向是lookat-position
-                let backdir = vec3.create(0, 1, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
-                let upDir = vec3.create(0, 0, -1);
-                let rightDir = vec3.create(1, 0, 0);
+                const backdir = vec3.create(0, 1, 0);//摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的方向看过来
+                const upDir = vec3.create(0, 0, -1);
+                const rightDir = vec3.create(1, 0, 0);
 
                 vec3.copy(backdir, back);
                 vec3.copy(rightDir, right);
@@ -327,7 +327,7 @@ export class PointLight extends BaseLight {
 
                 const projectionMatrix = mat4.perspective(Math.PI / 2, 1, near, far);
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,

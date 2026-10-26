@@ -63,8 +63,8 @@ export async function createGLTFModel(input: I_Model,
     }
 ): Promise<GLTFModel> {
     let type: "gltf" | "glb";
-    let gltf = new GLTFModel(input);
-    let DataLoader = new GltfDataAtLoaders(input.url, input.scene.device, gltf);
+    const gltf = new GLTFModel(input);
+    const DataLoader = new GltfDataAtLoaders(input.url, input.scene.device, gltf);
     await DataLoader.init();
     callBack?.beforeGltfInit?.(gltf, DataLoader);
     await gltf.initData(DataLoader);
@@ -137,7 +137,7 @@ export class GLTFModel extends BaseModel {
     * @returns 场景节点实例
     */
     async initInstance(parent: NodeObject, attachValue?: IV_NodeSpace): Promise<NodeObject> {
-        let nodeOfScene: NodeObject = await this.initModelScene(parent, this.currentScene, attachValue);
+        const nodeOfScene: NodeObject = await this.initModelScene(parent, this.currentScene, attachValue);
         await this.initAnimationsForInstance(nodeOfScene);
         await this.initSkinsForInstance(nodeOfScene);
         if (this.debug === false) {
@@ -158,7 +158,7 @@ export class GLTFModel extends BaseModel {
      * @returns 场景节点实例
      */
     async initModelScene(parent: NodeObject, id?: number, attachValue?: IV_NodeSpace): Promise<NodeObject> {
-        let nodeOfScene: NodeObject = new NodeObject(attachValue);   //创建node object
+        const nodeOfScene: NodeObject = new NodeObject(attachValue);   //创建node object
         await nodeOfScene.init(this.scene, parent);         // 初始化node object
         this.instanceNodes.set(nodeOfScene, {
             nodes: new Map<any, NodeObject>(),
@@ -171,7 +171,7 @@ export class GLTFModel extends BaseModel {
         if (id == undefined) {
             id = this.currentScene;
         }
-        let scene = this.DataLoader.getScene(id);
+        const scene = this.DataLoader.getScene(id);
         if (scene == undefined) {
             throw new Error(`scene ${id} not found`);
         }
@@ -183,7 +183,7 @@ export class GLTFModel extends BaseModel {
             throw new Error(`scene ${id} not found nodes`);
         }
         /**    push mesh to children         */
-        for (let nodeID of nodes) {
+        for (const nodeID of nodes) {
             await BaseFunction.addNode(this, nodeID, nodeOfScene, nodeOfScene);
         }
         return nodeOfScene;
@@ -202,26 +202,26 @@ export class GLTFModel extends BaseModel {
         //1、递归获得mesh和skin的组合，以及对应的node ,输出[{meshID,skinID,nodeID}]
 
         //2、遍历mesh和skin的组合，初始化SkinAnimation,输出  [SkinAnimation]
-        let skinAnimations: SkinAnimation[] = [];
-        for (let bundle of this.meshAndSkinBundle) {
-            let node = this.instanceNodes.get(nodeOfScene)!.nodes.get(bundle.nodeID);
-            let mesh = node?.Entity;
-            let skin = this.DataLoader.getSkin(bundle.skinID);
+        const skinAnimations: SkinAnimation[] = [];
+        for (const bundle of this.meshAndSkinBundle) {
+            const node = this.instanceNodes.get(nodeOfScene)!.nodes.get(bundle.nodeID);
+            const mesh = node?.Entity;
+            const skin = this.DataLoader.getSkin(bundle.skinID);
 
-            let jointsNodes = skin.joints;
-            let jointMatrix = await this.getAccessor(skin.inverseBindMatrices, E_accessorUseFor.array) as Float32Array;
-            let joints: NodeObject[] = [];
-            for (let i of jointsNodes) {
+            const jointsNodes = skin.joints;
+            const jointMatrix = await this.getAccessor(skin.inverseBindMatrices, E_accessorUseFor.array) as Float32Array;
+            const joints: NodeObject[] = [];
+            for (const i of jointsNodes) {
                 joints.push(this.instanceNodes.get(nodeOfScene)!.nodes.get(i)!);
             }
-            let skeletons = new Skeleton({
+            const skeletons = new Skeleton({
                 joints: joints,
                 jointsMatrices: jointMatrix,
             });
 
-            let meshOfSkin = this.DataLoader.getMesh(bundle.meshID);
-            let accessorIdOfWeightCount = meshOfSkin.primitives[0].attributes["WEIGHTS_0"];
-            let accessorWeightsCount = this.DataLoader.getAccessorOfSource(accessorIdOfWeightCount);
+            const meshOfSkin = this.DataLoader.getMesh(bundle.meshID);
+            const accessorIdOfWeightCount = meshOfSkin.primitives[0].attributes["WEIGHTS_0"];
+            const accessorWeightsCount = this.DataLoader.getAccessorOfSource(accessorIdOfWeightCount);
             let weightsCount = 4;
             if (accessorWeightsCount != undefined && accessorWeightsCount.type == "VEC4") {
                 weightsCount = 4;
@@ -229,7 +229,7 @@ export class GLTFModel extends BaseModel {
             else {
                 console.warn(`weightsCount type not support: ${accessorWeightsCount.type},use default 4`);
             }
-            let skinAnimation = new SkinAnimation(
+            const skinAnimation = new SkinAnimation(
                 {
                     parent: node!,
                     skeleton: skeletons,
@@ -251,8 +251,8 @@ export class GLTFModel extends BaseModel {
          * 2、为每个animation group，都有添加skin animation（可能有多个skins，一般只有一个skin）。（未在gltf的定义中找到skins与animation group的对应关系的定义）
          * 3、动作是关键帧（每个动画组不同），skins是逆绑定矩阵（相同），所以产生不同的骨骼动画
         */
-        for (let animationGroup of nodeOfScene.AnimationGroup) {
-            for (let skinAnimation of skinAnimations) {
+        for (const animationGroup of nodeOfScene.AnimationGroup) {
+            for (const skinAnimation of skinAnimations) {
                 animationGroup.addSkinAnimation(skinAnimation);
             }
         }
@@ -264,18 +264,18 @@ export class GLTFModel extends BaseModel {
      * @returns morph target 数量
      */
     getMorphTargetsForNode(nodeID: number): number {
-        let node = this.DataLoader.getNode(nodeID);
+        const node = this.DataLoader.getNode(nodeID);
         if (node == undefined) {
             throw new Error(`node ${nodeID} not found`);
         }
         if (node.mesh == undefined) {
             throw new Error(`node ${nodeID} not found mesh`);
         }
-        let mesh = this.DataLoader.getMesh(node.mesh);
+        const mesh = this.DataLoader.getMesh(node.mesh);
         if (mesh == undefined) {
             throw new Error(`mesh ${node.mesh} not found`);
         }
-        let stride = mesh.primitives[0].targets.length;
+        const stride = mesh.primitives[0].targets.length;
         return stride;
     }
     /**
@@ -284,22 +284,22 @@ export class GLTFModel extends BaseModel {
      * 2、动画组附加到NodeObject
      */
     async initAnimationsForInstance(nodeOfScene: NodeObject) {
-        let animationGroupsJSON = this.DataLoader.gltfJSON().animations;
+        const animationGroupsJSON = this.DataLoader.gltfJSON().animations;
         if (animationGroupsJSON == undefined) {
             return;
         }
         if (animationGroupsJSON.length == 0) {
             return;
         }
-        let animationGroups: AnimationGroup[] = [];
-        for (let i in animationGroupsJSON) {
-            let perAnimationGroupJSON = animationGroupsJSON[i];
-            let name = perAnimationGroupJSON.name || i;
-            let perGroupList: (KeyFrameAnimation | MorphTargetAnimation)[] = [];
-            for (let j in perAnimationGroupJSON.channels) {
-                let perChannels = perAnimationGroupJSON.channels[j];
-                let perSampler = perAnimationGroupJSON.samplers[perChannels.sampler];
-                let targetNode = this.instanceNodes.get(nodeOfScene)!.nodes.get(perChannels.target.node);
+        const animationGroups: AnimationGroup[] = [];
+        for (const i in animationGroupsJSON) {
+            const perAnimationGroupJSON = animationGroupsJSON[i];
+            const name = perAnimationGroupJSON.name || i;
+            const perGroupList: (KeyFrameAnimation | MorphTargetAnimation)[] = [];
+            for (const j in perAnimationGroupJSON.channels) {
+                const perChannels = perAnimationGroupJSON.channels[j];
+                const perSampler = perAnimationGroupJSON.samplers[perChannels.sampler];
+                const targetNode = this.instanceNodes.get(nodeOfScene)!.nodes.get(perChannels.target.node);
                 let interpolation;
                 if (perSampler.interpolation == undefined) {
                     interpolation = E_InterpolationModes.linear;
@@ -310,8 +310,8 @@ export class GLTFModel extends BaseModel {
                         throw new Error(`animation interpolation type ${interpolation} not found`);
                     }
                 }
-                let frames = await this.getAccessor(perSampler.input, E_accessorUseFor.array) as TypedArray;
-                let values = await this.getAccessor(perSampler.output, E_accessorUseFor.array) as TypedArray;
+                const frames = await this.getAccessor(perSampler.input, E_accessorUseFor.array) as TypedArray;
+                const values = await this.getAccessor(perSampler.output, E_accessorUseFor.array) as TypedArray;
 
                 let targetAnimationType = perChannels.target.path.toLowerCase();
                 //gltf rotation 是 四元数
@@ -343,7 +343,7 @@ export class GLTFModel extends BaseModel {
                         throw new Error(`animation target type ${targetAnimationType} not found`);
                 }
 
-                let sampler: I_AnimationSampler = {
+                const sampler: I_AnimationSampler = {
                     interpolation: interpolation,
                     frames: frames,
                     values: values,
@@ -366,7 +366,7 @@ export class GLTFModel extends BaseModel {
                 }
                 perGroupList.push(oneAnimation);
             }
-            let animationGroup = new AnimationGroup(
+            const animationGroup = new AnimationGroup(
                 {
                     animations: perGroupList,
                     scene: this.scene,
@@ -435,7 +435,7 @@ export class GLTFModel extends BaseModel {
      * 2、不适用在gltf的销毁时，gltf的注销有RootGPU的destroy方法实现
      */
     destroyScene() {
-        for (let child of this.children) {
+        for (const child of this.children) {
             if (child instanceof RootGPU) {//scene中的camera,也会被注销
                 child.destroy();
             }
@@ -451,7 +451,7 @@ export class GLTFModel extends BaseModel {
         format?: GPUTextureFormat
         premultipliedAlpha?: boolean
     }): Promise<T | false> {
-        let key = id;
+        const key = id;
         switch (kind) {
             case T_ModelResKind.GPUBuffers:
                 if (this.modelRes.GPUBuffers.has(key)) {
@@ -478,7 +478,7 @@ export class GLTFModel extends BaseModel {
                 break;
             case T_ModelResKind.accessor:
                 if (this.modelRes.accessor.has(key)) {
-                    let value = this.modelRes.accessor.get(key);
+                    const value = this.modelRes.accessor.get(key);
                     return value as T;
                 }
                 break;
@@ -525,13 +525,13 @@ export class GLTFModel extends BaseModel {
      * 2、按照gltf的sampler，初始化采样器
      */
     initSamplers() {
-        let defaultSampler = this.scene.resourcesGPU.getSampler("linear");
+        const defaultSampler = this.scene.resourcesGPU.getSampler("linear");
         this.modelRes.sampler.set("default", defaultSampler);
-        let samplers = this.DataLoader.getSamplers();
+        const samplers = this.DataLoader.getSamplers();
 
         if (samplers) {
-            for (let i in samplers) {
-                let perSamplerData = samplers[i];
+            for (const i in samplers) {
+                const perSamplerData = samplers[i];
                 let samplerBindingType: GPUSamplerBindingType = "filtering";      //必须，手动bind group layout需要
                 let magFilter: GPUFilterMode = "linear";
                 if (perSamplerData.magFilter && perSamplerData.magFilter == 9728) {
@@ -618,7 +618,7 @@ export class GLTFModel extends BaseModel {
                     }
                 }
 
-                let perSampler = this.device.createSampler({
+                const perSampler = this.device.createSampler({
                     label: perSamplerData.name || i,
                     magFilter,
                     minFilter,
@@ -633,7 +633,7 @@ export class GLTFModel extends BaseModel {
 
     }
     async initGPUTextures() {
-        let defaultGPUTexture = this.scene.resourcesGPU.textureOfString.get("default");
+        const defaultGPUTexture = this.scene.resourcesGPU.textureOfString.get("default");
         this.modelRes.GPUTexture.set("default", defaultGPUTexture);
         // let images = this.DataLoader.getImages();
         // if (images) {
@@ -662,14 +662,14 @@ export class GLTFModel extends BaseModel {
         // }
     }
     async getGPUTexture(id: number | string, format: GPUTextureFormat = "rgba8unorm-srgb", premultipliedAlpha: boolean = false) {
-        let images = this.DataLoader.getImages();
+        const images = this.DataLoader.getImages();
         if (images) {
-            let perImageData = await this.DataLoader.getImage(Number(id));
+            const perImageData = await this.DataLoader.getImage(Number(id));
             if (!perImageData) {
                 console.error("getGPUTextures error, id:", id);
                 return;
             }
-            let gpuTexture = this.device.createTexture({
+            const gpuTexture = this.device.createTexture({
                 label: id.toString(),
                 size: [perImageData.width, perImageData.height],
                 format: format,
@@ -696,7 +696,7 @@ export class GLTFModel extends BaseModel {
      * 1、按照gltf的texture，初始化纹理
      */
     async initTextures() {
-        let defaultTexture = this.scene.resourcesGPU.weTextureOfString.get("default");
+        const defaultTexture = this.scene.resourcesGPU.weTextureOfString.get("default");
         this.modelRes.texture.set("default", defaultTexture);
         // let textures = this.DataLoader.getTextures();
         // if (textures)
@@ -724,9 +724,9 @@ export class GLTFModel extends BaseModel {
         //     }
     }
     async getTexture(id: number, format: GPUTextureFormat = "rgba8unorm-srgb", premultipliedAlpha: boolean = false) {
-        let textures = this.DataLoader.getTextures();
+        const textures = this.DataLoader.getTextures();
         if (textures) {
-            let perTextureData = textures[id];
+            const perTextureData = textures[id];
             let sampler: GPUSampler | undefined = undefined;
             if (perTextureData.sampler !== undefined) {
                 // sampler = this.modelRes.sampler.get(Number(perTextureData.sampler));
@@ -739,7 +739,7 @@ export class GLTFModel extends BaseModel {
             else {
                 gpuTexture = await this.getRes(T_ModelResKind.GPUTexture, "default") as GPUTexture;
             }
-            let perTexture = new Texture({
+            const perTexture = new Texture({
                 name: this.Name + " texture:" + id.toString(),
                 source: gpuTexture,
                 sampler: sampler,
@@ -767,34 +767,34 @@ export class GLTFModel extends BaseModel {
      */
     async initMaterials() {
         // this.modelRes.material.set("default", this.scene.resourcesGPU.weMaterialOfString.get("defaultPBR"));
-        let colorMaterial = new ColorMaterial({
+        const colorMaterial = new ColorMaterial({
             color: [1, 1, 1, 1],
         });
         this.modelRes.material.set("default", colorMaterial);
-        let alert = new ColorMaterial({
+        const alert = new ColorMaterial({
             color: [1, 0, 0, 1],
         });
         this.modelRes.material.set("alert", alert);
-        let vertexMaterial = new VertexColorMaterial();
+        const vertexMaterial = new VertexColorMaterial();
         this.modelRes.material.set("vertexColor", vertexMaterial);
 
-        let materials = this.DataLoader.getMaterials();
+        const materials = this.DataLoader.getMaterials();
         if (materials)
-            for (let i in materials) {
-                let perMaterialData = materials[i];
+            for (const i in materials) {
+                const perMaterialData = materials[i];
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //未实现
                 // 扩展未实现
-                let extensions = perMaterialData.extensions;
+                const extensions = perMaterialData.extensions;
                 // extras未实现
-                let extras = perMaterialData.extras;
+                const extras = perMaterialData.extras;
 
 
 
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                let name = perMaterialData.name || i;
-                let normalTextureData = perMaterialData.normalTexture;
+                const name = perMaterialData.name || i;
+                const normalTextureData = perMaterialData.normalTexture;
                 let normalForPbr: I_TextureForPBR | undefined = undefined;
                 if (normalTextureData != undefined) {
                     normalForPbr = {} as I_TextureForPBR;
@@ -812,11 +812,11 @@ export class GLTFModel extends BaseModel {
                  * 该值必须大于或等于0且小于或等于1。
                  * 必填：否，默认值：0.5
                  */
-                let alphaCutoff = perMaterialData.alphaCutoff || 0.5;
+                const alphaCutoff = perMaterialData.alphaCutoff || 0.5;
                 /**
                  * 使用data2:i32进行传输
                  */
-                let alphaMode = perMaterialData.alphaMode || "OPAQUE";
+                const alphaMode = perMaterialData.alphaMode || "OPAQUE";
                 let alphaForPbr: I_TextureForPBR | undefined = undefined;
                 if (alphaMode != undefined) {
                     if (alphaForPbr == undefined) {
@@ -845,7 +845,7 @@ export class GLTFModel extends BaseModel {
                  * 如果存在第四个分量（A），则必须忽略该分量。
                  * 未定义时，对该纹理进行采样时，其RGB分量必须为1.0
                  */
-                let emissiveTexture = perMaterialData.emissiveTexture;
+                const emissiveTexture = perMaterialData.emissiveTexture;
                 let emissiveForPbr: I_TextureForPBR | undefined = undefined;
                 if (emissiveTexture != undefined) {
                     emissiveForPbr = {} as I_TextureForPBR;
@@ -859,7 +859,7 @@ export class GLTFModel extends BaseModel {
                  * 数组中的每个元素都必须大于或等于0且小于或等于1。
                  * 必填：否，默认值：[0,0,0]
                  */
-                let emissiveFactor = perMaterialData.emissiveFactor;
+                const emissiveFactor = perMaterialData.emissiveFactor;
                 let emissiveFactorForPbr: I_TextureForPBR | undefined = undefined;
                 if (emissiveFactor != undefined) {
                     emissiveFactorForPbr = {} as I_TextureForPBR;
@@ -878,7 +878,7 @@ export class GLTFModel extends BaseModel {
                  * 如果存在其他通道（GBA），在occlusion计算中MUST忽略这些通道。
                  * 未定义时，该材质没有occlusion纹理。
                  */
-                let occlusionTexture = perMaterialData.occlusionTexture;
+                const occlusionTexture = perMaterialData.occlusionTexture;
                 let occlusionForPbr: I_TextureForPBR | undefined = undefined;
                 if (occlusionTexture != undefined) {
                     occlusionForPbr = {} as I_TextureForPBR;
@@ -896,13 +896,13 @@ export class GLTFModel extends BaseModel {
                     // console.log("occlusionForPbr", occlusionForPbr);
                 }
 
-                let doubleSided = perMaterialData.doubleSided || false;
+                const doubleSided = perMaterialData.doubleSided || false;
                 // PBR材质基础
-                let pbrMetallicRoughness = perMaterialData.pbrMetallicRoughness;
+                const pbrMetallicRoughness = perMaterialData.pbrMetallicRoughness;
                 //albedo
-                let baseColor = pbrMetallicRoughness?.baseColorFactor || [1, 1, 1, 1];
+                const baseColor = pbrMetallicRoughness?.baseColorFactor || [1, 1, 1, 1];
                 let albedoTexture: Texture;
-                let albedoForPbr: I_TextureForPBR = { value: baseColor as weVec4 };
+                const albedoForPbr: I_TextureForPBR = { value: baseColor as weVec4 };
                 if (pbrMetallicRoughness && pbrMetallicRoughness.baseColorTexture?.index != undefined) {
                     albedoTexture = await this.getRes(T_ModelResKind.texture, pbrMetallicRoughness.baseColorTexture?.index, { format: "rgba8unorm-srgb", premultipliedAlpha: true }) as Texture;
                     albedoForPbr.texture = albedoTexture;
@@ -911,9 +911,9 @@ export class GLTFModel extends BaseModel {
                     }
                 }
                 //metallic
-                let metallicFactor = pbrMetallicRoughness?.metallicFactor || 1;
+                const metallicFactor = pbrMetallicRoughness?.metallicFactor || 1;
                 let metallicTexture: Texture;
-                let metallicForPbr: I_TextureForPBR = { value: metallicFactor };
+                const metallicForPbr: I_TextureForPBR = { value: metallicFactor };
                 if (pbrMetallicRoughness && pbrMetallicRoughness.metallicRoughnessTexture?.index != undefined) {
                     metallicTexture = await this.getRes(T_ModelResKind.texture, pbrMetallicRoughness.metallicRoughnessTexture?.index, { format: "rgba8unorm" }) as Texture;
                     metallicForPbr.texture = metallicTexture;
@@ -923,9 +923,9 @@ export class GLTFModel extends BaseModel {
                     }
                 }
                 //roughness
-                let roughnessFactor = pbrMetallicRoughness?.roughnessFactor || 1;
+                const roughnessFactor = pbrMetallicRoughness?.roughnessFactor || 1;
                 let roughnessTexture: Texture;
-                let roughnessForPbr: I_TextureForPBR = { value: roughnessFactor };
+                const roughnessForPbr: I_TextureForPBR = { value: roughnessFactor };
                 if (pbrMetallicRoughness && pbrMetallicRoughness.metallicRoughnessTexture?.index != undefined) {
                     roughnessTexture = await this.getRes(T_ModelResKind.texture, pbrMetallicRoughness.metallicRoughnessTexture?.index, { format: "rgba8unorm" }) as Texture;
                     roughnessForPbr.texture = roughnessTexture;
@@ -935,7 +935,7 @@ export class GLTFModel extends BaseModel {
                     }
                 }
 
-                let inputPBRMaterial: IV_PBRMaterial = {
+                const inputPBRMaterial: IV_PBRMaterial = {
                     textures: {
                         albedo: albedoForPbr,
                         // normal: { texture: { source: "/resource/PBR/rustediron/rustediron2_normal.png" } },
@@ -993,7 +993,7 @@ export class GLTFModel extends BaseModel {
                 //         color: [1, 0, 0, 1],
                 //     });
                 // }
-                let perMaterial = new PBRMaterial(inputPBRMaterial);
+                const perMaterial = new PBRMaterial(inputPBRMaterial);
                 this.modelRes.material.set(Number(i), perMaterial);
             }
     }
@@ -1002,29 +1002,29 @@ export class GLTFModel extends BaseModel {
      * 初始化entity 
      */
     async initMeshes() {
-        let meshes = this.DataLoader.getMeshes();
+        const meshes = this.DataLoader.getMeshes();
         if (meshes) {
             // console.log("meshes.count ", meshes.length);
-            for (let i in meshes) {
-                let meshSource = meshes[i];
-                let flagSkins: boolean = this.meshHasSkins(parseInt(i));
+            for (const i in meshes) {
+                const meshSource = meshes[i];
+                const flagSkins: boolean = this.meshHasSkins(parseInt(i));
 
-                for (let j in meshSource.primitives) {
-                    let flagMorphTarget: boolean = this.meshHasMorphTarget(meshSource.primitives[j]);
+                for (const j in meshSource.primitives) {
+                    const flagMorphTarget: boolean = this.meshHasMorphTarget(meshSource.primitives[j]);
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     //base  part
-                    let primitive = meshSource.primitives[j];       //mesh的primitive
+                    const primitive = meshSource.primitives[j];       //mesh的primitive
                     let primitiveMode = primitive.mode;             //当前entity的primitive的绘制模式
                     if (primitiveMode == undefined) {               //设置primitiveMode为默认值4，GL_TRIANGLES
                         primitiveMode = 4;
                     }
-                    let name = (meshSource.name ?? i) + ` ${j}`;
+                    const name = (meshSource.name ?? i) + ` ${j}`;
                     let inputEntity: IV_MeshEntity | IV_PointsEntity | IV_LinesEntity;  //enity 属性
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     //material part
                     let cullMode: GPUCullMode = "back";
                     if (primitive.material != undefined) {
-                        let materialDataSource = this.DataLoader.getMaterial(primitive.material);
+                        const materialDataSource = this.DataLoader.getMaterial(primitive.material);
                         if (materialDataSource.doubleSided && materialDataSource.doubleSided === true) {
                             cullMode = "none";
                         }
@@ -1065,9 +1065,9 @@ export class GLTFModel extends BaseModel {
                     else {
                         indecis = await this.getIndecisArrayOfPrimitive(primitive, i, j);
                     }
-                    let drawMode = indecis.drawMode;
-                    let indicesOfDataOfEntity = indecis.indecis;
-                    let stripIndexFormat = indecis.stripIndexFormat;
+                    const drawMode = indecis.drawMode;
+                    const indicesOfDataOfEntity = indecis.indecis;
+                    const stripIndexFormat = indecis.stripIndexFormat;
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     // primitive of render
                     let primitiveOfDataOfRender: GPUPrimitiveState = {
@@ -1192,12 +1192,12 @@ export class GLTFModel extends BaseModel {
                 [name: string]: I_vsGPUBufferBundle
             }
         > {
-        let verticesOfDataOfEntity: {
+        const verticesOfDataOfEntity: {
             [name: string]: I_vsGPUBufferBundle
         } = {};
-        for (let k in primitive.attributes) {
-            let oneAttribute = primitive.attributes[k];
-            let accessor = await this.DataLoader.getAccessor(oneAttribute, E_accessorUseFor.vertex);
+        for (const k in primitive.attributes) {
+            const oneAttribute = primitive.attributes[k];
+            const accessor = await this.DataLoader.getAccessor(oneAttribute, E_accessorUseFor.vertex);
             // let accessor = this.modelRes.accessor.get(oneAttribute.toString());
             if (accessor == undefined) {
                 console.warn(`mesh ${meshID} primitive ${primitiveID} attribute ${k} not found accessor`);
@@ -1230,23 +1230,23 @@ export class GLTFModel extends BaseModel {
             verticesOfDataOfEntity[nameOfAttribute] = accessor as I_vsGPUBufferBundle;
         }
         if ("normal" in verticesOfDataOfEntity == false && (primitive.mode == undefined || primitive.mode == 4 || primitive.mode == 5 || primitive.mode == 6)) {//如果没有法线，计算法线
-            let positionAccessorID = primitive.attributes["POSITION"];
+            const positionAccessorID = primitive.attributes["POSITION"];
             // let positionAccessor = this.modelData.json.accessors[positionAccessorID];
-            let normalAccessorID = positionAccessorID + "_normal";
-            let alreadyNormal = this.modelRes.accessor.has(normalAccessorID);
+            const normalAccessorID = positionAccessorID + "_normal";
+            const alreadyNormal = this.modelRes.accessor.has(normalAccessorID);
             if (alreadyNormal) {
                 verticesOfDataOfEntity["normal"] = this.modelRes.accessor.get(normalAccessorID) as I_vsGPUBufferBundle;
             }
             else {
-                let positions = this.DataLoader.getAccessorForByte(positionAccessorID) as Float32Array;
+                const positions = this.DataLoader.getAccessorForByte(positionAccessorID) as Float32Array;
                 // let positions = this.getBufferSourceForAccessor(positionAccessor) as Float32Array;
                 let normalAccessorBufferSource: I_vsGPUBufferBundle;
                 let gpuBuffer: GPUBuffer;
                 if ("indices" in primitive) {//如果有索引，根据索引计算法线
-                    let indicesAccessorID: number = primitive["indices"]!;
+                    const indicesAccessorID: number = primitive["indices"]!;
                     // let indicesAccessor = this.modelData.json.accessors[indicesAccessorID];
-                    let indices = this.DataLoader.getAccessorForByte(indicesAccessorID) as Uint32Array;
-                    let normals: Float32Array = BaseFunction.computeNormalsFromPositionsAndIndices(positions, indices);
+                    const indices = this.DataLoader.getAccessorForByte(indicesAccessorID) as Uint32Array;
+                    const normals: Float32Array = BaseFunction.computeNormalsFromPositionsAndIndices(positions, indices);
                     gpuBuffer = createCommonGPUBuffer(this.device, normalAccessorID, normals.buffer as ArrayBuffer, 0, normals.byteLength);
                     normalAccessorBufferSource = {
                         buffer: gpuBuffer,
@@ -1263,7 +1263,7 @@ export class GLTFModel extends BaseModel {
                     verticesOfDataOfEntity["normal"] = normalAccessorBufferSource;
                 }
                 else {//如果没有索引，根据顶点顺序计算法线
-                    let normals: Float32Array = BaseFunction.computeNormalsFromPositionsNoIndex(positions);
+                    const normals: Float32Array = BaseFunction.computeNormalsFromPositionsNoIndex(positions);
                     gpuBuffer = createCommonGPUBuffer(this.device, normalAccessorID, normals.buffer as ArrayBuffer, 0, normals.byteLength);
                     normalAccessorBufferSource = {
                         buffer: gpuBuffer,
@@ -1284,10 +1284,10 @@ export class GLTFModel extends BaseModel {
             }
         }
         if (primitive.targets)
-            for (let k in primitive.targets) {
-                let index = Number(k) + 1;
-                let oneAttribute = primitive.targets[k]["POSITION"];
-                let accessor = await this.DataLoader.getAccessor(oneAttribute, E_accessorUseFor.vertex);
+            for (const k in primitive.targets) {
+                const index = Number(k) + 1;
+                const oneAttribute = primitive.targets[k]["POSITION"];
+                const accessor = await this.DataLoader.getAccessor(oneAttribute, E_accessorUseFor.vertex);
                 verticesOfDataOfEntity["position_" + index] = accessor as I_vsGPUBufferBundle;
             }
         return verticesOfDataOfEntity;
@@ -1304,12 +1304,12 @@ export class GLTFModel extends BaseModel {
                 [name: string]: number[]
             }
         > {
-        let verticesOfDataOfEntity: {
+        const verticesOfDataOfEntity: {
             [name: string]: number[]
         } = {};
-        for (let k in primitive.attributes) {
-            let oneAttribute = primitive.attributes[k];
-            let accessor = await this.DataLoader.getAccessorArray(oneAttribute, E_accessorUseFor.vertex);
+        for (const k in primitive.attributes) {
+            const oneAttribute = primitive.attributes[k];
+            const accessor = await this.DataLoader.getAccessorArray(oneAttribute, E_accessorUseFor.vertex);
             // let accessor = this.modelRes.accessor.get(oneAttribute.toString());
             if (accessor == undefined) {
                 console.warn(`mesh ${meshID} primitive ${primitiveID} attribute ${k} not found accessor`);
@@ -1342,26 +1342,26 @@ export class GLTFModel extends BaseModel {
             verticesOfDataOfEntity[nameOfAttribute] = accessor;
         }
         if ("normal" in verticesOfDataOfEntity == false && (primitive.mode == undefined || primitive.mode == 4 || primitive.mode == 5 || primitive.mode == 6)) {//如果没有法线，计算法线
-            let positionAccessorID = primitive.attributes["POSITION"];
-            let positions = this.DataLoader.getAccessorForByte(positionAccessorID) as Float32Array;
+            const positionAccessorID = primitive.attributes["POSITION"];
+            const positions = this.DataLoader.getAccessorForByte(positionAccessorID) as Float32Array;
             if ("indices" in primitive) {//如果有索引，根据索引计算法线
-                let indicesAccessorID: number = primitive["indices"]!;
+                const indicesAccessorID: number = primitive["indices"]!;
                 // let indicesAccessor = this.modelData.json.accessors[indicesAccessorID];
-                let indices = this.DataLoader.getAccessorForByte(indicesAccessorID) as Uint32Array;
-                let normals: Float32Array = BaseFunction.computeNormalsFromPositionsAndIndices(positions, indices);
+                const indices = this.DataLoader.getAccessorForByte(indicesAccessorID) as Uint32Array;
+                const normals: Float32Array = BaseFunction.computeNormalsFromPositionsAndIndices(positions, indices);
 
                 verticesOfDataOfEntity["normal"] = [...normals];
             }
             else {//如果没有索引，根据顶点顺序计算法线
-                let normals: Float32Array = BaseFunction.computeNormalsFromPositionsNoIndex(positions);
+                const normals: Float32Array = BaseFunction.computeNormalsFromPositionsNoIndex(positions);
                 verticesOfDataOfEntity["normal"] = [...normals];
             }
         }
         if (primitive.targets)
-            for (let k in primitive.targets) {
-                let index = Number(k) + 1;
-                let oneAttribute = primitive.targets[k]["POSITION"];
-                let accessor = await this.DataLoader.getAccessorForArray(oneAttribute);
+            for (const k in primitive.targets) {
+                const index = Number(k) + 1;
+                const oneAttribute = primitive.targets[k]["POSITION"];
+                const accessor = await this.DataLoader.getAccessorForArray(oneAttribute);
                 verticesOfDataOfEntity["position_" + index] = accessor;
             }
         return verticesOfDataOfEntity;
@@ -1381,8 +1381,8 @@ export class GLTFModel extends BaseModel {
     meshHasSkins(meshID: number): boolean {
         if (this.meshAndSkin === undefined) {
             this.meshAndSkin = new Map();
-            let nodes = this.DataLoader.getNodes()!;
-            for (let i of nodes) {
+            const nodes = this.DataLoader.getNodes()!;
+            for (const i of nodes) {
                 if ("skin" in i && "mesh" in i) {
                     this.meshAndSkin.set(i.mesh, i.skin);
                 }
@@ -1408,7 +1408,7 @@ export class GLTFModel extends BaseModel {
         //index accessor 转义we interface，可以为undefined(无index)
         let drawMode: I_drawMode | I_drawModeIndexed;
         if (primitive.indices != undefined) {                //index 
-            let idOfaccessors = primitive.indices;
+            const idOfaccessors = primitive.indices;
             let useFor: E_accessorUseFor
             switch (primitive.mode) {
                 case 0:
@@ -1435,7 +1435,7 @@ export class GLTFModel extends BaseModel {
                 default:
                     useFor = E_accessorUseFor.indexTriangleList;
             }
-            let indexAttribute = await this.getAccessor(idOfaccessors, useFor);
+            const indexAttribute = await this.getAccessor(idOfaccessors, useFor);
             stripIndexFormat = (indexAttribute as I_indexGPUBufferBundle).format;//重置 stripIndexFormat 为索引缓冲区的格式
 
             indicesOfDataOfEntity = indexAttribute as I_indexGPUBufferBundle;
@@ -1446,7 +1446,7 @@ export class GLTFModel extends BaseModel {
         else {                                                          // draw mode
             let count: number;
             if (primitive.attributes.POSITION != undefined) {
-                let position = this.DataLoader.getAccessorOfSource(primitive.attributes.POSITION);
+                const position = this.DataLoader.getAccessorOfSource(primitive.attributes.POSITION);
                 if (position == undefined) {
                     throw new Error(`mesh ${meshID} primitive ${primitiveID} attribute position not found accessor`);
                 }
@@ -1475,11 +1475,11 @@ export class GLTFModel extends BaseModel {
         }> {
         //strip index format default uint16,strip 存在，index一定存在，且stripIndexFormat 为 indexAttribute 的格式
         let indicesOfDataOfEntity: number[] = [];
-        let stripIndexFormat: GPUIndexFormat = "uint32";//gltf中一般默认uint16
+        const stripIndexFormat: GPUIndexFormat = "uint32";//gltf中一般默认uint16
         //index accessor 转义we interface，可以为undefined(无index)
         let drawMode: I_drawMode | I_drawModeIndexed;
         if (primitive.indices != undefined) {                //index 
-            let idOfaccessors = primitive.indices;
+            const idOfaccessors = primitive.indices;
             let useFor: E_accessorUseFor
             switch (primitive.mode) {
                 case 0:
@@ -1514,7 +1514,7 @@ export class GLTFModel extends BaseModel {
         else {                                                          // draw mode
             let count: number;
             if (primitive.attributes.POSITION != undefined) {
-                let position = this.DataLoader.getAccessorOfSource(primitive.attributes.POSITION);
+                const position = this.DataLoader.getAccessorOfSource(primitive.attributes.POSITION);
                 if (position == undefined) {
                     throw new Error(`mesh ${meshID} primitive ${primitiveID} attribute position not found accessor`);
                 }

@@ -1,6 +1,5 @@
 /////////////////////////////////////////////////
 
-import { Scene } from "../scene/scene";
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +53,7 @@ export type weHexColor = string | number;
 /** 将十六进制颜色值转换为 RGB 颜色值 */
 export function weHexColorToColor3(hex: weHexColor): weColor3 {
     if (typeof hex === "number") {
-        let hexStr = hex.toString(16);
+        const hexStr = hex.toString(16);
         if (parseInt(hexStr, 16) !== hex) {
             console.warn(`weHexColorToColor3() hex:${hex} is not a 6 digits hex color. use #FFFFFF instead`);
             return [1, 1, 1];
@@ -79,7 +78,7 @@ export function weHexColorToColor3(hex: weHexColor): weColor3 {
 
 /**将weColor3或weColor4的数值转换为0--1的float数值 */
 export function weColorToColorOfF32<T extends weColor3 | weColor4>(color: T): T {
-    for (let i of color) {
+    for (const i of color) {
         if (i > 255) {
             color[i] = color[i] / 255.0;
         }

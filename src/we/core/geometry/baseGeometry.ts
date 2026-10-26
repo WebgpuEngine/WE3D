@@ -106,22 +106,22 @@ export abstract class BaseGeometry {
         }
         else {
             for (let i = 0; i < this.buffer.indeices.length; i += 3) {
-                let A = this.buffer.indeices[i];
-                let B = this.buffer.indeices[i + 1];
-                let C = this.buffer.indeices[i + 2];
-                let AB = [A, B].sort().toString();
-                let BC = [B, C].sort().toString();
-                let CA = [C, A].sort().toString();
+                const A = this.buffer.indeices[i];
+                const B = this.buffer.indeices[i + 1];
+                const C = this.buffer.indeices[i + 2];
+                const AB = [A, B].sort().toString();
+                const BC = [B, C].sort().toString();
+                const CA = [C, A].sort().toString();
                 list[AB] = [A, B];
                 list[BC] = [B, C];
                 list[CA] = [C, A];
             }
         }
-        let indeices: number[] = [];
-        for (let i in list) {
+        const indeices: number[] = [];
+        for (const i in list) {
             indeices.push(list[i][0], list[i][1]);
         }
-        let output: I_geometryWireFrameAttribute = {
+        const output: I_geometryWireFrameAttribute = {
             indeices: indeices
         };
         this.wireFrame = output;
@@ -215,7 +215,7 @@ export abstract class BaseGeometry {
         if (this.input.color) {
             color = this.input.color;
         }
-        let colorsArray = [];
+        const colorsArray = [];
         for (let i = 0; i < length; i++) {
             colorsArray.push(color[0], color[1], color[2]);
         }

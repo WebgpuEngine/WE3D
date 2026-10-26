@@ -98,8 +98,8 @@ export abstract class BaseEntity extends NodeSpace {
         }
         else {
             let locationOfString = "";
-            for (let i in this.locationInterpolate) {
-                let perLocationInterpolate = this.locationInterpolate[i];
+            for (const i in this.locationInterpolate) {
+                const perLocationInterpolate = this.locationInterpolate[i];
                 locationOfString += ` interpolate:${perLocationInterpolate.type},${perLocationInterpolate.sampling}} `;
             }
             return locationOfString;
@@ -335,18 +335,18 @@ export abstract class BaseEntity extends NodeSpace {
     }
     abstract detachData(): void;
     _destroy(): void {
-        for (let i of this.outSideInstance) {
+        for (const i of this.outSideInstance) {
             i.destroy();
         }
         this.outSideInstanceCountPreFrame = 0;
-        for (let i in this.bufferPointers) {
-            let perPointer = this.bufferPointers[i as keyof typeof this.bufferPointers]!;
+        for (const i in this.bufferPointers) {
+            const perPointer = this.bufferPointers[i as keyof typeof this.bufferPointers]!;
             // console.log("===entity destroy release pointer", perPointer.pointerID);
             this.scene.pointers.releasePointer(perPointer.pointerID);
         }
-        for (let i in this.vertexPointers) {
+        for (const i in this.vertexPointers) {
             if (!this.vertexPointers[i as keyof typeof this.vertexPointers].pointer != undefined) {
-                let perPointer: I_pointerStruct = this.vertexPointers[i as keyof typeof this.vertexPointers].pointer!;
+                const perPointer: I_pointerStruct = this.vertexPointers[i as keyof typeof this.vertexPointers].pointer!;
                 // console.log("===entity destroy release pointer", perPointer.pointerID);
                 this.scene.pointers.releasePointer(perPointer.pointerID);
             }
@@ -413,26 +413,26 @@ export abstract class BaseEntity extends NodeSpace {
         else if (this.instance.position && this.instance.numInstances != this.instance.position.length / 3) {
             this.instance.numInstances = this.instance.position.length / 3;
         }
-        let insideMatrix: Mat4[] = [];
+        const insideMatrix: Mat4[] = [];
         for (let j = 0; j < this.instance.numInstances; j++) {
             let index: number = j;
             if (this.instance.index) {
                 index = this.instance.index[j];
             }
-            let perMatrix = mat4.identity();
+            const perMatrix = mat4.identity();
             if (scaleEnable) {
-                let perScale = vec3.fromValues(this.instance.scale![index * 3 + 0], this.instance.scale![index * 3 + 1], this.instance.scale![index * 3 + 2]);
+                const perScale = vec3.fromValues(this.instance.scale![index * 3 + 0], this.instance.scale![index * 3 + 1], this.instance.scale![index * 3 + 2]);
                 mat4.scale(perMatrix, perScale, perMatrix);
             }
             if (rotateEnable) {
-                let perAxis = vec3.fromValues(this.instance.rotate![index * 3] + 0, this.instance.rotate![index * 3] + 1, this.instance.rotate![index * 3] + 2);
-                let perAngle = this.instance.rotate![index * 3 + 3];
+                const perAxis = vec3.fromValues(this.instance.rotate![index * 3] + 0, this.instance.rotate![index * 3] + 1, this.instance.rotate![index * 3] + 2);
+                const perAngle = this.instance.rotate![index * 3 + 3];
                 if (perAngle != 0 && (this.instance.rotate![index * 3 + 0] != 0 || this.instance.rotate![index * 3 + 1] != 0 || this.instance.rotate![index * 3 + 2] != 0)) {
                     mat4.axisRotate(perMatrix, perAxis, perAngle, perMatrix);
                 }
             }
             if (positionEnable) {
-                let perPosition = vec3.fromValues(this.instance.position![index * 3 + 0], this.instance.position![index * 3 + 1], this.instance.position![index * 3 + 2]);
+                const perPosition = vec3.fromValues(this.instance.position![index * 3 + 0], this.instance.position![index * 3 + 1], this.instance.position![index * 3 + 2]);
                 mat4.setTranslation(perMatrix, perPosition, perMatrix);
             }
             mat4.multiply(this.matrixWorld, perMatrix, perMatrix);     // 先缩放，再旋转，最后平移，然后乘以world matrix ，得到instance的world matrix，在shader中的VS是再次的局部坐标*这个world matrix，得到顶点的world position
@@ -497,7 +497,7 @@ export abstract class BaseEntity extends NodeSpace {
      * @returns instance 世界矩阵
      */
     getMatrixWorldOfInstance(instance: NodeObject): Mat4 {
-        let parentMatrixWorld: Mat4 = instance.matrixWorld;
+        const parentMatrixWorld: Mat4 = instance.matrixWorld;
         return mat4.multiply(parentMatrixWorld, this.matrix);
     }
     /**
@@ -507,7 +507,7 @@ export abstract class BaseEntity extends NodeSpace {
      */
     getWorldPositionOfInstance(instance: NodeObject): Vec3 {
         // return this.updateWorldPosition(this.getMatrixWorldOfInstance(instance));
-        let _matrixWorld = this.getMatrixWorldOfInstance(instance);
+        const _matrixWorld = this.getMatrixWorldOfInstance(instance);
         return vec3.fromValues(_matrixWorld[12], _matrixWorld[13], _matrixWorld[14]);
     }
     /** 设置entity的包围盒
@@ -520,7 +520,7 @@ export abstract class BaseEntity extends NodeSpace {
     /** 根据顶点位置生成世界坐标的Box，当前entity的原始包围盒，不涉及变换 */
     generateBox(position: number[]): boundingBox | undefined {
         if (position) {
-            let box = generateBox3(position);
+            const box = generateBox3(position);
             return box;
         }
     }
@@ -541,8 +541,8 @@ export abstract class BaseEntity extends NodeSpace {
     /**
      * 20260322，todo，取消cameraDC中的按照id排序
      * 检查camear的id在commands中是否已经存在 */
-    checkIdOfCommands(id: string, commands: Object): boolean {
-        for (let i in commands) {
+    checkIdOfCommands(id: string, commands: object): boolean {
+        for (const i in commands) {
             if (i == id) return true;
         }
         return false;
@@ -644,7 +644,7 @@ export abstract class BaseEntity extends NodeSpace {
      * @returns number
      */
     getInstanceCountTotal(): number {
-        let outsideInstanceCount = this.getInstancesCount();
+        const outsideInstanceCount = this.getInstancesCount();
         return this.instance.numInstances * outsideInstanceCount
     }
 
@@ -660,7 +660,7 @@ export abstract class BaseEntity extends NodeSpace {
         name: string;
         byteSize: number;
     }[]) {
-        for (let perBuffer of bufferList) {
+        for (const perBuffer of bufferList) {
             /**
              * 1、获取外部实例化数量：没有的情况下，默认1个
              * 2、计算size
@@ -673,21 +673,21 @@ export abstract class BaseEntity extends NodeSpace {
              *      pointer存在，长度不相等，重建一个
              */
 
-            let nameOfPointer = perBuffer.name as keyof typeof this.bufferPointers;
+            const nameOfPointer = perBuffer.name as keyof typeof this.bufferPointers;
 
             //1、实例化,最少1个（分配pointer使用）
-            let instanceCount = this.getInstancesCount() || 1;
+            const instanceCount = this.getInstancesCount() || 1;
 
             //2.1 计算需要的pointer数量：目前以4个pointer为最小单位。
-            let stridePointerCount = Math.ceil(instanceCount / this.outsideInstanceCountOfDefaultStride);//1/4=1，5/4=2
+            const stridePointerCount = Math.ceil(instanceCount / this.outsideInstanceCountOfDefaultStride);//1/4=1，5/4=2
 
             //2.2 计算需要的pointer长度
-            let strideSizeOfInstances = Math.ceil(stridePointerCount * perBuffer.byteSize * this.outsideInstanceCountOfDefaultStride / this.storageOffsetStrideSize) * this.storageOffsetStrideSize;
+            const strideSizeOfInstances = Math.ceil(stridePointerCount * perBuffer.byteSize * this.outsideInstanceCountOfDefaultStride / this.storageOffsetStrideSize) * this.storageOffsetStrideSize;
 
             //3、判断是否新建
             if (this.bufferPointers[nameOfPointer] == undefined) {
                 this.flagInstanceArrayBufferReNew = true;//更新需要reNew的时间
-                let pointerParams: I_pointerCreateParams = {
+                const pointerParams: I_pointerCreateParams = {
                     name: `Entity:${this.ID.toString()},${perBuffer.name}:count=${instanceCount},size=${strideSizeOfInstances}`,
                     byteSize: strideSizeOfInstances,
                     type: E_BOLBufferType.storage,
@@ -700,7 +700,7 @@ export abstract class BaseEntity extends NodeSpace {
             //4、判断是否重建
             else if (this.bufferPointers[nameOfPointer].byteLength != strideSizeOfInstances) {
                 this.flagInstanceArrayBufferReNew = true;//更新需要reNew的时间
-                let newPointer = this.scene.pointers.resizePointer(this.bufferPointers[nameOfPointer].pointerID, strideSizeOfInstances);
+                const newPointer = this.scene.pointers.resizePointer(this.bufferPointers[nameOfPointer].pointerID, strideSizeOfInstances);
                 if (newPointer) {
                     newPointer.name = `${this.ID.toString()} ${perBuffer.name}:count=${instanceCount},size=${strideSizeOfInstances}`;
                     this.bufferPointers[nameOfPointer] = newPointer;
@@ -734,8 +734,8 @@ export abstract class BaseEntity extends NodeSpace {
     }
 
     intUniformCommonEntity() {
-        let offsetSize = Math.ceil(this._entityCommonByteSize / this.uniformOffsetStrideSize) * this.uniformOffsetStrideSize;
-        let pointerParams: I_pointerCreateParams = {
+        const offsetSize = Math.ceil(this._entityCommonByteSize / this.uniformOffsetStrideSize) * this.uniformOffsetStrideSize;
+        const pointerParams: I_pointerCreateParams = {
             name: this.ID.toString() + " uniform",
             byteSize: offsetSize,//uniform data 的bytesize大小
             type: E_BOLBufferType.uniform,
@@ -751,7 +751,7 @@ export abstract class BaseEntity extends NodeSpace {
     updateUniformCommonEntity(clock: Clock, updateParent: boolean = true): void {
         if (this.bufferPointers.uniformCommonEntity !== undefined) {
             const st_entityValues = this.bufferPointers.uniformCommonEntity.cpuBuffer;
-            let offset = this.bufferPointers.uniformCommonEntity.offset;
+            const offset = this.bufferPointers.uniformCommonEntity.offset;
             const st_entityViews = {
                 time: new Float32Array(st_entityValues, offset, 1),
                 last_time: new Float32Array(st_entityValues, offset + 4, 1),
@@ -781,14 +781,14 @@ export abstract class BaseEntity extends NodeSpace {
         {
             //update：cpu and gpu
             if (this.bufferPointers.instances) {
-                let offset = this.bufferPointers.instances.offset;
+                const offset = this.bufferPointers.instances.offset;
                 //外部instance
-                for (let i in this.outSideInstance) {
-                    let perNode = this.outSideInstance[i];
+                for (const i in this.outSideInstance) {
+                    const perNode = this.outSideInstance[i];
                     //内部instance
                     for (let j = 0; j < this.instance.numInstances; j++) {
                         // let instanceIndex = Number(i) * Number(j) * this._instanceInfoByteSize;
-                        let instanceIndex = (Number(i) * this.instance.numInstances + Number(j)) * this._instanceInfoByteSize + offset;
+                        const instanceIndex = (Number(i) * this.instance.numInstances + Number(j)) * this._instanceInfoByteSize + offset;
                         const st_instance_infoViews = {
                             node_id: new Uint32Array(this.bufferPointers.instances.cpuBuffer, instanceIndex, 1),
                             stage_id: new Uint32Array(this.bufferPointers.instances.cpuBuffer, instanceIndex + 4, 1),
@@ -824,20 +824,20 @@ export abstract class BaseEntity extends NodeSpace {
     updateWorldMatrixBuffer(_clock?: Clock) {
         //update：cpu and gpu
         if (this.bufferPointers.wolrdMatrix) {
-            let offset = this.bufferPointers.wolrdMatrix.offset;
+            const offset = this.bufferPointers.wolrdMatrix.offset;
             //外部instance
-            for (let i in this.outSideInstance) {
-                let perNode = this.outSideInstance[i];
+            for (const i in this.outSideInstance) {
+                const perNode = this.outSideInstance[i];
                 //内部instance
                 for (let j = 0; j < this.instance.numInstances; j++) {
-                    let instanceIndex = (Number(i) * this.instance.numInstances + Number(j)) * this._instanceWorldMatrixByteSize + offset;
+                    const instanceIndex = (Number(i) * this.instance.numInstances + Number(j)) * this._instanceWorldMatrixByteSize + offset;
                     //array buffer view ，全部为0的arraybuffer，参见checkStorageBuffer
                     const worldMatrix = new Float32Array(this.bufferPointers.wolrdMatrix.cpuBuffer, instanceIndex, 16 * 2);
                     //20260628 修改
                     // let matrixWorld = mat4.multiply(this.getMatrixWorldOfInstance(perNode), this.getInsideInstanceMatrix(j));//内部矩阵乘以外部矩阵，得到世界矩阵
                     let matrixWorld = mat4.multiply(this.matrix, this.getInsideInstanceMatrix(j));   //先是内部矩阵* 内部instance矩阵
                     matrixWorld = mat4.multiply(matrixWorld, perNode.matrixWorld);                   //再是 内部总矩阵* 外部instance矩阵
-                    let invertMatrixWorld = mat4.invert(matrixWorld);           //todo 待应用，世界逆矩阵
+                    const invertMatrixWorld = mat4.invert(matrixWorld);           //todo 待应用，世界逆矩阵
                     //20260628 修改
                     worldMatrix.set([...matrixWorld, ...invertMatrixWorld]);
                 }
@@ -892,7 +892,7 @@ export abstract class BaseEntity extends NodeSpace {
         if (this.bindGroup == undefined && this.bindGroupLayout == undefined) {
             //////////////////////////////////////////////////
             //bind group  layout
-            let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = this.generateGPUBindGroupLayoutDescriptor();
+            const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = this.generateGPUBindGroupLayoutDescriptor();
             this.bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);;
             //////////////////////////////////////////////////
             //bind group  
@@ -909,8 +909,8 @@ export abstract class BaseEntity extends NodeSpace {
 
         //创建或更新bind group
         if (createBindGroup === true) {
-            let entries: GPUBindGroupEntry[] = this.generateGPUBindGroupEntries();
-            let bindGroupDescriptor: GPUBindGroupDescriptor = {
+            const entries: GPUBindGroupEntry[] = this.generateGPUBindGroupEntries();
+            const bindGroupDescriptor: GPUBindGroupDescriptor = {
                 label: `entity:${this.ID}`,
                 layout: this.bindGroupLayout,
                 entries: entries
@@ -996,10 +996,10 @@ export abstract class BaseEntity extends NodeSpace {
      * @returns GPUBindGroupEntry[]
      */
     generateGPUBindGroupEntries(): GPUBindGroupEntry[] {
-        let entries: GPUBindGroupEntry[] = [];
-        for (let i in this.bufferPointers) {
-            let binding = this.getBindingOfBindGroup(i);//获取绑定的顺序
-            let perEntry: GPUBindGroupEntry = {
+        const entries: GPUBindGroupEntry[] = [];
+        for (const i in this.bufferPointers) {
+            const binding = this.getBindingOfBindGroup(i);//获取绑定的顺序
+            const perEntry: GPUBindGroupEntry = {
                 binding: binding,
                 resource: {
                     buffer: this.bufferPointers[i as keyof typeof this.bufferPointers]!.gpuBufferView.buffer,

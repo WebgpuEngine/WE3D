@@ -15,7 +15,7 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
     }
     generateBindGroup0(): void {
         //bindgroup  and layout 
-        let layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "renderSkyWithRayMarching",
             entries: [
                 {
@@ -116,7 +116,7 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
 
     generateBindGroup1() {
         if (this.bindGroupLayout[1] === undefined) {
-            let layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+            const layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
                 label: "renderSkyWithLut_1",
                 entries: [
                     {
@@ -209,12 +209,12 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
         this.generateBindGroup();
         //DC
         if (this.scene.finalTarget.NDC == true) {
-            let inputDC: IV_DrawCommandGenerator = {
+            const inputDC: IV_DrawCommandGenerator = {
                 scene: this.scene,
                 parent: this,
             }
-            let DCG = this.scene.DCG;
-            let valueDC: IV_DC = {
+            const DCG = this.scene.DCG;
+            const valueDC: IV_DC = {
                 label: "renderSkyWithRayMarching",
                 data: {
                     uniforms: this.bindGroups,
@@ -237,37 +237,37 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
                 },
             }
 
-            let dc = DCG.generateDrawCommand(valueDC);
+            const dc = DCG.generateDrawCommand(valueDC);
             this.commands.push(dc);
         }
         else {
             this.commands.push(this.copyColorCommand());
 
-            let pipelineLayout = this.device.createPipelineLayout({
+            const pipelineLayout = this.device.createPipelineLayout({
                 label: "renderSkyWithRayMarching",
                 bindGroupLayouts: this.bindGroupLayout,
             });
-            let moduleVS = this.device.createShaderModule({
+            const moduleVS = this.device.createShaderModule({
                 label: "renderSkyWithRayMarching vs",
                 code: shader_three_point_vs,
             });
-            let moduleFS = this.device.createShaderModule({
+            const moduleFS = this.device.createShaderModule({
                 label: "renderSkyWithRayMarching fs",
                 code: shaderRenderWithRayMarching,
             });
-            let vertex: GPUVertexState = {
+            const vertex: GPUVertexState = {
                 module: moduleVS,
                 entryPoint: "vs",
                 // constants: constansVS,
             }
 
-            let fragment: GPUFragmentState = {
+            const fragment: GPUFragmentState = {
                 module: moduleFS,
                 entryPoint: "fragment",
                 targets: [{ format: this.scene.colorFormatOfLinearSpace }],
                 // constants: constansFS,
             }
-            let descriptor: GPURenderPipelineDescriptor = {
+            const descriptor: GPURenderPipelineDescriptor = {
                 label: "renderSkyWithRayMarching",
                 vertex: vertex,
                 fragment: fragment,
@@ -275,8 +275,8 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
             }
             this.pipeline = this.device.createRenderPipeline(descriptor);
 
-            let rpd = this.getRpd();
-            let valueDC: IV_DynBindGroupDrawCommand = {
+            const rpd = this.getRpd();
+            const valueDC: IV_DynBindGroupDrawCommand = {
                 baseInfo: {
                     parent: this,
                 },
@@ -291,7 +291,7 @@ export class HillaireRenderWithRayMarching extends RenderHillaire {
                     renderPassDescriptor: () => this.getRpd(),
                 },
             };
-            let dc = new DynBindGroupDrawCommand(valueDC);
+            const dc = new DynBindGroupDrawCommand(valueDC);
             this.commands.push(dc);
         }
     }

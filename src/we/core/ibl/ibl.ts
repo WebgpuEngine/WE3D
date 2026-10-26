@@ -147,7 +147,7 @@ export class IBL {
     }
     initStorageBuffer() {
         if (this.bufferGPU == undefined && this.buffer == undefined) {
-            let sizeOfBuffer = 4 * 5 + 4 * 3 * 9 * this.iblCount;
+            const sizeOfBuffer = 4 * 5 + 4 * 3 * 9 * this.iblCount;
             this.buffer = new ArrayBuffer(sizeOfBuffer);
             this.bufferGPU = this.device.createBuffer({
                 size: this.buffer.byteLength,

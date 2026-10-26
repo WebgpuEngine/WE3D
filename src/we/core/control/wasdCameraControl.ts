@@ -61,7 +61,7 @@ export class WASDCameraControl extends CamreaControl {
     }
     update(deltaTime: number): boolean {
         // let input = this.inputHandler(this);
-        let input = this.getInputValue();
+        const input = this.getInputValue();
         const sign = (positive: boolean, negative: boolean) =>
             (positive ? 1 : 0) - (negative ? 1 : 0);
 

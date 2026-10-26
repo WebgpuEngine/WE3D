@@ -40,9 +40,9 @@ export class VertexColorMaterial extends BaseStandardMaterial {
 
     getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [];
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [];
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -50,11 +50,11 @@ export class VertexColorMaterial extends BaseStandardMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [];
+        const uniformEntries: T_uniformEntries[] = [];
 
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -67,7 +67,7 @@ export class VertexColorMaterial extends BaseStandardMaterial {
         let binding: number = 0;
         let groupAndBindingString: string = "";
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }

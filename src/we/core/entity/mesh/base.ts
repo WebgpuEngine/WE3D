@@ -13,19 +13,19 @@ export function    createWrieFrame(position: number[], indeices: number[]) {
         }
         else {
             for (let i = 0; i < indeices.length; i += 3) {
-                let A = indeices[i];
-                let B = indeices[i + 1];
-                let C = indeices[i + 2];
-                let AB = [A, B].sort().toString();
-                let BC = [B, C].sort().toString();
-                let CA = [C, A].sort().toString();
+                const A = indeices[i];
+                const B = indeices[i + 1];
+                const C = indeices[i + 2];
+                const AB = [A, B].sort().toString();
+                const BC = [B, C].sort().toString();
+                const CA = [C, A].sort().toString();
                 list[AB] = [A, B];
                 list[BC] = [B, C];
                 list[CA] = [C, A];
             }
         }
-        let indeicesWireframe: number[] = [];
-        for (let i in list) {
+        const indeicesWireframe: number[] = [];
+        for (const i in list) {
             indeicesWireframe.push(list[i][0], list[i][1]);
         }
         return indeicesWireframe;

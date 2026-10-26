@@ -36,13 +36,13 @@ export class ShaderRegister {
     _tag: Map<string, any> = new Map();
 
     constructor() {
-        for (let key in WGSL_Include) {
+        for (const key in WGSL_Include) {
             this.addInclude(key, WGSL_Include[key]);
         }
         // for (let key in WGSL_Replace) {
         //     this.addReplace(key, WGSL_Replace[key]);
         // }
-        for (let key in WGSL_ShaderCode) {
+        for (const key in WGSL_ShaderCode) {
             this.addShaderCode(key, WGSL_ShaderCode[key]);
         }
         //添加gbuffers tag
@@ -65,7 +65,7 @@ export class ShaderRegister {
         string | Record<T_SHR_RenderMode, string | undefined> {
         let hasShaderName = false;
         let shaderCodeName = "";
-        let materialName: Record<T_SHR_RenderMode, string | undefined> = {
+        const materialName: Record<T_SHR_RenderMode, string | undefined> = {
             forward: undefined,
             defer: undefined,
             Msaa: undefined,
@@ -118,10 +118,10 @@ export class ShaderRegister {
      * 初始化alias shader code（ this._aliasShaderCode）
      */
     initShaderCodeAlias() {
-        for (let key in WGSL_AliasShaderCode) {
-            let perAlias = WGSL_AliasShaderCode[key];
+        for (const key in WGSL_AliasShaderCode) {
+            const perAlias = WGSL_AliasShaderCode[key];
             if (perAlias.renderMode) {
-                for (let renderMode in perAlias.renderMode) {
+                for (const renderMode in perAlias.renderMode) {
                     let shaderCode = "";
                     if (perAlias.renderMode[renderMode as T_SHR_RenderMode] === true) {
                         shaderCode = this.formatShaderOfRenderMode(perAlias.code, renderMode as T_SHR_RenderMode);
@@ -130,19 +130,19 @@ export class ShaderRegister {
                 }
             }
             else {
-                let shaderCode = this.formatShaderOfRenderMode(perAlias.code, undefined);
+                const shaderCode = this.formatShaderOfRenderMode(perAlias.code, undefined);
                 this.addAliasShaderName(key, shaderCode);
             }
         }
     }
     /**根据renderMode格式化shader code */
     formatShaderOfRenderMode(shaderCode: string, renderMode: T_SHR_RenderMode | undefined): string {
-        let lines = this.splitByLine(shaderCode);
-        let newLines = [];
+        const lines = this.splitByLine(shaderCode);
+        const newLines = [];
         let weStart = false;
         let weStartRenderMode = false;
-        for (let perLine of lines) {
-            let lineTrimWithOutFirstSpace = perLine.trimStart();//只删开头空格
+        for (const perLine of lines) {
+            const lineTrimWithOutFirstSpace = perLine.trimStart();//只删开头空格
             if (lineTrimWithOutFirstSpace.startsWith("#includeFile")) {
                 let enable = false;
                 if (weStart === false) {//不在weStart中
@@ -155,7 +155,7 @@ export class ShaderRegister {
                 if (enable === false) {
                     continue;
                 }
-                let includeFile = this.splitBySpace(lineTrimWithOutFirstSpace);
+                const includeFile = this.splitBySpace(lineTrimWithOutFirstSpace);
                 let fileName = includeFile[1].replaceAll("\"", "");
                 fileName = fileName.replace("\'", "");
                 newLines.push(this.getInclude(fileName));
@@ -166,7 +166,7 @@ export class ShaderRegister {
             }
             //
             else if (lineTrimWithOutFirstSpace.startsWith("#tag")) {
-                let tag = this.splitBySpace(lineTrimWithOutFirstSpace);
+                const tag = this.splitBySpace(lineTrimWithOutFirstSpace);
                 //gbuffers 相关只在FS中
                 if (renderMode !== undefined) {
                     if (tag[1] === "gbuffers") {
@@ -193,9 +193,9 @@ export class ShaderRegister {
             }
             else if (renderMode !== undefined && weStart === true && lineTrimWithOutFirstSpace.startsWith("#renderMode")) {
                 weStartRenderMode = false;//遇到renderMode，重置weStartRenderMode=false(新的判断)
-                let renderModeInLine = this.splitBySpace(lineTrimWithOutFirstSpace);
+                const renderModeInLine = this.splitBySpace(lineTrimWithOutFirstSpace);
                 renderModeInLine.shift();//去掉#renderMode
-                for (let key of renderModeInLine) {
+                for (const key of renderModeInLine) {
                     if (key === renderMode) {
                         weStartRenderMode = true;
                     }
@@ -216,7 +216,7 @@ export class ShaderRegister {
     }
     /**根据tag name获取tag code（string） */
     getTag(tagName: string): string {
-        let tagCode = this._tag.get(tagName);
+        const tagCode = this._tag.get(tagName);
         if (tagCode) {
             return tagCode;
         }
@@ -226,7 +226,7 @@ export class ShaderRegister {
     }
     /**根据renderMode获取需要include的 gbuffers struct code（string） */
     getTagGBuffersStruct(renderMode: T_SHR_RenderMode): string {
-        let tagCode = this._tag.get("gbuffers")[renderMode];
+        const tagCode = this._tag.get("gbuffers")[renderMode];
         if (tagCode) {
             return tagCode;
         }
@@ -236,7 +236,7 @@ export class ShaderRegister {
     }
     /**根据renderMode获取gbuffers output 结构体 code（string） */
     getTagGBuffersOutput(renderMode: T_SHR_RenderMode): string {
-        let tagCode = this._tag.get("gbuffers.output")[renderMode];
+        const tagCode = this._tag.get("gbuffers.output")[renderMode];
         if (tagCode) {
             return tagCode;
         }
@@ -250,7 +250,7 @@ export class ShaderRegister {
     }
     /**根据include file path获取include code（string） */
     getInclude(filePath: string) {
-        let includeCode = this._include.get(filePath);
+        const includeCode = this._include.get(filePath);
         if (includeCode) {
             return includeCode;
         }
@@ -271,10 +271,10 @@ export class ShaderRegister {
      * 2、在vs、fs编译之前调用
     */
     replaceUserShaderCode(shaderCode: string, useShaderCode: string) {
-        let lines = shaderCode.split("\n");
-        for (let perLine_i in lines) {
-            let perLine = lines[perLine_i];
-            let lineTrimWithOutFirstSpace = perLine.trimStart();//只删开头空格
+        const lines = shaderCode.split("\n");
+        for (const perLine_i in lines) {
+            const perLine = lines[perLine_i];
+            const lineTrimWithOutFirstSpace = perLine.trimStart();//只删开头空格
             if (lineTrimWithOutFirstSpace.startsWith("#replace") && perLine.includes("user_shader_code")) {
                 lines[perLine_i] = useShaderCode;
             }
@@ -282,10 +282,10 @@ export class ShaderRegister {
         return lines.join("\n");
     }
     replaceUserShaderCodeFunction(shaderCode: string, useShaderCode: string) {
-        let lines = shaderCode.split("\n");
-        for (let perLine_i in lines) {
-            let perLine = lines[perLine_i];
-            let lineTrimWithOutFirstSpace = perLine.trimStart();//只删开头空格
+        const lines = shaderCode.split("\n");
+        for (const perLine_i in lines) {
+            const perLine = lines[perLine_i];
+            const lineTrimWithOutFirstSpace = perLine.trimStart();//只删开头空格
             if (lineTrimWithOutFirstSpace.startsWith("#replace") && perLine.includes("user_shader_function_code")) {
                 lines[perLine_i] = useShaderCode;
             }
@@ -355,7 +355,7 @@ export class ShaderRegister {
     }
     /** #reflection location */
     reflectionLocations(vsCode: string, refName: string[], locations: string[]): string {
-        let locationString: string = locations.join("\n");
+        const locationString: string = locations.join("\n");
         if (vsCode.includes("#reflection location")) {
             vsCode = vsCode.replace("#reflection location", locationString);
             return vsCode;
@@ -369,9 +369,9 @@ export class ShaderRegister {
     /** #reflection attributes */
     reflectionAttributes(vsCode: string, refName: string[], locations: string[]): string {
         if (vsCode.includes("#reflection attributes")) {
-            let addonCode: string[] = [];
-            for (let i in WGSL_reflection_attributes) {
-                let perOne = WGSL_reflection_attributes[i];
+            const addonCode: string[] = [];
+            for (const i in WGSL_reflection_attributes) {
+                const perOne = WGSL_reflection_attributes[i];
                 if (refName.includes(i)) {
                     addonCode.push(perOne[1]);
                 }
@@ -391,15 +391,15 @@ export class ShaderRegister {
     /** #reflection morphTarget */
     reflectionMorphTarget(vsCode: string, refName: string[], locations: string[]): string {
         if (vsCode.includes("#reflection morphTarget")) {
-            let positions: string[] = [];
+            const positions: string[] = [];
             for (let i = 0; i < refName.length; i++) {
                 if (refName[i].indexOf("position_") != -1) {
                     positions.push("attributes." + refName[i]);
                 }
             }
-            let positionsString: string = positions.join(",");
-            let varPositions: string = `\n var positions :array<vec3f,${positions.length}>=array(${positionsString}); \n`;
-            let morphTargetCode: string = ` 
+            const positionsString: string = positions.join(",");
+            const varPositions: string = `\n var positions :array<vec3f,${positions.length}>=array(${positionsString}); \n`;
+            const morphTargetCode: string = ` 
   if(u_entity_base.animation_kind == 2||u_entity_base.animation_kind == 3||u_entity_base.animation_kind == 6||u_entity_base.animation_kind == 7) {
     let count = i32(u_entity_base.morpht_target_count);
     var position_morph_target :vec3f = attributes.position;

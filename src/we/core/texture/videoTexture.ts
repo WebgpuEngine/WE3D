@@ -2,7 +2,7 @@ import { E_lifeState } from "../base/coreDefine";
 import { I_VideoOption, weGetVidoeByUrl } from "../base/file/getFile";
 import { E_resourceKind } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import { I_BaseSampler, I_BaseTexture, numMipLevels, T_textureSourceType } from "./base";
+import { I_BaseSampler, I_BaseTexture, numMipLevels } from "./base";
 import { BaseTexture } from "./baseTexture";
 
 export type T_VIdeoSourceType = HTMLVideoElement | HTMLCanvasElement | OffscreenCanvas | VideoFrame | string;
@@ -79,7 +79,7 @@ export class VideoTexture extends BaseTexture {
 
 
     async initTextureAndLayout(input: I_BaseTexture): Promise<any> {
-        let source = this.inputValues.source;
+        const source = this.inputValues.source;
         this._state = E_lifeState.initializing;
 
         if (source instanceof GPUTexture) {
@@ -109,7 +109,7 @@ export class VideoTexture extends BaseTexture {
     async getVidoeTexture(source: T_VIdeoSourceType) {
         //url
         if (typeof source == "string") {
-            let urlName = source.split("/");
+            const urlName = source.split("/");
             this.Name = urlName[urlName.length - 1];
             this._state = await this.generateTextureByString(source);
         }
@@ -124,8 +124,8 @@ export class VideoTexture extends BaseTexture {
 
 
     async generateTextureByString(res: string): Promise<E_lifeState> {
-        let scope = this;
-        let options: I_VideoOption = {
+        const scope = this;
+        const options: I_VideoOption = {
             // crossOrigin : "anonymous",
             // src : res,
             muted: this.inputValues.muted ?? true,
@@ -134,7 +134,7 @@ export class VideoTexture extends BaseTexture {
         this.video = await weGetVidoeByUrl(res, options);
         this.video.autoplay = true;  //这个必须
         await this.video.play();
-        let ready = await scope.generateTextureBySource(this.video);
+        const ready = await scope.generateTextureBySource(this.video);
         return ready;
     }
 
@@ -218,7 +218,7 @@ export class VideoTexture extends BaseTexture {
      * @returns 
      */
     getExternalTexture(scope: any): GPUExternalTexture {
-        let source: HTMLVideoElement | VideoFrame = scope.video as HTMLVideoElement | VideoFrame;
+        const source: HTMLVideoElement | VideoFrame = scope.video as HTMLVideoElement | VideoFrame;
         // if (source instanceof HTMLVideoElement || source instanceof VideoFrame)
         // scope.texture = scope.device.importExternalTexture({ source })
 
@@ -228,7 +228,7 @@ export class VideoTexture extends BaseTexture {
 
 
     updateSelf(): void {
-        let source = this.video;
+        const source = this.video;
         if (this.model == "copy" || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas) {
             this.device.queue.copyExternalImageToTexture(
                 { source: source, flipY: this._upsideDownY }, //webGPU 的UV从左下角开始，所以需要翻转Y轴。

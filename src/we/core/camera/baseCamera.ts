@@ -349,7 +349,7 @@ export abstract class BaseCamera extends NodeObject {
     *    | /
     *    |/______X
     */
-    let dotBackUp = vec3.dot(back, this.UpDirection);
+    const dotBackUp = vec3.dot(back, this.UpDirection);
     // if (this.back[0] == 0 && this.back[1] == -1 && this.back[2] == 0) {
     if (dotBackUp > 0.999999) {
       // vec3.copy(vec3.create(1, 0, 0), this.right);
@@ -406,7 +406,7 @@ export abstract class BaseCamera extends NodeObject {
     if (this._control) {
       this._control.destroy();
     }
-    let controlOption: IV_CamreaControl = {
+    const controlOption: IV_CamreaControl = {
       canvas: this.scene.canvas,
       camera: this,
     }
@@ -485,10 +485,10 @@ export abstract class BaseCamera extends NodeObject {
     //1、更新控制器或根据worldPosition更新属性
     if (this._control) {
       //有控制器情况，会隐性调用updateByPositionDirection（）或者updateByPositionYawPitch（）更新MV矩阵和MVP[]
-      let result = this._control.update(this.scene.clock.deltaTime);
+      const result = this._control.update(this.scene.clock.deltaTime);
     }
     else {
-      let lookat = this.LookAt;
+      const lookat = this.LookAt;
       if (this.isLookAtGlobal === false) {//lookat 是camera local 坐标系
         vec3.transformMat4(lookat, this.matrixWorld, lookat);//lookat 乘以 matrixWorld，得到lookat的世界坐标
       }
@@ -497,7 +497,7 @@ export abstract class BaseCamera extends NodeObject {
     }
     //2、 更新_position:下一帧updateMatrix()使用。否则,影响arcball zoom正确性和wasd 前后左右
     if (this.Parent) {
-      let pos = vec3.sub(this.worldPosition, this.Parent.worldPosition);//camera在其parent的local 坐标系下的位置
+      const pos = vec3.sub(this.worldPosition, this.Parent.worldPosition);//camera在其parent的local 坐标系下的位置
       vec3.copy(pos, this._position);
     }
     //3、 更新GPUBuffer
@@ -577,7 +577,7 @@ export abstract class BaseCamera extends NodeObject {
     //   this.up = vec3.normalize(vec3.cross(this.back, this.right));
     // }
     // console.log("projectionMatrix=", this.projectionMatrix)
-    let invViewMatrix = mat4.invert(this.viewMatrix);
+    const invViewMatrix = mat4.invert(this.viewMatrix);
     // this.MVP = [mat4.multiply( invViewMatrix, this.projectionMatrix), invViewMatrix, this.projectionMatrix];
     this.MVP = [mat4.multiply(this.projectionMatrix, invViewMatrix,), invViewMatrix, this.projectionMatrix];
     return this.MVP;
@@ -585,7 +585,7 @@ export abstract class BaseCamera extends NodeObject {
   updateByPositionYawPitch(position: Vec3, yaw: number, pitch: number): Mat4[] {
     //更新camera的矩阵，通过yaw和pitch的增量，暂缓后边通过camera.update更新
     // Reconstruct the camera's rotation, and store into the camera matrix.
-    let view = mat4.rotateX(mat4.rotationY(yaw), pitch);
+    const view = mat4.rotateX(mat4.rotationY(yaw), pitch);
     mat4.copy(view, this.viewMatrix);
 
     vec3.copy(position, this.PositionOfModelMatrix);
@@ -594,7 +594,7 @@ export abstract class BaseCamera extends NodeObject {
     //   let pos = vec3.sub(this.PositionOfModelMatrix, this.Parent.worldPosition);//camera在其parent的local 坐标系下的位置
     //   vec3.copy(pos, this._position);
     // }
-    let invViewMatrix = mat4.invert(this.viewMatrix);
+    const invViewMatrix = mat4.invert(this.viewMatrix);
     this.MVP = [mat4.multiply(this.projectionMatrix, invViewMatrix), invViewMatrix, this.projectionMatrix];
     return this.MVP;
 
@@ -624,18 +624,18 @@ export abstract class BaseCamera extends NodeObject {
    * 更新systemMVP
    */
   updateBufferOfSystemMVP() {
-    let mvp = this.MVP;
+    const mvp = this.MVP;
     let MVP: GPUBuffer;
-    let MVP_buffer = this.bufferOf_ST_SystemMVP;
+    const MVP_buffer = this.bufferOf_ST_SystemMVP;
 
     if (mvp.length == 3) {
-      let model = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);
+      const model = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);
       mat4.copy((<Mat4[]>mvp)[0], model);
 
-      let view = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 16);
+      const view = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 16);
       mat4.copy((<Mat4[]>mvp)[1], view);
 
-      let projection = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 2, 16);
+      const projection = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 2, 16);
       mat4.copy((<Mat4[]>mvp)[2], projection);
 
     }
@@ -643,13 +643,13 @@ export abstract class BaseCamera extends NodeObject {
       throw new Error("MVP矩阵长度错误");
     }
     // console.log("updateBufferOfSystemMVP",this.worldPosition);
-    let cameraPosition = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 3, 3);
+    const cameraPosition = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 3, 3);
     cameraPosition[0] = this.worldPosition[0];
     cameraPosition[1] = this.worldPosition[1];
     cameraPosition[2] = this.worldPosition[2];
 
     if (this.scene.reversedZ.isReversedZ) {
-      let reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 3 + 3 * 4, 1);
+      const reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 3 + 3 * 4, 1);
       reversedZ[0] = 1;
     }
 
@@ -701,8 +701,8 @@ export abstract class BaseCamera extends NodeObject {
   /////////////////////////////////////////////////////////////////////////////////////////
   /**获取逆VP矩阵 */
   getInverseVP(): Mat4 {
-    let invertProjectionMatrix = mat4.invert(this.projectionMatrix);
-    let invertVP = mat4.multiply(this.viewMatrix, invertProjectionMatrix);
+    const invertProjectionMatrix = mat4.invert(this.projectionMatrix);
+    const invertVP = mat4.multiply(this.viewMatrix, invertProjectionMatrix);
 
     return invertVP;
   }

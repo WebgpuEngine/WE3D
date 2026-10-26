@@ -29,7 +29,7 @@ export class SphereGeometry extends BaseGeometry {
     groupStart !: number;
 
     constructor(input?: optionSphereGeometry) {
-        let defaultValues = {
+        const defaultValues = {
             radius: 1,
             widthSegments: 16,
             heightSegments: 16,
@@ -72,8 +72,8 @@ export class SphereGeometry extends BaseGeometry {
 
         const thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
         let index = 0;
-        let grid = [];
-        let vertex = vec3.create();
+        const grid = [];
+        const vertex = vec3.create();
         let normal = vec3.create();
         // buffers
 
@@ -81,18 +81,18 @@ export class SphereGeometry extends BaseGeometry {
         // let vertices = [];
         // let normals = [];
         // let uvs = [];
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
 
-        let heightSegments = input.heightSegments!;
-        let widthSegments = input.widthSegments!;
-        let thetaStart = input.thetaStart!;
-        let radius = input.radius!;
-        let phiStart = input.phiStart!;
-        let phiLength = input.phiLength!;
-        let thetaLength = input.thetaLength!;
+        const heightSegments = input.heightSegments!;
+        const widthSegments = input.widthSegments!;
+        const thetaStart = input.thetaStart!;
+        const radius = input.radius!;
+        const phiStart = input.phiStart!;
+        const phiLength = input.phiLength!;
+        const thetaLength = input.thetaLength!;
         // generate vertices, normals and uvs
 
         for (let iy = 0; iy <= heightSegments / 2; iy++) {//不计算反面的半球(除以2)

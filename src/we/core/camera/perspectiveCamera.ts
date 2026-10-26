@@ -2,9 +2,8 @@ import { mat4, vec4, Vec4 } from 'wgpu-matrix';
 
 
 import { BaseCamera, I_BaseCameraValue } from "./baseCamera"
-import { Clock } from '../scene/clock';
 import { computeAABB } from '../math/Box';
-import { computeBoundingSphere, generateSphereFromBox3 } from '../math/sphere';
+import {  generateSphereFromBox3 } from '../math/sphere';
 
 /** 透视相机 */
 export interface IV_PerspectiveCamera extends I_BaseCameraValue {
@@ -76,13 +75,13 @@ export class PerspectiveCamera extends BaseCamera {
      * @param option 透视相机的初始化参数
      */
     updateProjectionMatrix() {
-        let aspect = this.scene.aspect;
+        const aspect = this.scene.aspect;
         this.inpuValues.aspect = aspect;
 
 
         this.projectionMatrix = mat4.perspective(this.inpuValues.fov, aspect, this.inpuValues.near, this.inpuValues.far);
         if (this.scene.reversedZ.isReversedZ) {
-            let reversedZ = mat4.create(
+            const reversedZ = mat4.create(
                 1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, -1.0, 0.0,
@@ -95,11 +94,11 @@ export class PerspectiveCamera extends BaseCamera {
 
 
     updateBoundingBox(): void {
-        let nearHeight = 2 * this.inpuValues.near * Math.tan(this.inpuValues.fov / 2);
-        let nearWidth = nearHeight * this.inpuValues.aspect;
-        let farHeight = 2 * this.inpuValues.far * Math.tan(this.inpuValues.fov / 2);
-        let farWidth = farHeight * this.inpuValues.aspect;
-        let positions: Vec4[] = [
+        const nearHeight = 2 * this.inpuValues.near * Math.tan(this.inpuValues.fov / 2);
+        const nearWidth = nearHeight * this.inpuValues.aspect;
+        const farHeight = 2 * this.inpuValues.far * Math.tan(this.inpuValues.fov / 2);
+        const farWidth = farHeight * this.inpuValues.aspect;
+        const positions: Vec4[] = [
             vec4.fromValues(-nearWidth / 2, -nearHeight / 2, this.inpuValues.near, 1),
             vec4.fromValues(nearWidth / 2, -nearHeight / 2, this.inpuValues.near, 1),
             vec4.fromValues(nearWidth / 2, nearHeight / 2, this.inpuValues.near, 1),
@@ -115,8 +114,8 @@ export class PerspectiveCamera extends BaseCamera {
             i = vec4.transformMat4(i, this.modelMatrix);
             i = vec4.transformMat4(i, this.viewMatrix);
         }
-        let positionsForAABB: [number, number, number][] = []
-        for (let i of positions) {
+        const positionsForAABB: [number, number, number][] = []
+        for (const i of positions) {
             positionsForAABB.push([i[0], i[1], i[2]]);
         }
         this.boundingBox = computeAABB(positionsForAABB);

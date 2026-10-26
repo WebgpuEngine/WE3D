@@ -1,4 +1,4 @@
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
+import { WeGenerateID } from "../math/baseFunction";
 import type { Scene } from "../scene/scene";
 import { E_lifeState, I_Update } from "../base/coreDefine";
 import { Clock } from "../scene/clock";
@@ -133,7 +133,7 @@ export abstract class RootGPU implements I_UUID {
         if (this._isDestroy) return;
         this._isDestroy = true;
         if (this.resourcesGPU) {
-            for (let i of this.mapList) {
+            for (const i of this.mapList) {
                 if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
                     (this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>).delete(i.map);
                 }

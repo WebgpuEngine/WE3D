@@ -4,7 +4,6 @@ import { BaseInputControl } from "../input/baseInputControl";
 import { E_InputControlType, E_InputEvent, E_InputPriority } from "../input/base";
 import { IV_Pickup, IV_PickupInitValue, pickupTargetOfIDs } from "./base";
 import { pickupManager } from "./pickupManager";
-import { WeGenerateID } from "../math/baseFunction";
 
 
 
@@ -166,10 +165,10 @@ export class Pickup extends BaseInputControl {
             if (resultOfID) {
                 let stageID = resultOfID[0];
                 stageID = stageID >>> 30;
-                let entityIDMask = (1 << 30) - 1;
+                const entityIDMask = (1 << 30) - 1;
                 let nodeID = resultOfID[0] & entityIDMask;
                 nodeID = nodeID >> 14;
-                let instance = resultOfID[0] & 0x3fff;
+                const instance = resultOfID[0] & 0x3fff;
                 ids = {
                     stageID: stageID,
                     nodeID: nodeID,
@@ -189,17 +188,17 @@ export class Pickup extends BaseInputControl {
         if (x > this.scene.surface.size.width || y > this.scene.surface.size.height) return false;
         const commandEncoder = this.device.createCommandEncoder();
         // Encode a command to copy the results to a mappable buffer.
-        let source: GPUTexelCopyTextureInfo = {//这里应该是GPUTexelCopyTextureInfo,@webgpu/types没有这个，GPUImageCopyTexture是GPUTexelCopyTextureInfo集成;
+        const source: GPUTexelCopyTextureInfo = {//这里应该是GPUTexelCopyTextureInfo,@webgpu/types没有这个，GPUImageCopyTexture是GPUTexelCopyTextureInfo集成;
             texture: texture,
             origin: {
                 x,
                 y
             }
         }
-        let destination: GPUTexelCopyBufferInfo = {//GPUTexelCopyBufferInfo,@webgpu/types没有这个,用GPUImageCopyBuffer代替
+        const destination: GPUTexelCopyBufferInfo = {//GPUTexelCopyBufferInfo,@webgpu/types没有这个,用GPUImageCopyBuffer代替
             buffer: this.resultBuffer
         };
-        let size: GPUExtent3DStrict = {
+        const size: GPUExtent3DStrict = {
             width: 1,
             height: 1
         }
@@ -227,7 +226,7 @@ export class Pickup extends BaseInputControl {
                 this.eventValues.mouseValue.ctrlKey = (event as PointerEvent).ctrlKey;
                 this.eventValues.mouseValue.altKey = (event as PointerEvent).altKey;
                 this.eventValues.mouseValue.shiftKey = (event as PointerEvent).shiftKey;
-                let mouse = event as MouseEvent;
+                const mouse = event as MouseEvent;
                 // console.log(mouse.x, mouse.y);
                 const rect = this.scene.canvas.getBoundingClientRect();
 

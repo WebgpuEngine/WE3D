@@ -1,5 +1,4 @@
 import { TypedArray } from "webgpu-utils";
-import { weVec2, weVec3, weVec4 } from "../base/coreDefine";
 import { AnimationGroup } from "./animationGroup";
 import { BaseAnimation } from "./BaseAnimation";
 

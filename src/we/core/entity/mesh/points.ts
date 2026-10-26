@@ -141,13 +141,13 @@ export class Points extends EntityBundleMaterial {
         else {//非模拟模式
             //属性数据
             if (input.attributes.data) {
-                let attributes = input.attributes.data.vertices;
+                const attributes = input.attributes.data.vertices;
                 // 位置数据必须存在
                 if (attributes["position"] == undefined) {
                     throw new Error("Points must have position attribute");
                 }
                 //设置position等数据，顶点数据 作为attribute属性数据
-                for (let key in attributes) {
+                for (const key in attributes) {
                     this.attributes.vertices[key] = attributes[key];
                 }
                 //索引数据
@@ -244,8 +244,8 @@ export class Points extends EntityBundleMaterial {
         if (this.inputValues.shadow?.generate === false) {
             return;
         }
-        let vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
-        let valueDC = this.generateInputValueOfDC(E_renderForDC.light, { vs: { code: vsCode } }, true);
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
+        const valueDC = this.generateInputValueOfDC(E_renderForDC.light, { vs: { code: vsCode } }, true);
         // valueDC.system.parent = this;//设置父对象，用于在渲染时，设置uniform值。由于存在 specialInitValueOfDC参数 ，在调用时，会传递不传递 this，所以需要单独设置。
         if (this.emulate == "none") {
             valueDC.render.primitive = {
@@ -259,7 +259,7 @@ export class Points extends EntityBundleMaterial {
                 cullMode: this._cullMode
             }
         }
-        let dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
         this.renderPassArray[E_renderPassName.shadowmapOpaque].push(dc);
     }
     createShadowMapTransparentDC(): void {

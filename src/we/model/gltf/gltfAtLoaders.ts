@@ -9,11 +9,11 @@
  */
 import { TypedArray } from "webgpu-utils";
 import { ModelDataLoader } from "../../core/model/ModelDataLoader";
-import { GLB, GLBLoader, GLTF, GLTFBufferView, GLTFImage, GLTFLoader, GLTFScene, GLTFScenegraph, GLTFWithBuffers } from "@loaders.gl/gltf";
+import { GLB, GLTF, GLTFBufferView, GLTFImage, GLTFLoader, GLTFScenegraph, GLTFWithBuffers } from "@loaders.gl/gltf";
 import { load } from "@loaders.gl/core";
 import { GLTFModel } from "./gltf";
 import { I_indexGPUBufferBundle, I_vsGPUBufferBundle } from "../../core/command/DrawCommandGenerator";
-import { E_accessorUseFor, T_accessorBufferSource } from "./base";
+import { E_accessorUseFor } from "./base";
 import * as BaseFunction from "./function";
 import { cloneBufferSource, createCommonGPUBuffer } from "../../core/command/baseFunction";
 
@@ -125,8 +125,8 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         byteLength: number,
         arrayBuffer: ArrayBuffer;
     } {
-        let bufferView: GLTFBufferView = this.gltf.getBufferView(bufferViewID);
-        let buffer = this.gltf.gltf.buffers[bufferView.buffer];
+        const bufferView: GLTFBufferView = this.gltf.getBufferView(bufferViewID);
+        const buffer = this.gltf.gltf.buffers[bufferView.buffer];
         return {
             byteOffset: buffer.byteOffset + (bufferView.byteOffset || 0),
             byteLength: bufferView.byteLength,
@@ -135,10 +135,10 @@ export class GltfDataAtLoaders extends ModelDataLoader {
     }
 
     async getImage(index: number): Promise<ImageBitmap | undefined> {
-        let imageData: GLTFImage = this.gltf.getImage(index);
+        const imageData: GLTFImage = this.gltf.getImage(index);
         if (Number.isInteger(imageData.bufferView)) {
             const buffer = this.getBufferByBufferViewID(imageData.bufferView!);          //获取bufferView对应的buffer
-            let dataView = new DataView(buffer.arrayBuffer, buffer.byteOffset, buffer.byteLength);      //创建DataView，从buffer的byteOffset开始，长度为byteLength
+            const dataView = new DataView(buffer.arrayBuffer, buffer.byteOffset, buffer.byteLength);      //创建DataView，从buffer的byteOffset开始，长度为byteLength
             const blob = new Blob([dataView], { type: imageData.mimeType });
             const bitmap = await createImageBitmap(blob);
             return bitmap;
@@ -152,7 +152,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         //     return bitmap;
         // }
         else if (this.gltfType == "gltf") {
-            let images = (this.modelData as GLTFWithBuffers).images as ImageBitmap[];
+            const images = (this.modelData as GLTFWithBuffers).images as ImageBitmap[];
             return images[index] as ImageBitmap;
         }
         return undefined;
@@ -242,16 +242,16 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         else {
             aliaseID = "gpuBuffer_" + accessorID;
         }
-        let generate = this.accessor.has(accessorID);
+        const generate = this.accessor.has(accessorID);
         if (generate === false) {
             if (useFor == E_accessorUseFor.array) {
                 // return this.gltf.getTypedArrayForAccessor(accessorID);
-                let array = this.getAccessorForByte(accessorID);
+                const array = this.getAccessorForByte(accessorID);
                 this.accessor.set(aliaseID, array);
                 return array;
             }
             else {
-                let gpuBufferBundle = await this.generateAccessor(accessorID, aliaseID, useFor);
+                const gpuBufferBundle = await this.generateAccessor(accessorID, aliaseID, useFor);
                 this.accessor.set(aliaseID, gpuBufferBundle);
                 return gpuBufferBundle;
             }
@@ -263,11 +263,11 @@ export class GltfDataAtLoaders extends ModelDataLoader {
     async getAccessorArray(accessorID: number, useFor: E_accessorUseFor): Promise<number[]> {
         if (useFor == E_accessorUseFor.array) {
             // return this.gltf.getTypedArrayForAccessor(accessorID);
-            let array = this.getAccessorForArray(accessorID);
+            const array = this.getAccessorForArray(accessorID);
             return array;
         }
         else {
-            let gpuBufferBundle = await this.generateAccessorForArray(accessorID, useFor);
+            const gpuBufferBundle = await this.generateAccessorForArray(accessorID, useFor);
             return gpuBufferBundle;
         }
     }
@@ -277,7 +277,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
      * @returns 
      */
     getAccessorForByte(index: number): Uint32Array | Int32Array | Float32Array {
-        let accessor = this.gltf.getAccessor(index);
+        const accessor = this.gltf.getAccessor(index);
         let arrayBuffer;
         //此处使用了修改版本的@loader.gl/gltf，增加了accessor.value的类型
         // @ts-ignore
@@ -318,7 +318,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
      * @returns 
      */
     getAccessorForArray(index: number): number[] {
-        let accessor = this.gltf.getAccessor(index);
+        const accessor = this.gltf.getAccessor(index);
         let arrayBuffer;
         //此处使用了修改版本的@loader.gl/gltf，增加了accessor.value的类型
         // @ts-ignore
@@ -353,8 +353,8 @@ export class GltfDataAtLoaders extends ModelDataLoader {
      */
     createGPUBuffer(accessorID: number, Buffer?: TypedArray): GPUBuffer {
         let gpuBuffer: GPUBuffer;
-        let accessor = this.gltf.getAccessor(accessorID);
-        let aliaseID = accessorID;
+        const accessor = this.gltf.getAccessor(accessorID);
+        const aliaseID = accessorID;
 
         if (Buffer != undefined) {
             gpuBuffer = createCommonGPUBuffer(
@@ -365,7 +365,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
                 Buffer.byteLength);
         }
         else {
-            let accessorArray = this.getAccessorForByte(accessorID);
+            const accessorArray = this.getAccessorForByte(accessorID);
             gpuBuffer = createCommonGPUBuffer(
                 this.device,
                 accessor.name || accessorID.toString(),
@@ -377,7 +377,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         return gpuBuffer;
     }
     async generateAccessor(accessorID: number, aliaseID: string, useFor: E_accessorUseFor): Promise<I_vsGPUBufferBundle | I_indexGPUBufferBundle> {
-        let accessor = this.gltf.getAccessor(accessorID);
+        const accessor = this.gltf.getAccessor(accessorID);
         let gpuBuffer = this.getGPUBuffer(accessorID);
         let accessorBufferSource: I_vsGPUBufferBundle | I_indexGPUBufferBundle;
         if (useFor == E_accessorUseFor.indexTriangleList || useFor == E_accessorUseFor.indexTriangleStrip
@@ -403,10 +403,10 @@ export class GltfDataAtLoaders extends ModelDataLoader {
             } as I_indexGPUBufferBundle;
 
         } else if (useFor == E_accessorUseFor.indexLineLoop) {
-            let countsOfList = accessor.count * 2;
+            const countsOfList = accessor.count * 2;
             if (!gpuBuffer) {
-                let arrayIndexLineLoop = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
-                let newIndexBuffer = BaseFunction.convertLineIndexLoopToList(arrayIndexLineLoop, accessor.count);
+                const arrayIndexLineLoop = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
+                const newIndexBuffer = BaseFunction.convertLineIndexLoopToList(arrayIndexLineLoop, accessor.count);
                 gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer);
             }
             accessorBufferSource = {
@@ -420,10 +420,10 @@ export class GltfDataAtLoaders extends ModelDataLoader {
             } as I_indexGPUBufferBundle;
         }
         else if (useFor == E_accessorUseFor.indexTriangleFan) {
-            let countsOfList = (accessor.count - 2) * 3;
+            const countsOfList = (accessor.count - 2) * 3;
             if (!gpuBuffer) {
-                let arrayIndexTriangleFan = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
-                let newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(arrayIndexTriangleFan, accessor.count);
+                const arrayIndexTriangleFan = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
+                const newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(arrayIndexTriangleFan, accessor.count);
                 gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer);
             }
             accessorBufferSource = {
@@ -436,7 +436,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
             } as I_indexGPUBufferBundle;
         }
         else if (useFor == E_accessorUseFor.vertex && accessor.sparse === undefined) {
-            let accessorArray = this.getAccessorForByte(accessorID);
+            const accessorArray = this.getAccessorForByte(accessorID);
             const { format, wgslFormat, byteSize, arrayStride } = this.getAccessorTypeForGPUVertexFormat(accessorID);
             if (!gpuBuffer) {
                 gpuBuffer = this.createGPUBuffer(accessorID, accessorArray);
@@ -457,14 +457,14 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         else if (useFor == E_accessorUseFor.vertex && accessor.sparse !== undefined) {
             const { format, wgslFormat, byteSize, arrayStride } = this.getAccessorTypeForGPUVertexFormat(accessorID);
             if (!gpuBuffer) {
-                let countOfSparse = accessor.sparse.count;
+                const countOfSparse = accessor.sparse.count;
                 // sparse index
                 // let indexBufferSparse = this.getArrayViewForBufferView(accessor.sparse.indices.bufferView,
                 // accessor.sparse.indices.componentType,
                 //     countOfSparse,
                 //     "SCALAR",
                 //     accessor.sparse.indices.byteOffset);
-                let indexBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.indices.bufferView!);          //获取bufferView对应的buffer
+                const indexBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.indices.bufferView!);          //获取bufferView对应的buffer
                 let indexBufferSparse: Uint16Array | Uint32Array;
                 if (accessor.sparse.indices.componentType == 5123) {
                     indexBufferSparse = new Uint16Array(indexBufferSparse_source.arrayBuffer, indexBufferSparse_source.byteOffset, indexBufferSparse_source.byteLength / 2);
@@ -480,15 +480,15 @@ export class GltfDataAtLoaders extends ModelDataLoader {
                 //     countOfSparse,
                 //     accessor.type,
                 //     accessor.sparse.values.byteOffset);
-                let valueBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.values.bufferView!);          //获取bufferView对应的buffer
-                let valueBufferSparse: Float32Array = new Float32Array(valueBufferSparse_source.arrayBuffer, valueBufferSparse_source.byteOffset, valueBufferSparse_source.byteLength / 4);
+                const valueBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.values.bufferView!);          //获取bufferView对应的buffer
+                const valueBufferSparse: Float32Array = new Float32Array(valueBufferSparse_source.arrayBuffer, valueBufferSparse_source.byteOffset, valueBufferSparse_source.byteLength / 4);
 
-                let fromBuffer = this.getAccessorForByte(accessorID) as Float32Array;
-                let bufferAttribute = new Float32Array(cloneBufferSource(fromBuffer, fromBuffer.byteOffset, fromBuffer.byteLength));
+                const fromBuffer = this.getAccessorForByte(accessorID) as Float32Array;
+                const bufferAttribute = new Float32Array(cloneBufferSource(fromBuffer, fromBuffer.byteOffset, fromBuffer.byteLength));
 
                 // 写入sparse数据到bufferAttribute
                 for (let i_sparse = 0; i_sparse < countOfSparse; i_sparse++) {
-                    let index = indexBufferSparse[i_sparse];
+                    const index = indexBufferSparse[i_sparse];
                     BaseFunction.writeArayBufferViewForSparse(bufferAttribute,
                         accessor.type,
                         accessor.componentType,
@@ -497,7 +497,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
                         i_sparse);
                 }
                 // 构建对应的GPUBuffer
-                let byteOffset = 0;//sparse数据对应的Arraybuffer是新建的，从0开始
+                const byteOffset = 0;//sparse数据对应的Arraybuffer是新建的，从0开始
                 gpuBuffer = this.createGPUBuffer(accessorID, bufferAttribute);
             }
             // 构建对应的GPUBufferBundle
@@ -527,7 +527,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
      * @returns 
      */
     async generateAccessorForArray(accessorID: number, useFor: E_accessorUseFor): Promise<number[]> {
-        let accessor = this.gltf.getAccessor(accessorID);
+        const accessor = this.gltf.getAccessor(accessorID);
         // let gpuBuffer = this.getGPUBuffer(accessorID);
         let accessorBufferSource: number[] = [];
         if (useFor == E_accessorUseFor.indexTriangleList || useFor == E_accessorUseFor.indexTriangleStrip
@@ -537,24 +537,24 @@ export class GltfDataAtLoaders extends ModelDataLoader {
             accessorBufferSource = this.getAccessorForArray(accessorID);
 
         } else if (useFor == E_accessorUseFor.indexLineLoop) {
-            let countsOfList = accessor.count * 2;
-            let arrayIndexLineLoop = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
-            let newIndexBuffer = BaseFunction.convertLineIndexLoopToList(arrayIndexLineLoop, accessor.count);
+            const countsOfList = accessor.count * 2;
+            const arrayIndexLineLoop = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
+            const newIndexBuffer = BaseFunction.convertLineIndexLoopToList(arrayIndexLineLoop, accessor.count);
             accessorBufferSource = [...newIndexBuffer];
         }
         else if (useFor == E_accessorUseFor.indexTriangleFan) {
-            let countsOfList = (accessor.count - 2) * 3;
-            let arrayIndexTriangleFan = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
-            let newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(arrayIndexTriangleFan, accessor.count);
+            const countsOfList = (accessor.count - 2) * 3;
+            const arrayIndexTriangleFan = this.gltf.getTypedArrayForAccessor(accessorID) as Uint32Array;
+            const newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(arrayIndexTriangleFan, accessor.count);
             accessorBufferSource = [...newIndexBuffer];
         }
         else if (useFor == E_accessorUseFor.vertex && accessor.sparse === undefined) {
             accessorBufferSource = this.getAccessorForArray(accessorID);
         }
         else if (useFor == E_accessorUseFor.vertex && accessor.sparse !== undefined) {
-            let countOfSparse = accessor.sparse.count;
+            const countOfSparse = accessor.sparse.count;
 
-            let indexBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.indices.bufferView!);          //获取bufferView对应的buffer
+            const indexBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.indices.bufferView!);          //获取bufferView对应的buffer
             let indexBufferSparse: Uint16Array | Uint32Array;
             if (accessor.sparse.indices.componentType == 5123) {
                 indexBufferSparse = new Uint16Array(indexBufferSparse_source.arrayBuffer, indexBufferSparse_source.byteOffset, indexBufferSparse_source.byteLength / 2);
@@ -563,15 +563,15 @@ export class GltfDataAtLoaders extends ModelDataLoader {
                 indexBufferSparse = new Uint32Array(indexBufferSparse_source.arrayBuffer, indexBufferSparse_source.byteOffset, indexBufferSparse_source.byteLength / 4);
             }
 
-            let valueBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.values.bufferView!);          //获取bufferView对应的buffer
-            let valueBufferSparse: Float32Array = new Float32Array(valueBufferSparse_source.arrayBuffer, valueBufferSparse_source.byteOffset, valueBufferSparse_source.byteLength / 4);
+            const valueBufferSparse_source = this.getBufferByBufferViewID(accessor.sparse.values.bufferView!);          //获取bufferView对应的buffer
+            const valueBufferSparse: Float32Array = new Float32Array(valueBufferSparse_source.arrayBuffer, valueBufferSparse_source.byteOffset, valueBufferSparse_source.byteLength / 4);
 
-            let fromBuffer = this.getAccessorForByte(accessorID) as Float32Array;
-            let bufferAttribute = new Float32Array(cloneBufferSource(fromBuffer, fromBuffer.byteOffset, fromBuffer.byteLength));
+            const fromBuffer = this.getAccessorForByte(accessorID) as Float32Array;
+            const bufferAttribute = new Float32Array(cloneBufferSource(fromBuffer, fromBuffer.byteOffset, fromBuffer.byteLength));
 
             // 写入sparse数据到bufferAttribute
             for (let i_sparse = 0; i_sparse < countOfSparse; i_sparse++) {
-                let index = indexBufferSparse[i_sparse];
+                const index = indexBufferSparse[i_sparse];
                 BaseFunction.writeArayBufferViewForSparse(bufferAttribute,
                     accessor.type,
                     accessor.componentType,
@@ -600,7 +600,7 @@ export class GltfDataAtLoaders extends ModelDataLoader {
         else {
             accessor = accessorID as any;
         }
-        let type = accessor.type;
+        const type = accessor.type;
         let format: GPUVertexFormat;
         let wgslFormat: string;
         let byteSize: number;

@@ -44,16 +44,16 @@ export class LatheGeometry extends BaseGeometry {
 
     /** copy code from threejs */
     init(input: IV_LatheGeometryGemetry) {
-        let points = input.points;
-        let segments = input.segments;
-        let phiStart = input.phiStart;
-        let phiLength = input.phiLength;
+        const points = input.points;
+        const segments = input.segments;
+        const phiStart = input.phiStart;
+        const phiLength = input.phiLength;
         // buffers
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
-        let initNormals = [];
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
+        const initNormals = [];
         // helper variables
 
         const inverseSegments = 1.0 / input.segments;

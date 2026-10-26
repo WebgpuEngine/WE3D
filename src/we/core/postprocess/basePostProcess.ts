@@ -58,7 +58,7 @@ export abstract class BasePostProcess implements I_UUID {
     abstract updateSelf(clock: Clock): void;
     destroy(): void {
         this._destroy();
-        for (let perCommand of this.commands) {
+        for (const perCommand of this.commands) {
             if (perCommand instanceof SimpleDrawCommand || perCommand instanceof DrawCommand || perCommand instanceof ComputeCommand) {
                 perCommand.destroy();
             }
@@ -82,8 +82,8 @@ export abstract class BasePostProcess implements I_UUID {
         this.copy(this.scene.finalTarget.color!, this.scene.finalTarget.colorPostProcess!);
     }
     copy(source: GPUTexture, target: GPUTexture) {
-        let size = this.scene.surface.size;
-        let copyToColorTexture = new CopyCommandT2T(
+        const size = this.scene.surface.size;
+        const copyToColorTexture = new CopyCommandT2T(
             {
                 A: source,
                 B: target,
@@ -94,7 +94,7 @@ export abstract class BasePostProcess implements I_UUID {
         this.commands.push(copyToColorTexture);
     }
     async onResize(): Promise<void> {
-        for (let perCommand of this.commands) {
+        for (const perCommand of this.commands) {
             if (perCommand instanceof SimpleDrawCommand || perCommand instanceof DrawCommand || perCommand instanceof ComputeCommand) {
                 perCommand.destroy();
             }

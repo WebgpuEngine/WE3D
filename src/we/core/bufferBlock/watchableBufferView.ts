@@ -67,11 +67,11 @@ export class WatchableBufferView {
     // 批量写入
     setArray(array: number[] | ArrayBuffer, offset: number = 0, byteLength?: number) {
         if (Array.isArray(array)) {
-            let data = new Uint8Array(array);
+            const data = new Uint8Array(array);
             this.#view.set(data);
         }
         else if (array instanceof ArrayBuffer) {
-            let view = this.generateView(array, this.viewType, offset, byteLength);
+            const view = this.generateView(array, this.viewType, offset, byteLength);
             this.#view.set(view);
         }
         else {

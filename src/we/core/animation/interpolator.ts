@@ -203,7 +203,7 @@ export class Interpolator {
                     this.linear(this.timer.currentKeyFrameIndex, this.timer.currentKeyFrameIndex + 1, this.timer.time, stride);
                 }
                 else if (this.sampler.interpolation == E_InterpolationModes.cubicSpline) {
-                    let deltaTime = this.sampler.frames[this.timer.currentKeyFrameIndex + 1] - this.sampler.frames[this.timer.currentKeyFrameIndex];
+                    const deltaTime = this.sampler.frames[this.timer.currentKeyFrameIndex + 1] - this.sampler.frames[this.timer.currentKeyFrameIndex];
                     this.cubicSpline(this.timer.currentKeyFrameIndex, this.timer.currentKeyFrameIndex + 1, deltaTime, this.timer.time, stride);
                 }
                 else {
@@ -216,13 +216,13 @@ export class Interpolator {
                     this.step(this.timer.currentKeyFrameIndex, stride);
                 }
                 else if (this.sampler.interpolation == E_InterpolationModes.linear) {
-                    let q1: weVec4 = [
+                    const q1: weVec4 = [
                         this.sampler.values[this.timer.currentKeyFrameIndex * stride],
                         this.sampler.values[this.timer.currentKeyFrameIndex * stride + 1],
                         this.sampler.values[this.timer.currentKeyFrameIndex * stride + 2],
                         this.sampler.values[this.timer.currentKeyFrameIndex * stride + 3]
                     ];
-                    let q2: weVec4 = [
+                    const q2: weVec4 = [
                         this.sampler.values[(this.timer.currentKeyFrameIndex + 1) * stride + 0],
                         this.sampler.values[(this.timer.currentKeyFrameIndex + 1) * stride + 1],
                         this.sampler.values[(this.timer.currentKeyFrameIndex + 1) * stride + 2],
@@ -231,8 +231,8 @@ export class Interpolator {
                     this.output = this.slerpQuat(q1, q2, this.timer.time);
                 }
                 else if (this.sampler.interpolation == E_InterpolationModes.cubicSpline) {
-                    let deltaTime = this.sampler.frames[this.timer.currentKeyFrameIndex + 1] - this.sampler.frames[this.timer.currentKeyFrameIndex];
-                    let quaternionArray: number[] = this.cubicSpline(this.timer.currentKeyFrameIndex, this.timer.currentKeyFrameIndex + 1, deltaTime, this.timer.time, stride);
+                    const deltaTime = this.sampler.frames[this.timer.currentKeyFrameIndex + 1] - this.sampler.frames[this.timer.currentKeyFrameIndex];
+                    const quaternionArray: number[] = this.cubicSpline(this.timer.currentKeyFrameIndex, this.timer.currentKeyFrameIndex + 1, deltaTime, this.timer.time, stride);
                     let quatResult = quat.create(...quaternionArray);
                     quatResult = quat.normalize(quatResult);
                     this.output = [quatResult[0], quatResult[1], quatResult[2], quatResult[3]];
@@ -293,7 +293,7 @@ export class Interpolator {
                 break;
             default:
                 if (this.sampler.targetStride) {
-                    let weight: number[] = [];
+                    const weight: number[] = [];
                     for (let i = 0; i < this.sampler.targetStride; i++) {
                         weight[i] = this.sampler.values[keyFrameTime + i] as number;
                     }
@@ -369,10 +369,10 @@ export class Interpolator {
         // console.log(clock.now, this.timer.currentKeyFrameIndex, this.timer.totalTime, this.timer.timeCurrent)
         // console.log("position", this.parent.parent.Position[0], ",", this.timer.totalTime, this.timer.timeCurrent);
         if (this.timer.currentKeyFrameIndex >= 81) {
-            let abc = 1;
+            const abc = 1;
         }
         if (this.timer.currentKeyFrameIndex == -1) {
-            let abc = 1;
+            const abc = 1;
         }
 
     }
@@ -403,7 +403,7 @@ export class Interpolator {
      */
     step(prevKey: number, stride: number): number[] {
         this.output = [];
-        let source = this.sampler.values;
+        const source = this.sampler.values;
         for (let i = 0; i < stride; ++i) {
             this.output[i] = source[prevKey * stride + i];
         }
@@ -419,11 +419,11 @@ export class Interpolator {
      */
     linear(prevKey: number, nextKey: number, t: number, stride: number): number[] {
         this.output = [];
-        let source = this.sampler.values;
+        const source = this.sampler.values;
         // 处理最后一个关键帧，直接返回最后一个关键帧数据
         // console.log("linear", prevKey, nextKey, t, stride);
         if (prevKey == -1 || prevKey == this.sampler.frames.length - 1) {
-            let endKey = this.sampler.frames.length - 1;
+            const endKey = this.sampler.frames.length - 1;
             // }
             // if (prevKey == this.sampler.frames.length ) {
             for (let i = 0; i < stride; ++i) {
@@ -450,7 +450,7 @@ export class Interpolator {
         qn1 = quat.normalize(qn1);
         qn2 = quat.normalize(qn2);
 
-        let quatResult = quat.slerp(qn1, qn2, t);
+        const quatResult = quat.slerp(qn1, qn2, t);
         quat.normalize(quatResult, quatResult);
 
         return [quatResult[0], quatResult[1], quatResult[2], quatResult[3]];
@@ -468,7 +468,7 @@ export class Interpolator {
     cubicSpline(prevKey: number, nextKey: number, keyDelta: number, t: number, stride: number): number[] {
         this.output = [];
         if (prevKey == -1 || prevKey == this.sampler.frames.length - 1) {
-            let newPrevKey = this.sampler.frames.length - 1;
+            const newPrevKey = this.sampler.frames.length - 1;
             for (let i = newPrevKey * stride * 3 + stride; i < newPrevKey * stride * 3 + stride * 2; i++) {
                 this.output.push(this.sampler.values[i]);
             }
@@ -482,7 +482,7 @@ export class Interpolator {
             }
         }
 
-        let output = this.sampler.values;
+        const output = this.sampler.values;
         // stride: Count of components (4 in a quaternion).
         // Scale by 3, because each output entry consist of two tangents and one data-point.
         const prevIndex = prevKey * stride * 3;
@@ -511,7 +511,7 @@ export class Interpolator {
                 (tCub - tSq) * a;
             if (Number.isNaN(result[0])) {
                 // console.log(`cubicSpline, prevKey:${prevKey}, nextKey:${nextKey}, keyDelta:${keyDelta}, t:${t}, stride:${stride}, result:${result}`);
-                let abc = 1;
+                const abc = 1;
             }
         }
         this.output = result;

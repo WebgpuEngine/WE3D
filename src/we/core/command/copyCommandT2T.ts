@@ -81,8 +81,8 @@ export class CopyCommandT2T extends CopyCommand {
         // return commandBuffer;
     }
     async submit() {
-        let commandBuffer = await this.update();
-        let device = this.device;
+        const commandBuffer = await this.update();
+        const device = this.device;
         if (commandBuffer == undefined) return;
         device.queue.submit([commandBuffer]);
     }

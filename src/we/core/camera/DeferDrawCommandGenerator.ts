@@ -27,8 +27,8 @@ export class DeferDrawCommandGenerator {
         this.device = input.scene.device;
     }
     clear() {
-        for (let key in this.dcArray) {
-            for (let perCommand of this.dcArray[key]) {
+        for (const key in this.dcArray) {
+            for (const perCommand of this.dcArray[key]) {
                 perCommand.destroy();
             }
         }
@@ -59,14 +59,14 @@ export class DeferDrawCommandGenerator {
         // this.dcArray[UUID].push(copyCommand);
 
         let pipeline: GPURenderPipeline;
-        let uniforms: GPUBindGroup[] = [];
+        const uniforms: GPUBindGroup[] = [];
         {
-            let cameraPositionAndinvertVPmatrixGPUBuffer = this.parent.cameraPositionAndinvertVP.getGPUBuffer(UUID);
+            const cameraPositionAndinvertVPmatrixGPUBuffer = this.parent.cameraPositionAndinvertVP.getGPUBuffer(UUID);
             if (cameraPositionAndinvertVPmatrixGPUBuffer == undefined) {
                 throw new Error("cameraPositionAndinvertVP GPUBuffer is undefined");
             }
-            let uniform0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(UUID, E_renderForDC.camera);
-            let uniform1_entry: GPUBindGroupEntry[] =
+            const uniform0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(UUID, E_renderForDC.camera);
+            const uniform1_entry: GPUBindGroupEntry[] =
                 [
                     {
                         binding: 0,
@@ -108,7 +108,7 @@ export class DeferDrawCommandGenerator {
                         resource: cameraPositionAndinvertVPmatrixGPUBuffer,
                     },
                 ];//参见deferRender.fs.wgsl
-            let uniform1_entryLayout: GPUBindGroupLayoutEntry[] =
+            const uniform1_entryLayout: GPUBindGroupLayoutEntry[] =
                 [
                     {
                         binding: 0,
@@ -183,23 +183,23 @@ export class DeferDrawCommandGenerator {
                     },
                 ];//参见deferRender.fs.wgsl
 
-            let uniform1_bindGroupLayout = this.device.createBindGroupLayout({
+            const uniform1_bindGroupLayout = this.device.createBindGroupLayout({
                 label: "DeferRender BindGroupLayout 1:" + UUID,
                 entries: uniform1_entryLayout,
             })
 
-            let bindGroup1 = this.device.createBindGroup({
+            const bindGroup1 = this.device.createBindGroup({
                 label: "DeferRender BindGroup 1:" + UUID,
                 layout: uniform1_bindGroupLayout,
                 entries: uniform1_entry
             });
 
-            let pipelineLayout = this.device.createPipelineLayout({
+            const pipelineLayout = this.device.createPipelineLayout({
                 label: "DeferRender PipelineLayout :" + UUID,
                 bindGroupLayouts: [uniform0.bindGroupLayout, uniform1_bindGroupLayout],
             });
 
-            let descriptor: GPURenderPipelineDescriptor = {
+            const descriptor: GPURenderPipelineDescriptor = {
                 label: "DeferRender",
                 layout: pipelineLayout,
                 vertex: {
@@ -228,10 +228,10 @@ export class DeferDrawCommandGenerator {
         //             storeOp: 'store',
         //         }]
         // };
-        let renderPassDescriptor = () => {
+        const renderPassDescriptor = () => {
             return this.parent.getRpdForFinalTarget(UUID)
         };
-        let valuesDC: IV_BaseDrawCommand = {
+        const valuesDC: IV_BaseDrawCommand = {
             device: this.device,
             drawInfo: {
                 pipeline: pipeline,
@@ -245,8 +245,8 @@ export class DeferDrawCommandGenerator {
         }
         this.dcArray[UUID].push(new BaseDrawCommand(valuesDC));
         if (UUID === this.parent.defaultCamera.UUID) {
-            let size = this.scene.surface.size;
-            let copyToColorTexture = new CopyCommandT2T(
+            const size = this.scene.surface.size;
+            const copyToColorTexture = new CopyCommandT2T(
                 {
                     A: this.parent.GBufferManager.GBuffer[UUID].finalRender.color,
                     B: this.parent.getGBufferTextureByUUID(UUID, E_GBufferNames.color),
@@ -265,7 +265,7 @@ export class DeferDrawCommandGenerator {
             // let template: I_ShaderTemplate = SHT_DeferRender;
             // let bundle = this.getCodeOfSHT(template);
             // let shaderCode = this.outPutShaderCode(bundle.shaderTemplateFinal);
-            let shaderCode = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName.defer);
+            const shaderCode = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName.defer);
             this.shaderModule = this.device.createShaderModule({
                 label: "DeferRender",
                 code: shaderCode,

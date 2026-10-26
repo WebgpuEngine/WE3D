@@ -95,15 +95,15 @@ export abstract class BaseMaterial extends RootGPU {
     /** 创建uniformcommonPointer */
     createUniformCommonPointer() {
         if (this.uniformPointerCommon == undefined) {
-            let pointerParams: I_pointerCreateParams = {
+            const pointerParams: I_pointerCreateParams = {
                 name: `uniform ${this.kind} material: ${this.UUID}`,
                 byteSize: this.getPointerByteSize(this.uniformPointerCommonSize),
                 type: E_BOLBufferType.uniform,
                 viewType: "f32",//由于data是ArrayBuffer,按照u8处理
             };
             this.uniformPointerCommon = this.scene.pointers.createPointer(pointerParams);
-            let offset = this.uniformPointerCommon.offset;
-            let uniformPointerCommonCPUBuffer = this.uniformPointerCommon.cpuBuffer;
+            const offset = this.uniformPointerCommon.offset;
+            const uniformPointerCommonCPUBuffer = this.uniformPointerCommon.cpuBuffer;
             this.uniformPointerCommonView = {
                 transparent: {
                     transparent_mode: new Int32Array(uniformPointerCommonCPUBuffer, offset + 0, 1),
@@ -313,7 +313,7 @@ export abstract class BaseMaterial extends RootGPU {
     * @returns 
     * */
     getPointerByteSize(size: number): number {
-        let min = Math.ceil(size / 256) || 1;
+        const min = Math.ceil(size / 256) || 1;
         return min * 256;
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -393,11 +393,11 @@ export abstract class BaseMaterial extends RootGPU {
     }
     /** 创建bind group */
     createBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string) {
-        let perGroup: T_uniformEntries[] = this.getEntriesOfBindGroup(materialType, uuid);
+        const perGroup: T_uniformEntries[] = this.getEntriesOfBindGroup(materialType, uuid);
         //BindGroup 的数据入口,主要是buffer的创建需要push,-->1.1.1
-        let bindGroupEntry: GPUBindGroupEntry[] = [];
-        for (let j in perGroup) {//遍历每组group的每个entry
-            let perEntry = perGroup[j];
+        const bindGroupEntry: GPUBindGroupEntry[] = [];
+        for (const j in perGroup) {//遍历每组group的每个entry
+            const perEntry = perGroup[j];
             //20260422,不再有数据类型的entry，已经使用BOL转为GPUBindGroupEntry
             //动态 external texture,不做map
             if (isDynamicTextureEntryForExternal(perEntry)) {
@@ -419,7 +419,7 @@ export abstract class BaseMaterial extends RootGPU {
             }
         }
         //初始化BindGroup描述
-        let bindGroupDesc: GPUBindGroupDescriptor = {
+        const bindGroupDesc: GPUBindGroupDescriptor = {
             label: `${this.kind}:${this.ID} :${materialType}`,
             layout: this.bindGroupLayout[materialType],
             entries: bindGroupEntry,
@@ -433,11 +433,11 @@ export abstract class BaseMaterial extends RootGPU {
             // materialType != E_materialTypeForBindGroup.TTP &&
             // materialType != E_materialTypeForBindGroup.TTPF
         ) {
-            let bindGroup = this.device.createBindGroup(bindGroupDesc);//防止uuid为空时创建，会产生webGPU错误
+            const bindGroup = this.device.createBindGroup(bindGroupDesc);//防止uuid为空时创建，会产生webGPU错误
             this.bindGroup[materialType] = bindGroup;
         }
         else if (uuid != undefined) {
-            let bindGroup = this.device.createBindGroup(bindGroupDesc);//防止uuid为空时创建
+            const bindGroup = this.device.createBindGroup(bindGroupDesc);//防止uuid为空时创建
             if (this.bindGroup[materialType] == undefined) {
                 this.bindGroup[materialType] = { [uuid]: bindGroup };
             }
@@ -460,8 +460,8 @@ export abstract class BaseMaterial extends RootGPU {
      * @returns I_bindGroupAndGroupLayout
      */
     bindGroupOfForward(): GPUBindGroup {
-        let materialType = E_materialTypeForBindGroup.opacityForward;
-        let createBindGroup = this.checkNeedCreateBindGroup(materialType);
+        const materialType = E_materialTypeForBindGroup.opacityForward;
+        const createBindGroup = this.checkNeedCreateBindGroup(materialType);
         //创建或更新bind group
         if (createBindGroup === true) {
             this.createBindGroup(materialType);
@@ -469,7 +469,7 @@ export abstract class BaseMaterial extends RootGPU {
         return this.bindGroup[materialType] as GPUBindGroup;
     }
     bindGroupLayoutOfForward(): GPUBindGroupLayout {
-        let materialType = E_materialTypeForBindGroup.opacityForward;
+        const materialType = E_materialTypeForBindGroup.opacityForward;
         if (this.bindGroupLayout[materialType] != undefined)
             return this.bindGroupLayout[materialType];
 
@@ -481,7 +481,7 @@ export abstract class BaseMaterial extends RootGPU {
     }
     bindGroupOfMSAA(mergeID: string): GPUBindGroup {
         // return this.bindGroupAndLayoutOfForward();
-        let materialType = E_materialTypeForBindGroup.opacityMSAA;
+        const materialType = E_materialTypeForBindGroup.opacityMSAA;
         let createBindGroup = this.checkNeedCreateBindGroup(materialType, mergeID);
         if (this.scene.isResized() && this.scene.cameraManager.getCameraByUUID(mergeID).FixedSize == false) {
             createBindGroup = true;
@@ -493,7 +493,7 @@ export abstract class BaseMaterial extends RootGPU {
         return (this.bindGroup[materialType] as { [uuid: string]: GPUBindGroup })[mergeID];
     }
     bindGroupLayoutOfMSAA(): GPUBindGroupLayout {
-        let materialType = E_materialTypeForBindGroup.opacityMSAA;
+        const materialType = E_materialTypeForBindGroup.opacityMSAA;
         if (this.bindGroupLayout[materialType] != undefined)
             return this.bindGroupLayout[materialType];
 
@@ -596,9 +596,9 @@ export abstract class BaseMaterial extends RootGPU {
      * @returns 
      * */
     composeShaderBundle(aliasName: string, materialType: E_materialTypeForBindGroup = E_materialTypeForBindGroup.opacityForward): I_materialBundleOutput {
-        let groupAndBindingString: string = this.getGroupAndBindingString(materialType);
-        let code: string = groupAndBindingString + this.scene.shaderRegister.getAliasShaderName(aliasName, this.getUserCode(), this.getUserCodeFunction());
-        let output: I_materialBundleOutput = {
+        const groupAndBindingString: string = this.getGroupAndBindingString(materialType);
+        const code: string = groupAndBindingString + this.scene.shaderRegister.getAliasShaderName(aliasName, this.getUserCode(), this.getUserCodeFunction());
+        const output: I_materialBundleOutput = {
             materialType,
             code,
             aliasName,
@@ -631,8 +631,8 @@ export abstract class BaseMaterial extends RootGPU {
      *  2、inforForward:输出其他GBuffer信息
      */
     getOpacity_MSAA(): I_BundleOfMaterialForMSAA {
-        let MSAA: I_materialBundleOutput = this.composeShaderBundle(this.shtOfMaterialType[E_materialTypeForBindGroup.opacityMSAA]!, E_materialTypeForBindGroup.opacityMSAA);
-        let inforForward: I_materialBundleOutput = this.composeShaderBundle(this.shtOfMaterialType[E_materialTypeForBindGroup.opacityMSAAInfo]!, E_materialTypeForBindGroup.opacityMSAAInfo);
+        const MSAA: I_materialBundleOutput = this.composeShaderBundle(this.shtOfMaterialType[E_materialTypeForBindGroup.opacityMSAA]!, E_materialTypeForBindGroup.opacityMSAA);
+        const inforForward: I_materialBundleOutput = this.composeShaderBundle(this.shtOfMaterialType[E_materialTypeForBindGroup.opacityMSAAInfo]!, E_materialTypeForBindGroup.opacityMSAAInfo);
         return { MSAA, inforForward };
     }
     /**
@@ -705,7 +705,7 @@ export abstract class BaseMaterial extends RootGPU {
      * @returns GPUSampler 材质的sampler
      */
     checkSampler(input: IV_BaseMaterial): GPUSampler {
-        let { sampler, bindingType } = getSampler({}, this.scene);
+        const { sampler, bindingType } = getSampler({}, this.scene);
         this.defaultSamplerBindingType = bindingType;
         this.defaultSampler = sampler;
         return sampler;
@@ -812,7 +812,7 @@ export abstract class BaseMaterial extends RootGPU {
             }
             else if (input.transparentMode == "blend" || input.transparentMode == "testAndBlend") {
                 this._transparentMode.alphaOfTransparent = true;
-                let blend: GPUBlendState = {
+                const blend: GPUBlendState = {
                     color: {
                         operation: "add",//操作
                         // srcFactor: "src-alpha",//源
@@ -826,7 +826,7 @@ export abstract class BaseMaterial extends RootGPU {
                         dstFactor: "one-minus-src-alpha",//目标
                     }
                 };
-                let blendParams = {
+                const blendParams = {
                     blend,
                     alphaCutOff: input.alphaTransparent?.alphaCutOff || 0.5,
                 }

@@ -52,8 +52,8 @@ export function WeGenerateID() {
 export function WeGenerateUUID() {
     let UUID: string;
     do {
-        let sub = 7;
-        let len = 36
+        const sub = 7;
+        const len = 36
         // UUID = Math.random().toString(len).substring(sub);
         UUID = Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub);
     } while (weUUIDs.has(UUID));
@@ -70,7 +70,7 @@ export function WeGenerateUUID() {
  */
 export function computeNormalsArrayFromPositionsAndIndices(positions: number[], indices: number[]): number[] {
     // 1. 初始化法线数组为 0
-    let normals: number[] = new Array(positions.length).fill(0);
+    const normals: number[] = new Array(positions.length).fill(0);
     const stride = 3; // 每个顶点 3 个分量（x,y,z）
 
     // 2. 遍历所有三角面，计算面法线并累加到顶点
@@ -211,12 +211,12 @@ export function computeFaceNormalsArrayFromPositionsAndIndices(positions: number
     return normals;
 }
 export function convertPositionsWithIndicesToPositionNonIndex(positions: number[], indices: number[]): number[] {
-    const positionNonIndex = new Array();
-    for (let i of indices) {
+    const positionNonIndex = [];
+    for (const i of indices) {
         positionNonIndex.push(positions[i * 3 + 0]);
         positionNonIndex.push(positions[i * 3 + 1]);
         positionNonIndex.push(positions[i * 3 + 2]);
-       let abc=1;
+       const abc=1;
     }
     return positionNonIndex;
 }
@@ -228,7 +228,7 @@ export function convertPositionsWithIndicesToPositionNonIndex(positions: number[
  */
 export function computeNormalsArrayFromPositionsNoIndex(positions: number[]): number[] {
     // 1. 初始化法线数组为 0
-    let normals: number[] = new Array(positions.length).fill(0);
+    const normals: number[] = new Array(positions.length).fill(0);
     const stride = 3; // 每个顶点 3 个分量（x,y,z）
 
     // 2. 遍历所有三角面，计算面法线并累加到顶点

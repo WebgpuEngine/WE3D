@@ -20,7 +20,7 @@ export abstract class LutUseShadowMap extends HillaireLutBase {
 
     generateBindGroup1() {
         if (this.bindGroupLayout[1] === undefined) {
-            let layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+            const layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
                 label: "renderSkyWithLut_1",
                 entries: [
                     {

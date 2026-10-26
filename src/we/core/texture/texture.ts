@@ -33,7 +33,7 @@ export class Texture extends BaseTexture {
         this.inputValues = input;
     }
     async initTextureAndLayout(input: IV_Texture): Promise<any> {
-        let source = this.inputValues.source;
+        const source = this.inputValues.source;
         //GPUTexture
         if (source instanceof GPUTexture) {
             this.texture = source;
@@ -46,7 +46,7 @@ export class Texture extends BaseTexture {
             }
             else {
                 if (typeof source == "string") {
-                    let urlName = source.split("/");
+                    const urlName = source.split("/");
                     this.Name = urlName[urlName.length - 1];
                     await this.generateTextureByString(source);
                 }
@@ -64,10 +64,10 @@ export class Texture extends BaseTexture {
     }
 
     async generateTextureByString(res: string) {
-        let scope = this;
+        const scope = this;
         // let response = await fetch(res);
         // let imageBitmap = await createImageBitmap(await response.blob());
-        let imageBitmap = await weGetImageByUrl(res);
+        const imageBitmap = await weGetImageByUrl(res);
         await scope.generateTextureByImageSource(imageBitmap);
         // const response =
         // await new Promise((resolve) => {
@@ -97,7 +97,7 @@ export class Texture extends BaseTexture {
             width = source.displayWidth;
             height = source.displayHeight;
         }
-        let scope = this;
+        const scope = this;
 
         let premultipliedAlpha = false;
         if (this.inputValues.premultipliedAlpha != undefined)//有input.premultipliedAlpha

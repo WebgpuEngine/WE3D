@@ -25,7 +25,6 @@ import meshMorphTargetMain_wgsl from "../shaders/entity/morphTarget/morphTarget.
 import meshSkinsMain_wgsl from "../shaders/entity/skins/skins.vs.wgsl?raw"
 
 import quadVS_wgsl from "../shaders/quad/quad.vs.wgsl?raw";
-import include_st_quad_output_wgsl from "../shaders/quad/st_quad_output.wgsl?raw";
 //////////////////////////////////////////////////////////////////////////////////
 //GBuffer
 //struct 定义

@@ -1,5 +1,5 @@
 
-import { IV_BaseDrawCommand, BaseDrawCommand, I_VertexBufferEntry, I_drawCallOption } from "./BaseDrawCommand";
+import { IV_BaseDrawCommand, BaseDrawCommand, I_drawCallOption } from "./BaseDrawCommand";
 
 
 export interface IV_DynBindGroupDrawCommand extends IV_BaseDrawCommand {

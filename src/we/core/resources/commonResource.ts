@@ -18,7 +18,7 @@ export class CommonResource {
      * @param layer  对应RGBA四层
      */
     seLayerOfTTPF(layer: number) {
-        let view = new Uint32Array(this.cpuArrayBufferTTPF);
+        const view = new Uint32Array(this.cpuArrayBufferTTPF);
         view[0] = layer;
         updataOneUniformBuffer(this.device, this.gpuBufferTTPF, this.cpuArrayBufferTTPF)
 

@@ -42,7 +42,6 @@ import { Clock } from "../scene/clock";
 import { Scene } from "../scene/scene";
 import { E_AnimationType, E_PlayState } from "./base";
 import { SkinsManager } from "./skinsManager";
-import { BaseEntity } from "../entity/baseEntity";
 import { IV_Skeleton, Skeleton } from "./skeleton";
 import { NodeObject } from "../organization/nodeObject";
 import { SkinsEntity } from "../entity/animationEntity/skinsEntity";

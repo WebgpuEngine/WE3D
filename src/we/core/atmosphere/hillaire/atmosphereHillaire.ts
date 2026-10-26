@@ -11,8 +11,7 @@ import { HillaireLutTransmittance } from "./lutTransmittance";
 import { HillaireLutMultipleScattering } from "./lutMultipleScattering";
 import { HillaireLutAP } from "./lutAP";
 import { HillaireLutSkyView } from "./lutSkyView";
-import { V_weShadowMapFormat, weVec3 } from "../../base/coreDefine";
-import { DirectionalLight } from "../../light/DirectionalLight";
+import {  weVec3 } from "../../base/coreDefine";
 import { HillaireShadowMap } from "./HillaireShadowMap";
 
 export class AtmosphereHillaire extends Atmosphere {
@@ -193,7 +192,7 @@ export class AtmosphereHillaire extends Atmosphere {
         if (inputAtmosphereParams) {
             const keys = Object.keys(inputAtmosphereParams) as Array<keyof I_HillaireAtmosphereParams>;
             for (const key of keys) {
-                let value = inputAtmosphereParams[key];
+                const value = inputAtmosphereParams[key];
                 if (value != undefined) {
                     (this.atmosphereParams[key] as typeof value) = value;
                 }
@@ -345,7 +344,7 @@ export class AtmosphereHillaire extends Atmosphere {
         //!!!!!!!!!!!!这个是相机的逆投影矩阵，需要替换为实际的逆投影矩阵
         let inverseProjection: Mat4 = mat4.create();
         let projection: Mat4 = mat4.create();
-        let cameraWorldPosition: Vec3 = vec3.create();
+        const cameraWorldPosition: Vec3 = vec3.create();
         let inverseView: Mat4 = mat4.create();
         if (this.scene.defaultCamera) {
             if (this.scene.reversedZ.isReversedZ) {
@@ -425,7 +424,7 @@ export class AtmosphereHillaire extends Atmosphere {
                 if (light.directionalLight.Shadow) this.moonShadowMap = true;
             }
             if (sun != undefined) {
-                let color: weVec3 = [(light.directionalLight.Color as Vec3)[0], (light.directionalLight.Color as Vec3)[1], (light.directionalLight.Color as Vec3)[2]];
+                const color: weVec3 = [(light.directionalLight.Color as Vec3)[0], (light.directionalLight.Color as Vec3)[1], (light.directionalLight.Color as Vec3)[2]];
                 color[0] *= light.directionalLight.Intensity;
                 color[1] *= light.directionalLight.Intensity;
                 color[2] *= light.directionalLight.Intensity;

@@ -93,7 +93,7 @@ export class Mesh extends EntityBundleMaterial {
                 else {
                     let positionTemp;
                     let position: number[] = [];
-                    let attributes = input.attributes.data.vertices;
+                    const attributes = input.attributes.data.vertices;
                     //如果有position属性，就创建线框
                     if (attributes["position"] !== undefined) {
                         positionTemp = attributes["position"];
@@ -113,7 +113,7 @@ export class Mesh extends EntityBundleMaterial {
                     //如果有mergeAttribute属性
                     else if ("mergeAttribute" in positionTemp) {//I_vsAttributeMerge
                         let positionIndex = -1;
-                        for (let mergeNameI in positionTemp.mergeAttribute) {
+                        for (const mergeNameI in positionTemp.mergeAttribute) {
                             if (positionTemp.mergeAttribute[mergeNameI].name == "position") {
                                 positionIndex = parseInt(mergeNameI);
                             }
@@ -172,7 +172,7 @@ export class Mesh extends EntityBundleMaterial {
      */
     invertNormal() {
         if (this.attributes.vertices["normal"]) {
-            let normal = this.attributes.vertices["normal"] as number[];
+            const normal = this.attributes.vertices["normal"] as number[];
             if (normal) {
                 for (let i = 0; i < normal.length; i += 3) {
                     normal[i] = -normal[i];
@@ -188,7 +188,7 @@ export class Mesh extends EntityBundleMaterial {
      */
     generateWireFrameDrawModeArray() {
         if (this._wireframe != undefined) {
-            let drawMode: I_drawModeIndexed = {
+            const drawMode: I_drawModeIndexed = {
                 indexCount: 0,
                 instanceCount: 1,
                 firstIndex: 0,
@@ -199,7 +199,7 @@ export class Mesh extends EntityBundleMaterial {
                 drawMode.indexCount = this._wireframe.indexCount;
                 drawMode.instanceCount = this.instance.numInstances;
             }
-            let instanaceArray = this.fillDrawDataToAarray(this._visibleInstanceIDBundle, drawMode);
+            const instanaceArray = this.fillDrawDataToAarray(this._visibleInstanceIDBundle, drawMode);
             return instanaceArray;
         }
     }
@@ -229,7 +229,7 @@ export class Mesh extends EntityBundleMaterial {
         scope?: Mesh
     ): IV_DC {
         if (scope == undefined) scope = this;
-        let drawMode: I_drawModeIndexed = {
+        const drawMode: I_drawModeIndexed = {
             indexCount: 0,
             instanceCount: 1,
             firstIndex: 0,
@@ -252,7 +252,7 @@ export class Mesh extends EntityBundleMaterial {
                 aliasName: bundle.fs.aliasName,
             };
         }
-        let valueDC: IV_DC = {
+        const valueDC: IV_DC = {
             // label: `wireframe  ${scope.Name} for ${type}: ${UUID}`,
             label: `wireframe ${scope.Name}`,
             data: {
@@ -312,10 +312,10 @@ export class Mesh extends EntityBundleMaterial {
         //wireframe 前向渲染
         if (this._wireframe.enable) {
             // let UUID = camera.UUID;
-            let vsCode = this.scene.shaderRegister.getAliasShaderName(sht);
-            let fs = this._materialWireframe.getOpacity_Forward();
-            let valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs });
-            let dcOfWireFrame = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+            const vsCode = this.scene.shaderRegister.getAliasShaderName(sht);
+            const fs = this._materialWireframe.getOpacity_Forward();
+            const valueDC = this.generateWireFrameInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs });
+            const dcOfWireFrame = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
             this.renderPassArray[E_renderPassName.forward].push(dcOfWireFrame);
         }
     }
@@ -348,19 +348,19 @@ export class Mesh extends EntityBundleMaterial {
         }
         else {//如果有索引，就按索引来创建线框
             for (let i = 0; i < indeices.length; i += 3) {
-                let A = indeices[i];
-                let B = indeices[i + 1];
-                let C = indeices[i + 2];
-                let AB = [A, B].sort().toString();
-                let BC = [B, C].sort().toString();
-                let CA = [C, A].sort().toString();
+                const A = indeices[i];
+                const B = indeices[i + 1];
+                const C = indeices[i + 2];
+                const AB = [A, B].sort().toString();
+                const BC = [B, C].sort().toString();
+                const CA = [C, A].sort().toString();
                 list[AB] = [A, B];
                 list[BC] = [B, C];
                 list[CA] = [C, A];
             }
         }
-        let indeicesWireframe: number[] = [];
-        for (let i in list) {
+        const indeicesWireframe: number[] = [];
+        for (const i in list) {
             indeicesWireframe.push(list[i][0], list[i][1]);
         }
         return indeicesWireframe;

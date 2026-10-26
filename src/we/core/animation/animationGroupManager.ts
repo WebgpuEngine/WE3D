@@ -22,12 +22,12 @@ export class AnimationGroupManager extends ECSManager<AnimationGroup> {
 
 
     update(clock: Clock): void {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             perOne.update(clock);
         }
     }
     getName(name: string): AnimationGroup | undefined {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             if (perOne.Name == name) {
                 return perOne;
             }

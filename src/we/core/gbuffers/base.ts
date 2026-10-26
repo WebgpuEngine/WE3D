@@ -1,5 +1,4 @@
 import { V_weDepthFormat, V_weLinearFormat } from "../base/coreDefine"
-import { T_uniformGroups } from "../command/base"
 
 /**GBuffer的 GPUTexture集合 
  * 每个camera最终的GBuffer存储位置
@@ -255,33 +254,33 @@ export function getColorAttachmentTargetsOfToneMapping(): GPUColorTargetState[] 
     return [{ format: V_ForwardGBufferNames[E_GBufferNames.color].format }];
 }
 export function getColorAttachmentTargetsOfBlend(): GPUColorTargetState[] {
-    let colorAttachmentTargets: GPUColorTargetState[] = [];
-    let perOneBuffer = V_ForwardGBufferNames[E_GBufferNames.color];
+    const colorAttachmentTargets: GPUColorTargetState[] = [];
+    const perOneBuffer = V_ForwardGBufferNames[E_GBufferNames.color];
     colorAttachmentTargets.push({ format: perOneBuffer.format });
     return colorAttachmentTargets;
 }
 export function getColorAttachmentTargetsOfForward(): GPUColorTargetState[] {
-    let colorAttachmentTargets: GPUColorTargetState[] = [];
-    for (let key in V_ForwardGBufferNames) {
-        let perOneBuffer = V_ForwardGBufferNames[key];
+    const colorAttachmentTargets: GPUColorTargetState[] = [];
+    for (const key in V_ForwardGBufferNames) {
+        const perOneBuffer = V_ForwardGBufferNames[key];
         if (key != E_GBufferNames.depth) colorAttachmentTargets.push({ format: perOneBuffer.format });
     }
     return colorAttachmentTargets;
 }
 
 export function getColorAttachmentTargetsOfMSAAinfo(): GPUColorTargetState[] {
-    let colorAttachmentTargets: GPUColorTargetState[] = [];
-    for (let key in V_ForwardGBufferNames) {
-        let perOneBuffer = V_ForwardGBufferNames[key];
+    const colorAttachmentTargets: GPUColorTargetState[] = [];
+    for (const key in V_ForwardGBufferNames) {
+        const perOneBuffer = V_ForwardGBufferNames[key];
         if (key != E_GBufferNames.depth && key != E_GBufferNames.color) colorAttachmentTargets.push({ format: perOneBuffer.format });
     }
     return colorAttachmentTargets;
 }
 
 export function getColorAttachmentTargetsOfMSAA(): GPUColorTargetState[] {
-    let colorAttachmentTargets: GPUColorTargetState[] = [];
-    for (let key in V_MsaaGBufferNames) {
-        let perOneBuffer = V_MsaaGBufferNames[key];
+    const colorAttachmentTargets: GPUColorTargetState[] = [];
+    for (const key in V_MsaaGBufferNames) {
+        const perOneBuffer = V_MsaaGBufferNames[key];
         if (key != E_GBufferNames.depth) colorAttachmentTargets.push({ format: perOneBuffer.format });
     }
     return colorAttachmentTargets;

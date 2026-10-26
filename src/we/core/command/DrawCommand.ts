@@ -108,8 +108,8 @@ export class DrawCommand extends BaseDrawCommand {
 
     override  doDraw(option: I_drawCallOption) {
         // console.log(this.label);
-        let passEncoder = option.passEncoder;
-        for (let i in this.vertexBuffers) {
+        const passEncoder = option.passEncoder;
+        for (const i in this.vertexBuffers) {
             if (isI_pointerStruct(this.vertexBuffers[i])) {
                 const verticesBuffer = this.vertexBuffers[i];
                 passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.gpuBufferView.buffer, verticesBuffer.gpuBufferView.offset, verticesBuffer.gpuBufferView.size);//四个参数： slot, buffer, offset, size
@@ -126,7 +126,7 @@ export class DrawCommand extends BaseDrawCommand {
             // light ,忽略viewport
         }
         else if (option.mergeID !== undefined) {
-            let viewport = this.scene.cameraManager.getCameraByUUID(option.mergeID).viewport;
+            const viewport = this.scene.cameraManager.getCameraByUUID(option.mergeID).viewport;
             if (viewport != undefined) {
                 let minDepth = 0;
                 let maxDepth = 1;
@@ -137,7 +137,7 @@ export class DrawCommand extends BaseDrawCommand {
         }
         // 无值：NDC等
         if (this.traget == undefined) {
-            for (let i in this.bindGroups) {
+            for (const i in this.bindGroups) {
                 passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
             }
         }
@@ -145,7 +145,7 @@ export class DrawCommand extends BaseDrawCommand {
         else if (this.inputValues.baseInfo?.traget
             // && option.mergeID
         ) {
-            for (let i in this.bindGroups) {
+            for (const i in this.bindGroups) {
                 if (i == '0') {
                     let group0;
                     if (option.mergeID !== undefined)  //renderManager 运行时传入的UUID
@@ -167,7 +167,7 @@ export class DrawCommand extends BaseDrawCommand {
                 }
                 else if (i == '2') {
                     if (this.material !== undefined) {
-                        let bindGroup = this.material.owner.getBindGroup(this.material.type, option.mergeID!, option.renderPassName!);
+                        const bindGroup = this.material.owner.getBindGroup(this.material.type, option.mergeID!, option.renderPassName!);
                         if (bindGroup != undefined)
                             passEncoder.setBindGroup(parseInt(i), bindGroup);
                         else
@@ -180,7 +180,7 @@ export class DrawCommand extends BaseDrawCommand {
                 }
                 else if (i == '3' && this.material && this.material.owner instanceof PBRMaterial) {
                     if (this.bindGroups[i] !== undefined && this.scene.IBL !== undefined) {
-                        let iblBindGroup = this.scene.IBL.bindGroup();
+                        const iblBindGroup = this.scene.IBL.bindGroup();
                         passEncoder.setBindGroup(parseInt(i), iblBindGroup);
                     }
                 }

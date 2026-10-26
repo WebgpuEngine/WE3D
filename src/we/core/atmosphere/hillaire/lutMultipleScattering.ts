@@ -1,12 +1,12 @@
 import { IV_ComputeCommand, ComputeCommand } from "../../command/ComputeCommand";
-import { shaderLutMulittrans, shaderLutTrans } from "./baseHillaire";
+import { shaderLutMulittrans } from "./baseHillaire";
 import { HillaireLutBase } from "./lutBase";
 
 export class HillaireLutMultipleScattering extends HillaireLutBase {
 
     generateCommands(){
         //bindgroup  and layout 
-        let layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "lutMulitScatt",
             entries: [
                 {
@@ -66,16 +66,16 @@ export class HillaireLutMultipleScattering extends HillaireLutBase {
         const bindGroup = this.scene.device.createBindGroup(bindGroupDescriptor);
 
         //1、创建GPURenderPipelineDescriptor
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: "lutMulitScattPipelineLayout",
             // label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: [layout],
         }
         //2、创建GPUPipelineLayout
-        let pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //3、创建ComputeCommand
-        let options: IV_ComputeCommand = {
+        const options: IV_ComputeCommand = {
             label: "lutMulitScatt",
             device: this.device,
             computeInfo: {
@@ -91,7 +91,7 @@ export class HillaireLutMultipleScattering extends HillaireLutBase {
                 },
             },
         }
-        let DC = new ComputeCommand(options);
+        const DC = new ComputeCommand(options);
         this.commands.push(DC);
         // DC.submit()
     }

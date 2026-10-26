@@ -17,7 +17,7 @@ function isArrayBufferView(v: any): v is ArrayBufferView {
 }
 
 export function checkGPUBufferSize(size: number): number {
-    let remainder = size % 4;
+    const remainder = size % 4;
     if (remainder != 0) {
         size += remainder;
     }
@@ -47,7 +47,7 @@ export function cloneBufferSource(src: BufferSource | Int8Array | Uint8Array | I
     if (!isArrayBuffer(src) && !isArrayBufferView(src)) {
         throw new Error("src is not ArrayBuffer or ArrayBufferView");
     }
-    let newArrayBuffer = new ArrayBuffer(length);
+    const newArrayBuffer = new ArrayBuffer(length);
     const newView = new Uint8Array(newArrayBuffer);
     if (isArrayBufferView(src)) {
         newView.set(new Uint8Array(src.buffer, src.byteOffset, src.byteLength)); // 将原视图数据复制到新视图（自动同步到新 Buffer）
@@ -66,7 +66,7 @@ export function ensureArrayBufferDivideByFour(src: BufferSource, offset: number,
     if (offset != undefined && length != undefined) {
         realSize = length;// - offset;
     }
-    let size = checkGPUBufferSize(realSize);
+    const size = checkGPUBufferSize(realSize);
 
     if (size == realSize) {
         return { dataArray: src, size: realSize, offset, length };
@@ -80,7 +80,7 @@ export function ensureArrayBufferDivideByFour(src: BufferSource, offset: number,
         return { dataArray: newArrayBuffer, size: size, offset: 0, length: size };
     }
     else {
-        let newArrayBuffer = new ArrayBuffer(size);
+        const newArrayBuffer = new ArrayBuffer(size);
         const newView = new Uint8Array(newArrayBuffer);
         newView.set(new Uint8Array(src, offset, length)); // 将原视图数据复制到新视图（自动同步到新 Buffer）
         return { dataArray: newArrayBuffer, size: size, offset: 0, length: size };
@@ -88,7 +88,7 @@ export function ensureArrayBufferDivideByFour(src: BufferSource, offset: number,
 }
 /** 创建GPUBuffer ,内容为空*/
 export function createEmptyGPUBuffer(device: GPUDevice, usage: GPUBufferUsageFlags, byteSize: number, label: string,) {
-    let size = checkGPUBufferSize(byteSize);
+    const size = checkGPUBufferSize(byteSize);
     return device.createBuffer({
         label: label,
         size: size,
@@ -127,13 +127,13 @@ function createGPUBufferByType(device: GPUDevice, label: string, usage: GPUBuffe
 
 /** 创建uniform Buffer，  usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST*/
 export function createUniformBuffer(device: GPUDevice, label: string, data: BufferSource, offset?: number, length?: number) {
-    let usage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST;
+    const usage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST;
     return createGPUBufferByType(device, label, usage, data, offset ?? 0, length || data.byteLength);
 
 }
 /** 创建uniform Buffer，  usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST*/
 export function createStorageBuffer(device: GPUDevice, label: string, data: BufferSource, offset?: number, length?: number) {
-    let usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC;
+    const usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC;
     return createGPUBufferByType(device, label, usage, data, offset ?? 0, length || data.byteLength);
 }
 /**

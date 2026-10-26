@@ -40,7 +40,7 @@ export class CylinderGeometry extends BaseGeometry {
     index = 0;
 
     constructor(input?: optionCylinderGeometry) {
-        let defaultValues: optionCylinderGeometry = {
+        const defaultValues: optionCylinderGeometry = {
             radiusTop: 1,
             radiusBottom: 1,
             height: 1,
@@ -77,10 +77,10 @@ export class CylinderGeometry extends BaseGeometry {
         const thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
 
         // buffers
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
 
 
         // generate vertices, normals and uvs
@@ -102,11 +102,11 @@ export class CylinderGeometry extends BaseGeometry {
     }
 
     generateTorso(input: optionCylinderGeometry) {
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
-        let materialStep = this.buffer.materialStep;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
+        const materialStep = this.buffer.materialStep;
 
         const normal: xyz = {
             x: 0,
@@ -213,11 +213,11 @@ export class CylinderGeometry extends BaseGeometry {
     }
 
     generateCap(input: optionCylinderGeometry, top: boolean) {
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
-        let materialStep = this.buffer.materialStep;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
+        const materialStep = this.buffer.materialStep;
         // save the index of the first center vertex
         const centerIndexStart = this.index;
 

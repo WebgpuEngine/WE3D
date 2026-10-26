@@ -16,7 +16,7 @@ export abstract class ECSManager<T extends I_UUID> {
     // abstract add(entity: T): void;
     // abstract remove(entity: T): void;
     add(entity: T, scendValue?: any) {
-        let index = this.list.indexOf(entity);
+        const index = this.list.indexOf(entity);
         if (index != -1) {
             return;
         }
@@ -26,13 +26,13 @@ export abstract class ECSManager<T extends I_UUID> {
         }
     }
     remove(entity: T, scendValue?: any) {
-        let index = this.list.indexOf(entity);
+        const index = this.list.indexOf(entity);
         if (index != -1) {
             this.list.splice(index, 1);
         }
     }
     checkDestroy() {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             if (perOne == undefined || perOne == null || perOne._isDestroy) {
                 this.remove(perOne);
             }
@@ -43,7 +43,7 @@ export abstract class ECSManager<T extends I_UUID> {
         return this.list.length;
     }
     getOneByUUID(UUID: string) {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             if (perOne.UUID! == UUID) {
                 return perOne;
             }

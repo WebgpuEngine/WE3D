@@ -151,28 +151,28 @@ export class ResourceManagerOfGPU {
     weTextureOfString: Map<string, Texture> = new Map();
     weMaterialOfString: Map<string, BaseMaterial> = new Map();
     createDefaultTexture() {
-        let textureDefault = new DefaultTexture(this.device);
+        const textureDefault = new DefaultTexture(this.device);
         this.textureOfString.set("default", textureDefault.texture);
         this.weTextureOfString.set("default", textureDefault);
-        let cubeTextureDefault = new DefaultCubeTexture(this.device);
+        const cubeTextureDefault = new DefaultCubeTexture(this.device);
         this.textureOfString.set("defaultCube", cubeTextureDefault.texture);
         this.weTextureOfString.set("defaultCube", cubeTextureDefault);
-        let baseInputPBR: IV_PBRMaterial = {
+        const baseInputPBR: IV_PBRMaterial = {
             textures: {
                 albedo: { value: [1, 1, 1, 1] },
                 metallic: { value: 1 },
                 roughness: { value: 1 },
             }
         }
-        let defaultMaterial = new PBRMaterial(baseInputPBR);//gltf 默认材质
+        const defaultMaterial = new PBRMaterial(baseInputPBR);//gltf 默认材质
         this.weMaterialOfString.set("defaultPBR", defaultMaterial);
-        let oneMatrixStorageBuffer = createEmptyGPUBuffer(this.device, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, 16 * 4, "oneStorageMatrix");
+        const oneMatrixStorageBuffer = createEmptyGPUBuffer(this.device, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, 16 * 4, "oneStorageMatrix");
         this.storageBuffer.set("oneStorageMatrix", oneMatrixStorageBuffer);
     }
     /**string 可以是sampler的名称等，比如通用的 linear,nearest ,也可以是定制的，linear-mipmap*/
     samplerOfString: Map<string | GPUSamplerDescriptor, GPUSampler> = new Map();
     createSampler() {
-        let linear = this.device.createSampler({
+        const linear = this.device.createSampler({
             label: "linear",
             magFilter: "linear",
             minFilter: "linear",
@@ -181,7 +181,7 @@ export class ResourceManagerOfGPU {
             addressModeV: "repeat"
         });
         this.samplerOfString.set("linear", linear);
-        let nearest = this.device.createSampler({
+        const nearest = this.device.createSampler({
             label: "nearest",
             magFilter: "nearest",
             minFilter: "nearest",
@@ -190,7 +190,7 @@ export class ResourceManagerOfGPU {
             addressModeV: "repeat"
         });
         this.samplerOfString.set("nearest", nearest);
-        let cube = this.device.createSampler({
+        const cube = this.device.createSampler({
             label: "cube",
             magFilter: "linear",
             minFilter: "linear",
@@ -363,7 +363,7 @@ export class ResourceManagerOfGPU {
             // else if (_kind == E_resourceKind.samplerOfString) {
             //     this.samplerOfString.delete(key);
             // }
-            let map = this.getProperty(_kind as keyof ResourceManagerOfGPU);
+            const map = this.getProperty(_kind as keyof ResourceManagerOfGPU);
             if (map instanceof Map)
                 map.delete(key);
         }

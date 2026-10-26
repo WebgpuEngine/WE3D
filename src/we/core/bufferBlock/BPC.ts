@@ -73,7 +73,7 @@ export class BlockPointerCoordinator {
         if (scene.configBOL !== undefined) {
             // BOL合并更新间距阈值，需要计算整除情况：4 || 256
             if (scene.configBOL.updateStrideSize !== undefined) {
-                for (let i in scene.configBOL.updateStrideSize) {
+                for (const i in scene.configBOL.updateStrideSize) {
                     let baseStride=4;
                     if (i == E_BOLBufferType.uniform) {
                         baseStride=256;
@@ -89,7 +89,7 @@ export class BlockPointerCoordinator {
             }
             // BOL大小，需要计算整除情况：4 || 256
             if (scene.configBOL.size !== undefined) {
-                for (let i in scene.configBOL.size) {
+                for (const i in scene.configBOL.size) {
                     let baseStride=4;
                     if (i == E_BOLBufferType.uniform) {
                         baseStride=256;
@@ -106,7 +106,7 @@ export class BlockPointerCoordinator {
             }
             // BOL重建百分比
             if (scene.configBOL.rebuildPecent !== undefined) {
-                for (let i in scene.configBOL.rebuildPecent) {
+                for (const i in scene.configBOL.rebuildPecent) {
                     this.BOL_params.rebuildPecent[i as keyof I_BolRebulidPercent] = scene.configBOL.rebuildPecent[i as keyof I_BolRebulidPercent];
                 }
             }
@@ -117,8 +117,8 @@ export class BlockPointerCoordinator {
         this.init();
     }
     init() {
-        for (let i of this.defaultBOL) {
-            let params: IV_BOL = {
+        for (const i of this.defaultBOL) {
+            const params: IV_BOL = {
                 size: this.BOL_params.sizeOfBOL[i as E_BOLBufferType]!,
                 type: i as E_BOLBufferType,
                 id: -1,
@@ -130,13 +130,13 @@ export class BlockPointerCoordinator {
     /** 创建BOL */
     createBOL(params: IV_BOL) {
         if (params.type != E_BOLBufferType.static) {
-            let key = params.type as keyof I_BolStrideSizeOfUpdate;
-            let updateStrideSize = this.BOL_params.updateStrideSize[key];
+            const key = params.type as keyof I_BolStrideSizeOfUpdate;
+            const updateStrideSize = this.BOL_params.updateStrideSize[key];
             if (updateStrideSize != undefined) {
                 params.updateStrideSize = updateStrideSize;
             }
 
-            let rebuildPecent = this.BOL_params.rebuildPecent[key];
+            const rebuildPecent = this.BOL_params.rebuildPecent[key];
             if (rebuildPecent != undefined) {
                 params.rebuildPecent = rebuildPecent;
             }
@@ -148,7 +148,7 @@ export class BlockPointerCoordinator {
             console.warn(`BOL ${params.id} 已存在`);
             params.id = this.createBolID();
         }
-        let bol = new BlockOffsetLength(params, this);
+        const bol = new BlockOffsetLength(params, this);
         this.BOLs.all.set(params.id, bol);
         this.BOLs[params.type].set(params.id, bol);
         this.MBM.add(bol);
@@ -170,16 +170,16 @@ export class BlockPointerCoordinator {
      * 4、静态VS不会被添加到MBM中
      */
     createStaticBolWithData(param: IV_BOL) {
-        let id = this.createBolID();
-        let bol = new BlockOffsetLength(param, this);
+        const id = this.createBolID();
+        const bol = new BlockOffsetLength(param, this);
         this.BOLs.all.set(id, bol);
         this.BOLs[E_BOLBufferType.static].set(id, bol);
         return id;
     }
     /** 分配指针到BOL，并分配内存空间，返回指针信息InBOL */
     allocatePointerBOL(pointerID: number, pointerParams: I_pointerCreateParams): I_pointerInfoInBOL {
-        let bol = this.getBOLsByType(pointerParams.type, pointerParams.byteSize);
-        let pointerInfo = bol.allocatePointer(pointerID, pointerParams.byteSize);
+        const bol = this.getBOLsByType(pointerParams.type, pointerParams.byteSize);
+        const pointerInfo = bol.allocatePointer(pointerID, pointerParams.byteSize);
 
         return pointerInfo;
     }
@@ -193,9 +193,9 @@ export class BlockPointerCoordinator {
             throw new Error("staticVertex BOL 不能申请分配，只能通过createStaticVertexBolWithData创建，且必须有初始化数据，且不可更改");
         }
         else {
-            let sizeOfFourL = byteSize + (4 - byteSize % 4);//BOL大小必须是4的倍数
+            const sizeOfFourL = byteSize + (4 - byteSize % 4);//BOL大小必须是4的倍数
             //匹配lastFree最大的BOL
-            for (let [id, bol] of this.BOLs[type]) {
+            for (const [id, bol] of this.BOLs[type]) {
                 //rebuilding状态原则上不会和分配状态冲突，因为在不同的执行阶段。
                 if (bol.state == E_BOLState.released || bol.state == E_BOLState.close || bol.state == E_BOLState.rebuilding) {
                     continue;
@@ -206,7 +206,7 @@ export class BlockPointerCoordinator {
                 }
             }
             //不满足，创建一个新的BOL
-            let params: IV_BOL = {
+            const params: IV_BOL = {
                 size: this.BOL_params.sizeOfBOL[type]! > sizeOfFourL ? this.BOL_params.sizeOfBOL[type]! : sizeOfFourL,//BOL大小不能小于需要分配的内存大小
                 type: type,
                 id: this.createBolID(),
@@ -220,7 +220,7 @@ export class BlockPointerCoordinator {
 
     /** 释放指针 */
     releasePointer(pointerID: number, BolID: number) {
-        let bol = this.BOLs.all.get(BolID);
+        const bol = this.BOLs.all.get(BolID);
         if (bol) {
             bol.releasePointer(pointerID);
         }
@@ -231,15 +231,15 @@ export class BlockPointerCoordinator {
             console.warn("id必须是number类型");
             return false;
         }
-        let bol = this.BOLs.all.get(id);
+        const bol = this.BOLs.all.get(id);
         if (bol) {
-            let pointerCount = bol.pointerIdList.size;
+            const pointerCount = bol.pointerIdList.size;
             if (pointerCount > 0) {
                 console.warn(`BOL ${id} 有 ${pointerCount} 个指针，不能删除`);
                 //有指针，不能删除
                 return false;
             }
-            let isDestroy = bol.destroy();
+            const isDestroy = bol.destroy();
             if (isDestroy) {
                 this.BOLs.all.delete(id);
                 this.BOLs[E_BOLBufferType.static].delete(id);
@@ -278,7 +278,7 @@ export class BlockPointerCoordinator {
          *      C、按需 调用rebuild()
      */
     update(clock: Clock) {
-        for (let [id, bol] of this.BOLs.all) {
+        for (const [id, bol] of this.BOLs.all) {
             if (bol.checkRebuild()) {
                 bol.rebuild();
             }

@@ -55,7 +55,7 @@ export interface IV_PhongMaterial extends IV_BaseStandardMaterial {
  * @returns PBR材质
 */
 export async function WePhongMaterial(param: IV_PhongMaterial, scene: Scene) {
-  let material = new PhongMaterial(param);
+  const material = new PhongMaterial(param);
   await material.init(scene);
   return material;
 }
@@ -93,15 +93,15 @@ export class PhongMaterial extends BaseStandardMaterial {
   /** 创建uniformPointer */
   createUniformPointer() {
     if (this.uniformPointer == undefined) {
-      let pointerParams: I_pointerCreateParams = {
+      const pointerParams: I_pointerCreateParams = {
         name: `uniform ${this.kind} material: ${this.UUID}`,
         byteSize: this.getPointerByteSize(this.uniformGPUBufferSize),
         type: E_BOLBufferType.uniform,
         viewType: "f32",//由于data是ArrayBuffer,按照u8处理
       };
       this.uniformPointer = this.scene.pointers.createPointer(pointerParams);
-      let offset = this.uniformPointer.offset;
-      let unifromCPUBuffer = this.uniformPointer.cpuBuffer;
+      const offset = this.uniformPointer.offset;
+      const unifromCPUBuffer = this.uniformPointer.cpuBuffer;
       this.unifromCPUBufferViews = {
         shininess: new Float32Array(unifromCPUBuffer, offset, 1),
         metalness: new Float32Array(unifromCPUBuffer, offset + 4, 1),
@@ -229,8 +229,8 @@ export class PhongMaterial extends BaseStandardMaterial {
     this.textures[E_TextureType.normal] = this.defaultTexture2D;
     this.textures[E_TextureType.parallax] = this.defaultTexture2D;
     this.textures[E_TextureType.specular] = this.defaultTexture2D;
-    for (let key in this.inputValues.textures) {
-      let texture = this.inputValues.textures[key as E_TextureType.color || key as E_TextureType.normal || key as E_TextureType.parallax || key as E_TextureType.specular];
+    for (const key in this.inputValues.textures) {
+      const texture = this.inputValues.textures[key as E_TextureType.color || key as E_TextureType.normal || key as E_TextureType.parallax || key as E_TextureType.specular];
       if (texture && texture instanceof Texture) {
         this.textures[key] = texture;
       }
@@ -238,7 +238,7 @@ export class PhongMaterial extends BaseStandardMaterial {
         if (key != E_TextureType.color) {
           texture.format = "rgba8unorm";
         }
-        let textureInstace = new Texture(texture, this.device, this.scene);
+        const textureInstace = new Texture(texture, this.device, this.scene);
         await textureInstace.init(this.scene);
         this.textures[key] = textureInstace;
       }
@@ -250,7 +250,7 @@ export class PhongMaterial extends BaseStandardMaterial {
   }
   getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
     let binding: number = 0;
-    let layoutEntries: GPUBindGroupLayoutEntry[] = [
+    const layoutEntries: GPUBindGroupLayoutEntry[] = [
       {
         binding: binding++,
         visibility: GPUShaderStage.FRAGMENT,
@@ -273,8 +273,8 @@ export class PhongMaterial extends BaseStandardMaterial {
         },
       },
     ];
-    for (let i in this.textures) {
-      let uniformTextureLayout: GPUBindGroupLayoutEntry = {
+    for (const i in this.textures) {
+      const uniformTextureLayout: GPUBindGroupLayoutEntry = {
         binding: binding++,
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
         texture: this.textures[i].defaultTextureLayout(),
@@ -282,7 +282,7 @@ export class PhongMaterial extends BaseStandardMaterial {
       layoutEntries.push(uniformTextureLayout);
     }
     if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-      let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+      const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
       layoutEntries.push(...layoutMSAA.layout);
       binding = layoutMSAA.binding;
     }
@@ -290,7 +290,7 @@ export class PhongMaterial extends BaseStandardMaterial {
   }
   getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
     let binding: number = 0;
-    let uniformEntries: T_uniformEntries[] = [
+    const uniformEntries: T_uniformEntries[] = [
       {
         binding: binding++,
         resource: this.uniformPointerCommon.gpuBufferView,
@@ -304,8 +304,8 @@ export class PhongMaterial extends BaseStandardMaterial {
         resource: this.defaultSampler,
       },
     ];
-    for (let i in this.textures) {
-      let uniformTexture: GPUBindGroupEntry = {
+    for (const i in this.textures) {
+      const uniformTexture: GPUBindGroupEntry = {
         binding: binding++,
         resource: this.textures[i].texture.createView(),
       };
@@ -313,7 +313,7 @@ export class PhongMaterial extends BaseStandardMaterial {
     }
     if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
       if (uuid) {
-        let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+        const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
         uniformEntries.push(...groupMSAA.group);
         binding = groupMSAA.binding;
       }
@@ -329,11 +329,11 @@ export class PhongMaterial extends BaseStandardMaterial {
               @group(${this.bindGroupNumber}) @binding(${binding++}) var<uniform> u_bulinphong : st_bulin_phong;
               @group(${this.bindGroupNumber}) @binding(${binding++}) var u_Sampler : sampler;
               `;
-    for (let i in this.textures) {
+    for (const i in this.textures) {
       groupAndBindingString += `@group(${this.bindGroupNumber})  @binding(${binding++}) var u_${i}Texture: texture_2d<f32>;\n`;//u_${i}是texture的名字，指定的三种情况，texture，specularTexture，normalTexture
     }
     if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-      let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+      const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
       groupAndBindingString += codeAddOfMSAA.code;
       binding = codeAddOfMSAA.binding;
     }

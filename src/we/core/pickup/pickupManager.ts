@@ -33,7 +33,7 @@ export class pickupManager extends ECSManager<Pickup> {
             pickup = pickupIV;
         }
         else {
-            let initValue: IV_PickupInitValue = {
+            const initValue: IV_PickupInitValue = {
                 scene: this.scene,
                 manager: this.inputManager,
                 pickup: pickupIV,
@@ -45,13 +45,13 @@ export class pickupManager extends ECSManager<Pickup> {
         return pickup;
     }
     async onResize() {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             perOne.onResize();
         }
     }
     async update(clock: Clock): Promise<void> {
         this.checkDestroy();
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             await perOne.update();
         }
     }

@@ -79,7 +79,7 @@ export interface IV_PBRMaterial extends IV_BaseMaterial {
  * @returns PBR材质
 */
 export async function WePbrMaterial(param: IV_PBRMaterial, scene: Scene) {
-    let material = new PBRMaterial(param);
+    const material = new PBRMaterial(param);
     await material.init(scene);
     return material;
 }
@@ -246,15 +246,15 @@ export class PBRMaterial extends BaseMaterial {
     /** 创建uniformPointer */
     createUniformPointer() {
         if (this.uniformPointer == undefined) {
-            let pointerParams: I_pointerCreateParams = {
+            const pointerParams: I_pointerCreateParams = {
                 name: `uniform ${this.kind} material: ${this.UUID}`,
                 byteSize: this.getPointerByteSize(this.uniformGPUBufferSize),
                 type: E_BOLBufferType.uniform,
                 viewType: "f32",//由于data是ArrayBuffer,按照u8处理
             };
             this.uniformPointer = this.scene.pointers.createPointer(pointerParams);
-            let offset = this.uniformPointer.offset;
-            let uniformArrayBuffer = this.uniformPointer.cpuBuffer;
+            const offset = this.uniformPointer.offset;
+            const uniformArrayBuffer = this.uniformPointer.cpuBuffer;
 
             this.uniformArrayBufferViews = {
                 albedo: {
@@ -461,14 +461,14 @@ export class PBRMaterial extends BaseMaterial {
         // if (this.inputValues.name == "alpha") debugger;
 
         //按照输入参数进行格式化uniform，没有的就使用默认值
-        for (let key in this.inputValues.textures) {
+        for (const key in this.inputValues.textures) {
             // if (key == E_TextureType.emissiveIntensity) {
             //     continue;       //20260509 未实现，gltf中实现了参数化，如果不跳过，会产生顺序错误；
             // }
-            let textureSource = this.inputValues.textures[key as vialidPBRTextureType];
+            const textureSource = this.inputValues.textures[key as vialidPBRTextureType];
             //envMap 单独处理，IBL，使用system envMap
             if (key == E_TextureType.envMap) {
-                let index: number = 9;
+                const index: number = 9;
                 if (textureSource as boolean === true) {
                     this.insideUniformBundle[index].kind = E_MaterialUniformKind.texture;
                 }
@@ -486,7 +486,7 @@ export class PBRMaterial extends BaseMaterial {
                 }
                 let index: number = 0;//this.insideUniformBundle数组的下标索引
                 let isVec3: boolean = true;//是否是vec3类型数组，RGB或R,G,B,A
-                let extra: [number, number] = [0, 0];//默认扩展数据
+                const extra: [number, number] = [0, 0];//默认扩展数据
                 if (perOne.data1 != undefined) {
                     extra[0] = perOne.data1;
                 }
@@ -656,9 +656,9 @@ export class PBRMaterial extends BaseMaterial {
      *      B、使用IBL，system和shader目前都未实现；
      */
     checkInsideUniformBundle() {
-        for (let i in this.insideUniformBundle) {
-            let uniform = this.insideUniformBundle[i];
-            let name = uniform.textureName;
+        for (const i in this.insideUniformBundle) {
+            const uniform = this.insideUniformBundle[i];
+            const name = uniform.textureName;
             if (name == E_TextureType.envMap) {
                 continue;
             }
@@ -683,12 +683,12 @@ export class PBRMaterial extends BaseMaterial {
      * 2、创建uniformGPUBuffer，并写入
      */
     writeUniformBuffer() {
-        let bufferViews = this.uniformArrayBufferViews;
-        for (let i in this.insideUniformBundle) {
+        const bufferViews = this.uniformArrayBufferViews;
+        for (const i in this.insideUniformBundle) {
             // console.log(i);
-            let uniform = this.insideUniformBundle[i];
-            let name = uniform.textureName;
-            let bufferView = bufferViews[name as keyof typeof bufferViews];
+            const uniform = this.insideUniformBundle[i];
+            const name = uniform.textureName;
+            const bufferView = bufferViews[name as keyof typeof bufferViews];
             if (name == E_TextureType.envMap) {
                 bufferView.kind[0] = uniform.kind;
             }
@@ -715,7 +715,7 @@ export class PBRMaterial extends BaseMaterial {
         let generate = false;
         if (typeof sourceUrl.source == "string") {
             if (this.scene.resourcesGPU.weTextureOfString.has(sourceUrl.source)) {
-                let result = this.scene.resourcesGPU.weTextureOfString.get(sourceUrl.source);
+                const result = this.scene.resourcesGPU.weTextureOfString.get(sourceUrl.source);
                 try {
                     if (result == undefined) {
                         throw new Error("texture not found");
@@ -747,8 +747,8 @@ export class PBRMaterial extends BaseMaterial {
     }
 
     _destroy(): void {
-        for (let key in this.textures) {
-            let texture = this.textures[key];
+        for (const key in this.textures) {
+            const texture = this.textures[key];
             if (texture instanceof Texture) {
                 texture.destroy();
             }
@@ -778,7 +778,7 @@ export class PBRMaterial extends BaseMaterial {
     }
     getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [
             {
                 binding: binding++,
                 visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
@@ -794,12 +794,12 @@ export class PBRMaterial extends BaseMaterial {
                 },
             },
         ];
-        for (let perTexture of this.insideUniformBundle) {
-            let uniformName = perTexture.textureName;
+        for (const perTexture of this.insideUniformBundle) {
+            const uniformName = perTexture.textureName;
             if (uniformName == E_TextureType.envMap) { continue; }
             {//texture
                 //uniform texture layout
-                let uniformTextureLayout: GPUBindGroupLayoutEntry = {
+                const uniformTextureLayout: GPUBindGroupLayoutEntry = {
                     binding: binding,
                     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                     texture: perTexture.texture!.defaultTextureLayout(),
@@ -811,7 +811,7 @@ export class PBRMaterial extends BaseMaterial {
             }
             {//sampler
                 //uniform sampler layout
-                let uniformSamplerLayout: GPUBindGroupLayoutEntry = {
+                const uniformSamplerLayout: GPUBindGroupLayoutEntry = {
                     binding: binding,
                     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                     sampler: {
@@ -825,7 +825,7 @@ export class PBRMaterial extends BaseMaterial {
         }
 
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -833,7 +833,7 @@ export class PBRMaterial extends BaseMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [
+        const uniformEntries: T_uniformEntries[] = [
             {
                 binding: binding++,
                 resource: this.uniformPointerCommon.gpuBufferView,
@@ -843,11 +843,11 @@ export class PBRMaterial extends BaseMaterial {
                 resource: this.uniformPointer.gpuBufferView,
             },
         ];
-        for (let perTexture of this.insideUniformBundle) {
-            let uniformName = perTexture.textureName;
+        for (const perTexture of this.insideUniformBundle) {
+            const uniformName = perTexture.textureName;
             if (uniformName == E_TextureType.envMap) { continue; }
             {//texture
-                let uniformTexture: GPUBindGroupEntry = {
+                const uniformTexture: GPUBindGroupEntry = {
                     binding: binding,
                     resource: perTexture.texture!.texture.createView(),//创建texture view,20251204 也可以直接使用texture
                 };
@@ -856,7 +856,7 @@ export class PBRMaterial extends BaseMaterial {
                 binding++;
             }
             {//sampler
-                let uniformSampler: GPUBindGroupEntry = {
+                const uniformSampler: GPUBindGroupEntry = {
                     binding: binding,
                     resource: perTexture.sampler!,
                 };
@@ -868,7 +868,7 @@ export class PBRMaterial extends BaseMaterial {
         }
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -883,8 +883,8 @@ export class PBRMaterial extends BaseMaterial {
  @group(${this.bindGroupNumber}) @binding(${binding++}) var<uniform> u_common_base: st_material_base_info;
  @group(${this.bindGroupNumber}) @binding(${binding++}) var<uniform> u_pbr_uniform : st_pbr_UniformInput; 
 `;
-        for (let perTexture of this.insideUniformBundle) {
-            let uniformName = perTexture.textureName;
+        for (const perTexture of this.insideUniformBundle) {
+            const uniformName = perTexture.textureName;
             if (uniformName == E_TextureType.envMap) { continue; }
             //texture
             groupAndBindingString += ` @group(${this.bindGroupNumber}) @binding(${binding++}) var u_texture_${uniformName} : texture_2d<f32>; \n `;
@@ -892,7 +892,7 @@ export class PBRMaterial extends BaseMaterial {
             groupAndBindingString += ` @group(${this.bindGroupNumber}) @binding(${binding++}) var u_sampler_${uniformName} : sampler; \n `;
         }
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }

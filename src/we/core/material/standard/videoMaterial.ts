@@ -74,7 +74,7 @@ export class VideoMaterial extends BaseStandardMaterial {
         this._state = E_lifeState.unstart;
     }
     _destroy(): void {
-        for (let key in this.textures) {
+        for (const key in this.textures) {
             this.textures[key].destroy();
         }
         this.textures = {};
@@ -96,7 +96,7 @@ export class VideoMaterial extends BaseStandardMaterial {
                     ...this.inputValues.videoOption,
                 }
             }
-            let video = new VideoTexture(option, this.device);
+            const video = new VideoTexture(option, this.device);
             await video.init(this.scene);
             this.textures[E_TextureType.video] = video;
         }
@@ -105,8 +105,8 @@ export class VideoMaterial extends BaseStandardMaterial {
 
     getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [];
-        let uniformBufferLayout: GPUBindGroupLayoutEntry = {
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [];
+        const uniformBufferLayout: GPUBindGroupLayoutEntry = {
             binding: binding++,
             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
             buffer: {
@@ -143,7 +143,7 @@ export class VideoMaterial extends BaseStandardMaterial {
             },
         });
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
@@ -151,8 +151,8 @@ export class VideoMaterial extends BaseStandardMaterial {
     }
     getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [];
-        let uniformBuffer: GPUBindGroupEntry = {
+        const uniformEntries: T_uniformEntries[] = [];
+        const uniformBuffer: GPUBindGroupEntry = {
             binding: binding++,
             resource: this.uniformPointerCommon.gpuBufferView,
         };
@@ -180,7 +180,7 @@ export class VideoMaterial extends BaseStandardMaterial {
         });
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
             }
@@ -204,7 +204,7 @@ export class VideoMaterial extends BaseStandardMaterial {
         }
         groupAndBindingString += ` @group(${this.bindGroupNumber}) @binding(${binding++}) var u_Sampler : sampler; \n `;
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }
@@ -224,8 +224,8 @@ export class VideoMaterial extends BaseStandardMaterial {
             return super.getOpacity_MSAA();
         }
         else {
-            let MSAA: I_materialBundleOutput = this.composeShaderBundle(this.shtOfVideoExternal[E_materialTypeForBindGroup.opacityMSAA]!, E_materialTypeForBindGroup.opacityMSAA);
-            let inforForward: I_materialBundleOutput = this.composeShaderBundle(this.shtOfVideoExternal[E_materialTypeForBindGroup.opacityMSAAInfo]!, E_materialTypeForBindGroup.opacityMSAAInfo);
+            const MSAA: I_materialBundleOutput = this.composeShaderBundle(this.shtOfVideoExternal[E_materialTypeForBindGroup.opacityMSAA]!, E_materialTypeForBindGroup.opacityMSAA);
+            const inforForward: I_materialBundleOutput = this.composeShaderBundle(this.shtOfVideoExternal[E_materialTypeForBindGroup.opacityMSAAInfo]!, E_materialTypeForBindGroup.opacityMSAAInfo);
             return { MSAA, inforForward };
         }
     }

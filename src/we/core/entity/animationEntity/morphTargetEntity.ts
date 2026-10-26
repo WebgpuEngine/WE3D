@@ -82,7 +82,7 @@ export abstract class MorphTargetEntity extends AnimationEntity {
     checkMorphTargetCount(count: number): boolean {
         // throw new Error("EntityBundleMaterial: checkMorphTargetCount not implemented");
         let countFromAttribute = 0;
-        for (let key in this.attributes.vertices) {
+        for (const key in this.attributes.vertices) {
             if (key.indexOf("position_") == 0) {
                 countFromAttribute++;
             }
@@ -102,7 +102,7 @@ export abstract class MorphTargetEntity extends AnimationEntity {
         super.updateUniformCommonEntity(clock, false);
         if (this.bufferPointers.uniformCommonEntity !== undefined) {
             const st_entityValues = this.bufferPointers.uniformCommonEntity.cpuBuffer;
-            let offset = this.bufferPointers.uniformCommonEntity.offset;
+            const offset = this.bufferPointers.uniformCommonEntity.offset;
             const st_entityViews = {
                 animation_kind: new Uint32Array(st_entityValues, offset + 16, 1),
                 morpht_target_count: new Uint32Array(st_entityValues, offset + 20, 1),
@@ -121,16 +121,16 @@ export abstract class MorphTargetEntity extends AnimationEntity {
      */
     updateMorphtTargetBuffer() {
         if (this.bufferPointers.morphMatrix) {
-            for (let i in this.outSideInstance) {
-                let offset = this.bufferPointers.morphMatrix.offset;
-                let perNode = this.outSideInstance[i];
+            for (const i in this.outSideInstance) {
+                const offset = this.bufferPointers.morphMatrix.offset;
+                const perNode = this.outSideInstance[i];
                 if (perNode.MorphTarget) {
-                    let instanceIndex = parseInt(i);
+                    const instanceIndex = parseInt(i);
                     for (let j = 0; j < this.instance.numInstances; j++) {
-                        let offsetOfPointer = (instanceIndex * this.instance.numInstances + j) * this.MorphTargetByteSize + offset;    //内外部instance的偏移量加上内部instance的偏移量
+                        const offsetOfPointer = (instanceIndex * this.instance.numInstances + j) * this.MorphTargetByteSize + offset;    //内外部instance的偏移量加上内部instance的偏移量
                         // this.device.queue.writeBuffer(this.bufferGPU.morphMatrix, offset, perNode.MorphTarget!);//写入每个instance的矩阵,内部instance写入相同的矩阵
-                        let f32DataViewOfPointer = new Float32Array(this.bufferPointers.morphMatrix.cpuBuffer, offsetOfPointer, this.bufferPointers.morphMatrix.byteLength / 4);
-                        let f32DataViewOfNodeObject = new Float32Array(perNode.MorphTarget);
+                        const f32DataViewOfPointer = new Float32Array(this.bufferPointers.morphMatrix.cpuBuffer, offsetOfPointer, this.bufferPointers.morphMatrix.byteLength / 4);
+                        const f32DataViewOfNodeObject = new Float32Array(perNode.MorphTarget);
                         f32DataViewOfPointer.set(f32DataViewOfNodeObject);
                     }
                     this.scene.pointers.updatePointerWriteTime(this.bufferPointers.morphMatrix);

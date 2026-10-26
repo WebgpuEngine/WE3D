@@ -45,7 +45,7 @@ export interface IV_LightSManager {
 /**
  * struct ST_shadowMapMatrix size
  */
-var ST_shadowMapMatrix_Size = 80;
+const ST_shadowMapMatrix_Size = 80;
 
 /**
  * 对应system.wgsl中的结构 ST_shadowMapMatrix的单体结构
@@ -70,8 +70,8 @@ export function mergeLightUUID(UUID: string, matrixIndex: number) {
 }
 
 export function splitLightUUID(UUID: string) {
-    let lightUUID = UUID.split("__");
-    let matrixIndex = parseInt(lightUUID[1]);
+    const lightUUID = UUID.split("__");
+    const matrixIndex = parseInt(lightUUID[1]);
     return { UUID: lightUUID[0], matrixIndex }
 }
 
@@ -269,7 +269,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             //这里有个问题，即使是使用async/await，也出现得不到matrixp[],所以更改为现在的初始化为单位矩阵
             // let MVPs = one.getMVP();//获取MVP，并for
             for (let i = 0; i < count; i++) {
-                let oneShadowMapRenderUniformBuffer = this.createShadowMapGPUBufferOfMVP(one.ID.toString());//todo 202508222 :这里的ID需要在stage的root中统一处理，与entity相同，此处为暂时的
+                const oneShadowMapRenderUniformBuffer = this.createShadowMapGPUBufferOfMVP(one.ID.toString());//todo 202508222 :这里的ID需要在stage的root中统一处理，与entity相同，此处为暂时的
                 const oneMVP: light_shadowMapMatrix = {
                     light_id: one.ID,
                     index: this.shadowIndexID,//在shadowMapTexture中的开始位置
@@ -301,7 +301,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         this.ShadowMapUniformGPUBuffer = this.createShadowMapUniformGPUBuffer();
 
         for (let i = 0; i < this.shadowArrayOfDepthMapAndMVP.length; i++) {
-            let oneMVP = this.shadowArrayOfDepthMapAndMVP[i];
+            const oneMVP = this.shadowArrayOfDepthMapAndMVP[i];
             oneMVP.RPD = this.createShadowMapRPD(oneMVP.index, oneMVP.matrix_self_index);
         }
         this.scene.refreshSystemBindGroupAndBindGroupLayoutZeroForCamera();
@@ -345,21 +345,21 @@ export class LightsManager extends ECSManager<BaseLight> {
      */
     createShadowMapGPUBufferOfMVP(id: string, m4?: Mat4): GPUBuffer {
 
-        let MVP_buffer = new Float32Array([
+        const MVP_buffer = new Float32Array([
             1, 0, 0, 0,     //start martix
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
             0, 0, 0, 0,     //reversedZ: u32,
         ]);
-        let MVP = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);
+        const MVP = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);
         if (m4)
             mat4.copy(m4, MVP);
         if (this.scene.reversedZ.isReversedZ) {
-            let reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 1);
+            const reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 1);
             reversedZ[0] = 1;
         }
-        let oneGPUBuffer: GPUBuffer = this.device.createBuffer({
+        const oneGPUBuffer: GPUBuffer = this.device.createBuffer({
             label: "Light Manager create buffer for lights MVP ,lights id :" + id,
             size: MVP_buffer.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -396,7 +396,7 @@ export class LightsManager extends ECSManager<BaseLight> {
     }
     /** 更新所有光源参数*/
     updateLights(clock: Clock) {
-        for (let i of this.list) {
+        for (const i of this.list) {
             i.update(clock);
         }
     }
@@ -406,10 +406,10 @@ export class LightsManager extends ECSManager<BaseLight> {
     * @returns 光源的GPUBuffer,大小=16 + 16 +(this.list.length ||1) * lightStructSize,
     */
     async updateSystemUniformBufferForlights() {
-        let stageName: string = "default";
-        let size = lightStructSize;
+        const stageName: string = "default";
+        const size = lightStructSize;
         // let lightNumber = lightNumber;
-        let lightRealNumberOfSystem = this.list.length;//this.getLightNumbers();
+        const lightRealNumberOfSystem = this.list.length;//this.getLightNumbers();
 
         //  {//不同，注销并新建
         //     if (this.lightsUniformGPUBuffer) {
@@ -424,14 +424,14 @@ export class LightsManager extends ECSManager<BaseLight> {
         // }
 
         //总arraybuffer
-        let buffer = new ArrayBuffer(16 + 16 + this.getLightNumber() * size);
+        const buffer = new ArrayBuffer(16 + 16 + this.getLightNumber() * size);
 
         //第一个16，是光源数量
-        let ST_lightNumber = new Uint32Array(buffer, 0, 1);
+        const ST_lightNumber = new Uint32Array(buffer, 0, 1);
         ST_lightNumber[0] = lightRealNumberOfSystem;
 
         //第二个16，是当前的环境光参数（每个stage的环境光可能不同，室内外）
-        let ST_AmbientLightViews = {
+        const ST_AmbientLightViews = {
             color: new Float32Array(buffer, 16, 3),
             intensity: new Float32Array(buffer, 16 + 12, 1),
         };
@@ -443,15 +443,15 @@ export class LightsManager extends ECSManager<BaseLight> {
         //第三部分，lightNumber * size
         //映射到每个viewer上，并写入新的数据（无论是否有变化）
         for (let i = 0; i < this.list.length; i++) {
-            let StructBuffer = new Float32Array(buffer, 16 + 16 + size * i, size / 4);//todo，20241117，需要确认是否/4(byte*4 -->float32*1)
-            let lightStructBuffer = this.list[i].getStructBuffer();
+            const StructBuffer = new Float32Array(buffer, 16 + 16 + size * i, size / 4);//todo，20241117，需要确认是否/4(byte*4 -->float32*1)
+            const lightStructBuffer = this.list[i].getStructBuffer();
             for (let j = 0; j < size; j++) {
                 StructBuffer[j] = lightStructBuffer[j];
             }
         }
 
         //生成浮点数据队列
-        let bufferFloat32Array = new Float32Array(buffer);
+        const bufferFloat32Array = new Float32Array(buffer);
         // let bufferFloat32Array = buffer;
         //将新生成的浮点数据写入到GPUBuffer中，
         this.device.queue.writeBuffer(
@@ -495,7 +495,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             this.writeToGPUBuffer(oneST.MVP, oneST.GPUBuffer);//同步更新每个光源的MVP
         }
 
-        let buffer = new Float32Array(ST_shadowMapMatrixValues)
+        const buffer = new Float32Array(ST_shadowMapMatrixValues)
 
         this.device.queue.writeBuffer(
             this.ShadowMapUniformGPUBuffer,
@@ -515,17 +515,17 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @param oneGPUBuffer 光源的shadow map的uniform buffer
      */
     writeToGPUBuffer(m4: Mat4, oneGPUBuffer: GPUBuffer) {
-        let MVP_buffer = new Float32Array([
+        const MVP_buffer = new Float32Array([
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
             0, 0, 0, 0,//reversedZ: u32,
         ]);
-        let MVP = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);//与ArrayBuffer不同，这里是有.buffer的
+        const MVP = new Float32Array(MVP_buffer.buffer, 4 * 4 * 4 * 0, 16);//与ArrayBuffer不同，这里是有.buffer的
         mat4.copy(m4, MVP);
         if (this.scene.reversedZ.isReversedZ) {
-            let reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 1);
+            const reversedZ = new Uint32Array(MVP_buffer.buffer, 4 * 4 * 4 * 1, 1);
             reversedZ[0] = 1;
         }
         this.device.queue.writeBuffer(
@@ -578,7 +578,7 @@ export class LightsManager extends ECSManager<BaseLight> {
     //获取MVP
     //secen 使用
     getOneLightMVP_ByMergeID(mergeID: string): GPUBuffer | false {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
         return this.getOneLightMVP_ByID(id, matrixIndex);
     }
     /**获取光源的shadow map  的MVP
@@ -588,7 +588,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns GPUBuffer | false 
      */
     getOneLightMVP_ByID(id: number, matrixIndex: number): GPUBuffer | false {
-        for (let i of this.shadowArrayOfDepthMapAndMVP) {
+        for (const i of this.shadowArrayOfDepthMapAndMVP) {
             if (i.light_id == id && i.matrix_self_index == matrixIndex) {
                 return i.GPUBuffer;
             }
@@ -605,7 +605,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      */
     getLightMVP_ByID(id: number, matrix_index: number): Mat4 {
         let m4 = mat4.identity();
-        let one = this.getLightByID(id);
+        const one = this.getLightByID(id);
         if (one) {
             m4 = (one as BaseLight).getMVPByIndex(matrix_index);
         }
@@ -617,7 +617,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns 光源的MVP
      */
     getLightMVP_ByMergeID(mergeID: string): Mat4 {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
         return this.getLightMVP_ByID(id, matrixIndex);
     }
 
@@ -630,7 +630,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns 
      */
     getLightByID(id: number): BaseLight | boolean {
-        for (let i of this.list) {
+        for (const i of this.list) {
             if (id == i.ID) {
                 return i;
             }
@@ -638,7 +638,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         return false;
     }
     getLightByMergeID(mergeID: string): BaseLight | boolean {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
         return this.getLightByID(id);
     }
 
@@ -648,7 +648,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns 光源的UUID
      */
     getUUIDByID(id: number): string {
-        let one = this.getLightByID(id);
+        const one = this.getLightByID(id);
         if (one) {
             return (one as BaseLight).UUID;
         }
@@ -662,9 +662,9 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns 光源的ID和matrixIndex
      */
     getIdAndMatrixIndexByMergeID(mergeUUID: string) {
-        let lightId = mergeUUID.split("__");
-        let UUID = lightId[0];
-        let light = this.getOneByUUID(UUID);
+        const lightId = mergeUUID.split("__");
+        const UUID = lightId[0];
+        const light = this.getOneByUUID(UUID);
         let id;
         if (light) {
             id = light.ID;
@@ -672,7 +672,7 @@ export class LightsManager extends ECSManager<BaseLight> {
         else {
             throw new Error("获取光源失败");
         }
-        let matrixIndex = parseInt(lightId[1]);
+        const matrixIndex = parseInt(lightId[1]);
         return { id, matrixIndex }
     }
     //////////////////////////////////////////////
@@ -686,11 +686,11 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns GPUBindGroup
      */
     getLightBindGroupByMergeID(mergeID: string, pipeline: GPURenderPipeline): GPUBindGroup {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
         // let lightId = mergeID.split("__");
         // let id = parseInt(lightId[0]);
         // let matrixIndex = parseInt(lightId[1]);
-        let uniformBuffer = this.getOneLightMVP_ByID(id, matrixIndex);
+        const uniformBuffer = this.getOneLightMVP_ByID(id, matrixIndex);
         if (uniformBuffer === false) {
             throw new Error("createSystemUnifromGroupForPerShaderOfShadowMap(),  call this.lightsManager.getOneLightMVP_ByID(id,matrixIndex) is false ");
         }
@@ -726,17 +726,17 @@ export class LightsManager extends ECSManager<BaseLight> {
     getLightBindGroupAndBindGroupLayoutByMergeID(mergeID: string): I_bindGroupAndGroupLayout {
 
         if (this.scene.resourcesGPU.shadowmapOfID2BindGroup.has(mergeID)) {
-            let bindGroup = this.scene.resourcesGPU.shadowmapOfID2BindGroup.get(mergeID)!;        //未验证，
-            let bindGroupLayout = this.scene.resourcesGPU.shadowmapOfBindGroup2Layout.get(bindGroup)!;//未验证
+            const bindGroup = this.scene.resourcesGPU.shadowmapOfID2BindGroup.get(mergeID)!;        //未验证，
+            const bindGroupLayout = this.scene.resourcesGPU.shadowmapOfBindGroup2Layout.get(bindGroup)!;//未验证
             return { bindGroup, bindGroupLayout };
         }
         else {
-            let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+            const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
 
             // let lightId = mergeID.split("__");
             // let id = parseInt(lightId[0]);
             // let matrixIndex = parseInt(lightId[1]);
-            let uniformBuffer = this.getOneLightMVP_ByID(id, matrixIndex);
+            const uniformBuffer = this.getOneLightMVP_ByID(id, matrixIndex);
             if (uniformBuffer === false) {
                 throw new Error("createSystemUnifromGroupForPerShaderOfShadowMap(),  call this.lightsManager.getOneLightMVP_ByID(id,matrixIndex) is false ");
             }
@@ -750,7 +750,7 @@ export class LightsManager extends ECSManager<BaseLight> {
                 //         },
                 //     }
                 // ];
-                let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+                const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
                     label: "light bind group layout,light is " + mergeID,
                     entries:
                         [
@@ -794,7 +794,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns 光源的shadow map的depth texture view
      */
     getShadowMapDepthTextureView_ByMergeID(mergeID: string): GPUTextureView {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
         return this.getShadowMapDepthTextureView_ByIdAndMatrixID(id, matrixIndex);
     }
     /**
@@ -805,7 +805,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      */
     getShadowMapDepthTextureView_ByIdAndMatrixID(id: number, matrixIndex: number): GPUTextureView {
         let index = -1;
-        for (let i of this.shadowArrayOfDepthMapAndMVP) {
+        for (const i of this.shadowArrayOfDepthMapAndMVP) {
             if (i.light_id == id && i.matrix_self_index == matrixIndex!) {
                 index = i.index;
                 break;
@@ -833,7 +833,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns  GPURenderPassDescriptor | false
      */
     gettShadowMapRPD_ByMergeID(mergeID: string): GPURenderPassDescriptor | false {
-        let { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
+        const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
         return this.getShadowMapRPDByIdAndSelfIndex(id, matrixIndex);
     }
     /**
@@ -843,7 +843,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns  GPURenderPassDescriptor | false
      */
     getShadowMapRPDByIdAndSelfIndex(id: number, matrixIndex: number): GPURenderPassDescriptor | false {
-        for (let i of this.shadowArrayOfDepthMapAndMVP) {
+        for (const i of this.shadowArrayOfDepthMapAndMVP) {
             if (i.light_id == id && i.matrix_self_index == matrixIndex!) {
                 return i.RPD;
             }

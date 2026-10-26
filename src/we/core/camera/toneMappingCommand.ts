@@ -52,13 +52,13 @@ export class ToneMappingCommandGenerator {
      * @param exposure 曝光值,默认值为1.0
      */
     setToneMappingExposure(exposure: number) {
-        let uniformCPUBufferView = new Float32Array(this.uniformCPUBuffer);
+        const uniformCPUBufferView = new Float32Array(this.uniformCPUBuffer);
         uniformCPUBufferView[0] = exposure;
         this.device.queue.writeBuffer(this.uniformGPUBuffer, 0, this.uniformCPUBuffer);
     }
     clear() {
-        for (let key in this.dcArray) {
-            for (let perCommand of this.dcArray[key].toneMapping) {
+        for (const key in this.dcArray) {
+            for (const perCommand of this.dcArray[key].toneMapping) {
                 perCommand.destroy();
             }
         }
@@ -73,7 +73,7 @@ export class ToneMappingCommandGenerator {
             };
         }
         else {
-            for (let perCommand of this.dcArray[UUID].toneMapping) {
+            for (const perCommand of this.dcArray[UUID].toneMapping) {
                 if (perCommand instanceof DrawCommand && perCommand.IsDestroy != false) {
                     perCommand.destroy();
                 }
@@ -89,7 +89,7 @@ export class ToneMappingCommandGenerator {
         // };
 
         //bindgroup layout 0 的描述
-        let bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor =
+        const bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor =
         {
             label: "ToneMapping BindGroupLayout" + UUID,
             entries: [
@@ -112,9 +112,9 @@ export class ToneMappingCommandGenerator {
             ]
         };
         //bindgroup layout 0 
-        let bindGroupLayout0: GPUBindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor0);
+        const bindGroupLayout0: GPUBindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor0);
 
-        let bindGroupDesc0: GPUBindGroupDescriptor = {
+        const bindGroupDesc0: GPUBindGroupDescriptor = {
             label: "ToneMapping BindGroup" + UUID,
             layout: bindGroupLayout0,
             entries: [
@@ -128,18 +128,18 @@ export class ToneMappingCommandGenerator {
                 },
             ],
         };
-        let bindGroup0: GPUBindGroup = this.device.createBindGroup(bindGroupDesc0);
+        const bindGroup0: GPUBindGroup = this.device.createBindGroup(bindGroupDesc0);
 
         //pipeline layout 描述
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: "ToneMapping PipelineLayout" + UUID,
             bindGroupLayouts: [bindGroupLayout0],
         };
         //pipeline layout 
-        let pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //pipeline 描述
-        let descriptor: GPURenderPipelineDescriptor = {
+        const descriptor: GPURenderPipelineDescriptor = {
             label: "RenderFinal ToneMapping Pipeline: " + UUID,
             vertex: {
                 module: this.shaderModule,
@@ -157,12 +157,12 @@ export class ToneMappingCommandGenerator {
             },
         }
         //pipeline 
-        let pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-        let renderPassDescriptor = () => {
+        const pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
+        const renderPassDescriptor = () => {
             // console.log("=======================", UUID);
             return this.parent.getRpdForFinalTarget(UUID)
         };
-        let valuesDC: IV_BaseDrawCommand = {
+        const valuesDC: IV_BaseDrawCommand = {
             device: this.device,
             label: "RenderFinal ToneMapping: " + UUID,
             drawInfo: {
@@ -176,8 +176,8 @@ export class ToneMappingCommandGenerator {
         }
         this.dcArray[UUID].toneMapping.push(new BaseDrawCommand(valuesDC));
         if (UUID === this.parent.defaultCamera.UUID) {
-            let size = this.scene.surface.size;
-            let copyToColorTexture = new CopyCommandT2T(
+            const size = this.scene.surface.size;
+            const copyToColorTexture = new CopyCommandT2T(
                 {
                     A: this.parent.GBufferManager.GBuffer[UUID].finalRender.color,
                     B: this.scene.finalTarget.color!,
@@ -244,7 +244,7 @@ export class ToneMappingCommandGenerator {
         //         let color=textureLoad(u_ColorTexture, vec2i(floor(pos.xy) ) ,0);
         //         ${returnColor}
         //     }`;
-        let moduleVS = this.device.createShaderModule({
+        const moduleVS = this.device.createShaderModule({
             label: "ToneMapping",
             code: toneMappingShaderCode,
         });

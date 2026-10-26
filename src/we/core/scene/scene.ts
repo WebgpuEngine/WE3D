@@ -461,7 +461,7 @@ export class Scene {
 
         //1、扩展与限制 
         // console.log("WebGPU limits:", adapter.limits);
-        for (let i in this.webGPULimits) {
+        for (const i in this.webGPULimits) {
             const hardwareMax = adapter.limits[i as keyof GPUSupportedLimits] as number;
             if (this.webGPULimits[i] > hardwareMax) {
                 throw new Error(`WebGPU device not meet minimum requirements. ${i}=${this.webGPULimits[i]}`);
@@ -482,14 +482,14 @@ export class Scene {
         // 3、 输出当前支持的特性与限制
         console.log("当前支持的特性：");
         for (const f of supportedFeatures) {
-            let enabled = device.features.has(f);
+            const enabled = device.features.has(f);
             console.log(`       ${f}:`, enabled ? "✅ 已启用" : "❌ 不支持");
             if (enabled) {
                 this.webGPUFeaturesSupported.push(f);
             }
         }
         console.log("当前webGPU的limits:");
-        for (let i in this.webGPULimits) {
+        for (const i in this.webGPULimits) {
             console.log(`       ${i}:`, this.webGPULimits[i]);
         }
 
@@ -542,21 +542,21 @@ export class Scene {
         this.IBL = new IBL(this);
     }
     getResourceDefaultPBR() {
-        let one = this.resourcesGPU.weMaterialOfString.get("defaultPBR");
+        const one = this.resourcesGPU.weMaterialOfString.get("defaultPBR");
         if (one) return one;
         else {
             throw new Error("default defaultPBR 不存在");
         }
     }
     getResourceDefaultTexture(): Texture {
-        let one = this.resourcesGPU.weTextureOfString.get("default");
+        const one = this.resourcesGPU.weTextureOfString.get("default");
         if (one) return one;
         else {
             throw new Error("default Texture 不存在");
         }
     }
     getResourceDefaultGPUTexture(): GPUTexture {
-        let one = this.resourcesGPU.textureOfString.get("default");
+        const one = this.resourcesGPU.textureOfString.get("default");
         if (one) return one;
         else {
             throw new Error("default GPUTexture 不存在");
@@ -582,7 +582,7 @@ export class Scene {
      * @returns 
      */
     configure() {
-        let usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING;
+        const usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING;
 
         const hasP3Display = window.matchMedia('(color-gamut: p3)').matches || window.matchMedia('(color-gamut: rec2020)').matches;
         const hasHighDynamicRange = window.matchMedia('(dynamic-range: high)').matches;
@@ -725,7 +725,7 @@ export class Scene {
      *  订阅，触发、MQ、WW等
      */
     updateUserDefineEvent(event: eventOfScene) {
-        for (let i of this.userDefineUpdateArray) {
+        for (const i of this.userDefineUpdateArray) {
             if (i.state && i.event == event) {
                 i.call(this);
             }
@@ -736,8 +736,8 @@ export class Scene {
         this.userDefineUpdateArray.push(call);
     }
     /**设置用户自定义call function的状态 */
-    setUserDefineEventStateByName(name: String, state: boolean) {
-        for (let i of this.userDefineUpdateArray) {
+    setUserDefineEventStateByName(name: string, state: boolean) {
+        for (const i of this.userDefineUpdateArray) {
             if (i.name == name) {
                 i.state = state;
                 break;
@@ -746,7 +746,7 @@ export class Scene {
     }
     /**获取用户字自定义 call function的状态 */
     getUserDefineEventStateByName(name: string, state: boolean): { name: string, state: boolean } {
-        for (let i of this.userDefineUpdateArray) {
+        for (const i of this.userDefineUpdateArray) {
             if (i.name == name) {
                 i.state = state;
                 return { name, state };
@@ -858,13 +858,13 @@ export class Scene {
     }
 
     run() {
-        let scope = this;
+        const scope = this;
         this.clock.update();
         async function perFrameRun() {
             if (scope.flags.realTimeRender) {//是否开启实时更新
                 //时间更新
-                let timerNow = Date.now();
-                let timerLast = timerNow;
+                const timerNow = Date.now();
+                const timerLast = timerNow;
                 scope.clock.update();
                 await scope.onBeforeUpdate();
                 await scope.pickup();//pickup 在当前帧的update开始之前
@@ -922,7 +922,7 @@ export class Scene {
     async showGBuffersVisualize() { }
 
     async renderToSurface() {
-        let defaultCamera = this.cameraManager.defaultCamera;
+        const defaultCamera = this.cameraManager.defaultCamera;
         if (defaultCamera && this.finalTarget.NDC === false) {
             //直接copy GBuffer的color到canvas
             // let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].finalRender.color;
@@ -956,7 +956,7 @@ export class Scene {
      * @returns 
      */
     getBackgroudColor(): [number, number, number, number] {
-        let premultipliedAlpha: boolean = this.premultipliedAlpha;
+        const premultipliedAlpha: boolean = this.premultipliedAlpha;
         if (premultipliedAlpha) {
             return [this.backgroudColor[0] * this.backgroudColor[3], this.backgroudColor[1] * this.backgroudColor[3], this.backgroudColor[2] * this.backgroudColor[3], this.backgroudColor[3]];
         }
@@ -1002,7 +1002,7 @@ export class Scene {
         this.root.removeChild(child);
     }
     removeFromScene(child: NodeObject) {
-        let parent = child.Parent;
+        const parent = child.Parent;
         if (parent) {
             parent.removeChild(child);
         }
@@ -1041,7 +1041,7 @@ export class Scene {
     /** 获取系统的bindGroupLayoutZeroOfCamera，用于渲染camera */
     getBindGroupLayoutZeroOfCamera(): GPUBindGroupLayout {
         if (this._bindGroupLayoutZeroOfCamera === undefined) {
-            let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+            const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
                 label: "System BGLD(0) Camera",
                 entries: [
                     {
@@ -1090,9 +1090,9 @@ export class Scene {
     /** 获取系统的bindGroupZeroOfCamera，用于渲染camera */
     getBindGroupZeroOfCamera(UUID: string): GPUBindGroup {
         if (this._bindGroupZeroOfCamera[UUID] == undefined) {
-            let camera = this.cameraManager.getCameraByUUID(UUID);
+            const camera = this.cameraManager.getCameraByUUID(UUID);
             if (camera) {
-                let entriesGroup: GPUBindGroupEntry[] = [
+                const entriesGroup: GPUBindGroupEntry[] = [
                     { //camera uniform MVP
                         binding: 0,
                         resource: {
@@ -1128,7 +1128,7 @@ export class Scene {
                                 })
                     }
                 ];
-                let bindGroupDescriptor: GPUBindGroupDescriptor = {
+                const bindGroupDescriptor: GPUBindGroupDescriptor = {
                     label: "System BGD(0) Camera:" + UUID,
                     layout: this.getBindGroupLayoutZeroOfCamera(),
                     entries: entriesGroup,
@@ -1144,7 +1144,7 @@ export class Scene {
     _bindGroupZeroOfLight: { [key: string]: GPUBindGroup } = {};
     getBindGroupLayoutZeroOfLight(): GPUBindGroupLayout {
         if (this._bindGroupLayoutZeroOfLight === undefined) {
-            let bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+            const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
                 label: "System BGLD(0) Light",
                 entries: [
                     {
@@ -1162,11 +1162,11 @@ export class Scene {
     }
     getBindGroupZeroOfLight(UUID: string): GPUBindGroup {
         if (this._bindGroupZeroOfLight[UUID] == undefined) {
-            let mvpGPUBuffer = this.lightsManager.getOneLightMVP_ByMergeID(UUID);
+            const mvpGPUBuffer = this.lightsManager.getOneLightMVP_ByMergeID(UUID);
             if (!mvpGPUBuffer) {
                 throw new Error("getBindGroup0OfLight error,mvpGPUBuffer is undefined");
             }
-            let bindGroupDescriptor: GPUBindGroupDescriptor = {
+            const bindGroupDescriptor: GPUBindGroupDescriptor = {
                 label: "System BGD(0) Light:" + UUID,
                 layout: this.getBindGroupLayoutZeroOfLight(),
                 entries: [
@@ -1189,7 +1189,7 @@ export class Scene {
      */
     refreshSystemBindGroupAndBindGroupLayoutZeroForCamera() {
         this._bindGroupZeroOfCamera = {};
-        for (let perCamera of this.cameraManager.list) {
+        for (const perCamera of this.cameraManager.list) {
             // let UUID = perCamera.UUID;
             // let kind: E_renderForDC = E_renderForDC.camera;
             // let bindGroup = this.resourcesGPU.systemGroup0ByID.get(UUID);
@@ -1201,7 +1201,7 @@ export class Scene {
             this.getBindGroupZeroOfCamera(perCamera.UUID);
         }
         this.cameraManager.deferDCG.clear();
-        for (let perCamera of this.cameraManager.list) {
+        for (const perCamera of this.cameraManager.list) {
             this.cameraManager.deferDCG.add(perCamera.UUID);
         }
     }
@@ -1220,7 +1220,7 @@ export class Scene {
                     return this.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
             }
             else {
-                let rdp = this.cameraManager.getRPDByUUID(UUID);
+                const rdp = this.cameraManager.getRPDByUUID(UUID);
                 if (rdp)
                     return rdp;
                 else
@@ -1228,7 +1228,7 @@ export class Scene {
             }
         }
         else {
-            let rdp = this.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
+            const rdp = this.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
             if (rdp)
                 return rdp;
             else
@@ -1236,7 +1236,7 @@ export class Scene {
         }
     }
     getRenderPassDescriptorOfTransparent(UUID: string, kind: E_renderForDC): GPURenderPassDescriptor {
-        let rdp = this.cameraManager.getRpdOfTransparentByUUID(UUID);
+        const rdp = this.cameraManager.getRpdOfTransparentByUUID(UUID);
         if (rdp)
             return rdp;
         else

@@ -11,7 +11,7 @@ export class OneColorCube extends BoxGeometry {
 
     constructor(width = 2) {
 
-        let option: optionBoxGemetry = {
+        const option: optionBoxGemetry = {
             width: width,
             height: width,
             depth: width
@@ -51,7 +51,7 @@ export class OneColorCube extends BoxGeometry {
           
         */
         //这个颜色不能与每个点对应上，todo
-        let colorsArray = [
+        const colorsArray = [
             1, 0, 1, 1,
             0, 0, 1, 1,
             0, 0, 0, 1,

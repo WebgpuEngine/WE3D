@@ -1,6 +1,4 @@
 import { E_renderForDC } from "../base/coreDefine";
-import { I_drawMode, I_drawModeIndexed } from "../command/base";
-import { DrawCommand } from "../command/DrawCommand";
 import { mergeLightUUID } from "../light/lightsManager";
 import { ECSManager } from "../organization/manager";
 import { NodeObject } from "../organization/nodeObject";
@@ -29,9 +27,9 @@ export class EntityManager extends ECSManager<BaseEntity> {
         entity.outSideInstance = instances;//对象指向=指针
     }
     remove(entity: BaseEntity, instance: NodeObject) {
-        let instances = this.instances.get(entity);
+        const instances = this.instances.get(entity);
         if (instances != undefined) {
-            let index = instances.indexOf(instance);
+            const index = instances.indexOf(instance);
             if (index != -1) {
                 instances.splice(index, 1);
             }
@@ -39,7 +37,7 @@ export class EntityManager extends ECSManager<BaseEntity> {
     }
     update(clock: Clock) {
         this.checkDestroy();
-        for (let entity of this.list) {//所有entity
+        for (const entity of this.list) {//所有entity
             entity.preUpdate(clock); //检查instance变化
             if (entity.isDestroy() === false &&
                 entity.getInstancesCount() > 0 &&
@@ -52,17 +50,17 @@ export class EntityManager extends ECSManager<BaseEntity> {
                     entity.renderPassArray[E_renderPassName.sprite].length > 0 ||
                     entity.renderPassArray[E_renderPassName.MSAA].length > 0
                 ) {
-                    for (let perCamera of this.scene.cameraManager.list) {
-                        let instanaceArray = entity.getDrawModeArrayOfInstances(perCamera.UUID, E_renderForDC.camera);                  //获取可见性
+                    for (const perCamera of this.scene.cameraManager.list) {
+                        const instanaceArray = entity.getDrawModeArrayOfInstances(perCamera.UUID, E_renderForDC.camera);                  //获取可见性
                         if (instanaceArray.length > 0) {    //如果有可见性
-                            let dcArray = {
+                            const dcArray = {
                                 [E_renderPassName.forward]: entity.renderPassArray[E_renderPassName.forward],
                                 [E_renderPassName.sprite]: entity.renderPassArray[E_renderPassName.sprite],
                                 [E_renderPassName.MSAA]: entity.renderPassArray[E_renderPassName.MSAA],
                                 // [E_renderPassName.shadowmapOpaque]: entity.renderPassArray[E_renderPassName.shadowmapOpaque],
                             };
-                            for (let i_renderPass in dcArray) {     //遍历所有renderPass
-                                for (let perDC of dcArray[i_renderPass as keyof typeof dcArray]) {       //遍历所有DC
+                            for (const i_renderPass in dcArray) {     //遍历所有renderPass
+                                for (const perDC of dcArray[i_renderPass as keyof typeof dcArray]) {       //遍历所有DC
                                     if (perDC.label.toLowerCase().indexOf("wireframe") == -1) {                                               //如果不是线框
                                         this.renderManager.push(
                                             {
@@ -74,7 +72,7 @@ export class EntityManager extends ECSManager<BaseEntity> {
                                             }
                                         );
                                     } else {                                               //如果是线框
-                                        let wireFrameInstanceAarray = (entity as Mesh).generateWireFrameDrawModeArray();        //生成线框的DrawModeArray
+                                        const wireFrameInstanceAarray = (entity as Mesh).generateWireFrameDrawModeArray();        //生成线框的DrawModeArray
                                         if (wireFrameInstanceAarray && wireFrameInstanceAarray.length > 0)
                                             this.renderManager.push(
                                                 {
@@ -101,15 +99,15 @@ export class EntityManager extends ECSManager<BaseEntity> {
                  * 5、这里不包含线框体（entity的wireFrame），线框是不透明的
                  */
                 if (entity.renderPassArray[E_renderPassName.transparent].length > 0) {
-                    for (let perCamera of this.scene.cameraManager.list) {
-                        let perInstanaceArray = entity.getDrawModeArrayOfPerInstance(perCamera.UUID, E_renderForDC.camera);                  //获取可见性数据
+                    for (const perCamera of this.scene.cameraManager.list) {
+                        const perInstanaceArray = entity.getDrawModeArrayOfPerInstance(perCamera.UUID, E_renderForDC.camera);                  //获取可见性数据
                         if (perInstanaceArray.length > 0) {    //如果有可见性
-                            let dcArray = {
+                            const dcArray = {
                                 [E_renderPassName.transparent]: entity.renderPassArray[E_renderPassName.transparent]
                             };
-                            for (let i_renderPass in dcArray) {                                          //遍历所有renderPass
-                                for (let perDC of dcArray[i_renderPass as keyof typeof dcArray]) {       //遍历所有DC
-                                    for (let perInstance of perInstanaceArray) {                         //遍历所有instance 可见性数据
+                            for (const i_renderPass in dcArray) {                                          //遍历所有renderPass
+                                for (const perDC of dcArray[i_renderPass as keyof typeof dcArray]) {       //遍历所有DC
+                                    for (const perInstance of perInstanaceArray) {                         //遍历所有instance 可见性数据
                                         this.renderManager.push(
                                             {
                                                 command: perDC,
@@ -155,17 +153,17 @@ export class EntityManager extends ECSManager<BaseEntity> {
                 //shadow map Opacity
                 if (entity.renderPassArray[E_renderPassName.shadowmapOpaque].length > 0
                 ) {
-                    for (let i of this.scene.lightsManager.getShdowMapsStructArray()) { //所有shadowmap：light + matrix_self_index（point light有6个）
-                        let perLight = this.scene.lightsManager.getLightByID(i.light_id);
+                    for (const i of this.scene.lightsManager.getShdowMapsStructArray()) { //所有shadowmap：light + matrix_self_index（point light有6个）
+                        const perLight = this.scene.lightsManager.getLightByID(i.light_id);
                         if (perLight) {
-                            let uuid = this.scene.lightsManager.getUUIDByID(i.light_id);
-                            let mergeID = mergeLightUUID(uuid, i.matrix_self_index);
-                            let instanaceArray = entity.getDrawModeArrayOfInstances(mergeID, E_renderForDC.light);
+                            const uuid = this.scene.lightsManager.getUUIDByID(i.light_id);
+                            const mergeID = mergeLightUUID(uuid, i.matrix_self_index);
+                            const instanaceArray = entity.getDrawModeArrayOfInstances(mergeID, E_renderForDC.light);
                             //遍历shadowmap 的render pass，获得DC集合
-                            let shadowMapDC = entity.renderPassArray[E_renderPassName.shadowmapOpaque];
+                            const shadowMapDC = entity.renderPassArray[E_renderPassName.shadowmapOpaque];
                             //遍历DC集合
-                            for (let i_DC in shadowMapDC) {
-                                let perDC = shadowMapDC[parseInt(i_DC)];
+                            for (const i_DC in shadowMapDC) {
+                                const perDC = shadowMapDC[parseInt(i_DC)];
                                 this.renderManager.push(
                                     {
                                         command: perDC,
@@ -194,7 +192,7 @@ export class EntityManager extends ECSManager<BaseEntity> {
     // }
     // }
     getEntityByUUID(UUID: string): BaseEntity {
-        let entity = this.list.find((entity) => entity.UUID == UUID);
+        const entity = this.list.find((entity) => entity.UUID == UUID);
         if (entity) {
             return entity;
         }
@@ -203,7 +201,7 @@ export class EntityManager extends ECSManager<BaseEntity> {
         }
     }
     getEntityByID(ID: number): BaseEntity {
-        let entity = this.list.find((entity) => entity.ID == ID);
+        const entity = this.list.find((entity) => entity.ID == ID);
         if (entity) {
             return entity;
         }
@@ -213,11 +211,11 @@ export class EntityManager extends ECSManager<BaseEntity> {
     }
 
     getNodeByIDs(IDs: pickupTargetOfIDs): NodeObject {
-        let entity = this.list.find((entity) => entity.ID == IDs.nodeID);
+        const entity = this.list.find((entity) => entity.ID == IDs.nodeID);
         if (entity) {
-            let instances = this.instances.get(entity);
+            const instances = this.instances.get(entity);
             if (instances != undefined) {
-                let index = instances.findIndex((instance) => instance.ID == IDs.instanceID);
+                const index = instances.findIndex((instance) => instance.ID == IDs.instanceID);
                 if (index != -1) {
                     return instances[index];
                 }

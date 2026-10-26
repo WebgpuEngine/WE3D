@@ -44,7 +44,7 @@ export class WeightMixAnimation extends BaseAnimation {
 
     constructor(weightPlay: I_AnimationWeightForMergePlay) {
 
-        let group = weightPlay.animation as BaseAnimation[];
+        const group = weightPlay.animation as BaseAnimation[];
         if (group.length == 0) {
             console.error(" 权重动画为空");
             return;
@@ -62,15 +62,15 @@ export class WeightMixAnimation extends BaseAnimation {
             return;
         }
 
-        let targetStride = weightPlay.weight.length / weightPlay.timer.length;
-        let sampler: I_AnimationSampler = {
+        const targetStride = weightPlay.weight.length / weightPlay.timer.length;
+        const sampler: I_AnimationSampler = {
             interpolation: E_InterpolationModes.linear,
             frames: weightPlay.timer,
             values: weightPlay.weight,
             target: E_AnimationTargetType.weights,
             targetStride: targetStride,
         };
-        let iv: IV_AnimationValue = {
+        const iv: IV_AnimationValue = {
             parent: (weightPlay.animation[0] as BaseAnimation).parent,
             sampler: sampler,
         };
@@ -102,9 +102,9 @@ export class WeightMixAnimation extends BaseAnimation {
      * @returns 
      */
     weightsUpdate(weghtsGroup: I_AnimationWeightForMergePlay): void {
-        let group = weghtsGroup.animation;
+        const group = weghtsGroup.animation;
 
-        let weightList: number[][] = [];
+        const weightList: number[][] = [];
         let targetStride: number = 0;
         let target: string = "";
         if (group.length == 0) {
@@ -115,9 +115,9 @@ export class WeightMixAnimation extends BaseAnimation {
             if (group[0] instanceof BaseAnimation) {
                 targetStride = group[0].interpolator.sampler.targetStride;
                 target = group[0].interpolator.sampler.target;
-                let output: number[] = [];
-                for (let perOne of group as BaseAnimation[]) {
-                    let perOutput = perOne.interpolator.output;
+                const output: number[] = [];
+                for (const perOne of group as BaseAnimation[]) {
+                    const perOutput = perOne.interpolator.output;
                     for (let i = 0; i < targetStride; i++) {
                         output[i] += perOutput[i] * weghtsGroup.weight[i];
                     }

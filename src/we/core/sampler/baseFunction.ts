@@ -1,6 +1,5 @@
 import { E_resourceKind } from "../resources/resourcesGPU";
 import { Scene } from "../scene/scene";
-import { IV_BaseMaterial } from "../material/base";
 
 /**
  * 1、检查材质的sampler是否存在，不存在就创建一个。
@@ -20,7 +19,7 @@ export function getSampler(
     } {
     let sampler: GPUSampler;
     let samplerBindingType: GPUSamplerBindingType;
-    let owner = false;
+    const owner = false;
 
     if (input.samplerDescriptor) {
         if (scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.samplerOfString)) {

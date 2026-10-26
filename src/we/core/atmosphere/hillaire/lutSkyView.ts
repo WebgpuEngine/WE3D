@@ -1,8 +1,5 @@
-import { mat4 } from "wgpu-matrix";
 import { IV_ComputeCommand, ComputeCommand } from "../../command/ComputeCommand";
-import { AtmosphereHillaire } from "./atmosphereHillaire";
 import { shaderLutSkyview } from "./baseHillaire";
-import { HillaireLutBase } from "./lutBase";
 import { LutUseShadowMap } from "./lutUseShadowMap";
 
 export class HillaireLutSkyView extends LutUseShadowMap {
@@ -11,7 +8,7 @@ export class HillaireLutSkyView extends LutUseShadowMap {
 
     generateBindGroup0() {
         //bindgroup  and layout 
-        let layout0: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout0: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "lutSkyView",
             entries: [
                 {
@@ -185,16 +182,16 @@ export class HillaireLutSkyView extends LutUseShadowMap {
         this.generateBindGroup1();
 
         //1、创建GPURenderPipelineDescriptor
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: "lutSkyView",
             // label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: this.bindGroupLayout,
         }
         //2、创建GPUPipelineLayout
-        let pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //3、创建ComputeCommand
-        let options: IV_ComputeCommand = {
+        const options: IV_ComputeCommand = {
             label: "lutSkyView",
             device: this.scene.device,
             baseInfo: {
@@ -215,7 +212,7 @@ export class HillaireLutSkyView extends LutUseShadowMap {
             },
         }
 
-        let DC = new ComputeCommand(options);
+        const DC = new ComputeCommand(options);
         this.commands.push(DC);
         // DC.submit()
     }

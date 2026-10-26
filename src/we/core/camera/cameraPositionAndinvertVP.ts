@@ -66,7 +66,7 @@ export class CameraPositionAndInvertVP {
     update() {
         for (const uuid in this.camerasData) {
             const perCameraData = this.camerasData[uuid];
-            let camera = perCameraData.camera;
+            const camera = perCameraData.camera;
             if (camera == undefined || camera == null || camera._isDestroy) {
                 this.remove(camera);
                 continue;

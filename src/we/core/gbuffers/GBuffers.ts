@@ -89,37 +89,37 @@ export class GBuffers {
      * @param input ：GBuffer的初始化参数
      */
     async initGBuffer(id: string, input: IV_GBuffer) {
-        let isMSAA = input.MSAA;
+        const isMSAA = input.MSAA;
         if (this.GBuffer[id]) {
             console.warn("GBuffer id:" + id + " already exist");
             return;
         }
-        let name = input.name || id;
-        let unixTime = new Date().getTime();
+        const name = input.name || id;
+        const unixTime = new Date().getTime();
 
-        let device = input.device;
+        const device = input.device;
 
-        let width = input.surfaceSize.width;
-        let height = input.surfaceSize.height;
+        const width = input.surfaceSize.width;
+        const height = input.surfaceSize.height;
 
-        let premultipliedAlpha = input.premultipliedAlpha;
-        let backgroudColor = input.backGroudColor;
+        const premultipliedAlpha = input.premultipliedAlpha;
+        const backgroudColor = input.backGroudColor;
 
-        let depthClearValue = input.depthClearValue;
+        const depthClearValue = input.depthClearValue;
 
-        let colorAttachments: GPURenderPassColorAttachment[] = [];
+        const colorAttachments: GPURenderPassColorAttachment[] = [];
 
-        let gbuffers: I_GBuffer = {};
-        let gbuffersMSAA: I_GBuffer = {};
+        const gbuffers: I_GBuffer = {};
+        const gbuffersMSAA: I_GBuffer = {};
         let RPD_forward: GPURenderPassDescriptor;
-        let RPD_MSAAinfo_colorAttachments: GPURenderPassColorAttachment[] = [];
+        const RPD_MSAAinfo_colorAttachments: GPURenderPassColorAttachment[] = [];
 
         //forward gbuffers
         {
-            for (let key in V_ForwardGBufferNames) {
-                let perOneBuffer = V_ForwardGBufferNames[key];
+            for (const key in V_ForwardGBufferNames) {
+                const perOneBuffer = V_ForwardGBufferNames[key];
 
-                let texture = device.createTexture({
+                const texture = device.createTexture({
                     label: name + " " + perOneBuffer.label,
                     size: [width, height],
                     format: perOneBuffer.format,
@@ -167,13 +167,13 @@ export class GBuffers {
         // console.log(RPD_MSAAinfo_colorAttachments,MSAAinfo_colorAttachmentTargets)
         //finalRender
         {
-            let toneMappingTexture: GPUTexture = device.createTexture({
+            const toneMappingTexture: GPUTexture = device.createTexture({
                 label: name + " finalRenderTexture",
                 size: [width, height],
                 format: V_weLinearFormat,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
             });
-            let rpdToneMapping: GPURenderPassDescriptor = {
+            const rpdToneMapping: GPURenderPassDescriptor = {
                 label: name + " finalRenderTexture",
                 colorAttachments: [
                     {
@@ -184,7 +184,7 @@ export class GBuffers {
                     }
                 ],
             };
-            let finalRender = {
+            const finalRender = {
                 color: toneMappingTexture,
                 rpd: rpdToneMapping,
                 colorAttachmentTargets: getColorAttachmentTargetsOfToneMapping(),
@@ -199,7 +199,7 @@ export class GBuffers {
                     depthStoreOp: 'store',
                 },
             };
-            let RPD_transparent: GPURenderPassDescriptor={
+            const RPD_transparent: GPURenderPassDescriptor={
                 colorAttachments: [
                     {
                         view: gbuffers["color"].createView({ label: id + " color" }),
@@ -237,12 +237,12 @@ export class GBuffers {
         //MSAA
         if (isMSAA) {
             // let colorAttachmentTargets: GPUColorTargetState[] = [];
-            let colorAttachments: GPURenderPassColorAttachment[] = [];
+            const colorAttachments: GPURenderPassColorAttachment[] = [];
 
-            for (let key in V_MsaaGBufferNames) {
-                let perOneBuffer = V_ForwardGBufferNames[key];
+            for (const key in V_MsaaGBufferNames) {
+                const perOneBuffer = V_ForwardGBufferNames[key];
 
-                let texture = device.createTexture({
+                const texture = device.createTexture({
                     label: name + " MSAA " + perOneBuffer.label,
                     size: [width, height],
                     format: perOneBuffer.format,
@@ -291,7 +291,7 @@ export class GBuffers {
 
     }
     removeGBuffer(id: string) {
-        for (let key in this.GBuffer[id].forward.GBuffer) {
+        for (const key in this.GBuffer[id].forward.GBuffer) {
             this.GBuffer[id].forward.GBuffer[key].destroy();
         }
         if (this.GBuffer[id].finalRender.color)
@@ -447,8 +447,8 @@ export class GBuffers {
      * @returns string[]
      */
     getUUIDFromGBuffer() {
-        let UUIDs: string[] = [];
-        for (let key in this.GBuffer) {
+        const UUIDs: string[] = [];
+        for (const key in this.GBuffer) {
             UUIDs.push(key);
         }
         return UUIDs;
@@ -460,13 +460,13 @@ export class GBuffers {
      * @returns 
      */
     initCommonTransparentRPB_ByUUID(UUIDs: string[], gbuffers: I_GBuffer) {
-        let rpd: {
+        const rpd: {
             [UUID: string]: GPURenderPassDescriptor
         } = {};
-        for (let UUID of UUIDs) {
-            let colorAttachments: GPURenderPassColorAttachment[] = [];
-            for (let key in gbuffers) {
-                let texture = gbuffers[key];
+        for (const UUID of UUIDs) {
+            const colorAttachments: GPURenderPassColorAttachment[] = [];
+            for (const key in gbuffers) {
+                const texture = gbuffers[key];
                 colorAttachments.push({
                     view: texture.createView(),
                     // clearValue: [0.0, 0.0, 0.0, 0.0],

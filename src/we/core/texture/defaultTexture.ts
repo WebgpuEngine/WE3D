@@ -4,7 +4,7 @@ import { Texture } from "./texture";
 export class DefaultTexture extends Texture {
 
     constructor(device: GPUDevice) {
-        let input: I_BaseTexture = {
+        const input: I_BaseTexture = {
             source: "",
             format: 'rgba8unorm',
         }

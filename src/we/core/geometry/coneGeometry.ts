@@ -21,7 +21,7 @@ export interface optionConeGeometry extends IV_Gemetry {
 export class ConeGeometry extends CylinderGeometry {
     constructor(input?: optionConeGeometry) {
 
-        let defaultValues: optionCylinderGeometry = {
+        const defaultValues: optionCylinderGeometry = {
             radiusTop: 0,
             radiusBottom: 1,
             height: 1,
@@ -31,7 +31,7 @@ export class ConeGeometry extends CylinderGeometry {
             thetaStart: 0,
             thetaLength: Math.PI * 2,
         }
-        let parameters = {
+        const parameters = {
             radiusTop: 0,
             radiusBottom: input?.radius || defaultValues.radiusBottom,
             height: input?.height ?? defaultValues.height,

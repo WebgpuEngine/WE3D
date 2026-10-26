@@ -1,4 +1,4 @@
-import { mat4, Mat4, vec3, Vec3, vec4 } from "wgpu-matrix";
+import { mat4, Mat4, vec3, vec4 } from "wgpu-matrix";
 import { E_lightType, I_optionBaseLight } from "./baseLight";
 import { BaseLight } from "./baseLight";
 import { Scene } from "../scene/scene";
@@ -66,7 +66,7 @@ export class SpotLight extends BaseLight {
         //7、取中心点为光源的方向
         //8、取半径为光源的范围
 
-        let matrix = new Float32Array([
+        const matrix = new Float32Array([
             1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
         ]);
 
@@ -97,20 +97,20 @@ export class SpotLight extends BaseLight {
                 // vec3.copy(this.inputValues.position!, position);
 
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
                 vec3.copy(this.worldPosition, position);
                 // 
                 // vec3.copy(vec3.create(-3,-3,-3), position);
 
                 //+Z
                 //摄像机是position-lookat,光的摄像机方向是（0，0，0）-direction，就是光源的照射来的方向（spot的光源的反方向，+Z）。
-                let dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.inputValues.direction!));
+                const dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.inputValues.direction!));
                 //方向在世界坐标系的+轴
                 if (this.inputValues.direction![0] == 0 && this.inputValues.direction![1] == 1 && this.inputValues.direction![2] == 0) {
                     vec3.copy(dir, back);
@@ -153,10 +153,10 @@ export class SpotLight extends BaseLight {
 
                 // }
                 //p0 sphere 原点
-                let p0 = vec4.transformMat4(vec4.create(spshere.position[0], spshere.position[1], spshere.position[2], 1), mat4.invert(matrix));
+                const p0 = vec4.transformMat4(vec4.create(spshere.position[0], spshere.position[1], spshere.position[2], 1), mat4.invert(matrix));
                 projectionMatrix = mat4.perspective(this.inputValues.angleOut! * 2.1, 1, 0.25, p0[2] + spshere.radius * 2 + this.epsilon);//todo,分析：near ,需要大于0.5，否则会被裁掉
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,

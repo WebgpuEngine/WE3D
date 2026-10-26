@@ -1,4 +1,3 @@
-import { E_renderForDC } from "../base/coreDefine";
 import { BaseDrawCommand } from "./BaseDrawCommand";
 import { ComputeCommand } from "./ComputeCommand";
 import { CopyCommandT2T } from "./copyCommandT2T";

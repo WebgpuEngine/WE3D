@@ -1,6 +1,6 @@
 import { E_lifeState } from "../base/coreDefine";
 import { Scene } from "../scene/scene";
-import { I_BaseTexture, isGPUSamplerDescriptor } from "./base";
+import { I_BaseTexture } from "./base";
 import { BaseTexture } from "./baseTexture";
 import { HdrifyImage, readExr, readHdr, readJpegGainMap } from "hdrify";
 
@@ -87,7 +87,7 @@ export class HDRTexture extends BaseTexture {
     //     }
     // }
     async initTextureAndLayout(): Promise<any> {
-        let source = this.inputValues.source;
+        const source = this.inputValues.source;
         if (this.scene.resourcesGPU.textureOfString.has(source)) {
             this.texture = this.scene.resourcesGPU.textureOfString.get(source);
         }
@@ -95,11 +95,11 @@ export class HDRTexture extends BaseTexture {
             if (typeof source == "string") {
                 let image: HdrifyImage;
 
-                let urlName = source.split("/");
+                const urlName = source.split("/");
                 this.Name = urlName[urlName.length - 1];
-                let extFile = this.Name.split(".")[1];
+                const extFile = this.Name.split(".")[1];
 
-                let response = await fetch(source);
+                const response = await fetch(source);
                 const buf = await response.arrayBuffer();
                 const u8buffer = new Uint8Array(buf);
 

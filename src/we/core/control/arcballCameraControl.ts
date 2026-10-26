@@ -70,11 +70,11 @@ export class ArcballCameraControl extends CamreaControl {
     update(deltaTime: number): boolean {
         if (typeof this.camera !== 'boolean') {
             //一、通用数据
-            let input = this.getInputValue();
+            const input = this.getInputValue();
             let position = vec3.copy(this.camera.worldPosition);
             //1.1、计算当前距离，旋转距离不变
             this.distance = vec3.distance(this.camera.PositionOfModelMatrix, this.camera.LookAt);
-            let oldDistance = this.distance;
+            const oldDistance = this.distance;
             //阈值，for 旋转角 & 旋转轴
             const epsilon = 0.0000001;
 
@@ -124,7 +124,7 @@ export class ArcballCameraControl extends CamreaControl {
                     //3.5.2 计算在dir方向上的摄像机的position的位置
                     if (dir) {//方向变化，距离有可能变化
                         position = vec3.scale(dir, this.distance);//重新计算位置：以相同的距离，不同的方向向量
-                        let positionOfLookat = vec3.add(position, this.camera.LookAt);//在现有位置上增加lookat位的增量。camera和lookat的坐标系在xyz的三个向量上保持一致，只有position不同（no zoom情况下）。
+                        const positionOfLookat = vec3.add(position, this.camera.LookAt);//在现有位置上增加lookat位的增量。camera和lookat的坐标系在xyz的三个向量上保持一致，只有position不同（no zoom情况下）。
                         //3.4 更新摄像机的position和lookAt
                         this.camera.updateByPositionDirection(positionOfLookat, dir, true, true);//第二、三个参数，在控制器情况下，不使用，无意义。具体参见camera.updateByPositionDirection
                         return true;
@@ -142,7 +142,7 @@ export class ArcballCameraControl extends CamreaControl {
                     vec3.addScaled(movement, this.camera.UpOfViewMatrix, input.analog.y * this.rightKeyRate, movement);//Y 方向的增量
 
                     if (movement[0] || movement[1]) {//如果X或Y方向有增量
-                        let localLookat = this.camera.getLocalLookAtVec3();
+                        const localLookat = this.camera.getLocalLookAtVec3();
                         // console.log("before add: ", localLookat, movement, position);
                         vec3.add(localLookat, movement, localLookat);//lookat 加上增量
                         vec3.add(position, movement, position);//lookat 加上position
@@ -190,8 +190,8 @@ export class ArcballCameraControl extends CamreaControl {
         else {
             vec3.copy(this.camera.LookAt, lookAt);
         }
-        let worldPosition = vec3.transformMat4(position, this.camera.Parent!.matrixWorld);//position 乘以 matrixWorld，得到position的世界坐标
-        let back = vec3.normalize(vec3.sub(worldPosition, lookAt));
+        const worldPosition = vec3.transformMat4(position, this.camera.Parent!.matrixWorld);//position 乘以 matrixWorld，得到position的世界坐标
+        const back = vec3.normalize(vec3.sub(worldPosition, lookAt));
         return back;
     }
     /**
@@ -213,22 +213,22 @@ export class ArcballCameraControl extends CamreaControl {
      * @returns ：Up向量与Z向量的叉积（标量值,共面二维化）
      */
     computeSinOfUpDirectionAndPosition(up: Vec3, position: Vec3): number {
-        let viewMatrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
+        const viewMatrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
         //新的X轴=up方向
-        let axisX = new Float32Array(viewMatrix.buffer, 4 * 0, 4);
+        const axisX = new Float32Array(viewMatrix.buffer, 4 * 0, 4);
         vec3.copy(up, axisX);
         // 新的Z轴=camrea X
-        let axizZ = new Float32Array(viewMatrix.buffer, 4 * 4 * 2, 4);
+        const axizZ = new Float32Array(viewMatrix.buffer, 4 * 4 * 2, 4);
         vec3.normalize(vec3.negate(vec3.create(this.camera.RightOfViewMatrix[0], this.camera.RightOfViewMatrix[1], this.camera.RightOfViewMatrix[2])), axizZ);
         //新的Y轴=新的Z轴叉积新的X轴
-        let axizY = new Float32Array(viewMatrix.buffer, 4 * 4 * 1, 4);
+        const axizY = new Float32Array(viewMatrix.buffer, 4 * 4 * 1, 4);
         vec3.normalize(vec3.cross(axizZ, axisX), axizY);
         //获取camera Z方向
-        let cameraZ = this.computeCameraZByPosition(position);
+        const cameraZ = this.computeCameraZByPosition(position);
         //将camera Z方向转换到本地坐标系
         vec3.normalize(vec3.transformMat4(cameraZ, mat4.invert(viewMatrix)), cameraZ);//cameraZ[3]应该=0
         //计算XY平面上，Up向量与Z向量的叉积
-        let sin = 1 * cameraZ[1] - 0 * cameraZ[0];
+        const sin = 1 * cameraZ[1] - 0 * cameraZ[0];
         return sin;
     }
 
@@ -254,25 +254,25 @@ export class ArcballCameraControl extends CamreaControl {
      * @returns ：Up向量与Z向量的点积（标量值,共面二维化）
      */
     computeCosOfUpDirectionAndPositionOld(position: Vec3): number {
-        let viewMatrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
+        const viewMatrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
         //新的X轴=up方向
-        let axisX = new Float32Array(viewMatrix.buffer, 4 * 0, 4);
+        const axisX = new Float32Array(viewMatrix.buffer, 4 * 0, 4);
         vec3.copy(vec3.create(0, 1, 0), axisX);
 
         // 新的Z轴=camrea X
-        let axizZ = new Float32Array(viewMatrix.buffer, 4 * 4 * 2, 4);
+        const axizZ = new Float32Array(viewMatrix.buffer, 4 * 4 * 2, 4);
         vec3.normalize(vec3.negate(vec3.create(this.camera.RightOfViewMatrix[0], this.camera.RightOfViewMatrix[1], this.camera.RightOfViewMatrix[2])), axizZ);
 
         //新的Y轴=新的Z轴叉积新的X轴
-        let axizY = new Float32Array(viewMatrix.buffer, 4 * 4 * 1, 4);
+        const axizY = new Float32Array(viewMatrix.buffer, 4 * 4 * 1, 4);
         vec3.normalize(vec3.cross(axizZ, axisX), axizY);
 
         //获取camera Z方向
-        let cameraZ = this.computeCameraZByPosition(position);
+        const cameraZ = this.computeCameraZByPosition(position);
         //将camera Z方向转换到本地坐标系
         vec3.normalize(vec3.transformMat4(cameraZ, mat4.invert(viewMatrix)), cameraZ);//cameraZ[3]应该=0
         //计算XY平面上，Up向量与Z向量的叉积
-        let cos = 1 * cameraZ[0] + 0 * cameraZ[1];
+        const cos = 1 * cameraZ[0] + 0 * cameraZ[1];
         return cos;
     }
 
@@ -290,7 +290,7 @@ export class ArcballCameraControl extends CamreaControl {
     * @returns ：Up向量与Z向量的点积（标量值,共面二维化）
     */
     computeSinAndCosOfUpDirectionAndX0z(position: Vec3): { sin: number, cos: number } {
-        let xOfPoint = position[0];
+        const xOfPoint = position[0];
         if (Math.abs(xOfPoint) < 0.0001) {
             if (position[1] > 0) {//判断Y值是否大于0，大于0，说明摄像机在Y轴的上方；X值趋近0，但可为正负
                 return { sin: 1, cos: 0 };
@@ -300,26 +300,26 @@ export class ArcballCameraControl extends CamreaControl {
             }
         }
         else {
-            let viewMatrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
+            const viewMatrix = mat4.create(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,);
             //新的X轴= x0z方向
-            let axisX = new Float32Array(viewMatrix.buffer, 4 * 0, 4);
+            const axisX = new Float32Array(viewMatrix.buffer, 4 * 0, 4);
             vec3.normalize(vec3.create(position[0], 0, position[2]), axisX);
 
             //新的Y轴=新的Z轴叉积新的X轴
-            let axisY = new Float32Array(viewMatrix.buffer, 4 * 4 * 1, 4);
+            const axisY = new Float32Array(viewMatrix.buffer, 4 * 4 * 1, 4);
 
             // 新的Z轴：-camrea X
-            let axizZ = new Float32Array(viewMatrix.buffer, 4 * 4 * 2, 4);
+            const axizZ = new Float32Array(viewMatrix.buffer, 4 * 4 * 2, 4);
             vec3.normalize(vec3.cross(axisX, axisY), axizZ);
 
             //获取camera Z方向xiang
-            let cameraZ = vec3.create();
+            const cameraZ = vec3.create();
             //将camera Z方向转换到本地坐标系
             vec3.normalize(vec3.transformMat4(position, mat4.invert(viewMatrix)), cameraZ);//cameraZ[3]应该=0
             // console.log("cameraZ", cameraZ, "viewMatrix", viewMatrix, "position", position);
             //计算XY平面上，Up向量与Z向量的叉积
-            let sin = 1 * cameraZ[1] - 0 * cameraZ[0];
-            let cos = 1 * cameraZ[0] + 0 * cameraZ[1];
+            const sin = 1 * cameraZ[1] - 0 * cameraZ[0];
+            const cos = 1 * cameraZ[0] + 0 * cameraZ[1];
             return { sin, cos };
         }
     }

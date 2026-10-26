@@ -24,7 +24,7 @@ export class TorusGeometry extends BaseGeometry {
     /** 计算过程中使用，应该改为私有模式，todo*/
     groupStart !: number;
     constructor(input?: optionTorusGeometry) {
-        let defaultValues = {
+        const defaultValues = {
             radius: 1,
             tube: 0.4,
             radialSegments: 12,
@@ -48,10 +48,10 @@ export class TorusGeometry extends BaseGeometry {
         this.init(this.parameters)
     }
     init(input: optionTorusGeometry) {
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
 
         const radius = input.radius!;
         const tube = input.tube!;
@@ -97,7 +97,7 @@ export class TorusGeometry extends BaseGeometry {
                 center.x = radius * Math.cos(u);
                 center.y = radius * Math.sin(u);
                 // normal.subVectors(vertex, center).normalize();
-                let normal_1 = vec3.normalize(vec3.sub(vec3.fromValues(vertex.x, vertex.y, vertex.z), vec3.fromValues(center.x, center.y, center.z)));
+                const normal_1 = vec3.normalize(vec3.sub(vec3.fromValues(vertex.x, vertex.y, vertex.z), vec3.fromValues(center.x, center.y, center.z)));
                 normal.x, normal.y, normal.z = normal_1[0], normal_1[1], normal_1[2];
                 normals.push(normal.x, normal.y, normal.z);
 

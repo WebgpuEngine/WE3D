@@ -11,7 +11,7 @@ export function generateSphereFromBox3(box: Box3): Sphere {
     const yR = Math.max(Math.pow(box.min[1], 2), Math.pow(box.max[1], 2));
     const zR = Math.max(Math.pow(box.min[2], 2), Math.pow(box.max[2], 2));
     const maxR = Math.max(xR, yR, zR);
-    let sphere: Sphere = {
+    const sphere: Sphere = {
         position: [
             (box.min[0] + box.max[0]) / 2,
             (box.min[1] + box.max[1]) / 2,

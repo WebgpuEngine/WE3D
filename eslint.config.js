@@ -14,6 +14,8 @@ export default tseslint.config(
       'test-results/**',
       '**/*.wgsl',
       '**/*.dragonData.ts',
+      'public/**',
+      'doc/**',
     ],
   },
   js.configs.recommended,

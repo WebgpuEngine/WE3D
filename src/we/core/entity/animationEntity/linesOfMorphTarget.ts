@@ -43,7 +43,7 @@ export class LinesMorphTarget extends MorphTargetEntity {
         throw new Error("Method not implemented.");
     }
     override createForwardDC(): void {
-        let dc = this.generateOpacityDC( E_shaderRegisterAlianName["entity.morphTarget"]) as DrawCommand;
+        const dc = this.generateOpacityDC( E_shaderRegisterAlianName["entity.morphTarget"]) as DrawCommand;
         this.renderPassArray[E_renderPassName.forward].push(dc);
     }
     override createTransparent(): void {

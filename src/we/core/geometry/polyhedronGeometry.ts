@@ -34,7 +34,7 @@ export class PolyhedronGeometry extends BaseGeometry {
     }
     init(input: optionPolyhedronGeometry) {
         // let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
+        const vertices = this.buffer.position;
         let normals = this.buffer.normal;
         // let uvs = this.buffer.uv;
         const vertices_ = input.vertices;
@@ -169,8 +169,8 @@ export class PolyhedronGeometry extends BaseGeometry {
 
     }
     applyRadius(radius: number) {
-        let vertexBuffer = this.buffer.position;
-        let uvBuffer = this.buffer.uv;
+        const vertexBuffer = this.buffer.position;
+        const uvBuffer = this.buffer.uv;
         const vertex: xyz = {
             x: 0,
             y: 0,
@@ -185,7 +185,7 @@ export class PolyhedronGeometry extends BaseGeometry {
             vertex.y = vertexBuffer[i + 1];
             vertex.z = vertexBuffer[i + 2];
 
-            let vector_1 = vec3.scale(vec3.fromValues(vertex.x, vertex.y, vertex.z), radius);
+            const vector_1 = vec3.scale(vec3.fromValues(vertex.x, vertex.y, vertex.z), radius);
             // vertex.normalize().multiplyScalar( radius );
             vertex.x = vector_1[0];
             vertex.y = vector_1[1];
@@ -198,8 +198,8 @@ export class PolyhedronGeometry extends BaseGeometry {
 
     }
     generateUVs() {
-        let vertexBuffer = this.buffer.position;
-        let uvBuffer = this.buffer.uv;
+        const vertexBuffer = this.buffer.position;
+        const uvBuffer = this.buffer.uv;
         const vertex: xyz = {
             x: 0,
             y: 0,
@@ -224,7 +224,7 @@ export class PolyhedronGeometry extends BaseGeometry {
 
     }
     correctSeam() {
-        let uvBuffer = this.buffer.uv
+        const uvBuffer = this.buffer.uv
         // handle case when face straddles the seam, see #3269
 
         for (let i = 0; i < uvBuffer.length; i += 6) {
@@ -257,9 +257,9 @@ export class PolyhedronGeometry extends BaseGeometry {
     }
 
     getVertexByIndex(index: number) {
-        let vertices = this.input.vertices;
+        const vertices = this.input.vertices;
         const stride = index * 3;
-        let vertex: xyz = {
+        const vertex: xyz = {
             x: 0,
             y: 0,
             z: 0
@@ -270,8 +270,8 @@ export class PolyhedronGeometry extends BaseGeometry {
         return vertex;
     }
     correctUVs() {
-        let vertexBuffer = this.buffer.position;
-        let uvBuffer = this.buffer.uv;
+        const vertexBuffer = this.buffer.position;
+        const uvBuffer = this.buffer.uv;
         const a: xyz = {
             x: 0,
             y: 0,
@@ -392,7 +392,7 @@ export class PolyhedronGeometry extends BaseGeometry {
 
         const index = this.buffer.indeices;
         const positionAttribute = this.buffer.position;
-        let normalAttribute = this.buffer.normal;
+        const normalAttribute = this.buffer.normal;
         // normalAttribute = [];
         for (let i = 0; i < positionAttribute.length; i += 3) {
             normalAttribute.push(0, 0, 0);
@@ -418,7 +418,7 @@ export class PolyhedronGeometry extends BaseGeometry {
 
 
                     let cb = vec3.sub(vC, vB);
-                    let ab = vec3.sub(vA, vB);
+                    const ab = vec3.sub(vA, vB);
                     cb = vec3.cross(cb, ab);
                     // cb = vec3.cross(cb, ab);
 
@@ -448,7 +448,7 @@ export class PolyhedronGeometry extends BaseGeometry {
                     const pC = vec3.fromValues(positionAttribute[i + 6], positionAttribute[i + 7], positionAttribute[i + 8]);
 
                     let cb = vec3.sub(pC, pB);
-                    let ab = vec3.sub(pA, pB);
+                    const ab = vec3.sub(pA, pB);
                     cb = vec3.cross(cb, ab);
 
                     normalAttribute[i + 0] = cb[0], normalAttribute[i + 1] = cb[1], normalAttribute[i + 2] = cb[2];
@@ -460,7 +460,7 @@ export class PolyhedronGeometry extends BaseGeometry {
             }
 
             for (let i = 0, il = normalAttribute.length; i < il; i += 3) {
-                let _vector = vec3.normalize(vec3.fromValues(normalAttribute[i + 0], normalAttribute[i + 1], normalAttribute[i + 2]));
+                const _vector = vec3.normalize(vec3.fromValues(normalAttribute[i + 0], normalAttribute[i + 1], normalAttribute[i + 2]));
                 normalAttribute[i + 0] = _vector[0], normalAttribute[i + 1] = _vector[1], normalAttribute[i + 2] = _vector[2];
             }
 
@@ -473,7 +473,7 @@ export class PolyhedronGeometry extends BaseGeometry {
         const normalAttribute = this.buffer.normal;
 
         for (let i = 0, il = normalAttribute.length; i < il; i += 3) {
-            let _vector = vec3.normalize(vec3.fromValues(normalAttribute[i + 0], normalAttribute[i + 1], normalAttribute[i + 2]));
+            const _vector = vec3.normalize(vec3.fromValues(normalAttribute[i + 0], normalAttribute[i + 1], normalAttribute[i + 2]));
             normalAttribute[i + 0] = _vector[0], normalAttribute[i + 1] = _vector[1], normalAttribute[i + 2] = _vector[2];
         }
 

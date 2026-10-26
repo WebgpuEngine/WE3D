@@ -149,7 +149,7 @@ export class BaseDrawCommand extends BaseCommand {
         return this.dowhole();
     }
     dowhole() {
-        let device = this.device;
+        const device = this.device;
         if (this.renderPassDescriptor !== undefined) {
             const commandEncoder = device.createCommandEncoder({ label: this.label });
             this.doWithRPD(commandEncoder);
@@ -174,7 +174,7 @@ export class BaseDrawCommand extends BaseCommand {
         }
     }
     doWithPipeline(option: I_drawCallOption) {
-        let passEncoder = option.passEncoder;
+        const passEncoder = option.passEncoder;
         passEncoder.setPipeline(this.pipeline);
         this.doDraw({ passEncoder });
     }
@@ -183,8 +183,8 @@ export class BaseDrawCommand extends BaseCommand {
      * @param option I_drawCallOption
      */
     doDraw(option: I_drawCallOption) {
-        let passEncoder = option.passEncoder;
-        for (let i in this.vertexBuffers) {
+        const passEncoder = option.passEncoder;
+        for (const i in this.vertexBuffers) {
             if (isI_pointerStruct(this.vertexBuffers[i])) {
                 const verticesBuffer = this.vertexBuffers[i];
                 passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.gpuBufferView.buffer, verticesBuffer.gpuBufferView.offset, verticesBuffer.gpuBufferView.size);//四个参数： slot, buffer, offset, size
@@ -198,14 +198,14 @@ export class BaseDrawCommand extends BaseCommand {
             }
         }
         if (this.viewport) {
-            let minDepth = this.viewport.minDepth == undefined ? 0 : this.viewport.minDepth;
-            let maxDepth = this.viewport.maxDepth == undefined ? 1 : this.viewport.maxDepth;
+            const minDepth = this.viewport.minDepth == undefined ? 0 : this.viewport.minDepth;
+            const maxDepth = this.viewport.maxDepth == undefined ? 1 : this.viewport.maxDepth;
 
             passEncoder.setViewport(this.viewport.x, this.viewport.y, this.viewport.width, this.viewport.height, minDepth, maxDepth);
         }
 
 
-        for (let i in this.bindGroups) {
+        for (const i in this.bindGroups) {
             passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
         }
 
@@ -231,7 +231,7 @@ export class BaseDrawCommand extends BaseCommand {
     }
     /** 绘制多个instance数组*/
     drawInstacnceArray(passEncoder: GPURenderPassEncoder, drawMode: I_drawMode[] | I_drawModeIndexed[]) {
-        for (let i in drawMode) {
+        for (const i in drawMode) {
             this.drawInstacnce(passEncoder, drawMode[i]);
         }
     }
@@ -294,7 +294,7 @@ export class BaseDrawCommand extends BaseCommand {
      * 提交单次命令
      */
     submit() {
-        let commandBuffer = this.update()
+        const commandBuffer = this.update()
         this.device.queue.submit([commandBuffer]);
     }
 

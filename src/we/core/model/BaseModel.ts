@@ -143,7 +143,7 @@ export abstract class BaseModel extends NodeObject {
     abstract detachData(): void;
 
     update(clock: Clock, updateSelftFN: boolean = true): boolean {
-        for (let perOne of this.children) {
+        for (const perOne of this.children) {
             (perOne as NodeObject).update(clock);
         }
         return true;

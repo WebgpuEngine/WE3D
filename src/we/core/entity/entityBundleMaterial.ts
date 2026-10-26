@@ -56,11 +56,11 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         //顶点数据源处理
         if (input.attributes.geometry) {
             this._geometry = input.attributes.geometry;
-            let attributes = input.attributes.geometry.getAttribute();
-            for (let key in attributes) {
+            const attributes = input.attributes.geometry.getAttribute();
+            for (const key in attributes) {
                 this.attributes.vertices[key] = attributes[key];
             }
-            let indices = input.attributes.geometry.getIndeices();
+            const indices = input.attributes.geometry.getIndeices();
             if (indices) {
                 this.attributes.indices = indices;
             }
@@ -68,8 +68,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
 
         }
         else if (input.attributes.data) {
-            let attributes = input.attributes.data.vertices;
-            for (let key in attributes) {
+            const attributes = input.attributes.data.vertices;
+            for (const key in attributes) {
                 this.attributes.vertices[key] = attributes[key];
             }
             if (input.attributes.data.indices) {
@@ -196,7 +196,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             this.inputValues.attributes.data.vertices &&
             this.inputValues.attributes.data.vertices.position &&
             isVSGPUBufferBundle(this.inputValues.attributes.data.vertices.position)) {
-            let box: boundingBox = {
+            const box: boundingBox = {
                 min: this.inputValues.attributes.data.vertices.position.min,
                 max: this.inputValues.attributes.data.vertices.position.max,
             };
@@ -226,7 +226,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     getBoundingBoxMaxSize(): number {
         if (this.boundingBox == undefined)
             this.generateBoxAndSphere();
-        let box3 = this.boundingBox;
+        const box3 = this.boundingBox;
         if (box3) {
             return Math.max(box3.max[0] - box3.min[0], box3.max[1] - box3.min[1], box3.max[2] - box3.min[2]);
         }
@@ -347,12 +347,12 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 drawMode = this.inputValues.drawMode;
             }
             else {
-                let drawModeMesh: I_drawMode = {
+                const drawModeMesh: I_drawMode = {
                     vertexCount: 0,
                     firstInstance: 0,
                     instanceCount: 1,
                 };
-                let drawModeIndexMesh: I_drawModeIndexed = {
+                const drawModeIndexMesh: I_drawModeIndexed = {
                     indexCount: 0,//this.attributes.indices.length,
                     instanceCount: 1,
                     firstIndex: 0,
@@ -373,7 +373,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 //non-index mode
                 else {
                     if (this.attributes.vertices["position"]) {
-                        let pos = this.attributes.vertices["position"]!;
+                        const pos = this.attributes.vertices["position"]!;
                         if (isVSGPUBufferBundle(pos)) {
                             drawModeMesh.vertexCount = pos.count;
                         }
@@ -438,21 +438,21 @@ export abstract class EntityBundleMaterial extends BaseEntity {
 
         //2、可见性
         // 可见的实例ID数组
-        let visibleInstanceIDArray: number[] = [];
+        const visibleInstanceIDArray: number[] = [];
         // 遍历所有实例ID：可见性可用性判断
         // if (scope.attributes.indices) {
-        for (let i in this.outSideInstance) {
+        for (const i in this.outSideInstance) {
             let visibleOfNode = true;
             let enableOfNode = true;
             let visibleInBVH = true;
-            let perNode = this.outSideInstance[i];
+            const perNode = this.outSideInstance[i];
             visibleOfNode = perNode.getVisibleAndParents();
             enableOfNode = perNode.getEnableAndParents();
             if (kind == E_renderForDC.camera) {
                 visibleInBVH = this.scene.cameraManager.getCameraByUUID(UUID).getVisibleInBVH(perNode);
             }
             else if (kind == E_renderForDC.light) {
-                let light = this.scene.lightsManager.getLightByMergeID(UUID);
+                const light = this.scene.lightsManager.getLightByMergeID(UUID);
                 if (light != false && light instanceof BaseLight)
                     visibleInBVH = light.getVisibleInBVH(perNode, UUID);
             }
@@ -464,15 +464,15 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         }
 
         //3、聚合instance bundle，形成 instance ID 连续的实例ID
-        let visibleInstanceIDBundle: { count: number, firstInstance: number }[] = [];
+        const visibleInstanceIDBundle: { count: number, firstInstance: number }[] = [];
         let firstInstance = visibleInstanceIDArray[0];
         // let instanceCount = visibleInstanceIDArray.length;
         let lastVisibleInstanceID = visibleInstanceIDArray[0];
 
         //3.1 bundle instance ID 连续的实例ID
         let lastInBundle = false;
-        for (let i in visibleInstanceIDArray) {
-            let id = visibleInstanceIDArray[i];
+        for (const i in visibleInstanceIDArray) {
+            const id = visibleInstanceIDArray[i];
             if (i == "0") {
                 firstInstance = id;
                 lastVisibleInstanceID = id;
@@ -501,7 +501,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         }
         //4、实例化drawMode数组
         // 数组：实例化的drawMode数组
-        let instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = this.fillDrawDataToAarray(visibleInstanceIDBundle, drawMode);
+        const instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = this.fillDrawDataToAarray(visibleInstanceIDBundle, drawMode);
         this._visibleInstanceIDBundle = visibleInstanceIDBundle;
         //5、返回
         return instanceDrawArray;
@@ -513,9 +513,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @returns 
      */
     fillDrawDataToAarray(visibleInstanceIDBundle: { count: number, firstInstance: number }[], drawMode: I_drawMode | I_drawModeIndexed) {
-        let instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = [];
-        for (let perPart of visibleInstanceIDBundle) {
-            let instanceDraw: I_drawMode | I_drawModeIndexed = {
+        const instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = [];
+        for (const perPart of visibleInstanceIDBundle) {
+            const instanceDraw: I_drawMode | I_drawModeIndexed = {
                 ...drawMode
             };
             instanceDraw.instanceCount = perPart.count;
@@ -554,11 +554,11 @@ export abstract class EntityBundleMaterial extends BaseEntity {
          * 5、返回
          */
         //1、获取entity drawMode模板
-        let drawMode: I_drawMode | I_drawModeIndexed = this.getDrawModeTemplate();
+        const drawMode: I_drawMode | I_drawModeIndexed = this.getDrawModeTemplate();
         //2、可见性
         // 可见的实例ID数组
         // let visibleInstanceIDArray: number[] = [];
-        let visibleInstanceIDArray: ({
+        const visibleInstanceIDArray: ({
             instance: NodeObject,
             // instanceIdArray: number[],
             distance: number,
@@ -571,21 +571,21 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         // 遍历所有实例ID：可见性可用性判断
         // if (scope.attributes.indices) {
         let iOfInstance = 0;
-        for (let i in this.outSideInstance) {
+        for (const i in this.outSideInstance) {
             let visibleOfNode = true;
             let enableOfNode = true;
             let visibleInBVH = true;
-            let perNode = this.outSideInstance[i];
+            const perNode = this.outSideInstance[i];
             visibleOfNode = perNode.getVisibleAndParents();
             enableOfNode = perNode.getEnableAndParents();
             let worldPositionOfUUID: Vec3 | undefined;
             if (kind == E_renderForDC.camera) {
-                let camera = this.scene.cameraManager.getCameraByUUID(UUID);
+                const camera = this.scene.cameraManager.getCameraByUUID(UUID);
                 visibleInBVH = camera.getVisibleInBVH(perNode);
                 worldPositionOfUUID = camera.worldPosition;
             }
             else if (kind == E_renderForDC.light) {
-                let light = this.scene.lightsManager.getLightByMergeID(UUID);
+                const light = this.scene.lightsManager.getLightByMergeID(UUID);
                 if (light != false && light instanceof BaseLight) {
                     worldPositionOfUUID = light.worldPosition;
                     visibleInBVH = light.getVisibleInBVH(perNode, UUID);
@@ -600,8 +600,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     drawData: [],
                     distance: distance,
                 };
-                let firstInstance = Number(i) * this.instance.numInstances;
-                let instanceDraw: I_drawMode | I_drawModeIndexed = {
+                const firstInstance = Number(i) * this.instance.numInstances;
+                const instanceDraw: I_drawMode | I_drawModeIndexed = {
                     ...drawMode
                 };
                 instanceDraw.instanceCount = this.instance.numInstances;
@@ -666,7 +666,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 aliasName: bundle.fs.aliasName,
             };
         }
-        let valueDC: IV_DC = {
+        const valueDC: IV_DC = {
             label: `${scope.kind} ${scope.Name || scope.ID}`,
             data: {
                 vertices: scope.attributes.vertices,
@@ -753,14 +753,14 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         vsAliasName: string,
         _material?: BaseMaterial
     ): DrawCommand {
-        let vsCode = this.scene.shaderRegister.getAliasShaderName(vsAliasName, this.getUserCodeVS(), this.getUserCodeFunction());
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(vsAliasName, this.getUserCodeVS(), this.getUserCodeFunction());
         let material = this._material;
         if (_material) material = _material;
         let dc: DrawCommand;
         if (this.MSAA === true) {   //输出两个DC（MSAA 和 info forward）
-            let uniformsMaterialMSAA: I_BundleOfMaterialForMSAA = material.getOpacity_MSAA();
+            const uniformsMaterialMSAA: I_BundleOfMaterialForMSAA = material.getOpacity_MSAA();
             {//MSAA 部分,输出MSAA DC队列
-                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.MSAA }, false, this);
+                const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.MSAA }, false, this);
                 valueDC.system!.MSAA = "MSAA";
                 valueDC.label = valueDC.label;
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
@@ -768,7 +768,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 this.renderPassArray[E_renderPassName.MSAA].push(dc);
             }
             {//info forward 部分,输出info forward DC队列
-                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.inforForward }, false, this);
+                const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.inforForward }, false, this);
                 valueDC.system!.MSAA = "MSAAinfo";
                 valueDC.label = valueDC.label;
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
@@ -785,7 +785,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             }
             //材质的shader 模板输出，
             {
-                let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterial }, false, this);
+                const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterial }, false, this);
                 if (this.deferColor)
                     valueDC.label = valueDC.label;
                 else
@@ -810,7 +810,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         else if (this.kind === E_entityType.points) {
             sht = "entity.points";
         }
-        let dc = this.generateOpacityDC(sht) as DrawCommand;
+        const dc = this.generateOpacityDC(sht) as DrawCommand;
         // this.cameraDC[UUID][E_renderPassName.forward].push(dc);
         this.renderPassArray[E_renderPassName.forward]!.push(dc);
     }
@@ -826,10 +826,10 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         }
         //mesh VS 模板输出
         // let vsCode = this.scene.shaderRegister.getAliasShaderName(sht);
-        let vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
-        let valueDC = this.generateInputValueOfDC(E_renderForDC.light, { vs: { code: vsCode } }, true);
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
+        const valueDC = this.generateInputValueOfDC(E_renderForDC.light, { vs: { code: vsCode } }, true);
         valueDC.label = "shadowmap:" + valueDC.label;
-        let dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
         this.renderPassArray[E_renderPassName.shadowmapOpaque]!.push(dc);
     }
     createShadowMapTransparentDC(): void {
@@ -845,16 +845,16 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             return;
         //材质的shader 模板输出，
         // let vsCode = this.scene.shaderRegister.getAliasShaderName(sht);
-        let vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
         //获取TTTT，然后分别判断并执行
-        let uniformsMaterialTT = this._material.getFS_TT();
-        let valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialTT });
+        const uniformsMaterialTT = this._material.getFS_TT();
+        const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialTT });
 
         //设置为透明
         valueDC.transparent = this.getBlend();//材质的透明混合参数
         valueDC.label = "TT mesh:" + this.Name || this.ID.toString();
         // valueDC.label = this.ID.toString();
-        let dcTT: DrawCommand = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dcTT: DrawCommand = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
         this.renderPassArray[E_renderPassName.transparent]!.push(dcTT);
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -880,7 +880,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      */
     setVertexBuffer(name: string, data: number[], option?: { type?: "float32" | "int32" | "uint32", stride?: number }) {
         if (this._dynamicAttribute && this.vertexPointers[name]) {//必须判断vertexPointers[name]是否存在，否则会报错(创建后，visible=false ，没有进行创建DC)，
-            let replaceTarget = this.attributes.vertices[name];
+            const replaceTarget = this.attributes.vertices[name];
             // if (isVSGPUBufferBundle(this.attributes.vertices[name]) && isI_vsAttributeMerge(replaceTarget)) {
             if (Array.isArray(replaceTarget)) {
                 /*
@@ -907,7 +907,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
 
                 //2.1 删除旧的vertexBuffer
                 // let vertexBuffer = this.resourcesGPU.verticesDynamic.get(replaceTarget);
-                let vertexBuffer = this.vertexPointers[name].gpuBuffer;
+                const vertexBuffer = this.vertexPointers[name].gpuBuffer;
                 // this.resourcesGPU.verticesDynamic.delete(replaceTarget);
                 vertexBuffer.destroy();
 
@@ -927,15 +927,15 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     // return;
                 }
                 //2.2 创建新的vertexBuffer
-                let vertexBufferNew = createVerticesBuffer(this.device, `${this.ID} rebuild ${name} `, arrayBuffer);
+                const vertexBufferNew = createVerticesBuffer(this.device, `${this.ID} rebuild ${name} `, arrayBuffer);
                 // this.resourcesGPU.verticesDynamic.set(this.attributes.vertices[name], vertexBufferNew);
                 this.vertexPointers[name].gpuBuffer = vertexBufferNew;
 
 
                 //3.1  更新cameraDC队列
-                for (let i in this.renderPassArray) {
-                    for (let perDC of this.renderPassArray[i as keyof typeof this.renderPassArray]) {
-                        for (let perVertexBuffer of perDC.vertexBuffers) {
+                for (const i in this.renderPassArray) {
+                    for (const perDC of this.renderPassArray[i as keyof typeof this.renderPassArray]) {
+                        for (const perVertexBuffer of perDC.vertexBuffers) {
                             if (perVertexBuffer.name == name) {
                                 (perVertexBuffer as I_VertexBufferEntry).buffer = vertexBufferNew;
                             }
@@ -964,7 +964,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     }
     setIndexBuffer(data: number[], option?: { stride?: number, wireFrame?: boolean }) {
         if (this._dynamicAttribute && this.vertexPointers.indices) {
-            let wireFrame = "wireframe";
+            const wireFrame = "wireframe";
             let isWireFrame = false;
             if (option?.wireFrame == true) {
                 isWireFrame = true;
@@ -983,7 +983,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                  * 四、更新shadowmapDC
                  * 
                  */
-                let replaceTarget = this.attributes.indices;
+                const replaceTarget = this.attributes.indices;
                 if (Array.isArray(replaceTarget) && data.length > 0) {
                     //1.1 更新this.attributes.indices
                     this.attributes.indices = data;
@@ -993,8 +993,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     //2.2 创建新的indexBuffer
                     indexBuffer = createIndexBuffer(this.device, `${this.ID} rebuild indices `, new Uint32Array(data));
                     //3.1 更新cameraDC队列
-                    for (let i in this.renderPassArray) {
-                        for (let perDC of this.renderPassArray[i as keyof typeof this.renderPassArray]) {
+                    for (const i in this.renderPassArray) {
+                        for (const perDC of this.renderPassArray[i as keyof typeof this.renderPassArray]) {
                             if (perDC.label.includes(wireFrame) && isWireFrame === false) {
                                 continue;
                             }

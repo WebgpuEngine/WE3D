@@ -1,5 +1,4 @@
 import { commmandType } from "../../command/base";
-import { E_GBufferNames } from "../../gbuffers/base";
 import { E_renderPassName } from "../../scene/renderManager";
 import { Scene } from "../../scene/scene";
 import { AtmosphereHillaire } from "./atmosphereHillaire";
@@ -42,7 +41,7 @@ export abstract class HillaireLutBase {
         })
     }
     getConstants(): Record<string, number> | undefined {
-        let constants: Record<string, number> = {};
+        const constants: Record<string, number> = {};
         if (this.parent.atmosphereParams.FROM_KM_SCALE != undefined) {
             constants["FROM_KM_SCALE"] = this.parent.atmosphereParams.FROM_KM_SCALE;
         }

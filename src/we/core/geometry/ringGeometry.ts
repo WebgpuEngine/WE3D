@@ -1,4 +1,3 @@
-import { vec3 } from "wgpu-matrix";
 import {
     BaseGeometry,
     IV_Gemetry,
@@ -34,7 +33,7 @@ export class RingGeometry extends BaseGeometry {
     groupStart !: number;
 
     constructor(input?: optionRingGeometry) {
-        let defaultValues = {
+        const defaultValues = {
             innerRadius: 0.5,
             outerRadius: 1,
             thetaSegments: 32,
@@ -63,10 +62,10 @@ export class RingGeometry extends BaseGeometry {
     /** copy code from threejs */
     init(input: optionRingGeometry) {
         // buffers         
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
 
         let radius = input.innerRadius!;
         const radiusStep = ((input.outerRadius! - input.innerRadius!) / input.phiSegments!);

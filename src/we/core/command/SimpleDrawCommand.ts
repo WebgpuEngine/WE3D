@@ -111,15 +111,15 @@ export class SimpleDrawCommand extends BaseCommand {
         this._isDestroy = true;
     }
     createVertexBuffers() {
-        let DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
+        const DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
 
         let shaderLocation = 0;
         if (this.inputValues.data) {
-            for (let i in this.inputValues.data) {
-                let perOne = this.inputValues.data[i as keyof typeof this.inputValues.data];
+            for (const i in this.inputValues.data) {
+                const perOne = this.inputValues.data[i as keyof typeof this.inputValues.data];
                 let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                let data = new Float32Array(perOne! as number[]);
-                let gpuBuffer = createVerticesBuffer(this.device, this.label + " position vertex GPUBuffer", data.buffer);
+                const data = new Float32Array(perOne! as number[]);
+                const gpuBuffer = createVerticesBuffer(this.device, this.label + " position vertex GPUBuffer", data.buffer);
 
                 if (i == "indices") {
                     this.indexBuffer = {
@@ -180,7 +180,7 @@ export class SimpleDrawCommand extends BaseCommand {
     }
     createPipeline() {
         this.createShaderModule(this.inputValues.shaderCode);
-        let descriptor: GPURenderPipelineDescriptor = {
+        const descriptor: GPURenderPipelineDescriptor = {
             label: this.label,
             layout: "auto",
             vertex: {
@@ -281,8 +281,8 @@ export class SimpleDrawCommand extends BaseCommand {
     //     return shaderCode;
     // }
     generateBindGroup() {
-        let values = this.inputValues;
-        let uniformGroup = this.inputValues.uniforms;
+        const values = this.inputValues;
+        const uniformGroup = this.inputValues.uniforms;
         if (!uniformGroup) {
             return;
         }
@@ -291,19 +291,19 @@ export class SimpleDrawCommand extends BaseCommand {
         // if (this.inputValues.system != undefined) {
 
         // }
-        for (let perGroup of uniformGroup) {
+        for (const perGroup of uniformGroup) {
             //BindGroup
             let bindGroup: GPUBindGroup;
             //BindGroup 的数据入口,主要是buffer的创建需要push
-            let bindGroupEntry: GPUBindGroupEntry[] = [];
+            const bindGroupEntry: GPUBindGroupEntry[] = [];
 
             //创建BindGroup entry
-            for (let perEntry of perGroup) {
+            for (const perEntry of perGroup) {
 
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 if (isUniformBufferPart(perEntry)) {
                     const label = (perEntry as I_uniformArrayBufferEntry).label;
-                    let buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
+                    const buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
                     this.uniformGPUBuffers.push(buffer);
                     bindGroupEntry.push({
                         binding: perEntry.binding,
@@ -319,7 +319,7 @@ export class SimpleDrawCommand extends BaseCommand {
             }
 
             //初始化BindGroup描述
-            let bindGroupDesc: GPUBindGroupDescriptor = {
+            const bindGroupDesc: GPUBindGroupDescriptor = {
                 label: values.label + " BGD: " + layoutNumber,
                 layout: this.pipeline.getBindGroupLayout(layoutNumber),
                 entries: bindGroupEntry,
@@ -333,14 +333,14 @@ export class SimpleDrawCommand extends BaseCommand {
         }
     }
     submit() {
-        let commandBuffer = this.update()
+        const commandBuffer = this.update()
         this.device.queue.submit([commandBuffer]);
     }
     update(): GPUCommandBuffer {
         return this.dowhole();
     }
     dowhole() {
-        let device = this.device;
+        const device = this.device;
         if (this.renderPassDescriptor !== undefined) {
             const commandEncoder = device.createCommandEncoder({ label: this.label });
             this.doWithRPD(commandEncoder);
@@ -370,7 +370,7 @@ export class SimpleDrawCommand extends BaseCommand {
         this.doDraw(passEncoder);
     }
     doDraw(passEncoder: GPURenderPassEncoder) {
-        for (let i in this.vertexBuffers) {
+        for (const i in this.vertexBuffers) {
             const verticesBuffer = this.vertexBuffers[i];
             if (verticesBuffer.offset !== undefined && verticesBuffer.byteSize !== undefined)
                 passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer, verticesBuffer.offset, verticesBuffer.byteSize);//四个参数： slot, buffer, offset, size
@@ -378,7 +378,7 @@ export class SimpleDrawCommand extends BaseCommand {
                 passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer);//四个参数： slot, buffer, offset, size
         }
 
-        for (let i in this.bindGroups) {
+        for (const i in this.bindGroups) {
             passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
         }
 

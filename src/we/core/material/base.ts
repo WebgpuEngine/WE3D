@@ -366,7 +366,7 @@ export interface I_MaterialUniformTextureBundle {
 
 /** getGroupAndBindingString()使用*/
 export function materialAddGroupBindStringOfMSAA(binding: number): { code: string, binding: number } {
-    let code = `
+    const code = `
                 @group(2) @binding(${binding++}) var u_texture_id: texture_2d<u32>;
                 @group(2) @binding(${binding++}) var u_texture_normal_msaainfo: texture_2d<f32>;         //normal（可能，按需）会被计算过
                 //其他适用VS 传输的:uv,color,worldPosition等
@@ -378,7 +378,7 @@ export function materialAddGroupBindStringOfMSAA(binding: number): { code: strin
 }
 /**getEntriesOfBindGroupLayout()使用 */
 export function materialAddBindGroupLayoutOfMSAA(binding: number): { layout: GPUBindGroupLayoutEntry[], binding: number } {
-    let layout: GPUBindGroupLayoutEntry[] = [
+    const layout: GPUBindGroupLayoutEntry[] = [
         {
             binding: binding++,
             texture: {
@@ -403,7 +403,7 @@ export function materialAddBindGroupLayoutOfMSAA(binding: number): { layout: GPU
 }
 /**getEntriesOfBindGroup()使用 */
 export function materialAddBindGroupOfMSAA(scope: BaseMaterial, binding: number, uuid: string): { group: T_uniformEntries[], binding: number } {
-    let group: T_uniformEntries[] = [
+    const group: T_uniformEntries[] = [
         {
             binding: binding++,
             resource: scope.scene.cameraManager.getGBufferTextureByUUID(uuid, E_GBufferNames.id).createView(),

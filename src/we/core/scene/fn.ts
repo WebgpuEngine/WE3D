@@ -3,13 +3,13 @@ import { initSceneConfig } from "./base";
 import { Scene } from "./scene";
 
 export async function initScene(config: initSceneConfig) {
-    let initValues = config.initConfig;
+    const initValues = config.initConfig;
     // if (config.loadConfig) {
     //     initValues.backgroudColor = config.loadConfig.weRender.backgroudColor;
     //     initValues.premultipliedAlpha = config.loadConfig.surface.premultipliedAlpha;
     //     initValues.surface = config.loadConfig.surface;
     // }
-    let scene = new Scene(initValues);
+    const scene = new Scene(initValues);
     await scene.init();
     // if (config.loadConfig) {
     //     scene.load(config.loadConfig);
@@ -21,7 +21,7 @@ export async function initScene(config: initSceneConfig) {
     }
     if (config.initConfig.modeNDC !== true) {
         // 全透明点
-        let mesh = new Points({
+        const mesh = new Points({
             name: "全透明点",
             attributes: {
                 data: {

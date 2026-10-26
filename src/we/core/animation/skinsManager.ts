@@ -6,7 +6,7 @@ export class SkinsManager extends ECSManager<SkinAnimation> {
 
     update(clock: Clock): void {
         this.checkDestroy();
-        for (let skin of this.list) {
+        for (const skin of this.list) {
             skin.update(clock);
         }
     }

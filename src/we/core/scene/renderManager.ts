@@ -427,11 +427,11 @@ export class RenderManager {
         this.RC[E_renderPassName.renderTarget] = [];
         this.RC[E_renderPassName.afterDeferRender] = [];
 
-        for (let UUID in this.RC[E_renderPassName.shadowmapOpaque]) {
+        for (const UUID in this.RC[E_renderPassName.shadowmapOpaque]) {
             this.RC[E_renderPassName.shadowmapOpaque][UUID as E_renderPassName].clear();
             this.RC[E_renderPassName.shadowmapTransparent][UUID as E_renderPassName] = [];
         }
-        for (let UUID in this.RC[E_renderPassName.forward]) {
+        for (const UUID in this.RC[E_renderPassName.forward]) {
             this.RC[E_renderPassName.forward][UUID as E_renderPassName].clear();
             this.RC[E_renderPassName.MSAA][UUID as E_renderPassName].clear();
             this.RC[E_renderPassName.sprite][UUID as E_renderPassName].clear();
@@ -562,7 +562,7 @@ export class RenderManager {
     render() {
 
         if (this.scene.finalTarget.NDC === true) {
-            for (let oneDC of this.RC[E_renderPassName.ndc]) {
+            for (const oneDC of this.RC[E_renderPassName.ndc]) {
                 this.autoChangeRPDloadOP(this.scene.getRenderPassDescriptorForNDC(), "ndc");
                 oneDC.submit();
                 // console.log(oneDC);
@@ -572,7 +572,7 @@ export class RenderManager {
             this.commandEncoder = this.device.createCommandEncoder({ label: "RenderManager" });
 
             //compute ,texture ,material ,renderTarget
-            for (let onePass of this.listCommandType) {
+            for (const onePass of this.listCommandType) {
                 this.doCommand(onePass, E_renderPassName.renderTarget);
             }
 
@@ -639,13 +639,13 @@ export class RenderManager {
          *  5、设置loadOp为“load”，后续绘制时，不再需要更改loadOp；
          * 
          */
-        for (let mergeID in commands) {
-            let perMapOfPipelineOfCamera = commands[mergeID];
+        for (const mergeID in commands) {
+            const perMapOfPipelineOfCamera = commands[mergeID];
             if (perMapOfPipelineOfCamera.size == 0)
                 continue;
             //1 获取RPD
             let rpd: GPURenderPassDescriptor;
-            let uuid: string = mergeID;
+            const uuid: string = mergeID;
             if (uuid.indexOf("__") != -1 && renderPassName == E_renderPassName.shadowmapOpaque) {
                 rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.light);
             }
@@ -664,7 +664,7 @@ export class RenderManager {
             // debugger;
 
             //2 生成 passEncoder
-            let passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
+            const passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
             // console.warn(`renderForwaredDC: ${mergeID},loadOp: ${rpd.colorAttachments[0]!.loadOp}`);
             // debugger;
 
@@ -672,12 +672,12 @@ export class RenderManager {
             // todo
 
             //4 遍历每个pipeline，
-            for (let [perPipeLine, dcMap] of perMapOfPipelineOfCamera) {
+            for (const [perPipeLine, dcMap] of perMapOfPipelineOfCamera) {
                 //4.1  设置pipeline
                 passEncoder.setPipeline(perPipeLine);
                 //4.2  遍历每个drawCommand
-                for (let [perDrawCommand, drawModeData] of dcMap) {
-                    let optionOfDraw: I_drawCallOption = {
+                for (const [perDrawCommand, drawModeData] of dcMap) {
+                    const optionOfDraw: I_drawCallOption = {
                         passEncoder,
                         renderPassName,
                         mergeID,
@@ -706,7 +706,7 @@ export class RenderManager {
             }
 
             //5 设置loadOp为“load”，后续绘制时，不再需要更改loadOp；
-            for (let perColorAttachment of rpd.colorAttachments) {
+            for (const perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "load";
             }
@@ -718,13 +718,13 @@ export class RenderManager {
      * @param list 透明渲染列表
      */
     renderTransParentDC(commands: I_renderDrawOfDistancesLine, renderPassName: E_renderPassName) {
-        for (let mergeID in commands) {
-            let list = commands[mergeID];
+        for (const mergeID in commands) {
+            const list = commands[mergeID];
             if (list.length == 0)
                 continue;
             //1 获取RPD
             let rpd: GPURenderPassDescriptor;
-            let uuid: string = mergeID;
+            const uuid: string = mergeID;
             if (uuid.indexOf("__") != -1 && renderPassName == E_renderPassName.shadowmapTransparent) {
                 rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.light);
                 this.autoChangeRPDloadOP(rpd, mergeID);
@@ -734,11 +734,11 @@ export class RenderManager {
                 this.autoChangeRPDloadOP(rpd, mergeID + "_" + E_renderPassName.forward);
             }
             //2 生成 passEncoder
-            let passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
+            const passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
             //3 排序，按距离从远到近
             list.sort((a, b) => b.distance - a.distance);
             //4 遍历每个drawCommand
-            for (let perDrawCommand of list) {//camera UUID
+            for (const perDrawCommand of list) {//camera UUID
                 let pipeline: GPURenderPipeline | undefined = undefined;
 
                 if (Array.isArray(perDrawCommand)) {//如果是数组（BVH相交的透明物体集合），说明是TTP，执行TTP渲染
@@ -756,7 +756,7 @@ export class RenderManager {
                         passEncoder.setPipeline(pipeline);
                     }
 
-                    let optionOfDraw: I_drawCallOption = {
+                    const optionOfDraw: I_drawCallOption = {
                         passEncoder,
                         renderPassName,
                         mergeID,
@@ -783,10 +783,10 @@ export class RenderManager {
      * @param renderPassName E_renderPassName
      */
     renderComplexQuad(list: I_renderDrawOfQuad, renderPassName: E_renderPassName) {
-        for (let id in list) {
-            let perSetOfCommand = list[id];
+        for (const id in list) {
+            const perSetOfCommand = list[id];
             // let rpd: GPURenderPassDescriptor = this.scene.getRenderPassDescriptor(id, E_renderForDC.camera);
-            for (let perCommand of perSetOfCommand) {
+            for (const perCommand of perSetOfCommand) {
                 if (perCommand instanceof SimpleDrawCommand || perCommand instanceof BaseDrawCommand) {
                     perCommand.doWithRPD(this.commandEncoder);
                 }
@@ -819,7 +819,7 @@ export class RenderManager {
      * 1、命令集合为数组
      */
     doCommand(list: commmandType[], renderPassName: E_renderPassName) {
-        for (let perCommand of list) {
+        for (const perCommand of list) {
             if (perCommand instanceof SimpleDrawCommand) {
                 perCommand.doWithRPD(this.commandEncoder);
             }
@@ -1011,10 +1011,10 @@ export class RenderManager {
     // }
 
     autoChangeRPDloadOP(rpd: GPURenderPassDescriptor, mergeID: string) {
-        let countOfUUID: number = this.checkChangeRPDloadOP(mergeID);
+        const countOfUUID: number = this.checkChangeRPDloadOP(mergeID);
         if (countOfUUID == 0) {
             // countOfUUID = 0;
-            for (let perColorAttachment of rpd.colorAttachments) {
+            for (const perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "clear";
             }
@@ -1023,7 +1023,7 @@ export class RenderManager {
             }
         }
         else {// forward render
-            for (let perColorAttachment of rpd.colorAttachments) {
+            for (const perColorAttachment of rpd.colorAttachments) {
                 if (perColorAttachment)
                     perColorAttachment.loadOp = "load";                 //forward render loadOp="load"   
             }

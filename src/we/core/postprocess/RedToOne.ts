@@ -17,7 +17,7 @@ export class PP_RedToOne extends BasePostProcess {
     init() {
         this.defaultPushCopyCommand();
 
-        let rpd: GPURenderPassDescriptor = {
+        const rpd: GPURenderPassDescriptor = {
             colorAttachments: [
                 {
                     // view: this.finalTarget.createView(),
@@ -28,20 +28,20 @@ export class PP_RedToOne extends BasePostProcess {
                 }
             ],
         };
-        let screenSize = new ArrayBuffer(4 * 2);
+        const screenSize = new ArrayBuffer(4 * 2);
         new Float32Array(screenSize).set([this.scene.surface.size.width, this.scene.surface.size.height]);
 
 
-        let texture1: GPUBindGroupEntry = {
+        const texture1: GPUBindGroupEntry = {
             binding: 0,
             resource: this.scene.finalTarget.colorPostProcess!.createView(),
         }
-        let uniforms = [[
+        const uniforms = [[
             texture1,
         ]]
         // let SHT = SHT_PP_RedToOne;
-        let code = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName["postProcess.redToOne"]);
-        let inputSDC: IV_SimpleDrawCommand = {
+        const code = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName["postProcess.redToOne"]);
+        const inputSDC: IV_SimpleDrawCommand = {
             scene: this.scene,
             drawMode: {
                 vertexCount: 4
@@ -59,12 +59,12 @@ export class PP_RedToOne extends BasePostProcess {
             // device: this.scene.device,
             label: "PP_RedToOne"
         };
-        let SDC1 = new SimpleDrawCommand(inputSDC);
+        const SDC1 = new SimpleDrawCommand(inputSDC);
         this.commands.push(SDC1);
     }
 
     async onResize(): Promise<void> {
-        for (let perCommand of this.commands) {
+        for (const perCommand of this.commands) {
             if (perCommand instanceof SimpleDrawCommand) {
                 perCommand.destroy();
             }

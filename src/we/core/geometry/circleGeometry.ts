@@ -24,7 +24,7 @@ export class CircleGeometry extends BaseGeometry {
     groupStart !: number;
 
     constructor(input?: optionCircleGeometry) {
-        let defaultValues = {
+        const defaultValues = {
             radius: 1,
             segments: 16,
             thetaStart: 0,
@@ -49,25 +49,25 @@ export class CircleGeometry extends BaseGeometry {
     init(input: optionCircleGeometry) {
 
         const thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
-        let index = 0;
-        let grid = [];
-        let vertex = vec3.create();
-        let normal = vec3.create();
+        const index = 0;
+        const grid = [];
+        const vertex = vec3.create();
+        const normal = vec3.create();
         // buffers
 
         // let indices = [];
         // let vertices = [];
         // let normals = [];
         // let uvs = [];
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
 
-        let segments = input.segments!; 
-        let thetaStart = input.thetaStart!;
-        let radius = input.radius!; 
-        let thetaLength = input.thetaLength!;
+        const segments = input.segments!; 
+        const thetaStart = input.thetaStart!;
+        const radius = input.radius!; 
+        const thetaLength = input.thetaLength!;
         // generate vertices, normals and uvs
 
      		// center point
@@ -82,8 +82,8 @@ export class CircleGeometry extends BaseGeometry {
 
 			// vertex
 
-			let x = radius * Math.cos( segment );
-			let y = radius * Math.sin( segment );
+			const x = radius * Math.cos( segment );
+			const y = radius * Math.sin( segment );
 
 			vertices.push( x,y, 0);
 
@@ -93,8 +93,8 @@ export class CircleGeometry extends BaseGeometry {
 
 			// uvs
 
-			let u = ( vertices[ i ] / radius + 1 ) / 2;
-			let v = ( vertices[ i + 1 ] / radius + 1 ) / 2;
+			const u = ( vertices[ i ] / radius + 1 ) / 2;
+			const v = ( vertices[ i + 1 ] / radius + 1 ) / 2;
 
 			uvs.push( u, v );
 

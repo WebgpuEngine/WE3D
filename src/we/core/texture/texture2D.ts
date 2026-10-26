@@ -61,7 +61,7 @@ export class Texture2D extends BaseTexture {
         }
     }
     async initTextureAndLayout(): Promise<any> {
-        let source = this.inputValues.source;
+        const source = this.inputValues.source;
 
         this.texture = this.device.createTexture({
             dimension: '2d',

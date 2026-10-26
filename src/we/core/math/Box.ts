@@ -12,7 +12,7 @@ export type boundingBox = Box3;
 
 
 export function generateBox2(position: number[]): Box2 {
-    let box: Box2 = {
+    const box: Box2 = {
         min: [0, 0],
         max: [0, 0]
     };
@@ -46,7 +46,7 @@ export function generateBox2(position: number[]): Box2 {
  * @returns 
  */
 export function generateBox3(position: number[]): Box3 {
-    let box: Box3 = {
+    const box: Box3 = {
         min: [0, 0, 0],
         max: [0, 0, 0],
     }

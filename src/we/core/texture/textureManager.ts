@@ -8,9 +8,9 @@ export class TextureManager extends ECSManager<BaseTexture> {
 
     update(clock: Clock): void {
         this.checkDestroy();
-        for (let i of this.list) {
+        for (const i of this.list) {
             i.update(clock);
-            for (let j of i.commands) {
+            for (const j of i.commands) {
                 this.scene.renderManager.push({
                     command: j,
                     kind: E_renderPassName.texture,

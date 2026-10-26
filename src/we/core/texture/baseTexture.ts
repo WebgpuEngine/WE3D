@@ -208,11 +208,11 @@ export abstract class BaseTexture extends RootGPU {
 
 
     generateMips(texture: GPUTexture) {
-        let device: GPUDevice = this.device;
-        let sampler: GPUSampler = device.createSampler({
+        const device: GPUDevice = this.device;
+        const sampler: GPUSampler = device.createSampler({
             minFilter: 'linear',
         });
-        let module = device.createShaderModule({
+        const module = device.createShaderModule({
             label: 'textured quad shaders for mip level generation',
             code: `
             struct VSOutput {

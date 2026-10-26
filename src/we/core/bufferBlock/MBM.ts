@@ -1,6 +1,5 @@
 import { ECSManager } from "../organization/manager";
 import { Clock } from "../scene/clock";
-import { E_BOLBufferType, E_BOLState } from "./base";
 import { BlockOffsetLength } from "./BOL";
 
 /**

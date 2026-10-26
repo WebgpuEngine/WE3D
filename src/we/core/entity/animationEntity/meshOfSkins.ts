@@ -27,7 +27,7 @@ export class MeshSkins extends SkinsEntity {
         throw new Error("Method not implemented.");
     }
     override createForwardDC(): void {
-        let dc = this.generateOpacityDC(E_shaderRegisterAlianName["entity.skins"]) as DrawCommand;
+        const dc = this.generateOpacityDC(E_shaderRegisterAlianName["entity.skins"]) as DrawCommand;
         this.renderPassArray[E_renderPassName.forward].push(dc);
     }
 

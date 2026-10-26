@@ -98,7 +98,7 @@ export abstract class SkinsEntity extends AnimationEntity {
         }
         if (this.bufferPointers.uniformCommonEntity !== undefined) {
             const st_entityValues = this.bufferPointers.uniformCommonEntity.cpuBuffer;
-            let offset = this.bufferPointers.uniformCommonEntity.offset;
+            const offset = this.bufferPointers.uniformCommonEntity.offset;
             const st_entityViews = {
                 animation_kind: new Uint32Array(st_entityValues, offset + 16, 1),
                 joints_count: new Uint32Array(st_entityValues, offset + 24, 1),
@@ -119,16 +119,16 @@ export abstract class SkinsEntity extends AnimationEntity {
      */
     updateJointMatrixBuffer() {
         if (this.bufferPointers.jointMatrix) {
-            for (let i in this.outSideInstance) {
-                let offset = this.bufferPointers.jointMatrix.offset;
-                let perNode = this.outSideInstance[i];
+            for (const i in this.outSideInstance) {
+                const offset = this.bufferPointers.jointMatrix.offset;
+                const perNode = this.outSideInstance[i];
                 if (perNode.JointsMat) {
-                    let instanceIndex = parseInt(i);
+                    const instanceIndex = parseInt(i);
                     for (let j = 0; j < this.instance.numInstances; j++) {
-                        let offsetOfPointer = (instanceIndex * this.instance.numInstances + j) * this.JointMatrixByteSize + offset;    //内外部instance的偏移量加上内部instance的偏移量
+                        const offsetOfPointer = (instanceIndex * this.instance.numInstances + j) * this.JointMatrixByteSize + offset;    //内外部instance的偏移量加上内部instance的偏移量
                         // this.device.queue.writeBuffer(this.bufferGPU.jointMatrix, offset, perNode.JointsMat!);//写入每个instance的矩阵,内部instance写入相同的矩阵
-                        let f32DataViewOfPointer = new Float32Array(this.bufferPointers.jointMatrix.cpuBuffer, offsetOfPointer, this.bufferPointers.jointMatrix.byteLength / 4);
-                        let f32DataViewOfNodeObject = new Float32Array(perNode.JointsMat);
+                        const f32DataViewOfPointer = new Float32Array(this.bufferPointers.jointMatrix.cpuBuffer, offsetOfPointer, this.bufferPointers.jointMatrix.byteLength / 4);
+                        const f32DataViewOfNodeObject = new Float32Array(perNode.JointsMat);
                         f32DataViewOfPointer.set(f32DataViewOfNodeObject);
                     }
                     this.scene.pointers.updatePointerWriteTime(this.bufferPointers.jointMatrix);

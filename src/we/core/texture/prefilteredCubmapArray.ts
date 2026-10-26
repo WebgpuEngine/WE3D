@@ -1,5 +1,5 @@
 import { Scene } from "../scene/scene";
-import { I_BaseTexture, isGPUSamplerDescriptor } from "./base";
+import { I_BaseTexture } from "./base";
 import { BaseTexture } from "./baseTexture";
 
 export interface I_PrefilteredCubmap extends I_BaseTexture {
@@ -33,10 +33,10 @@ export class PrefilteredCubmapArray extends BaseTexture {
     async initTextureAndLayout(): Promise<any> {
 
         this.texture = undefined;
-        let source = this.inputValues.source;
+        const source = this.inputValues.source;
         let width = 256;
         let height = 256;
-        let createTexture = true;
+        const createTexture = true;
         // if (this.scene.resourcesGPU.textureOfString.has(source)) {
         //     let texture = this.scene.resourcesGPU.textureOfString.get(source);
         //     if (texture) {
@@ -51,9 +51,9 @@ export class PrefilteredCubmapArray extends BaseTexture {
             // if (typeof source == "string") {
             if (Array.isArray(source)) {
                 for (let i_url = 0; i_url < source.length; i_url++) {
-                    let perUrl = source[i_url];
+                    const perUrl = source[i_url];
                     // 1. 读取文件二进制
-                    let response = await fetch(perUrl);
+                    const response = await fetch(perUrl);
                     const bufffer = await response.arrayBuffer();
                     const u8buffer = new Uint8Array(bufffer);
 

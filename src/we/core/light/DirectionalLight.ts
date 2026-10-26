@@ -34,7 +34,7 @@ export class DirectionalLight extends BaseLight {
      * @returns Mat4[]
      */
     updateMVP(scene: Scene): Mat4[] {
-        let matrix = new Float32Array([
+        const matrix = new Float32Array([
             1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
         ]);
 
@@ -49,15 +49,15 @@ export class DirectionalLight extends BaseLight {
 
             if (sphere) {
                 /** 第一行,X轴 */
-                let right = new Float32Array(matrix.buffer, 4 * 0, 4);
+                const right = new Float32Array(matrix.buffer, 4 * 0, 4);
                 /** 第二行,Y轴 */
-                let up = new Float32Array(matrix.buffer, 4 * 4, 4);
+                const up = new Float32Array(matrix.buffer, 4 * 4, 4);
                 /** 第三行,Z轴 */
-                let back = new Float32Array(matrix.buffer, 4 * 8, 4);
+                const back = new Float32Array(matrix.buffer, 4 * 8, 4);
                 /** 第四行,位置 */
-                let position = new Float32Array(matrix.buffer, 4 * 12, 4);
+                const position = new Float32Array(matrix.buffer, 4 * 12, 4);
 
-                let dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.Direction as Vec3));
+                const dir = vec3.normalize(vec3.sub(vec3.create(0, 0, 0), this.Direction as Vec3));
                 if ((this.Direction as Vec3)[0] == 0 && (this.Direction as Vec3)[1] == 1 && (this.Direction as Vec3)[2] == 0) {
                     vec3.copy((this.Direction as Vec3), back);
                     vec3.copy(vec3.create(1, 0, 0), right);
@@ -71,7 +71,7 @@ export class DirectionalLight extends BaseLight {
                 }
 
                 //todo,202501024,暂时使用sphere代替摄像机的视锥体可视范围
-                let p0 = vec4.transformMat4(vec4.create(sphere.position[0], sphere.position[1], sphere.position[2], 1), mat4.invert(matrix));
+                const p0 = vec4.transformMat4(vec4.create(sphere.position[0], sphere.position[1], sphere.position[2], 1), mat4.invert(matrix));
 
 
 
@@ -88,7 +88,7 @@ export class DirectionalLight extends BaseLight {
                     p0[2] + sphere.radius + this.epsilon
                 );
                 if (this.scene.reversedZ.isReversedZ) {
-                    let reversedZ = mat4.create(
+                    const reversedZ = mat4.create(
                         1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, -1.0, 0.0,

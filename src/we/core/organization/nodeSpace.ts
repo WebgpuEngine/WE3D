@@ -140,24 +140,24 @@ export abstract class NodeSpace extends RootGPU {
         if (worldSpace !== this._rodriguesRotation[3]) {
             return;
         }
-        let matOrigin = mat4.create();//创建原始矩阵
-        let matTraget = mat4.create();//创建目标矩阵
+        const matOrigin = mat4.create();//创建原始矩阵
+        const matTraget = mat4.create();//创建目标矩阵
         if (this._rodriguesRotation[3]) {//在世界坐标下
             mat4.copy(this.matrixWorld, matOrigin);
         }
         else {  //在本地坐标下
             mat4.copy(this.matrix, matOrigin);
         }
-        let zeroPoint = vec3.fromValues(this._rodriguesRotation[0][0], this._rodriguesRotation[0][1], this._rodriguesRotation[0][2]);//零点=旋转点
-        let zeroMat = mat4.translation(zeroPoint);//创建零点矩阵
-        let zeroMatInv = mat4.invert(zeroMat);//创建零点矩阵的逆矩阵
+        const zeroPoint = vec3.fromValues(this._rodriguesRotation[0][0], this._rodriguesRotation[0][1], this._rodriguesRotation[0][2]);//零点=旋转点
+        const zeroMat = mat4.translation(zeroPoint);//创建零点矩阵
+        const zeroMatInv = mat4.invert(zeroMat);//创建零点矩阵的逆矩阵
 
         mat4.multiply(zeroMat, matOrigin, matTraget);//将零点移动到原点
 
-        let pos: Vec3 = mat4.getTranslation(matOrigin);     //获取原始矩阵的位置
+        const pos: Vec3 = mat4.getTranslation(matOrigin);     //获取原始矩阵的位置
         // console.log(pos[0], pos[1], pos[2]);
-        let posMat = mat4.translation(vec3.fromValues(-pos[0], -pos[1], -pos[2]));      //创建当前对象的原始位置矩阵
-        let posMatInv = mat4.invert(posMat);                                            //创建当前对象的原始位置矩阵的逆矩阵
+        const posMat = mat4.translation(vec3.fromValues(-pos[0], -pos[1], -pos[2]));      //创建当前对象的原始位置矩阵
+        const posMatInv = mat4.invert(posMat);                                            //创建当前对象的原始位置矩阵的逆矩阵
         mat4.multiply(posMat, matTraget, matTraget);                                    //将对象位置移动到原点
 
         mat4.axisRotate(matTraget, this._rodriguesRotation[1], this._rodriguesRotation[2], matTraget);    //对象在原点实现旋转
@@ -291,7 +291,7 @@ export abstract class NodeSpace extends RootGPU {
     // updateMatrix(_m4?: Mat4, _opera: "copy" | "multiply" = "copy"): Mat4 {
     updateMatrix(): Mat4 {
         if (this.Name === "0") {
-            let abc = 1;
+            const abc = 1;
         }
         // 1、如果提供了初始化矩阵，直接复制
         if (this._matrix !== undefined) {

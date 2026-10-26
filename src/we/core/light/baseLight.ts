@@ -1,6 +1,5 @@
 import { mat4, Mat4, vec3, Vec3, } from "wgpu-matrix";
 // import { NodeObject } from "../organization/root";
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
 import { Scene } from "../scene/scene";
 import { weColor3, I_Update, weVec3 } from "../base/coreDefine";
 import { Clock } from "../scene/clock";
@@ -384,7 +383,7 @@ export abstract class BaseLight extends NodeObject {
      * @returns structBaselight
      */
     updateStructBuffer(): structBaselight {
-        let ST_LightValues = new ArrayBuffer(lightStructSize);
+        const ST_LightValues = new ArrayBuffer(lightStructSize);
         const ST_LightViews = {
             position: new Float32Array(ST_LightValues, 0, 3),
             decay: new Float32Array(ST_LightValues, 12, 1),
@@ -408,7 +407,7 @@ export abstract class BaseLight extends NodeObject {
         ST_LightViews.kind[0] = this.Kind;
 
         // let position = this.Position;
-        let position = this.worldPosition;
+        const position = this.worldPosition;
         if (position) {
             ST_LightViews.position[0] = position[0];
             ST_LightViews.position[1] = position[1];
@@ -423,7 +422,7 @@ export abstract class BaseLight extends NodeObject {
 
         ST_LightViews.distance[0] = this.Distance;
 
-        let dir = this.Direction;
+        const dir = this.Direction;
         if (dir) {
             ST_LightViews.direction[0] = dir[0];
             ST_LightViews.direction[1] = dir[1];
@@ -432,7 +431,7 @@ export abstract class BaseLight extends NodeObject {
 
         ST_LightViews.decay[0] = this.Decay;
 
-        let angle = this.Angle;
+        const angle = this.Angle;
         if (angle) {
             ST_LightViews.angle[0] = angle[0];
             ST_LightViews.angle[1] = angle[1];
@@ -464,7 +463,7 @@ export abstract class BaseLight extends NodeObject {
             shadow_map_enable: 1,
         };
 
-        let ST_LightValues = this._buffer.buffer;
+        const ST_LightValues = this._buffer.buffer;
         const ST_LightViews = {
             // position: new Float32Array(ST_LightValues, 0, 3),
             // decay: new Float32Array(ST_LightValues, 12, 1),

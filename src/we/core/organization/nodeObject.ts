@@ -2,7 +2,7 @@
 // some JSON
 ///////////////////////////////////////////////////////////
 
-import { vec3, Mat4, mat4, Vec3, vec4, Quat, Vec4 } from "wgpu-matrix";
+import { vec3, Mat4, mat4, Vec3 } from "wgpu-matrix";
 import { AnimationGroup } from "../animation/animationGroup";
 import { BaseAnimation } from "../animation/BaseAnimation";
 import { SkinAnimation } from "../animation/skin";
@@ -601,7 +601,7 @@ export class NodeObject extends NodeSpace {
 
     async initNodeObject(value: IV_Node): Promise<NodeObject> {
         // let childNode: NodeObject = new NodeInstance(value);//创建node object
-        let childNode: NodeObject = new NodeObject(value);//创建node object
+        const childNode: NodeObject = new NodeObject(value);//创建node object
         await childNode.init(this.scene, this);  //初始化node object
         childNode.Parent = this;    //设置parent
         if (value.entity) {//如果有entity
@@ -629,7 +629,7 @@ export class NodeObject extends NodeSpace {
      * @returns 是否移除成功
      */
     removeChild(child: NodeObject, onlyOne: boolean = true): boolean {
-        let index = this._children.indexOf(child);
+        const index = this._children.indexOf(child);
         if (index !== -1) {
             child.removeChildren();
             child.destroy();
@@ -662,7 +662,7 @@ export class NodeObject extends NodeSpace {
     }
     traverse(callback: (node: NodeObject) => void) {
         callback(this);
-        for (let i of this.children) {
+        for (const i of this.children) {
             i.traverse(callback);
         }
     }
@@ -671,13 +671,13 @@ export class NodeObject extends NodeSpace {
      * @param id 子节点的id
      */
     getNodeObjectByID(id: number): NodeObject | boolean {
-        for (let i of this.children) {
+        for (const i of this.children) {
             if (i.ID == id) {
                 return i;
             }
             else if (i.children.length > 0) {
-                for (let j of i.children) {
-                    let isTarget = j.getNodeObjectByID(id);
+                for (const j of i.children) {
+                    const isTarget = j.getNodeObjectByID(id);
                     if (isTarget != false) {
                         return isTarget;
                     }
@@ -692,13 +692,13 @@ export class NodeObject extends NodeSpace {
      * @returns 
      */
     getNodeObjectByUUID(id: string): NodeObject | boolean {
-        for (let i of this.children) {
+        for (const i of this.children) {
             if (i.UUID == id) {
                 return i;
             }
             else if (i.children.length > 0) {
-                for (let j of i.children) {
-                    let isTarget = j.getNodeObjectByUUID(id);
+                for (const j of i.children) {
+                    const isTarget = j.getNodeObjectByUUID(id);
                     if (isTarget != false) {
                         return isTarget;
                     }
@@ -714,12 +714,12 @@ export class NodeObject extends NodeSpace {
      * @returns 
      */
     getNodeObjectByName(name: string): NodeObject | boolean {
-        for (let i of this.children) {
+        for (const i of this.children) {
             if (i.Name == name) {
                 return this;
             }
             else if (i instanceof NodeObject) {
-                let isTarget = i.getNodeObjectByName(name);
+                const isTarget = i.getNodeObjectByName(name);
                 if (isTarget != false) {
                     return isTarget;
                 }
@@ -772,7 +772,7 @@ export class NodeObject extends NodeSpace {
             this.lastUpdaeTime = clock.now;                     //更新最后一次更新时间
         }
         if (this.children.length > 0)                           //更新子节点
-            for (let i of this.children) {
+            for (const i of this.children) {
                 i.update(clock);//更新子节点,包括：node object，light，camera
             }
 
@@ -792,7 +792,7 @@ export class NodeObject extends NodeSpace {
     updateSelfAttribute() {
         //更新包围盒
         if (this.Entity && this.Entity.boundingBox && this.scene) {
-            let box = this.Entity.boundingBox;
+            const box = this.Entity.boundingBox;
             const min = vec3.transformMat4(box.min, this.matrixWorld);
             const max = vec3.transformMat4(box.max, this.matrixWorld);
             this.scene.Box3s.push({
@@ -1056,8 +1056,8 @@ export class NodeObject extends NodeSpace {
  * @returns 新的节点实例
  */
 export async function newNode(parent: NodeObject) {
-    let scene: Scene = parent.scene;
-    let node = new NodeObject();
+    const scene: Scene = parent.scene;
+    const node = new NodeObject();
     await node.init(scene, parent);
     return node;
 }

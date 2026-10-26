@@ -246,7 +246,7 @@ export class BlockOffsetLength implements I_UUID {
     }
     init() {
         this.cpuBuffer = new ArrayBuffer(this.inputValues.size);
-        let label = `BOL ${this.name}`;
+        const label = `BOL ${this.name}`;
         this.gpuBuffer = createEmptyGPUBuffer(this.device, this.usage, this.inputValues.size, label);
         if (this.inputValues.data) {
             this.device.queue.writeBuffer(this.gpuBuffer, 0, this.inputValues.data.buffer);
@@ -280,18 +280,18 @@ export class BlockOffsetLength implements I_UUID {
         this.size.free = this.size.total;
         this.size.released = 0;
         //2、slice 一个新副本，作为原数据
-        let cloneBuffer = this.cpuBuffer.slice();
+        const cloneBuffer = this.cpuBuffer.slice();
         //3、重置 updateOffsetMap ,
         this.pointerOffsetMap.clear();
         //4、for pointerList，
-        for (let i of this.pointerIdList) {
-            let oldPointerStruct = this.pointers.getPointer(i);
+        for (const i of this.pointerIdList) {
+            const oldPointerStruct = this.pointers.getPointer(i);
             if (oldPointerStruct == undefined) {
                 continue;
             }
             //4.1 重新写入数据到cpuBuffer
-            let oneViewOfClone = new Uint8Array(cloneBuffer, oldPointerStruct.offset, oldPointerStruct.byteLength);
-            let oneViewOfRebuild = new Uint8Array(this.cpuBuffer, offset, oldPointerStruct.byteLength);
+            const oneViewOfClone = new Uint8Array(cloneBuffer, oldPointerStruct.offset, oldPointerStruct.byteLength);
+            const oneViewOfRebuild = new Uint8Array(this.cpuBuffer, offset, oldPointerStruct.byteLength);
             oneViewOfRebuild.set(oneViewOfClone);
 
             //4.2 更新指针的offset和byteLength
@@ -322,8 +322,8 @@ export class BlockOffsetLength implements I_UUID {
         // if (this.type === E_BOLBufferType.VS) {
         //      console.log(this.type);
         // }
-        for (let [offset, pointerID] of this.pointerOffsetMap) {
-            let pointer = this.pointers.getPointer(pointerID)!;
+        for (const [offset, pointerID] of this.pointerOffsetMap) {
+            const pointer = this.pointers.getPointer(pointerID)!;
 
             if (this.type === E_BOLBufferType.storage && pointer.writeTime != 0) {
                 // console.log(pointer.writeTime,clock.now);
@@ -360,7 +360,7 @@ export class BlockOffsetLength implements I_UUID {
                     }
                 }
                 //当前指针的结束偏移量=当前指针的偏移量+当前指针的长度
-                let atEndOfPointer = offset + pointer.byteLength;
+                const atEndOfPointer = offset + pointer.byteLength;
                 //如果是第一个指针，直接赋值
                 if (lastOffset === 0 && lastAtEndOfPointer === 0 && strideSize === 0) {
                     lastOffset = offset;
@@ -403,7 +403,7 @@ export class BlockOffsetLength implements I_UUID {
             }
             else {
                 this.generateUpdateOffsetAndLenght(clock);
-                for (let i of this.updateOffsetAndLenght) {
+                for (const i of this.updateOffsetAndLenght) {
                     this.device.queue.writeBuffer(this.gpuBuffer, i[0], this.cpuBuffer, i[0], i[1]);
                     // console.log(this.type,i[0],i[1]);
                 }
@@ -420,14 +420,14 @@ export class BlockOffsetLength implements I_UUID {
      * @returns 指针信息
     */
     allocatePointer(pointerID: number, byteSize: number): I_pointerInfoInBOL {
-        let offset = this.lastOffset;
+        const offset = this.lastOffset;
         if (offset + byteSize > this.size.total) {
             throw new Error("BOL size not enough");
         }
         // if (this.type == E_BOLBufferType.storage)
         // console.log(` BOL allocate pointer ${this.type} ,last offset: ${this.lastOffset} and offset256:${this.lastOffset / 256} , pointer: ${pointerID} ${offset} ${byteSize}`);
         this.lastOffset += byteSize;
-        let pointerInfo: I_pointerInfoInBOL = {
+        const pointerInfo: I_pointerInfoInBOL = {
             pointerID: pointerID,
             offset: offset,
             byteLength: byteSize,
@@ -445,8 +445,8 @@ export class BlockOffsetLength implements I_UUID {
     }
     updatePointerOffsetMap() {
         this.pointerOffsetMap.clear();
-        for (let i of this.pointerIdList) {
-            let pointer = this.pointers.getPointer(i);
+        for (const i of this.pointerIdList) {
+            const pointer = this.pointers.getPointer(i);
             if (pointer != undefined) {
                 this.pointerOffsetMap.set(pointer.offset, i);
             }
@@ -463,12 +463,12 @@ export class BlockOffsetLength implements I_UUID {
      * @param pointerID 指针ID
      */
     releasePointer(pointerID: number) {
-        let pointerStruct = this.pointers.getPointer(pointerID);
+        const pointerStruct = this.pointers.getPointer(pointerID);
         if (pointerStruct == undefined) {
             console.warn("pointerID not found");
             return;
         }
-        let index = this.hasPointerInBOL(pointerID);
+        const index = this.hasPointerInBOL(pointerID);
         if (index == false) {
             console.warn("pointerID not found");
             return;
@@ -509,7 +509,7 @@ export class BlockOffsetLength implements I_UUID {
     }
     checkRebuild(): boolean {
         if (this.checkUpdate()) {
-            let percent = this.size.released / this.size.total ;
+            const percent = this.size.released / this.size.total ;
             if (percent >= this.rebuildPecent) {
                 return true;
             }

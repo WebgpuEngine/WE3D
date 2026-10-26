@@ -26,7 +26,7 @@ export class PlaneGeometry extends BaseGeometry {
     groupStart !: number;
 
     constructor(input?: optionPlaneGeometry) {
-        let defaultValues:optionPlaneGeometry = {
+        const defaultValues:optionPlaneGeometry = {
             width:1,
             height:1,
             widthSegments:1,
@@ -51,13 +51,13 @@ export class PlaneGeometry extends BaseGeometry {
     init(input: optionPlaneGeometry) {
 
       
-        let indices = this.buffer.indeices;
-        let vertices = this.buffer.position;
-        let normals = this.buffer.normal;
-        let uvs = this.buffer.uv;
+        const indices = this.buffer.indeices;
+        const vertices = this.buffer.position;
+        const normals = this.buffer.normal;
+        const uvs = this.buffer.uv;
 
-        let heightSegments = input.heightSegments!;
-        let widthSegments = input.widthSegments!;
+        const heightSegments = input.heightSegments!;
+        const widthSegments = input.widthSegments!;
 
         const width_half = input.width! / 2;
 		const height_half = input.height! / 2;

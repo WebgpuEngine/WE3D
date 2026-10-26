@@ -1,4 +1,4 @@
-import { Mat4, vec3, Vec3 } from "wgpu-matrix";
+import { Mat4 } from "wgpu-matrix";
 import { BaseLight, I_optionBaseLight, E_lightType, structBaselight } from "./baseLight";
 import { Scene } from "../scene/scene";
 import { weColor3 } from "../base/coreDefine";

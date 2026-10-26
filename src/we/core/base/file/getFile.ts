@@ -2,17 +2,17 @@ export async function weGetResource(param: string): Promise<any> {
 
 }
 export async function weGetImageByUrl(param: string): Promise<ImageBitmap> {
-    let response = await fetch(param);
-    let imageBitmap = await createImageBitmap(await response.blob());
+    const response = await fetch(param);
+    const imageBitmap = await createImageBitmap(await response.blob());
     return imageBitmap;
 }
 export async function weGetBinaryByUrl(param: string): Promise<ArrayBuffer> {
-    let response = await fetch(param);
-    let binary = (await response.blob()).arrayBuffer();
+    const response = await fetch(param);
+    const binary = (await response.blob()).arrayBuffer();
     return binary;
 }
 export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayBuffer> {
-    let response = await fetch(param);
+    const response = await fetch(param);
     // 在解压前判断是否存在传输压缩
     if (response.headers.get('content-encoding') === 'gzip') {        // 浏览器已自动解压，直接拿原始gz二进制，不再走DecompressionStream
         return await response.arrayBuffer();
@@ -23,12 +23,12 @@ export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayB
         if (!response.body) {
             throw new Error("响应体为空，无二进制流可解压");
         }
-        let decompressionStream = new DecompressionStream('gzip');
-        let decompressedStream = response.body.pipeThrough(decompressionStream);
+        const decompressionStream = new DecompressionStream('gzip');
+        const decompressedStream = response.body.pipeThrough(decompressionStream);
         if (!decompressedStream) {
             throw new Error("获取压缩流失败");
         }
-        let decompressedArrayBuffer = await new Response(
+        const decompressedArrayBuffer = await new Response(
             decompressedStream
         ).arrayBuffer();
         return decompressedArrayBuffer;
@@ -121,11 +121,11 @@ export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayB
 //     return allImages;
 // }
 export async function weGetImagesByUrl(param: string[]): Promise<ImageBitmap[]> {
-    let allImages: ImageBitmap[] = [];
+    const allImages: ImageBitmap[] = [];
 
-    for (let perRes of param) {
-        let response = await fetch(perRes);
-        let imageBitmap = await createImageBitmap(await response.blob());
+    for (const perRes of param) {
+        const response = await fetch(perRes);
+        const imageBitmap = await createImageBitmap(await response.blob());
         allImages.push(imageBitmap);
     }
     return allImages;

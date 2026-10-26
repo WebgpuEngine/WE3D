@@ -11,7 +11,7 @@ export abstract class AnimationEntity extends EntityBundleMaterial {
     // _animationType: number = E_AnimationType.none;
     get AnimationType(): number {
         let total: number = 0;
-        for (let item of this._animationType) {
+        for (const item of this._animationType) {
             total += item;
         }
         return total;

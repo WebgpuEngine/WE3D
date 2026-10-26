@@ -1,4 +1,3 @@
-import { GLTFAccessor, GLTFBufferView, GLTFNode } from "@loaders.gl/gltf";
 import { weVec3, weVec4 } from "../../core/base/coreDefine";
 import { mat4 } from "wgpu-matrix";
 import { BaseEntity } from "../../core/entity/baseEntity";
@@ -26,19 +25,19 @@ import { NodeObject, newNode } from "../../core/organization/nodeObject";
  */
 export async function addNode(gltf: GLTFModel, nodeID: number, parent: NodeObject, root: NodeObject): Promise<any> {
 
-    let node = gltf.DataLoader.getNode(nodeID);
+    const node = gltf.DataLoader.getNode(nodeID);
     //存在骨骼动画，就添加到meshAndSkinBundle中
     if (node.mesh != undefined && node.skin != undefined) {
         gltf.meshAndSkinBundle.push({ meshID: node.mesh, skinID: node.skin, nodeID: nodeID });
     }
 
-    let oneNode = await newNode(parent);
+    const oneNode = await newNode(parent);
     oneNode.Name = node.name || nodeID;
     // console.log(oneNode.ID, oneNode.Name);
     ////////////////////////////////////////////////
     //如果当前节点有mesh，就添加到parent中
     if (node.mesh !== undefined && typeof node.mesh == "number") {//有mesh，就添加到parent中
-        let mesh = await gltf.getRes(T_ModelResKind.entity, node.mesh) as BaseEntity;
+        const mesh = await gltf.getRes(T_ModelResKind.entity, node.mesh) as BaseEntity;
         if (node.matrix !== undefined) {
             // mesh.setMatrix(node.matrix);
         }
@@ -83,8 +82,8 @@ export async function addNode(gltf: GLTFModel, nodeID: number, parent: NodeObjec
     //child node
     //nodeID下如果有children，就递归添加
     if (node.children) {
-        let children = node.children as number[];
-        for (let childID of children) {
+        const children = node.children as number[];
+        for (const childID of children) {
             await addNode(gltf, childID, oneNode, root);
         }
     }
@@ -115,23 +114,23 @@ export async function addNode(gltf: GLTFModel, nodeID: number, parent: NodeObjec
 /////////////////////////////////////////////////////////////////
 // 转换index fan 到 list
 export function convertTriangleIndexFanToList(indexFan: Uint32Array | Uint16Array, count: number) {
-    let listArray: number[] = [];
-    let zero = indexFan[0];
+    const listArray: number[] = [];
+    const zero = indexFan[0];
     for (let i = 2; i < count; i++) {
         listArray.push(zero, indexFan[i - 1], indexFan[i]);
     }
-    let indexList = new Uint32Array(listArray);
+    const indexList = new Uint32Array(listArray);
     return indexList;
 }
 
 export function convertLineIndexLoopToList(indexFan: Uint32Array | Uint16Array, count: number) {
-    let listArray: number[] = [];
-    let zero = indexFan[0];
+    const listArray: number[] = [];
+    const zero = indexFan[0];
     for (let i = 1; i < count; i++) {
         listArray.push(indexFan[i - 1], indexFan[i]);
     }
     listArray.push(indexFan[count - 1], zero);
-    let indexList = new Uint32Array(listArray);
+    const indexList = new Uint32Array(listArray);
     return indexList;
 }
 

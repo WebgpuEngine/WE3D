@@ -1,12 +1,11 @@
 import { IV_ComputeCommand, ComputeCommand } from "../../command/ComputeCommand";
 import { shaderLutAp } from "./baseHillaire";
-import { HillaireLutBase } from "./lutBase";
 import { LutUseShadowMap } from "./lutUseShadowMap";
 
 export class HillaireLutAP extends LutUseShadowMap {
 
     generateBindGroup0() {
-        let layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+        const layout: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
             label: "lutAP",
             entries: [
                 {
@@ -97,16 +96,16 @@ export class HillaireLutAP extends LutUseShadowMap {
         this.generateBindGroup1();
 
         //1、创建GPURenderPipelineDescriptor
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
             label: "lutAPPipelineLayout",
             // label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: this.bindGroupLayout,
         }
         //2、创建GPUPipelineLayout
-        let pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //3、创建ComputeCommand
-        let options: IV_ComputeCommand = {
+        const options: IV_ComputeCommand = {
             label: "lutAP",
             device: this.scene.device,
             baseInfo: {
@@ -127,7 +126,7 @@ export class HillaireLutAP extends LutUseShadowMap {
             },
         }
 
-        let DC = new ComputeCommand(options);
+        const DC = new ComputeCommand(options);
         this.commands.push(DC);
         // DC.submit()
     }
