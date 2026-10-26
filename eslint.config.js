@@ -13,13 +13,14 @@ export default tseslint.config(
       'coverage/**',
       'test-results/**',
       '**/*.wgsl',
+      '**/*.dragonData.ts',
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
   {
-    files: ['src/**/*.ts'],
+    files: ['src/we/**/*.ts'],
     languageOptions: {
       parserOptions: {
         project: './tsconfig.json',

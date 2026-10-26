@@ -79,16 +79,21 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ### Phase 2 — ESLint + Prettier　⬜ 未开始
 
+- **现状分析**：详见 `./phase2-eslint-prettier.md`。
+  - 配置（`eslint.config.js` / `.prettierrc.json` / `.prettierignore`）**已存在**（上一轮终止运行已建），依赖已列 devDependencies。
+  - **缺失**：`package.json` 无 `lint` / `lint:fix` / `format` / `format:check` 脚本。
+  - `npx eslint .` 实跑 **1870 problems（1869 error）**：1531 可 `--fix`（多为 `prefer-const`），约 338 为 `no-unused-vars` 需手动，2 个 `no-loss-of-precision` 在 `src/we/model/simple/stanfordDragonData.ts:4`（模型数据，应排除）。
+  - 未使用检查（Phase 1 移交）已由 `@typescript-eslint/no-unused-vars: error` 承担。
 - **计划要点**
-  - 安装 `eslint` + `typescript-eslint` + `eslint-config-prettier` + `prettier`。
+  - 安装 `eslint` + `typescript-eslint` + `eslint-config-prettier` + `prettier`（已满足，无需重装）。
   - `eslint.config.js`（flat），ignores 排除 `examples/`、`docs/`、`src/@loaders.gl/`、`node_modules`，范围 `src/we`。
   - `.prettierrc` + `.prettierignore`（排除 examples 海量文件、`.wgsl`、`docs/`、`public/`）。
   - 脚本：`lint` / `lint:fix` / `format` / `format:check`。
   - 承接 Phase 1 移交：未使用检查由类型感知 `no-unused-vars` 承担。
-- **验收**：`npm run lint` 在 `src/we` 上可运行；`lint:fix` 可自动修复。
+- **验收**：`npm run lint` 输出 0 error（仅 `src/we`）；`lint:fix` 可自动修复；`format` / `format:check` 可用。
 - **实施记录**：（待确认后填写）
 - **验证**：（待确认后填写）
-- **备注**：
+- **备注**：2026-10-26 确认配置微调并实施（`files`→`src/we/**/*.ts` + 忽略 `**/*.dragonData.ts`），已提交推送；lint:fix 实验 + 全盘自动修复进行中，未使用变量手动清理待做，format 延后至项目验证后。
 
 ---
 
@@ -186,3 +191,4 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 2026-10-22 | Phase 1 完成 | 修 `GBuffers.ts:9` 删除不存在导入；`tsc --noEmit` 归零（1→0）；确认两处计划偏差落地 |
 | 2026-10-22 | AGENTS.md 增补 | 「六、Git 提交约定」：commit 格式 `月日 具体内容`（MMDD）；禁止 AI/工具自动合并分支，合并仅人工手动 |
 | 2026-10-22 | 决策记录 | `@loaders.gl` 相关 glTF 功能后期整体迁移到 `gltfTransform`；所有 `@loaders.gl` 问题不处理，待迁移后整体移除（同步更新 phase-1-备忘 §3.5 与 engineering-plan §Phase6） |
+| 2026-10-26 | Phase 2 配置微调 | `eslint.config.js` `files` 收窄为 `src/we/**/*.ts` + 忽略 `**/*.dragonData.ts`；确认未使用变量门禁保持 `error`、format 延后至项目验证后 |
