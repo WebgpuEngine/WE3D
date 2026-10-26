@@ -2,6 +2,8 @@
 <html lang="zh">
 <head>
     <meta charset="utf-8" />
+    <!-- 空的 data: icon，避免浏览器自动请求 favicon 产生 404 console 报错 -->
+    <link rel="icon" href="data:," />
     <title>WE3D Env — WebGPU Colored Triangle</title>
     <style>
         html, body { margin: 0; background: #101820; }
@@ -10,79 +12,136 @@
 </head>
 <body>
     <!-- 与 WE3D 无关的纯 WebGPU 环境自检用例：单一背景色 + 彩色三角形，用于验证
-         WebGPU 运行环境与项目配置的基础正确性（不引入任何 WE3D 代码）。 -->
+         WebGPU 运行环境与项目配置的基础正确性（不引入任何 WE3D 代码）。
+         离屏校验写法参考 testCI 项目（顶点缓冲 + 256 字节对齐读回），避免 headless
+         下画布渲染后设备被销毁、读回失效的问题。 -->
     <canvas id="gpu" width="800" height="600"></canvas>
     <script>
         (async () => {
             const canvas = document.getElementById('gpu');
-            if (!navigator.gpu) {
-                console.error('WE3D_ENV: WebGPU not supported');
-                window.__envReady = 'nowebgpu';
-                return;
-            }
-            const adapter = await navigator.gpu.requestAdapter();
-            if (!adapter) {
-                console.error('WE3D_ENV: no GPU adapter');
-                window.__envReady = 'noadapter';
-                return;
-            }
-            const device = await adapter.requestDevice();
-            const ctx = canvas.getContext('webgpu');
-            const format = navigator.gpu.getPreferredCanvasFormat();
-            ctx.configure({ device, format, alphaMode: 'opaque' });
+            const fail = (msg, val) => { console.error('WE3D_ENV: ' + msg); window.__envReady = val; };
 
-            const module = device.createShaderModule({
-                code: `
-                    struct VSOut {
-                        @builtin(position) pos: vec4f,
-                        @location(0) color: vec3f,
-                    };
-                    @vertex fn vs(@builtin(vertex_index) i: u32) -> VSOut {
-                        var p = array<vec2f, 3>(
-                            vec2f(0.0, 0.5),
-                            vec2f(-0.5, -0.5),
-                            vec2f(0.5, -0.5)
-                        );
-                        var c = array<vec3f, 3>(
-                            vec3f(1.0, 0.0, 0.0),
-                            vec3f(0.0, 1.0, 0.0),
-                            vec3f(0.0, 0.0, 1.0)
-                        );
-                        var o: VSOut;
-                        o.pos = vec4f(p[i], 0.0, 1.0);
-                        o.color = c[i];
-                        return o;
+            // 顶点缓冲：位置(xy) + 颜色(rgb)，三个顶点分别为红/绿/蓝
+            const FLOATS = 5;
+            const VERTS = new Float32Array([
+                0.0, 0.5, 1.0, 0.0, 0.0,
+                -0.5, -0.5, 0.0, 1.0, 0.0,
+                0.5, -0.5, 0.0, 0.0, 1.0,
+            ]);
+            const WGSL = `
+                struct VO { @builtin(position) pos: vec4f, @location(0) color: vec4f, };
+                @vertex fn vs(@location(0) position: vec2f, @location(1) color: vec3f) -> VO {
+                    var o: VO;
+                    o.pos = vec4f(position, 0.0, 1.0);
+                    o.color = vec4f(color, 1.0);
+                    return o;
+                }
+                @fragment fn fs(i: VO) -> @location(0) vec4f { return i.color; }
+            `;
+            // 离屏校验尺寸（与画布 800x600 无关，仅用于读回统计）
+            const RW = 256, RH = 192;
+            const BG = { r: 0.063, g: 0.094, b: 0.125, a: 1 };
+
+            try {
+                if (!navigator.gpu) { fail('WebGPU not supported', 'nowebgpu'); return; }
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) { fail('no GPU adapter', 'noadapter'); return; }
+                const device = await adapter.requestDevice();
+                device.pushErrorScope('validation');
+
+                const format = navigator.gpu.getPreferredCanvasFormat();
+                const module = device.createShaderModule({ code: WGSL });
+                const pipeline = device.createRenderPipeline({
+                    layout: 'auto',
+                    vertex: {
+                        module, entryPoint: 'vs',
+                        buffers: [{
+                            arrayStride: FLOATS * 4, stepMode: 'vertex',
+                            attributes: [
+                                { shaderLocation: 0, offset: 0, format: 'float32x2' },
+                                { shaderLocation: 1, offset: 2 * 4, format: 'float32x3' },
+                            ],
+                        }],
+                    },
+                    fragment: { module, entryPoint: 'fs', targets: [{ format }] },
+                    primitive: { topology: 'triangle-list' },
+                });
+                const vbuf = device.createBuffer({
+                    size: VERTS.byteLength, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true,
+                });
+                new Float32Array(vbuf.getMappedRange()).set(VERTS);
+                vbuf.unmap();
+
+                // 1) 离屏纹理渲染（复用画布格式，安全可回读）
+                const tex = device.createTexture({
+                    size: [RW, RH], format,
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+                });
+                {
+                    const enc = device.createCommandEncoder();
+                    const pass = enc.beginRenderPass({
+                        colorAttachments: [{ view: tex.createView(), clearValue: BG, loadOp: 'clear', storeOp: 'store' }],
+                    });
+                    pass.setPipeline(pipeline);
+                    pass.setVertexBuffer(0, vbuf);
+                    pass.draw(3);
+                    pass.end();
+                    device.queue.submit([enc.finish()]);
+                }
+
+                // 2) 读回（copyTextureToBuffer 要求行宽 256 字节对齐）
+                const bytesPerRow = Math.ceil((RW * 4) / 256) * 256;
+                const rbuf = device.createBuffer({
+                    size: bytesPerRow * RH, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+                });
+                {
+                    const enc = device.createCommandEncoder();
+                    enc.copyTextureToBuffer({ texture: tex }, { buffer: rbuf, bytesPerRow, rowsPerImage: RH }, [RW, RH]);
+                    device.queue.submit([enc.finish()]);
+                }
+                await Promise.race([
+                    rbuf.mapAsync(GPUMapMode.READ),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('mapAsync timeout')), 15000)),
+                ]);
+                const data = new Uint8Array(rbuf.getMappedRange());
+                const bgBytes = format === 'bgra8unorm' ? [Math.round(BG.b * 255), Math.round(BG.g * 255), Math.round(BG.r * 255)] : [Math.round(BG.r * 255), Math.round(BG.g * 255), Math.round(BG.b * 255)];
+                let colored = 0;
+                for (let y = 0; y < RH; y++) {
+                    const row = y * bytesPerRow;
+                    for (let x = 0; x < RW; x++) {
+                        const o = row + x * 4;
+                        const r = format === 'bgra8unorm' ? data[o + 2] : data[o];
+                        const g = data[o + 1];
+                        const b = format === 'bgra8unorm' ? data[o] : data[o + 2];
+                        if (Math.abs(r - bgBytes[0]) > 20 || Math.abs(g - bgBytes[1]) > 20 || Math.abs(b - bgBytes[2]) > 20) colored++;
                     }
-                    @fragment fn fs(in: VSOut) -> @location(0) vec4f {
-                        return vec4f(in.color, 1.0);
-                    }
-                `,
-            });
+                }
+                rbuf.unmap();
+                window.__envVerify = colored > 100;
+                window.__envVerifyDetail = { colored, total: RW * RH, bgBytes };
 
-            const pipeline = device.createRenderPipeline({
-                layout: 'auto',
-                vertex: { module, entryPoint: 'vs' },
-                fragment: { module, entryPoint: 'fs', targets: [{ format }] },
-                primitive: { topology: 'triangle-list' },
-            });
+                const gpuErr = await device.popErrorScope();
+                if (gpuErr) console.error('WE3D_ENV: gpu validation: ' + gpuErr.message);
 
-            const encoder = device.createCommandEncoder();
-            const view = ctx.getCurrentTexture().createView();
-            const pass = encoder.beginRenderPass({
-                colorAttachments: [{
-                    view,
-                    clearValue: { r: 0.063, g: 0.094, b: 0.125, a: 1 },
-                    loadOp: 'clear',
-                    storeOp: 'store',
-                }],
-            });
-            pass.setPipeline(pipeline);
-            pass.draw(3);
-            pass.end();
-            device.queue.submit([encoder.finish()]);
-
-            console.log('WE3D_ENV: triangle rendered');
-            window.__envReady = true;
+                // 3) 画布渲染（截图基线）。必须在读回之后（headless 画布渲染会销毁设备）
+                const ctx = canvas.getContext('webgpu');
+                ctx.configure({ device, format, alphaMode: 'opaque' });
+                {
+                    const enc = device.createCommandEncoder();
+                    const pass = enc.beginRenderPass({
+                        colorAttachments: [{ view: ctx.getCurrentTexture().createView(), clearValue: BG, loadOp: 'clear', storeOp: 'store' }],
+                    });
+                    pass.setPipeline(pipeline);
+                    pass.setVertexBuffer(0, vbuf);
+                    pass.draw(3);
+                    pass.end();
+                    device.queue.submit([enc.finish()]);
+                }
+                console.log('WE3D_ENV: triangle rendered');
+                window.__envReady = true;
+            } catch (e) {
+                fail('exception: ' + (e && e.message ? e.message : e), 'error');
+            }
         })();
     </script>
 </body>

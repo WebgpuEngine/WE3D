@@ -4,13 +4,21 @@ import { defineConfig, devices } from '@playwright/test';
  * Phase 4 — Playwright 示例回归（E2E）
  * 说明见 design/engineering/phase4-playwright-e2e.md
  *
- * - webServer：复用 `npm run dev`（vite）作为示例服务，默认 http://localhost:5173
- * - testDir：./e2e（含环境测试与批量示例测试）
- * - 基线目录：e2e/baseline/（提交 git）；test-results/ 等瞬时产物忽略
- * - 截图像素比对阈值见 expect.toHaveScreenshot.maxDiffPixelRatio（初始 0.02，校准方法见方案文档）
+ * WebGPU 策略（事项4，参考 testCI 项目的可用配置）：
+ * - 必须用 `channel: 'chromium'`（新版 headless Chrome）；默认的 headless shell
+ *   不暴露 WebGPU（navigator.gpu 为 undefined）。务必配合以下启动参数：
+ *     --enable-unsafe-webgpu           暴露 navigator.gpu（需安全上下文，如 http://localhost）
+ *     --use-webgpu-adapter=swiftshader 无独立 GPU 时用 SwiftShader 软件适配器
+ *     --enable-unsafe-swiftshader      允许 SwiftShader 用于 WebGPU
+ * - headless 默认开启（与 testCI 一致）。若 headless WebGPU 不可用，由 spec 内降级为
+ *   headed 重试；两者都失败则 spec 显式报错（见 e2e/env-webgpu.spec.ts）。
+ * - webServer：复用 `npm run dev`（vite），默认 http://localhost:5173。
+ * - 基线目录：e2e/baseline/（提交 git）；test-results/ 等瞬时产物忽略。
  */
 export default defineConfig({
     testDir: './e2e',
+    // 基线截图统一存放于 e2e/baseline/（事项5，提交 git 不忽略）
+    snapshotDir: './e2e/baseline',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
@@ -18,19 +26,34 @@ export default defineConfig({
     reporter: 'list',
     use: {
         baseURL: 'http://localhost:5173',
-        trace: 'on-first-retry',
+        // 固定视口 + 浅色 + 关闭动画，确保截图大小一致、稳定（参考 testCI）
+        viewport: { width: 800, height: 600 },
+        colorScheme: 'light',
+        reducedMotion: 'reduce',
         screenshot: 'only-on-failure',
+        // 关键：新版 headless Chrome（非默认 shell），才能跑 WebGPU
+        channel: 'chromium',
+        headless: true,
+        launchOptions: {
+            args: [
+                '--enable-unsafe-webgpu',
+                '--use-webgpu-adapter=swiftshader',
+                '--enable-unsafe-swiftshader',
+            ],
+        },
     },
     projects: [
         {
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                // headless WebGPU 启用（事项4：本机先验证；不可用则降级 console 断言）
+                channel: 'chromium',
+                headless: true,
                 launchOptions: {
                     args: [
                         '--enable-unsafe-webgpu',
-                        '--enable-features=Vulkan,UseSkiaRenderer',
+                        '--use-webgpu-adapter=swiftshader',
+                        '--enable-unsafe-swiftshader',
                     ],
                 },
             },
@@ -43,7 +66,8 @@ export default defineConfig({
         timeout: 120000,
     },
     expect: {
-        // 初始阈值；以最简单示例（webgpu-triangle）校准，方法见 phase4 方案文档
-        toHaveScreenshot: { maxDiffPixelRatio: 0.02 },
+        // 参考 testCI：跨平台 SwiftShader 像素有微小差异，放宽到可接受范围。
+        // 基准值 0.05；env 三角形为确定性渲染，后续可校准收紧（见方案文档 §3.5）。
+        toHaveScreenshot: { maxDiffPixelRatio: 0.05 },
     },
 });

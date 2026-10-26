@@ -10,9 +10,10 @@ import { fileURLToPath } from 'node:url';
  * - 断言：加载无 console 报错 + canvas 存在。像素比对（toHaveScreenshot）按需开启。
  *
  * 运行方式（待用户发出批量指令后）：
- *   npm run test:e2e            # 全量（含本文件）
- *   npx playwright test e2e/examples.spec.ts   # 仅批量
+ *   WE3D_E2E_BATCH=1 npx playwright test e2e/examples.spec.ts   # 仅批量
+ * 默认（无 WE3D_E2E_BATCH）下整体跳过，避免误跑 349 个 url（json 尚待手工裁剪）。
  */
+const BATCH_ENABLED = !!process.env.WE3D_E2E_BATCH;
 const jsonPath = fileURLToPath(new URL('./examples-e2e.json', import.meta.url));
 const data = JSON.parse(readFileSync(jsonPath, 'utf-8')) as Record<string, string[]>;
 
@@ -24,6 +25,11 @@ for (const [category, urls] of Object.entries(data)) {
 test.describe('WE3D examples e2e (batch)', () => {
     for (const { category, url } of targets) {
         test(`[${category}] ${url}`, async ({ page }) => {
+            test.skip(!BATCH_ENABLED, '批量示例待手工裁剪 json 后启用（设置 WE3D_E2E_BATCH=1）');
+
+            // 屏蔽 favicon 请求，避免每个示例都因 /favicon.ico 404 产生 console 报错
+            await page.route('**/favicon.ico', (r) => r.abort());
+
             const errors: string[] = [];
             page.on('console', (m) => {
                 if (m.type() === 'error') errors.push(m.text());

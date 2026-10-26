@@ -132,19 +132,19 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 安装 `@playwright/test` + `playwright` + chromium 浏览器（**已完成**，v1.64.1 / Chromium 156）。
   - `playwright.config.ts`：`webServer` 启动 vite；env 自检用**原生 WebGPU 三角形 fixture**（不依赖 WE3D），**批量示例读取独立的 `e2e/examples-e2e.json`**（不复用 `examples/files.json`），加载→等 canvas 挂载→截图 + console 断言。
   - 基线存 `e2e/baseline/`（用户 2026-10-26 确认）；首跑由 `test:baseline` 生成后提交 git；已补 `test:baseline` / `test:e2e` 脚本。
-  - headless WebGPU 需 `--enable-unsafe-webgpu` + `--enable-features=Vulkan,UseSkiaRenderer`；**本机构建机实测不可用 → 降级 console 断言**（事项4）。
+  - WebGPU 策略（事项4，已实测修正）：`channel: 'chromium'`（新版 headless Chrome，关键——默认 headless shell 不暴露 `navigator.gpu`）+ SwiftShader 软件渲染参数；**本机 headless WebGPU 已验证可用**。不可用则 spec 内降级 headed 重试；两者都失败显式报错。
   - 约定文档化：`AGENTS.md`「三、开发流程约定」第 1、4 条已写「提交前必跑示例」。
   - **节奏（用户 2026-10-26 决策）**：先以 1 个基础示例（原生 WebGPU 三角形）落地 E2E（同时承接 examples 冒烟验证），再**分批导入**——按目录 + 功能（HTML span 标签）分批，每批清单经用户批准后再实施；需改动/修正的示例单独标记、不静默修改（示例量大、工作量较大）。
-- **验收**：基线生成并提交（WebGPU 环境）；后续跑示例可比对；首个基础示例（env 三角形）e2e 链已跑通（构建机降级为 console 断言）。
+- **验收**：env 基线生成并提交；后续跑示例可比对；首个基础示例（env 三角形）e2e 链已在本机 headless 跑通（WebGPU 渲染 + 离屏读回校验 + 截图基线比对通过）。
 - **实施记录**
   - 2026-10-26 形成详细方案 `./phase4-playwright-e2e.md`（含配置、脚本、清单设计、阈值方法、分批方式、降级策略、执行进度），用户确认 5 项事项（1.1 原生三角形 / 1.2 独立 json / 1.3 全量扫描待裁 / 2 阈值 / 3 目录+功能分批 / 4 降级 / 5 基线目录）。
-  - 配置落地：`playwright.config.ts`、`e2e/fixtures/webgpu-triangle.html`、`e2e/env-webgpu.spec.ts`、`e2e/examples.spec.ts`（批量链，未执行）、`scripts/generate-e2e-examples.mjs`；`package.json` 加 `test:e2e`/`test:baseline`；`.gitignore` 补忽略；chromium 已安装。
+  - 配置落地：`playwright.config.ts`（`channel:'chromium'`+SwiftShader、`snapshotDir: e2e/baseline`、阈值 0.05）、`e2e/fixtures/webgpu-triangle.html`（顶点缓冲 + 离屏读回，testCI 写法）、`e2e/env-webgpu.spec.ts`（headed 降级 + 显式报错）、`e2e/examples.spec.ts`（批量链，默认 `WE3D_E2E_BATCH` 跳过，屏蔽 favicon）、`scripts/generate-e2e-examples.mjs`；`package.json` 加 `test:e2e`/`test:baseline`；`.gitignore` 补忽略；chromium 已安装。
   - 清单：`e2e/examples-e2e.json` 由脚本全量扫描 `examples/` 生成，**10 分类 / 349 url**（待用户裁剪为每类一个）。
-  - 实测：env 用例 e2e 已跑通 → 构建机 headless WebGPU 不可用，用例降级为 skip + 仅 console 断言；截图基线待 WebGPU 环境 `test:baseline` 生成。
-- **验证**：`npx playwright test e2e/env-webgpu.spec.ts` → 1 passed（降级 skip）；chromium 启动正常；vite webServer 复用正常。截图基线回归待 WebGPU 环境补。
+  - 实测修正：早期 `navigator.gpu` 为 `undefined` 是**误判**（默认 headless shell + 在 `about:blank` 非安全上下文探测）；换 `channel:'chromium'`+SwiftShader 后 env 用例在本机 headless 渲染成功，基线已生成 + 比对通过。
+- **验证**：`npx playwright test e2e/env-webgpu.spec.ts` → 1 passed（WebGPU 渲染 + 离屏读回校验 + 截图基线比对均通过）；基线已提交 `e2e/baseline/.../webgpu-triangle-chromium-win32.png`；chromium 启动正常；vite webServer 复用正常。批量链（examples.spec.ts）默认跳过，未执行。
 - **备注**
   - 原 `pending-work.md` 第 2 条「examples 冒烟验证」**已并入本阶段作为步骤 2**（2026-10-26 用户决策），备忘中改为「已并入 Phase 4」并指向本方案；不再单独跟踪。
-  - 限制：本构建机 headless Chromium 无 `navigator.gpu`（多 flags 组合均 `NO_NAV_GPU`），故像素级回归需在支持 WebGPU 的环境完成；本机仅 console 断言级。执行5（批量 e2e + 系统检查 + 文档闭环）**待用户发出「批量测试」指令**后实施。
+  - 偏差/限制：本机 headless WebGPU 已可用；跨平台/CI 若 WebGPU 后端不同，按 §3.4 降级处理。执行5（批量 e2e + 系统检查 + 文档闭环）**待用户发出「批量测试」指令**后实施。
 
 ---
 
