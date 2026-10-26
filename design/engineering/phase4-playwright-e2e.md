@@ -65,11 +65,13 @@
 
 ## 四、执行进度（对应执行指令 1–5）
 
-- [x] **执行1 — 配置 e2e 环境**：`playwright.config.ts`、`package.json` 脚本、`.gitignore` 已落地；chromium 已安装（Playwright v1.64.1 / Chromium 156）。
+- [x] **执行1 — 配置 e2e 环境**：`playwright.config.ts`、`package.json` 脚本、`.gitignore`、eslint 覆盖 glob 已落地；e2e 目录已迁至 `tests/e2e/`（2026-10-26 二次调整）；chromium 已安装（Playwright v1.64.1 / Chromium 156）。
 - [x] **执行2 — 基础 WebGPU 三角形 + 标准**：fixture + spec 已建；e2e 链**已在本机 headless 下跑通**（WebGPU 渲染成功 + 离屏读回校验 + 截图基线生成并比对通过，见 §3.4 修正）。基线已提交 `tests/e2e/baseline/.../webgpu-triangle-chromium-win32.png`。
-- [x] **执行3 — 生成新 json（不跑 e2e）**：`tests/e2e/examples-e2e.ts`（349 urls）已生成；**未执行 e2e**，等你手工裁剪为每类一个典型 url（及可能的源码修正）。
-- [x] **执行4 — 批量链形成（不执行）**：`tests/e2e/examples.spec.ts` 已就绪，读取 json 参数化；**未运行**。
-- [ ] **执行5 — 批量 e2e + 系统检查 + 文档闭环**：**待你发出「批量测试」指令后**进行。
+- [x] **执行3 — 生成新清单（不跑 e2e）**：`tests/e2e/examples-e2e.ts`（嵌套 TS，16 顶级分类 / 349 url；目录=功能层级、叶子=html、url 多级组合、每层带 name）已生成；待手工裁剪为每类一个典型 url（及可能的源码修正）。
+- [x] **执行4 — 批量链形成（不执行）**：`tests/e2e/examples.spec.ts` 已就绪，导入嵌套 TS 展开为扁平 url 参数化；默认 `WE3D_E2E_BATCH` 跳过，**未运行**。
+- [ ] **执行5 — 批量 e2e + 系统检查 + 文档闭环**：
+  - [x] 文档闭环：新增 `design/webgpu-playwright-headless.md`（WebGPU + Playwright 无头测试跨项目技术指南）。
+  - [ ] 批量 e2e + 系统检查：**待你发出「批量测试」指令后**，用 `WE3D_E2E_BATCH=1 npx playwright test tests/e2e/examples.spec.ts` 跑批量、做系统性检查（console 报错、需修正示例标记）并收口。
 
 ## 五、工作量与风险
 - 示例量大（全量 349 个待裁）；裁剪后预期每类 1 个、约 15–20 个 url。

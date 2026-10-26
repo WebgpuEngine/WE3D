@@ -21,6 +21,7 @@
 - 关联：`implementation-log.md` §Phase 2 备注·偏差2
 - 说明：`npm run format` / `format:check` 脚本已于 `df28473` 补齐，但按约定**延后至「Phase 4 — Playwright 示例回归完成」后单独执行**（`prettier --write .` 改动面大，避免与 lint/bug 修复叠加排错）。属 Phase 2 收尾遗留的边角项。
 - 触发条件：完成 **Phase 4 — Playwright 示例回归**（`test:baseline` 建立并跑通）之后，单独跑 `npm run format` + `npm run format:check`，并单独提交。
+- 进度（2026-10-26）：Phase 4 的 e2e 环境已搭好、`test:baseline` 已生成且 env 用例跑通，触发条件**现已满足**；是否执行仍按你的节奏单独提交（不随本次改动自动跑）。
 
 ### 2. examples 冒烟验证（已并入 Phase 4，不再单独跟踪）
 - 状态：🔀 已并入主线
