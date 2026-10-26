@@ -140,6 +140,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 2026-10-26 形成详细方案 `./phase4-playwright-e2e.md`（含配置、脚本、清单设计、阈值方法、分批方式、降级策略、执行进度），用户确认 5 项事项（1.1 原生三角形 / 1.2 独立 TS 清单 / 1.3 全量扫描待裁 / 2 阈值 / 3 目录+功能分批 / 4 降级 / 5 基线目录）。
   - 配置落地：`playwright.config.ts`（`channel:'chromium'`+SwiftShader、`snapshotDir: tests/e2e/baseline`、阈值 0.05）、`tests/e2e/fixtures/webgpu-triangle.html`（顶点缓冲 + 离屏读回，testCI 写法）、`tests/e2e/env-webgpu.spec.ts`（headed 降级 + 显式报错）、`tests/e2e/examples.spec.ts`（批量链，默认 `WE3D_E2E_BATCH` 跳过，屏蔽 favicon）、`scripts/generate-e2e-examples.mjs`；`package.json` 加 `test:e2e`/`test:baseline`；`.gitignore` 补忽略；chromium 已安装。
   - 清单：`tests/e2e/examples-e2e.ts` 由脚本全量扫描 `examples/` 生成**多级嵌套 TS**（目录=功能层级、叶子=html 文件名、每层带 name），**16 顶级分类 / 349 url**（待用户裁剪为每类一个）。
+  - 修正：`examples.spec.ts` 展开叶子时 url/label 被重复拼接（如 `box.html/box.html` → 404 → vite SPA fallback 回根落地页 → canvas 超时误报「无 canvas」）；已修复（叶子文件名由父级递归加入路径，叶子分支不再追加）。box 示例（`system/geometry/box.html`）批量用例本机 headless WebGPU 下通过（2.5s，无 console 报错）。
   - 实测修正：早期 `navigator.gpu` 为 `undefined` 是**误判**（默认 headless shell + 在 `about:blank` 非安全上下文探测）；换 `channel:'chromium'`+SwiftShader 后 env 用例在本机 headless 渲染成功，基线已生成 + 比对通过。
 - **验证**：`npx playwright test tests/e2e/env-webgpu.spec.ts` → 1 passed（WebGPU 渲染 + 离屏读回校验 + 截图基线比对均通过）；基线已提交 `tests/e2e/baseline/.../webgpu-triangle-chromium-win32.png`；chromium 启动正常；vite webServer 复用正常。批量链（examples.spec.ts）默认跳过，未执行。
 - **备注**

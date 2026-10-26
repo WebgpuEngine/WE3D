@@ -23,10 +23,12 @@ interface Target {
 
 function flatten(node: E2ENode, dirKeys: string[], names: string[], out: Target[]) {
     if (node.file) {
+        // 叶子的文件名 / name 已由父级递归加入 dirKeys / names，这里不再重复追加
+        const parts = dirKeys[dirKeys.length - 1] === node.file ? dirKeys : [...dirKeys, node.file];
         out.push({
             category: dirKeys[0],
-            url: '/examples/' + [...dirKeys, node.file].join('/'),
-            label: [...names, node.name].join(' / '),
+            url: '/examples/' + parts.join('/'),
+            label: names.join(' / '),
         });
         return;
     }
