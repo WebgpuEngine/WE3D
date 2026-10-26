@@ -32,7 +32,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 0 | 约定与文档 | AGENTS.md + 方案文档就位 | ✅ 已完成 | [engineering-plan §Phase0](./engineering-plan.md#phase-0--约定与文档) |
 | 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ✅ 已完成 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
-| 3 | Vitest 单测 | 无 GPU 依赖冒烟用例 | ⬜ 未开始 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
+| 3 | Vitest 单测 | 无 GPU 依赖冒烟用例 | 🔵 进行中 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
 | 4 | Playwright 回归 | 示例截图基线，提交前必跑 | ⬜ 未开始 | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ⬜ 未开始 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ⬜ 未开始 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
@@ -105,7 +105,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 3 — Vitest 单元测试　⬜ 未开始
+### Phase 3 — Vitest 单元测试　🔵 进行中
 
 - **计划要点**
   - 安装 `vitest`（环境 `node`，不依赖 GPU）。
@@ -113,9 +113,15 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - `test/` 用例（无 GPU 依赖）：数学（`weMat4/weVec3`、`Box3/Sphere`、ID 生成）；修复回归（`checkGPUBufferSize` 等）；冒烟（mock `navigator.gpu`：`initScene`→`add` Mesh→断言 `entityManager.count===1`）。
   - 脚本：`test` / `test:run` / `coverage`。
 - **验收**：`npm run test` 通过；关键路径有冒烟用例。
-- **实施记录**：（待确认后填写）
-- **验证**：（待确认后填写）
-- **备注**：
+- **实施记录**
+  - 2026-10-26 搭建 Vitest 基础体系：`vitest.config.ts`（`environment: node`，`include: src/**/*.test.ts`）；`package.json` 增加 `test`/`test:run`（均 = `vitest run`）。
+  - 样例用例 `src/we/core/math/math.test.ts`：测试 `clamp`/`mod`（`baseFunction.ts`）与 `generateBox3`/`computeAABB`（`Box.ts`），**4 测试全部通过**，证明 Vitest 可在 node 下运行项目代码。
+  - 完整用例体系（数学 `weMat3/weVec3`、`Box3/Sphere`、ID 生成；修复回归 `checkGPUBufferSize`；mock `navigator.gpu` 冒烟等）**由人工后续补齐**（见备注）。
+- **验证**：`npm run test` → 1 文件 / 4 测试通过；`npx tsc --noEmit` 0 错误、ESLint 0 错误（测试文件纳入 `src/we` 门禁）。
+- **备注**
+  - 偏差：计划原拟独立 `test/` 目录 + `include: test/**/*.test.ts`；实际按用户要求将测试置于 `src/**/*.test.ts`（与源码同树），已相应调整配置。
+  - 未加 `coverage` 脚本：缺 `@vitest/coverage-*` 提供者，待后续按需补。
+  - 主线推进：Phase 3 脚手架已就位，但**完整单测用例体系由人工补齐**，本阶段不阻断验收。
 
 ---
 

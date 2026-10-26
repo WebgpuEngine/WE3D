@@ -38,6 +38,18 @@
 - 说明：决策后期整体迁移到 `gltfTransform`；所有 `@loaders.gl` 相关问题暂不处理，待迁移后整体移除（`src/@loaders.gl/` 不在工程化门禁范围内）。
 - 注意：迁移前 `src/@loaders.gl/` 的本地依赖（`draco`/`gltf`）保持现状，勿动。
 
+### 5. morphTarget WGSL shader 问题（历史遗留，人工后期修正）
+- 状态：⬜ 待人工修正（用户 2026-10-26 反馈）
+- 关联：人工测试发现
+- 说明：morphTarget 相关 WGSL shader 存在问题，根源是更早之前 **MVP 变量设计变更** 留下的历史遗留（非本次工程化引入），不影响 ESLint/tsc 清理结果。
+- 待办：用户后期抽时间人工修正，不在本工程化阶段处理。
+
+### 6. WE3D 单元测试完整体系后期由人工补齐（本次仅搭脚手架）
+- 状态：🔵 脚手架已建 / 主体待人工
+- 关联：`implementation-log.md` §Phase 3
+- 说明：2026-10-26 已搭 Vitest 基础体系（`vitest.config.ts` + `package.json` 的 `test`/`test:run` + `src/we/core/math/math.test.ts` 样例，4 测试通过）。**完整的 WE3D 单元测试用例体系由人工后续补齐**。
+- 备注：本次未加 `coverage` 脚本（缺 `@vitest/coverage-*` 提供者），待后续按需补；测试置于 `src/**/*.test.ts`（非独立 `test/` 目录），与计划微调。
+
 ## 二、变更记录
 | 日期 | 动作 | 说明 |
 | --- | --- | --- |
