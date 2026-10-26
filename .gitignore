@@ -13,6 +13,9 @@ dist
 dist-ssr
 *.local
 
+# Vitest 覆盖率报告产物
+coverage
+
 
 public/models/gltf/model
 !src/@loaders.gl/*
