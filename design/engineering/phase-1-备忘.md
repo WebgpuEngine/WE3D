@@ -3,6 +3,7 @@
 > 关联：`./phase1-build-green.md`、`./implementation-log.md` §Phase 1
 > 生成：2026-10-22
 > 说明：本文件记录 Phase 1 实施中**未当场处理、延后到后续阶段**的事项，避免遗漏。Phase 1 主体（修 `GBuffers.ts`、tsc 归零）已完成，见 `implementation-log.md`。
+> 状态更新（2026-10-26）：本备忘中「移交 Phase 2」一项已落地——Phase 2 ESLint 门禁归零且 `lint:fix` 脚本已补齐（见 `implementation-log.md` §Phase 2）。其余延迟项（依赖漏洞、`npm audit fix`、`@loaders.gl` 迁移、Playwright 基线、lib 发布）仍开放，不在此关闭。
 
 ## 一、Phase 1 已完成的实质工作（回顾）
 
@@ -10,7 +11,9 @@
 - `npx tsc --noEmit` 错误数 **1 → 0**，建立 tsc 门禁基线（0 错误）。
 - `design/` 工程化文档迁移至 `design/engineering/`。
 
-## 二、计划偏差 → 移交 Phase 2（延迟）
+## 二、计划偏差 → 移交 Phase 2（✅ 已完成）
+
+> Phase 2 已于 2026-10-26 落地（ESLint 0 错误，`lint:fix` 脚本就绪），本条移交已达成。详见 `implementation-log.md` §Phase 2。
 
 | 原计划动作 | 决策 | 移交去向 |
 | --- | --- | --- |
@@ -72,7 +75,7 @@
 
 ## 五、处置跟踪（待办清单）
 
-- [ ] Phase 2 落地 ESLint 未使用检查 + `lint:fix`，覆盖原 `fix-unused` 脚本职责
+- [x] Phase 2 落地 ESLint 未使用检查 + `lint:fix`，覆盖原 `fix-unused` 脚本职责（✅ 已完成 2026-10-26）
 - [ ] 评估并对开发链执行 `npm audit fix`（仅兼容项，不动主版本）
 - [ ] 后期将 `@loaders.gl` glTF 功能迁移到 `gltfTransform`，迁移后整体移除 `@loaders.gl`（迁移前所有 `@loaders.gl` 问题不处理）
 - [ ] 生产 high 无修复项（`@loaders.gl/textures`、`image-size`、`texture-compressor`）决策：接受 / 换实现 / 等上游
