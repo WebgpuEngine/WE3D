@@ -28,10 +28,9 @@
 - 说明：Phase 2 改动触及运行时逻辑（`scene.ts` 的 `perFrameRun` 改为箭头函数、`inputManager.ts` 方法签名/调用重构、`baseEntity`/`baseMaterial` 等 8 处 bug 修复）。尚未跑 `examples/` 验证渲染 / 输入无回归。属提交前门禁的零散验证项。
 - 做法：`npm run dev` 启动后加载关键示例，确认无 console 报错与功能回退。
 
-### 3. 远程仓库 URL 更新（建议）
-- 状态：⬜ 建议
-- 说明：GitHub 提示仓库已迁移至 `https://github.com/WebgpuEngine/WE3D.git`，但本地 `origin` 仍指向旧 `https://github.com/WebgpuEngine/WE.git`（当前靠 GitHub 重定向仍可推送）。
-- 待办：`git remote set-url origin https://github.com/WebgpuEngine/WE3D.git`，并确认后续推送走新地址。
+### 3. 远程仓库 URL 更新（✅ 已完成）
+- 状态：✅ 已完成（2026-10-26）
+- 说明：已将本地 `origin` 由旧 `https://github.com/WebgpuEngine/WE.git` 改为新 `https://github.com/WebgpuEngine/WE3D.git`；`git push` 经新地址验证成功（Everything up-to-date），后续推送走新地址。
 
 ### 4. `@loaders.gl` 整体迁移（决策，后期）
 - 状态：⏸ 已暂停 / 后期
