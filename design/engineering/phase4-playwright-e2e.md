@@ -84,7 +84,7 @@
 - 生成基线：`npm run test:baseline`（env 三角形已生成并提交）
 - 回归比对：`npm run test:e2e`（默认只跑 env 用例；examples 批量被 `WE3D_E2E_BATCH` 跳过）
 - 批量示例（待裁剪 json + 你发出指令后）：`WE3D_E2E_BATCH=1 npx playwright test tests/e2e/examples.spec.ts`
-- 重新生成清单：`node scripts/generate-e2e-examples.mjs`
+- 重新生成清单：`npm run test:generate`（即 `node scripts/generate-e2e-examples.mjs`）
 
 ## 七、与 pending-work 的关系
 - 原第 2 条「examples 冒烟验证」已并入本阶段步骤 2，备忘改为「已并入 Phase 4」并指向本文。
