@@ -13,12 +13,12 @@ import { defineConfig, devices } from '@playwright/test';
  * - headless 默认开启（与 testCI 一致）。若 headless WebGPU 不可用，由 spec 内降级为
  *   headed 重试；两者都失败则 spec 显式报错（见 e2e/env-webgpu.spec.ts）。
  * - webServer：复用 `npm run dev`（vite），默认 http://localhost:5173。
- * - 基线目录：e2e/baseline/（提交 git）；test-results/ 等瞬时产物忽略。
+ * - 基线目录：tests/e2e/baseline/（提交 git）；test-results/ 等瞬时产物忽略。
  */
 export default defineConfig({
-    testDir: './e2e',
-    // 基线截图统一存放于 e2e/baseline/（事项5，提交 git 不忽略）
-    snapshotDir: './e2e/baseline',
+    testDir: './tests/e2e',
+    // 基线截图统一存放于 tests/e2e/baseline/（事项5，提交 git 不忽略）
+    snapshotDir: './tests/e2e/baseline',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,

@@ -47,7 +47,7 @@ export default tseslint.config(
   },
   {
     // Playwright e2e 规格与配置：测试文件允许 any（如 window 断言）
-    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    files: ['tests/e2e/**/*.ts', 'playwright.config.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },

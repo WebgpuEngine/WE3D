@@ -31,7 +31,7 @@
    - `npm run test`（vitest 单测）
    - `npm run docs:build`（typedoc 同步）
 3. 错误修复遵循：先让构建变绿 → 建回归基线 → 加单测 → 再修错误。
-4. **Playwright 示例回归**（Phase 4 落地后启用）：遍历 `examples/files.json` 的 `.html` 加载并截图，与 `test-results/baseline/` 基线比对。
+4. **Playwright 示例回归**（Phase 4 落地后启用）：遍历 `tests/e2e/examples-e2e.ts` 清单的 `.html` 加载并截图，与 `tests/e2e/baseline/` 基线比对。
    - 首次：`npm run test:baseline` 生成基线并 **提交 git**。
    - 改动渲染相关代码时，提交前重跑关键示例确认无回归（与第 1 条 `examples/` 验证等价）。
    - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为「加载无 console 报错」断言。

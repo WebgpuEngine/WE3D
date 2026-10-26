@@ -11,7 +11,7 @@ import { test, expect, chromium } from '@playwright/test';
  *
  * 校验方式（参考 testCI，规避 headless 截图抓不到画布的问题）：
  * 1) 离屏纹理读回校验 window.__envVerify（确定性，证明渲染正确）
- * 2) 画布渲染 + 基线截图 window.__envReady（视觉基线，maxDiffPixelRatio 见配置）
+ * 2) 画布渲染 + 基线截图 window.__envReady（视觉基线，maxDiffPixelRatio 见配置；fixture 位于 tests/e2e/fixtures/）
  */
 const FLAGS = [
     '--enable-unsafe-webgpu',
@@ -26,7 +26,7 @@ async function probe(page: import('@playwright/test').Page) {
     });
     page.on('pageerror', (e) => errors.push(String(e)));
 
-    await page.goto('/e2e/fixtures/webgpu-triangle.html');
+    await page.goto('/tests/e2e/fixtures/webgpu-triangle.html');
     await page.waitForFunction(() => (window as any).__envReady !== undefined, undefined, {
         timeout: 20000,
     });
