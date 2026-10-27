@@ -36,8 +36,9 @@
 ### Phase 3 — Vitest 单元测试
 - 安装 `vitest`（环境 `node`，不依赖 GPU）。
 - `vitest.config.ts`，`include: test/**/*.test.ts`。
-- `test/` 用例（无 GPU 依赖）：数学（`weMat4/weVec3`、`Box3/Sphere`、ID 生成）；修复回归（`checkGPUBufferSize` 等）；冒烟（mock `navigator.gpu`：`initScene`→`add` Mesh→断言 `entityManager.count===1`）。
+- `test/` 用例（无 GPU 依赖）：数学（`weMat4/weVec3`、`Box3/Sphere`、ID 生成）；修复回归（`checkGPUBufferSize` 等）。（注：渲染相关冒烟原拟 mock `navigator.gpu`，已取消，由 Phase 4 真实 WebGPU 设备回归承担。）
 - 脚本：`test` / `test:run` / `coverage`。
+- 现状与样例：详见 `design/engineering/phase3-vitest-unit-test.md`（2026-10-26 已搭 Vitest 流程，样例 `src/we/core/math/math.test.ts` 数学例子 4 测试通过；完整用例体系待人工补齐）。
 
 ### Phase 4 — Playwright 示例回归
 - 安装 `@playwright/test` + `playwright`。

@@ -32,7 +32,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 0 | 约定与文档 | AGENTS.md + 方案文档就位 | ✅ 已完成 | [engineering-plan §Phase0](./engineering-plan.md#phase-0--约定与文档) |
 | 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ✅ 已完成 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
-| 3 | Vitest 单测 | 无 GPU 依赖冒烟用例 | 🔵 进行中 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
+| 3 | Vitest 单测 | 数学/修复回归用例（无 GPU 依赖） | 🔵 进行中 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
 | 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（环境已搭，批量待指令） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ⬜ 未开始 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ⬜ 未开始 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
@@ -110,13 +110,13 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 - **计划要点**
   - 安装 `vitest`（环境 `node`，不依赖 GPU）。
   - `vitest.config.ts`，`include: test/**/*.test.ts`。
-  - `test/` 用例（无 GPU 依赖）：数学（`weMat4/weVec3`、`Box3/Sphere`、ID 生成）；修复回归（`checkGPUBufferSize` 等）；冒烟（mock `navigator.gpu`：`initScene`→`add` Mesh→断言 `entityManager.count===1`）。
+  - `test/` 用例（无 GPU 依赖）：数学（`weMat4/weVec3`、`Box3/Sphere`、ID 生成）；修复回归（`checkGPUBufferSize` 等）。（注：渲染相关冒烟原拟 mock `navigator.gpu`，已取消，由 Phase 4 真实 WebGPU 设备回归承担。）
   - 脚本：`test` / `test:run` / `coverage`。
-- **验收**：`npm run test` 通过；关键路径有冒烟用例。
+- **验收**：`npm run test` 通过（数学/修复回归用例；渲染验证由 Phase 4 真实 WebGPU 承担）。
 - **实施记录**
   - 2026-10-26 搭建 Vitest 基础体系：`vitest.config.ts`（`environment: node`，`include: src/**/*.test.ts`）；`package.json` 增加 `test`/`test:run`（均 = `vitest run`）与 `coverage`（= `vitest run --coverage`），并安装 `@vitest/coverage-v8@^2.1.9` 提供者；`vitest.config.ts` 配置 `coverage.provider: 'v8'` 且范围限定 `src/we`（排除测试与本地 fork）。
   - 样例用例 `src/we/core/math/math.test.ts`：测试 `clamp`/`mod`（`baseFunction.ts`）与 `generateBox3`/`computeAABB`（`Box.ts`），**4 测试全部通过**，证明 Vitest 可在 node 下运行项目代码。
-  - 完整用例体系（数学 `weMat3/weVec3`、`Box3/Sphere`、ID 生成；修复回归 `checkGPUBufferSize`；mock `navigator.gpu` 冒烟等）**由人工后续补齐**（见备注）。
+  - 完整用例体系（数学 `weMat3/weVec3`、`Box3/Sphere`、ID 生成；修复回归 `checkGPUBufferSize` 等）**由人工后续补齐**（见备注；渲染相关 mock `navigator.gpu` 冒烟已取消，改由 Phase 4 真实 WebGPU 回归）。
 - **验证**：`npm run test` → 1 文件 / 4 测试通过；`npm run coverage` → v8 覆盖率报告生成；`npx tsc --noEmit` 0 错误、ESLint 0 错误、`npm run build` 通过（测试文件纳入 `src/we` 门禁）。
 - **备注**
   - 偏差：计划原拟独立 `test/` 目录 + `include: test/**/*.test.ts`；实际按用户要求将测试置于 `src/**/*.test.ts`（与源码同树），已相应调整配置。
@@ -134,7 +134,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 基线存 `tests/e2e/baseline/`（用户 2026-10-26 确认）；首跑由 `test:baseline` 生成后提交 git；已补 `test:baseline` / `test:e2e` 脚本。
   - WebGPU 策略（事项4，已实测修正）：`channel: 'chromium'`（新版 headless Chrome，关键——默认 headless shell 不暴露 `navigator.gpu`）+ SwiftShader 软件渲染参数；**本机 headless WebGPU 已验证可用**。不可用则 spec 内降级 headed 重试；两者都失败显式报错。
   - 约定文档化：`AGENTS.md`「三、开发流程约定」第 1、4 条已写「提交前必跑示例」。
-  - **节奏（用户 2026-10-26 决策）**：先以 1 个基础示例（原生 WebGPU 三角形）落地 E2E（同时承接 examples 冒烟验证），再**分批导入**——按目录 + 功能（HTML span 标签）分批，每批清单经用户批准后再实施；需改动/修正的示例单独标记、不静默修改（示例量大、工作量较大）。
+  - **节奏（用户 2026-10-27 决策）**：先以 1 个基础示例（原生 WebGPU 三角形）落地 E2E，再以 `e2e-cases/` 指定目录承载引擎示例验证（运行期自动探测 + 截图基线比对；原「examples 冒烟验证」已取消，由 e2e-cases 代替）；用例按需逐个新增，无需批量导入/裁剪。
 - **验收**：env 基线生成并提交；后续跑示例可比对；首个基础示例（env 三角形）e2e 链已在本机 headless 跑通（WebGPU 渲染 + 离屏读回校验 + 截图基线比对通过）。
 - **实施记录**
   - 2026-10-26 形成详细方案 `./phase4-playwright-e2e.md`（含配置、脚本、清单设计、阈值方法、分批方式、降级策略、执行进度），用户确认 5 项事项（1.1 原生三角形 / 1.2 独立 TS 清单 / 1.3 全量扫描待裁 / 2 阈值 / 3 目录+功能分批 / 4 降级 / 5 基线目录）。
@@ -147,7 +147,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 实测修正：早期 `navigator.gpu` 为 `undefined` 是**误判**（默认 headless shell + 在 `about:blank` 非安全上下文探测）；换 `channel:'chromium'`+SwiftShader 后 env 用例在本机 headless 渲染成功，基线已生成 + 比对通过。
 - **验证**：`npx playwright test tests/e2e/env-webgpu.spec.ts` → 1 passed（WebGPU 渲染 + 离屏读回校验 + 截图基线比对均通过）；基线已提交 `tests/e2e/baseline/.../webgpu-triangle.png`（跨平台命名，无平台后缀）；chromium 启动正常；vite webServer 复用正常。批量链（examples.spec.ts）默认跳过，未执行。
 - **备注**
-  - 原 `pending-work.md` 第 2 条「examples 冒烟验证」**已并入本阶段作为步骤 2**（2026-10-26 用户决策），备忘中改为「已并入 Phase 4」并指向本方案；不再单独跟踪。
+  - 原 `pending-work.md` 第 2 条「examples 冒烟验证」已**取消**（2026-10-27），改由 `e2e-cases/` 指定目录 + 运行期自动探测代替；备忘同步改为「已取消，由 e2e-cases 指定目录代替」。
   - 偏差/限制：本机 headless WebGPU 已可用；跨平台/CI 若 WebGPU 后端不同，按 §3.4 降级处理。执行5（批量 e2e + 系统检查 + 文档闭环）**待用户发出「批量测试」指令**后实施。
 
 ---

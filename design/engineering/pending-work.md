@@ -23,11 +23,11 @@
 - 触发条件：完成 **Phase 4 — Playwright 示例回归**（`test:baseline` 建立并跑通）之后，单独跑 `npm run format` + `npm run format:check`，并单独提交。
 - 进度（2026-10-26）：Phase 4 的 e2e 环境已搭好、`test:baseline` 已生成且 env 用例跑通，触发条件**现已满足**；是否执行仍按你的节奏单独提交（不随本次改动自动跑）。
 
-### 2. examples 冒烟验证（已并入 Phase 4，不再单独跟踪）
-- 状态：🔀 已并入主线
-- 关联：`phase4-playwright-e2e.md` 步骤 2；`implementation-log.md` §Phase 4
-- 说明：原作为零散验证项记录。2026-10-26 用户决策将其**并入 Phase 4 — Playwright 示例回归**作为其中一步（示例极多、许多需 playwright 跑且部分需修正，二者合一更合理）。故不再于本备忘单独跟踪，归口主线 Phase 4。
-- 落地点：Phase 4 步骤 2「首个基础示例 E2E」即其落地形式。
+### 2. examples 冒烟验证（❌ 已取消，由 e2e-cases 指定目录代替）
+- 状态：❌ 已取消
+- 关联：`phase4-playwright-e2e.md` §3.6；`implementation-log.md` §Phase 4
+- 说明：原作为零散验证项记录。2026-10-27 用户决策**取消**「examples 冒烟验证」——不再复用/全量扫描 `examples/`，改由 `e2e-cases/` 指定目录承载引擎示例的加载与渲染验证（运行期自动探测 + 截图基线比对）。故不再于本备忘单独跟踪，归口主线 Phase 4。
+- 落地点：`e2e-cases/<一级目录>/*.html`（如 `e2e-cases/geometry/box.html`）。
 
 ### 3. 远程仓库 URL 更新（✅ 已完成）
 - 状态：✅ 已完成（2026-10-26）

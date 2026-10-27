@@ -3,13 +3,13 @@
 > 跟踪：`implementation-log.md` §Phase 4
 > 关联方案：`engineering-plan.md` §Phase 4
 > 生成：2026-10-26　更新：2026-10-27　状态：环境+基线脚手架已搭；批量链已重构为「e2e-cases 目录 + 运行期自动探测 + 缺失基线自动生成」
-> 背景：原 `pending-work.md` 第 2 条「examples 冒烟验证」**并入本阶段作为步骤 2**（示例极多，验证本身即在 Playwright 下跑示例，二者合一）。
+> 背景：原 `pending-work.md` 第 2 条「examples 冒烟验证」已**取消**——不再复用/全量扫描 `examples/`，改由 `e2e-cases/` 指定目录承载引擎示例的加载与渲染验证（见 §3.6）。
 
 ## 一、目标
 
 1. 建立 WE3D 的 Playwright E2E 回归体系，覆盖 `e2e-cases/` 用例页（引擎示例）的加载与渲染。
 2. 以「截图基线 + 渲染断言」沉淀回归基线，作为后续源码/渲染改动的回归保护（落实 engineering-plan 依赖链：先建基线，再修错误）；WebGPU 执行策略为 headless 优先 → 失败降级 headed → 仍失败显式报错（见 §3.4）。
-3. 把 AGENTS.md「三、开发流程约定」第 1 条的「提交前 examples 验证」从纯人工，升级为可由 Playwright 跑关键示例。
+3. 把 AGENTS.md「三、开发流程约定」第 1 条的「提交前示例验证」从纯人工，升级为可由 Playwright 跑 `e2e-cases/` 关键用例页。
 
 ## 二、已确认事项（用户 2026-10-26 确认）
 
@@ -91,4 +91,4 @@
 - 新增用例：直接在 `e2e-cases/<一级目录>/` 下放置 `*.html`（及引用的 `*.ts`），下次运行即自动纳入；首次跑自动生成基线。
 
 ## 七、与 pending-work 的关系
-- 原第 2 条「examples 冒烟验证」已并入本阶段步骤 2，备忘改为「已并入 Phase 4」并指向本文。
+- 原第 2 条「examples 冒烟验证」已**取消**，由 `e2e-cases/` 指定目录 + 运行期自动探测代替；`pending-work.md` 备忘同步改为「已取消，由 e2e-cases 指定目录代替」。
