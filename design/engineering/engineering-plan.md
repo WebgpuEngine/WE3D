@@ -49,9 +49,11 @@
 - **进度（2026-10-27）**：工程化 ✅ 已完成（Playwright 环境 / 配置 / 脚本 / 截图基线 / env WebGPU 三角形与 box 样例，均在本机 headless 跑通）；**大量 WE3D 示例 e2e 验证（`e2e-cases/` 逐例）⬜ 未完成**，按需逐个新增。上述最初计划要点在实施中有修订（如 `channel:'chromium'`+SwiftShader、`e2e-cases/` 指定目录替代 `examples/` 全量、跨平台 600x600 基线等），以 `phase4-playwright-e2e.md` 为准；实施与验证见 `implementation-log.md §Phase 4`。
 
 ### Phase 5 — typedoc 文档整合
-- 修复 `doc/typedoc.json` 过期入口：删除 `typedoc copy.json` / `old.tsconfig.json`；统一以 `doc/tsconfigdoc.json` 为唯一真相源（入口 `../src/we/**/*.ts`，out `../docs`），删 include 里错误的 `./src/@loader.gl/**`。
-- 根 `package.json` 增加 `docs:build` → `cd doc && npm run make`。
-- CI 跑 `docs:build` 保证同步。
+- 合并到根目录（方案 A）：删除 `doc/` 独立包，根 `typedoc.json` 为唯一真相源。
+- 入口全量 `src/we/**/*.ts`；开启 `excludePrivate` / `excludeInternal` / `excludeExternals`；`exclude ["**/* copy.ts", "**/*.test.ts"]`；`skipErrorChecking: true`（屏蔽现有 TS 错误）。
+- 首页单独新建 `typedoc-home.md`（不用根 `README.md`）；根 `package.json` 增 `docs:build` / `docs:build:watch`。
+- 更新 `AGENTS.md`（删 `doc/` 行、改 `docs/` 描述、补脚本速查）；CI 跑 `docs:build` 保证同步。
+- **进度（2026-10-27）**：✅ 已完成（`npm run docs:build` 0 错误 / 273 警告；产物 766 → 727 文件；首页为 `typedoc-home.md`；浏览器验证可用）。踩坑见 `implementation-log.md §Phase 5`（环境「安全删除」拦截导致 `Could not empty`，重建前需 `.NET Directory.Delete` 直删 `docs/`）。
 
 ### Phase 6 — Lib 打包与 npm 发布（方案 A）
 - `vite.config.ts` 增加 `build.lib`：`entry` = `src/we/export/main.ts`、`formats:['es']`、`fileName`，并接入 `vite-plugin-dts` 输出 `.d.ts` 到 `dist`。
