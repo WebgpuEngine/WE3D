@@ -2,13 +2,13 @@
 
 > 跟踪：`implementation-log.md` §Phase 4
 > 关联方案：`engineering-plan.md` §Phase 4
-> 生成：2026-10-26　状态：方案已确认，执行中（环境+基线脚手架已搭，批量待指令）
+> 生成：2026-10-26　更新：2026-10-27　状态：环境+基线脚手架已搭；批量链已重构为「e2e-cases 目录 + 运行期自动探测 + 缺失基线自动生成」
 > 背景：原 `pending-work.md` 第 2 条「examples 冒烟验证」**并入本阶段作为步骤 2**（示例极多，验证本身即在 Playwright 下跑示例，二者合一）。
 
 ## 一、目标
 
-1. 建立 WE3D 的 Playwright E2E 回归体系，覆盖 `examples/` 示例的加载与渲染。
-2. 以「截图基线 + console 断言」沉淀回归基线，作为后续源码/渲染改动的回归保护（落实 engineering-plan 依赖链：先建基线，再修错误）。
+1. 建立 WE3D 的 Playwright E2E 回归体系，覆盖 `e2e-cases/` 用例页（引擎示例）的加载与渲染。
+2. 以「截图基线 + 渲染断言」沉淀回归基线，作为后续源码/渲染改动的回归保护（落实 engineering-plan 依赖链：先建基线，再修错误）；WebGPU 执行策略为 headless 优先 → 失败降级 headed → 仍失败显式报错（见 §3.4）。
 3. 把 AGENTS.md「三、开发流程约定」第 1 条的「提交前 examples 验证」从纯人工，升级为可由 Playwright 跑关键示例。
 
 ## 二、已确认事项（用户 2026-10-26 确认）
@@ -23,11 +23,13 @@
 | 4 | WebGPU 策略 | **headless 优先**（`channel:'chromium'` + SwiftShader 软件渲染，本机已验证可用）；不可用则 spec 内降级 headed 重试；两者都失败则显式报错（不静默跳过）。 |
 | 5 | 基线目录 | `tests/e2e/baseline/`。 |
 
+> 注（2026-10-27）：事项 1.2/1.3 的「静态清单 + 手工裁剪」方案已被 §3.6 的「e2e-cases 目录 + 运行期自动探测」取代，此处仅作历史决策留存。
+
 ## 三、技术方案
 
 ### 3.1 配置 `playwright.config.ts`（已建）
 - `webServer`：`command: "npm run dev"`，`url: "http://localhost:5173"`，`reuseExistingServer: true`（首次 vite 冷启较慢，超时 120s）。
-- `testDir: "./e2e"`；`snapshotDir: "./tests/e2e/baseline"`（事项5，基线提交、不忽略）。
+- `testDir: "./tests/e2e"`；`snapshotDir: "./tests/e2e/baseline"`（事项5，基线提交、不忽略）；`snapshotPathTemplate: '{snapshotDir}/{testFilePath}-snapshots/{arg}{ext}'`（去掉平台后缀，跨平台共享基线）。
 - `use`：`baseURL: "http://localhost:5173"`；`screenshot: "only-on-failure"`；`viewport: 600×600`、`colorScheme: 'light'`、`reducedMotion: 'reduce'`（固定截图尺寸/消除动画抖动，参考 testCI）。
 - `use`/`projects.chromium`：**`channel: 'chromium'`（关键）**——默认 headless shell 不暴露 `navigator.gpu`，必须用新版 headless Chrome；`headless: true` + `launchOptions.args: ['--enable-unsafe-webgpu', '--use-webgpu-adapter=swiftshader', '--enable-unsafe-swiftshader']`（无独立 GPU 时用 SwiftShader 软件适配器；参考 testCI 项目可用配置）。
 - `expect.toHaveScreenshot.maxDiffPixelRatio: 0.05`（参考 testCI，吸收跨平台 SwiftShader 像素微量差异；校准见 §3.5）。
@@ -57,34 +59,36 @@
   - 若某示例像素抖动大，优先排查渲染稳定性，而非一味放宽阈值。
 - 注：本机 headless WebGPU 已验证可用，基线已在此环境生成并提交；跨平台/CI 若后端不同，按 §3.4 降级处理。
 
-### 3.6 批量清单与 e2e 链（事项1.2/1.3、执行4）
-- 生成器：`scripts/generate-e2e-examples.mjs`（扫描 `examples/**/*.html`，排除 `index*.html`，构建**多级嵌套树**：目录=功能层级、叶子=html 文件名（不含目录），完整 url = `/examples/<多级路径>/<叶子 html>`，每个层级带 `name`；输出 `tests/e2e/examples-e2e.ts`）。
-- 当前产出：`tests/e2e/examples-e2e.ts` = **16 个顶级分类、349 个 url**（全量，待用户裁剪为每类一个；顶级分类对应 `examples/` 下含 html 的一级目录，如 `animations / base / system` 等）。
-- 批量用例：`tests/e2e/examples.spec.ts` 导入嵌套 TS 对象并**展开为扁平 url 参数化遍历**（`test.describe` + `forEach`）；断言（与 `env-webgpu.spec.ts` 同一标准）加载无 console 报错 + canvas 存在 + `toHaveScreenshot` 视觉基线比对（`maxDiffPixelRatio: 0.05`，截图名由各示例 url 派生，如 `system-geometry-box.png`，基线存于 `tests/e2e/baseline/examples.spec.ts-snapshots/`）；并 `page.route` 屏蔽 `/favicon.ico` 避免每个示例都因 404 失败。**默认整体跳过**（`test.skip` 受 `WE3D_E2E_BATCH` 环境变量控制），待你手工裁剪清单 + 发出批量指令后执行（执行5）。
-- 分批方式（事项3）：按目录 + 功能（HTML 中 span 标签内容）分批，再展开子目录；每批清单经用户批准后执行；需修正的示例单独标记、不静默改。
+### 3.6 用例源目录与 e2e 链（2026-10-27 重构，取代静态清单方案）
+- **用例源目录改为 `e2e-cases/`（项目根）**：与 `tests/e2e/`（测试代码）从命名上区分——`e2e-cases/` 存「被测页面」，`tests/e2e/` 存「测试代码」；不再复用/全量扫描 `examples/`。
+- 目录结构：`e2e-cases/` 下为**一级目录（节点，仅一层）**，如 `e2e-cases/geometry/`；每个一级目录下直接放 `*.html` 测试页，完整 url = `/e2e-cases/<一级目录>/<文件>.html`（如 `/e2e-cases/geometry/box.html`）。
+- `tests/e2e/examples-e2e.ts`：**不再维护静态清单**，运行期用 Node `fs` 扫描 `e2e-cases/` 的一级目录、自动收集各目录下 `*.html`（非 `.html` 与空目录自动跳过），导出 `e2eTargets`（`{ dir, file, name, url }`）。新增用例只需在 `e2e-cases/<目录>/` 下放置 html 即被自动纳入，无需改清单、无需再生成。
+- `tests/e2e/examples.spec.ts`：按一级目录分组（`test.describe(dir)`）+ 遍历；**WebGPU 策略与 env 一致**：headless 优先 → 适配器不可用降级 headed（`chromium.launch({ headless: false })`）→ 仍失败显式报错（不静默跳过）。**正确性以 `toHaveScreenshot` 截图基线比对为准**（`maxDiffPixelRatio: 0.05`，缺失基线自动生成）；「无 console 报错 + canvas 存在」仅为必要非充分条件——WebGPU 渲染正确性不能靠 console 判断，必须走完整截图测试。并 `page.route` 屏蔽 `/favicon.ico` 避免 404。截图名由 url 派生（剥离 `/e2e-cases/` 前缀），如 `/e2e-cases/geometry/box.html` → `geometry-box.png`，基线存于 `tests/e2e/baseline/examples.spec.ts-snapshots/`。
+- **缺失基线自动生成**：spec 内用 `testInfo.snapshotPath(name)` 判断基线是否存在；不存在则 `page.screenshot({ animations: 'disabled' })` 直接写入该路径（首次运行即产出基线，不报错）；存在才走 `toHaveScreenshot` 比对。故新增用例无需预生成基线，跑一次即自动落基线。
+- 已移除：`scripts/generate-e2e-examples.mjs`（静态清单生成器）、`package.json` 的 `test:generate`、`WE3D_E2E_BATCH` 跳过逻辑；`eslint.config.js` 的 `ignores` 新增 `e2e-cases/**`（被测示例页不纳入主规则，与 `examples/**` 同类）。
 
 ## 四、执行进度（对应执行指令 1–5）
 
 - [x] **执行1 — 配置 e2e 环境**：`playwright.config.ts`、`package.json` 脚本、`.gitignore`、eslint 覆盖 glob 已落地；e2e 目录已迁至 `tests/e2e/`（2026-10-26 二次调整）；chromium 已安装（Playwright v1.64.1 / Chromium 156）。
 - [x] **执行2 — 基础 WebGPU 三角形 + 标准**：fixture + spec 已建；e2e 链**已在本机 headless 下跑通**（WebGPU 渲染成功 + 离屏读回校验 + 截图基线生成并比对通过，见 §3.4 修正）。基线已提交 `tests/e2e/baseline/.../webgpu-triangle.png`。
-- [x] **执行3 — 生成新清单（不跑 e2e）**：`tests/e2e/examples-e2e.ts`（嵌套 TS，16 顶级分类 / 349 url；目录=功能层级、叶子=html、url 多级组合、每层带 name）已生成；待手工裁剪为每类一个典型 url（及可能的源码修正）。
-- [x] **执行4 — 批量链形成（不执行）**：`tests/e2e/examples.spec.ts` 已就绪，导入嵌套 TS 展开为扁平 url 参数化；默认 `WE3D_E2E_BATCH` 跳过，**未运行**。
+- [x] **执行3 — 用例源目录与自动探测（2026-10-27 重构）**：目标目录由 `examples/` 全量扫描改为 `e2e-cases/`（一级目录 + 直接放置 html）；`tests/e2e/examples-e2e.ts` 改为运行期自动探测 `e2e-cases/*/*.html`，去掉静态清单、多级树与显式 html 指定；已删除 `scripts/generate-e2e-examples.mjs` 与 `test:generate`。
+- [x] **执行4 — 批量链 + 缺失基线自动生成**：`tests/e2e/examples.spec.ts` 按一级目录分组遍历，缺失基线时自动 `page.screenshot` 生成（不再依赖 `WE3D_E2E_BATCH` 跳过）；首个用例 `geometry/box` 已跑通（基线 `geometry-box.png` 已生成并比对通过）。
 - [ ] **执行5 — 批量 e2e + 系统检查 + 文档闭环**：
   - [x] 文档闭环：新增 `design/webgpu-playwright-headless.md`（WebGPU + Playwright 无头测试跨项目技术指南）。
-  - [ ] 批量 e2e + 系统检查：**待你发出「批量测试」指令后**，用 `WE3D_E2E_BATCH=1 npx playwright test tests/e2e/examples.spec.ts` 跑批量、做系统性检查（console 报错、需修正示例标记）并收口。
+  - [ ] 批量 e2e + 系统检查：**待后续在 `e2e-cases/` 下补充更多用例页**，直接跑 `npx playwright test tests/e2e/examples.spec.ts` 即自动纳入并生成基线；再做系统性检查（console 报错、需修正示例标记）并收口。
 
 ## 五、工作量与风险
-- 示例量大（全量 349 个待裁）；裁剪后预期每类 1 个、约 15–20 个 url。
+- 用例按需在 `e2e-cases/` 下逐个新增（自动探测，无静态清单、无需裁剪）；当前已覆盖 `geometry/box`。
 - 本机 headless WebGPU 已验证可用（`channel:'chromium'` + SwiftShader）；跨平台/CI 若后端不同，按 §3.4 降级处理。
 - 部分示例需源码修正（已知 morphTarget WGSL 历史遗留，见 `pending-work.md` 第 5 条），批量时单独标记、不静默修改。
 - 外部依赖/特定设备示例需排除或单独处理。
 
 ## 六、运行方式
 - 环境自检（单跑）：`npx playwright test tests/e2e/env-webgpu.spec.ts`
-- 生成基线：`npm run test:baseline`（env 三角形已生成并提交）
-- 回归比对：`npm run test:e2e`（默认只跑 env 用例；examples 批量被 `WE3D_E2E_BATCH` 跳过）
-- 批量示例（待裁剪 json + 你发出指令后）：`WE3D_E2E_BATCH=1 npx playwright test tests/e2e/examples.spec.ts`
-- 重新生成清单：`npm run test:generate`（即 `node scripts/generate-e2e-examples.mjs`）
+- 生成/刷新基线：`npm run test:baseline`（即 `playwright test --update-snapshots`）
+- 回归比对：`npm run test:e2e`（即 `playwright test`）
+- 用例页自动探测：`npx playwright test tests/e2e/examples.spec.ts --list`（列出 `e2e-cases/` 下自动发现的所有用例）
+- 新增用例：直接在 `e2e-cases/<一级目录>/` 下放置 `*.html`（及引用的 `*.ts`），下次运行即自动纳入；首次跑自动生成基线。
 
 ## 七、与 pending-work 的关系
 - 原第 2 条「examples 冒烟验证」已并入本阶段步骤 2，备忘改为「已并入 Phase 4」并指向本文。
