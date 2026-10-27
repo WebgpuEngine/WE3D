@@ -46,6 +46,7 @@
 - 基线存 `test-results/baseline/`，首跑生成后提交 git；`test:baseline` 脚本。
 - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为"加载无 console 报错"断言。
 - 约定文档化进 `AGENTS.md`：提交前本地跑关键示例（「三、开发流程约定」第 1、4 条）。
+- **进度（2026-10-27）**：工程化 ✅ 已完成（Playwright 环境 / 配置 / 脚本 / 截图基线 / env WebGPU 三角形与 box 样例，均在本机 headless 跑通）；**大量 WE3D 示例 e2e 验证（`e2e-cases/` 逐例）⬜ 未完成**，按需逐个新增。上述最初计划要点在实施中有修订（如 `channel:'chromium'`+SwiftShader、`e2e-cases/` 指定目录替代 `examples/` 全量、跨平台 600x600 基线等），以 `phase4-playwright-e2e.md` 为准；实施与验证见 `implementation-log.md §Phase 4`。
 
 ### Phase 5 — typedoc 文档整合
 - 修复 `doc/typedoc.json` 过期入口：删除 `typedoc copy.json` / `old.tsconfig.json`；统一以 `doc/tsconfigdoc.json` 为唯一真相源（入口 `../src/we/**/*.ts`，out `../docs`），删 include 里错误的 `./src/@loader.gl/**`。
