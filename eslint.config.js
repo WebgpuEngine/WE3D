@@ -6,6 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       'examples/**',
+      'e2e-cases/**',
       'docs/**',
       'src/@loaders.gl/**',
       'node_modules/**',
