@@ -60,7 +60,7 @@
 ### 3.6 批量清单与 e2e 链（事项1.2/1.3、执行4）
 - 生成器：`scripts/generate-e2e-examples.mjs`（扫描 `examples/**/*.html`，排除 `index*.html`，构建**多级嵌套树**：目录=功能层级、叶子=html 文件名（不含目录），完整 url = `/examples/<多级路径>/<叶子 html>`，每个层级带 `name`；输出 `tests/e2e/examples-e2e.ts`）。
 - 当前产出：`tests/e2e/examples-e2e.ts` = **16 个顶级分类、349 个 url**（全量，待用户裁剪为每类一个；顶级分类对应 `examples/` 下含 html 的一级目录，如 `animations / base / system` 等）。
-- 批量用例：`tests/e2e/examples.spec.ts` 导入嵌套 TS 对象并**展开为扁平 url 参数化遍历**（`test.describe` + `forEach`）；断言加载无 console 报错 + canvas 存在；并 `page.route` 屏蔽 `/favicon.ico` 避免每个示例都因 404 失败。**默认整体跳过**（`test.skip` 受 `WE3D_E2E_BATCH` 环境变量控制），待你手工裁剪清单 + 发出批量指令后执行（执行5）。
+- 批量用例：`tests/e2e/examples.spec.ts` 导入嵌套 TS 对象并**展开为扁平 url 参数化遍历**（`test.describe` + `forEach`）；断言（与 `env-webgpu.spec.ts` 同一标准）加载无 console 报错 + canvas 存在 + `toHaveScreenshot` 视觉基线比对（`maxDiffPixelRatio: 0.05`，截图名由各示例 url 派生，如 `system-geometry-box.png`，基线存于 `tests/e2e/baseline/examples.spec.ts-snapshots/`）；并 `page.route` 屏蔽 `/favicon.ico` 避免每个示例都因 404 失败。**默认整体跳过**（`test.skip` 受 `WE3D_E2E_BATCH` 环境变量控制），待你手工裁剪清单 + 发出批量指令后执行（执行5）。
 - 分批方式（事项3）：按目录 + 功能（HTML 中 span 标签内容）分批，再展开子目录；每批清单经用户批准后执行；需修正的示例单独标记、不静默改。
 
 ## 四、执行进度（对应执行指令 1–5）

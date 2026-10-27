@@ -7,7 +7,7 @@ import { e2eExamples, type E2ENode } from './examples-e2e';
  * - 清单由 scripts/generate-e2e-examples.mjs 从 examples/ 全量扫描生成：多级目录→功能层级，
  *   叶子为 html 文件名（不含目录），完整 url = /examples/<多级路径>/<叶子 html>。每个层级带 name。
  * - 用户手工裁剪为「每类一个测试 url」后再跑（本 spec 暂不在默认执行中运行）。
- * - 断言：加载无 console 报错 + canvas 存在。像素比对（toHaveScreenshot）按需开启。
+ * - 断言（与 env-webgpu.spec.ts 同一标准）：加载无 console 报错 + canvas 存在 + toHaveScreenshot 视觉基线比对（maxDiffPixelRatio 0.05；基线存于 tests/e2e/baseline/examples.spec.ts-snapshots/）。
  *
  * 运行方式（待用户发出批量指令后）：
  *   WE3D_E2E_BATCH=1 npx playwright test tests/e2e/examples.spec.ts   # 仅批量
@@ -39,6 +39,12 @@ function flatten(node: E2ENode, dirKeys: string[], names: string[], out: Target[
     }
 }
 
+// 由 url 推导稳定截图名：/examples/system/geometry/box.html -> system-geometry-box.png
+function snapName(url: string): string {
+    const rel = url.replace(/^\/examples\//, '').replace(/\.html$/, '');
+    return `${rel.replace(/[/ \s]+/g, '-')}.png`;
+}
+
 const BATCH_ENABLED = !!process.env.WE3D_E2E_BATCH;
 const targets: Target[] = [];
 for (const [catKey, catNode] of Object.entries(e2eExamples)) {
@@ -65,7 +71,9 @@ test.describe('WE3D examples e2e (batch)', () => {
             // 给 WebGPU 渲染留时间
             await page.waitForTimeout(2000);
 
+            // 与 env-webgpu.spec.ts 同一标准：无 console 报错 + 视觉基线比对
             expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+            await expect(page).toHaveScreenshot(snapName(url), { maxDiffPixelRatio: 0.05 });
         });
     }
 });
