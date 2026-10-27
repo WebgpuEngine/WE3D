@@ -6,8 +6,7 @@
 
 | 目录 / 文件 | 用途 | 说明 |
 | --- | --- | --- |
-| `docs/` | typedoc 生成的项目 API 文档（产物） | 由 `doc/` 工具产出，CI 中自动重建，**不要手改** |
-| `doc/` | 文档生成工具项目（typedoc 配置 + 脚本） | 独立 `package.json`（`WE3D-doc`），后期准备移动到根目录 |
+| `docs/` | typedoc 生成的项目 API 文档（产物） | 由根 `typedoc.json` 生成，CI 中自动重建，**不要手改** |
 | `design/` | **设计 / 约定类文档目录** | AI 产出的方案、分析、约定统一存这里 |
 | `examples/` | 示例目录 | 功能开发的最直接测试，也是 Playwright 的测试对象来源 |
 | `src/we/` | 源代码目录 | 引擎主体（`core/`、`model/`、`export/`、`reExport/`） |
@@ -52,7 +51,8 @@
 | `npm run lint` / `lint:fix` | ESLint 检查 / 自动修复（仅 src/we） |
 | `npm run format` / `format:check` | Prettier 格式化 / 检查 |
 | `npm run test` / `test:run` | vitest 单元测试 |
-| `npm run docs:build` | 重建 `docs/`（typedoc） |
+| `npm run docs:build` | 重建 `docs/`（typedoc，读根 `typedoc.json`） |
+| `npm run docs:build:watch` | 监听模式重建 `docs/`（typedoc `--watch`） |
 | `npm run examples:generate` | 重新生成 `examples/files.json` 索引 |
 | `npm run test:baseline` | 生成 Playwright 截图基线（提交 git） |
 

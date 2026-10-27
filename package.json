@@ -8,6 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "examples:generate": "node scripts/generate-examples-json.mjs",
+    "docs:build": "typedoc",
+    "docs:build:watch": "typedoc --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
