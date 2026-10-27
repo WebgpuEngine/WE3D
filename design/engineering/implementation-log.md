@@ -33,7 +33,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ✅ 已完成 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
 | 3 | Vitest 单测 | 数学/修复回归用例（无 GPU 依赖） | ✅ 已完成 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
-| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（环境已搭，批量待指令） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
+| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（工程化已完成，e2e 验证待补） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ✅ 已完成 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ⬜ 未开始 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
 | 7 | CI | GitHub Actions 门禁 + 发布 | ⬜ 未开始 | [engineering-plan §Phase7](./engineering-plan.md#phase-7--cigithub-actions) |
@@ -126,8 +126,9 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 4 — Playwright 示例回归　🔵 进行中（环境已搭，批量待指令）
+### Phase 4 — Playwright 示例回归　🔵 进行中（工程化已完成，e2e 验证待补）
 
+- **状态拆分（2026-10-27）**：工程化（Playwright 环境 / 配置 / 脚本 / 截图基线 / env WebGPU 三角形与 box 样例）✅ 已完成；**大量 WE3D 引擎示例的 e2e 验证（`e2e-cases/` 逐例加载渲染 + 截图基线比对）⬜ 未完成**，按需逐个新增。
 - **计划要点**（详细方案见 `./phase4-playwright-e2e.md`）
   - 安装 `@playwright/test` + `playwright` + chromium 浏览器（**已完成**，v1.64.1 / Chromium 156）。
   - `playwright.config.ts`：`webServer` 启动 vite；env 自检用**原生 WebGPU 三角形 fixture**（不依赖 WE3D），**批量示例读取独立的 `tests/e2e/examples-e2e.ts`**（不复用 `examples/files.json`），加载→等 canvas 挂载→截图 + console 断言。
@@ -223,4 +224,6 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 2026-10-22 | 决策记录 | `@loaders.gl` 相关 glTF 功能后期整体迁移到 `gltfTransform`；所有 `@loaders.gl` 问题不处理，待迁移后整体移除（同步更新 phase-1-备忘 §3.5 与 engineering-plan §Phase6） |
 | 2026-10-26 | Phase 2 配置微调 | `eslint.config.js` `files` 收窄为 `src/we/**/*.ts` + 忽略 `**/*.dragonData.ts`；确认未使用变量门禁保持 `error`、format 延后至项目验证后 |
 | 2026-10-26 | Phase 2 完成 | ESLint 230→0 清零（prefer-const/no-this-alias/no-irregular-whitespace/no-case-declarations/no-unused-private-class-members/no-unused-vars/no-fallthrough 共 7 类），另修 8 处真实 bug；tsc 0、build 通过；提交 f690554 并推送 project20261022；lint/format 脚本待补（见 §Phase2 备注） |
+| 2026-10-26 | Phase 3 完成 | 搭 Vitest 基础体系（`vitest.config.ts` + `test`/`test:run`/`coverage` 脚本 + `@vitest/coverage-v8`）；样例 `math.test.ts` 4 测试通过、coverage 报告可生成；测试置于 `src/**/*.test.ts`（与源码同树）；完整用例体系由人工后续补齐（非阻塞） |
+| 2026-10-27 | Phase 4 工程化完成 | Playwright e2e 环境就绪（`channel:'chromium'`+SwiftShader、`test:e2e`/`test:baseline` 脚本、600x600 跨平台截图基线）；env WebGPU 三角形与 box 示例跑通；**大量 WE3D 示例 e2e 验证（`e2e-cases/` 逐例）待按需逐个新增** |
 | 2026-10-27 | Phase 5 完成 | 合并 typedoc 到根目录（方案 A）：删 `doc/`（11 文件）、新建根 `typedoc.json`/`typedoc-home.md`、`package.json` 增 `docs:build`/`docs:build:watch`、更新 `AGENTS.md`；重建 `docs/` 766→727 文件（0 错误/273 警告，排除 `* copy.ts`/`*.test.ts`）；浏览器验证可用；提交 `1bd48d1` 并推送 |
