@@ -142,8 +142,10 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 清单：`tests/e2e/examples-e2e.ts` 由脚本全量扫描 `examples/` 生成**多级嵌套 TS**（目录=功能层级、叶子=html 文件名、每层带 name），**16 顶级分类 / 349 url**（待用户裁剪为每类一个）。
   - 修正：`examples.spec.ts` 展开叶子时 url/label 被重复拼接（如 `box.html/box.html` → 404 → vite SPA fallback 回根落地页 → canvas 超时误报「无 canvas」）；已修复（叶子文件名由父级递归加入路径，叶子分支不再追加）。box 示例（`system/geometry/box.html`）批量用例本机 headless WebGPU 下通过（2.5s，无 console 报错）。
   - 统一标准：批量示例现与 `env-webgpu.spec.ts` 同标准——除「无 console 报错 + canvas 存在」外，新增 `toHaveScreenshot` 视觉基线比对（`maxDiffPixelRatio: 0.05`，截图名由 url 派生如 `system-geometry-box.png`，存于 `tests/e2e/baseline/examples.spec.ts-snapshots/`）。box 基线已生成并比对通过（2026-10-27）。
+  - 跨平台基线命名（2026-10-27）：弃用一度引入的自定义 `expectScreenshot` helper（不可靠且多余），改用 Playwright 官方 `snapshotPathTemplate: '{snapshotDir}/{testFilePath}-snapshots/{arg}{ext}'`（参考 testCI 项目），彻底去掉默认拼上的 `-<项目名>-<平台>` 后缀（如 `-chromium-win32`）。基线文件名现为 `webgpu-triangle.png` / `system-geometry-box.png`，可在 win/linux/darwin 间共享；旧的 `-chromium-win32.png` 基线已删除。`npm uninstall` 移除临时引入的 `pngjs`/`pixelmatch`。
+  - 截图尺寸 600x600（2026-10-27）：用户在顶层 `use.viewport` 改 600x600「未生效」的根因是 `projects` 里 `...devices['Desktop Chrome']` 自带 1280x720 视口、**项目级 `use` 覆盖顶层**，故在项目的 `use` 内加 `viewport:{width:600,height:600}` 覆盖；同时 env fixture 画布由 800x600 改为 600x600、断言 `width` 同步为 600。重新生成基线并比对通过（2 passed）。
   - 实测修正：早期 `navigator.gpu` 为 `undefined` 是**误判**（默认 headless shell + 在 `about:blank` 非安全上下文探测）；换 `channel:'chromium'`+SwiftShader 后 env 用例在本机 headless 渲染成功，基线已生成 + 比对通过。
-- **验证**：`npx playwright test tests/e2e/env-webgpu.spec.ts` → 1 passed（WebGPU 渲染 + 离屏读回校验 + 截图基线比对均通过）；基线已提交 `tests/e2e/baseline/.../webgpu-triangle-chromium-win32.png`；chromium 启动正常；vite webServer 复用正常。批量链（examples.spec.ts）默认跳过，未执行。
+- **验证**：`npx playwright test tests/e2e/env-webgpu.spec.ts` → 1 passed（WebGPU 渲染 + 离屏读回校验 + 截图基线比对均通过）；基线已提交 `tests/e2e/baseline/.../webgpu-triangle.png`（跨平台命名，无平台后缀）；chromium 启动正常；vite webServer 复用正常。批量链（examples.spec.ts）默认跳过，未执行。
 - **备注**
   - 原 `pending-work.md` 第 2 条「examples 冒烟验证」**已并入本阶段作为步骤 2**（2026-10-26 用户决策），备忘中改为「已并入 Phase 4」并指向本方案；不再单独跟踪。
   - 偏差/限制：本机 headless WebGPU 已可用；跨平台/CI 若 WebGPU 后端不同，按 §3.4 降级处理。执行5（批量 e2e + 系统检查 + 文档闭环）**待用户发出「批量测试」指令**后实施。

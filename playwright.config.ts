@@ -19,6 +19,9 @@ export default defineConfig({
     testDir: './tests/e2e',
     // 基线截图统一存放于 tests/e2e/baseline/（事项5，提交 git 不忽略）
     snapshotDir: './tests/e2e/baseline',
+    // 跨平台：去掉 Playwright 默认拼上的 -<项目名>-<平台> 后缀（如 -chromium-win32），
+    // 使同一基线可在 win/linux/darwin 间共享（参考 testCI 项目配置）。
+    snapshotPathTemplate: '{snapshotDir}/{testFilePath}-snapshots/{arg}{ext}',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
@@ -27,7 +30,7 @@ export default defineConfig({
     use: {
         baseURL: 'http://localhost:5173',
         // 固定视口 + 浅色 + 关闭动画，确保截图大小一致、稳定（参考 testCI）
-        viewport: { width: 800, height: 600 },
+        viewport: { width: 600, height: 600 },
         colorScheme: 'light',
         reducedMotion: 'reduce',
         screenshot: 'only-on-failure',
@@ -47,6 +50,8 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
+                // 覆盖设备预设的 1280x720 视口（项目级 use 会覆盖顶层 viewport），统一 600x600 截图标准
+                viewport: { width: 600, height: 600 },
                 channel: 'chromium',
                 headless: true,
                 launchOptions: {

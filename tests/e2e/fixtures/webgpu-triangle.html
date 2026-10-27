@@ -7,7 +7,7 @@
     <title>WE3D Env — WebGPU Colored Triangle</title>
     <style>
         html, body { margin: 0; background: #101820; }
-        #gpu { display: block; width: 800px; height: 600px; }
+        #gpu { display: block; width: 600px; height: 600px; }
     </style>
 </head>
 <body>
@@ -15,7 +15,7 @@
          WebGPU 运行环境与项目配置的基础正确性（不引入任何 WE3D 代码）。
          离屏校验写法参考 testCI 项目（顶点缓冲 + 256 字节对齐读回），避免 headless
          下画布渲染后设备被销毁、读回失效的问题。 -->
-    <canvas id="gpu" width="800" height="600"></canvas>
+    <canvas id="gpu" width="600" height="600"></canvas>
     <script>
         (async () => {
             const canvas = document.getElementById('gpu');
@@ -38,7 +38,7 @@
                 }
                 @fragment fn fs(i: VO) -> @location(0) vec4f { return i.color; }
             `;
-            // 离屏校验尺寸（与画布 800x600 无关，仅用于读回统计）
+            // 离屏校验尺寸（与画布 600x600 无关，仅用于读回统计）
             const RW = 256, RH = 192;
             const BG = { r: 0.063, g: 0.094, b: 0.125, a: 1 };
 

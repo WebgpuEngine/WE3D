@@ -3,7 +3,7 @@ import { test, expect, chromium } from '@playwright/test';
 /**
  * 环境自检（事项1.1）：不依赖 WE3D，纯 WebGPU API 渲染彩色三角形。
  * 目的：验证 WebGPU 运行环境与项目配置的基础正确性；并作为 e2e 测试标准的基线
- * （800x600 canvas）。后续示例 e2e 复用同一套环境约定。
+ * （600x600 canvas）。后续示例 e2e 复用同一套环境约定。
  *
  * WebGPU 策略（事项4）：默认 headless（channel:'chromium' + SwiftShader）。
  * 若 headless WebGPU 不可用（status !== true），降级为有头（headed）重试；
@@ -61,14 +61,12 @@ test('env: webgpu colored triangle renders @env', async ({ page }) => {
 
     // 2) 画布尺寸 + 无 console 报错
     const canvas = activePage.locator('#gpu');
-    await expect(canvas).toHaveJSProperty('width', 800);
+    await expect(canvas).toHaveJSProperty('width', 600);
     await expect(canvas).toHaveJSProperty('height', 600);
     expect(r.errors, `console errors: ${r.errors.join(' | ')}`).toEqual([]);
 
-    // 3) 视觉基线截图（首次需 test:baseline 生成；maxDiffPixelRatio 见 playwright.config.ts）
-    await expect(activePage).toHaveScreenshot('webgpu-triangle.png', {
-        maxDiffPixelRatio: 0.05,
-    });
+    // 3) 视觉基线截图（跨平台文件名由 snapshotPathTemplate 保证去平台后缀；maxDiffPixelRatio 见配置）
+    await expect(activePage).toHaveScreenshot('webgpu-triangle.png', { maxDiffPixelRatio: 0.05 });
 
     if (headedBrowser) await headedBrowser.close();
 });

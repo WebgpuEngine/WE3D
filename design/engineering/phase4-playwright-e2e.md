@@ -28,7 +28,7 @@
 ### 3.1 配置 `playwright.config.ts`（已建）
 - `webServer`：`command: "npm run dev"`，`url: "http://localhost:5173"`，`reuseExistingServer: true`（首次 vite 冷启较慢，超时 120s）。
 - `testDir: "./e2e"`；`snapshotDir: "./tests/e2e/baseline"`（事项5，基线提交、不忽略）。
-- `use`：`baseURL: "http://localhost:5173"`；`screenshot: "only-on-failure"`；`viewport: 800×600`、`colorScheme: 'light'`、`reducedMotion: 'reduce'`（固定截图尺寸/消除动画抖动，参考 testCI）。
+- `use`：`baseURL: "http://localhost:5173"`；`screenshot: "only-on-failure"`；`viewport: 600×600`、`colorScheme: 'light'`、`reducedMotion: 'reduce'`（固定截图尺寸/消除动画抖动，参考 testCI）。
 - `use`/`projects.chromium`：**`channel: 'chromium'`（关键）**——默认 headless shell 不暴露 `navigator.gpu`，必须用新版 headless Chrome；`headless: true` + `launchOptions.args: ['--enable-unsafe-webgpu', '--use-webgpu-adapter=swiftshader', '--enable-unsafe-swiftshader']`（无独立 GPU 时用 SwiftShader 软件适配器；参考 testCI 项目可用配置）。
 - `expect.toHaveScreenshot.maxDiffPixelRatio: 0.05`（参考 testCI，吸收跨平台 SwiftShader 像素微量差异；校准见 §3.5）。
 
@@ -38,8 +38,8 @@
 - `.gitignore` 已补：`test-results/`、`playwright-report/`、`blob-report/`；基线目录 `tests/e2e/baseline/` **提交、不忽略**。
 
 ### 3.3 环境自检 fixture（事项1.1，已建，已验证通过）
-- `tests/e2e/fixtures/webgpu-triangle.html`：纯 WebGPU（无 WE3D）渲染 **800×600** 彩色三角形 + 单一背景色。采用 testCI 验证写法：**先用顶点缓冲把三角形渲染进离屏纹理并读回像素统计**（确定性校验渲染正确性，规避 headless 画布渲染后设备被销毁导致读回失效），**再渲染到画布**（截图基线）。用 `window.__envReady`（`true`/错误码）与 `window.__envVerify`（离屏读回校验是否通过）标记结果。
-- `tests/e2e/env-webgpu.spec.ts`：加载 → 等 `__envReady` → 断言 `__envVerify===true`（离屏读回）+ canvas 800×600 + 无 console 报错 + 截图比对基线（`tests/e2e/baseline/...`）。WebGPU 不可用时按事项4 **spec 内降级 headed 重试**，仍失败则**显式报错**（不静默跳过）。
+- `tests/e2e/fixtures/webgpu-triangle.html`：纯 WebGPU（无 WE3D）渲染 **600×600** 彩色三角形 + 单一背景色。采用 testCI 验证写法：**先用顶点缓冲把三角形渲染进离屏纹理并读回像素统计**（确定性校验渲染正确性，规避 headless 画布渲染后设备被销毁导致读回失效），**再渲染到画布**（截图基线）。用 `window.__envReady`（`true`/错误码）与 `window.__envVerify`（离屏读回校验是否通过）标记结果。
+- `tests/e2e/env-webgpu.spec.ts`：加载 → 等 `__envReady` → 断言 `__envVerify===true`（离屏读回）+ canvas 600×600 + 无 console 报错 + 截图比对基线（`tests/e2e/baseline/...`）。WebGPU 不可用时按事项4 **spec 内降级 headed 重试**，仍失败则**显式报错**（不静默跳过）。
 
 ### 3.4 WebGPU 策略与降级（事项4，已实测修正）
 - **关键修正**：本机 headless WebGPU **可用**。早期实测 `navigator.gpu` 为 `undefined` 是**误判**——根因是（a）用了默认 headless shell 而非 `channel:'chromium'`，（b）在 `about:blank`（非安全上下文）里探测，`navigator.gpu` 只在安全上下文（如 `http://localhost`）才暴露。换用 `channel:'chromium'` + SwiftShader 参数后，env 用例在本地 headless 下已渲染成功并通过（基线已生成 + 比对通过）。
@@ -48,7 +48,7 @@
 ### 3.5 阈值设置方法与参考值（事项2）
 - **设置位置**：`playwright.config.ts` 的 `expect.toHaveScreenshot.maxDiffPixelRatio`（取值 0~1，允许的最大像素差异比例）。
 - **校准步骤**：
-  1. 跑 `npm run test:baseline` 为 env 三角形（确定性渲染）生成基线 `tests/e2e/baseline/.../webgpu-triangle-chromium-win32.png`；
+  1. 跑 `npm run test:baseline` 为 env 三角形（确定性渲染）生成基线 `tests/e2e/baseline/.../webgpu-triangle.png`；
   2. 跑 `npm run test:e2e`，观察 env 用例实际 diff（Playwright 报告 `pixels diff`）；
   3. 取「观测 diff 比例 + 安全余量」作为阈值；确定性示例可收紧，含抗锯齿/字体的示例放宽。
 - **参考值（已落地）**：
@@ -66,7 +66,7 @@
 ## 四、执行进度（对应执行指令 1–5）
 
 - [x] **执行1 — 配置 e2e 环境**：`playwright.config.ts`、`package.json` 脚本、`.gitignore`、eslint 覆盖 glob 已落地；e2e 目录已迁至 `tests/e2e/`（2026-10-26 二次调整）；chromium 已安装（Playwright v1.64.1 / Chromium 156）。
-- [x] **执行2 — 基础 WebGPU 三角形 + 标准**：fixture + spec 已建；e2e 链**已在本机 headless 下跑通**（WebGPU 渲染成功 + 离屏读回校验 + 截图基线生成并比对通过，见 §3.4 修正）。基线已提交 `tests/e2e/baseline/.../webgpu-triangle-chromium-win32.png`。
+- [x] **执行2 — 基础 WebGPU 三角形 + 标准**：fixture + spec 已建；e2e 链**已在本机 headless 下跑通**（WebGPU 渲染成功 + 离屏读回校验 + 截图基线生成并比对通过，见 §3.4 修正）。基线已提交 `tests/e2e/baseline/.../webgpu-triangle.png`。
 - [x] **执行3 — 生成新清单（不跑 e2e）**：`tests/e2e/examples-e2e.ts`（嵌套 TS，16 顶级分类 / 349 url；目录=功能层级、叶子=html、url 多级组合、每层带 name）已生成；待手工裁剪为每类一个典型 url（及可能的源码修正）。
 - [x] **执行4 — 批量链形成（不执行）**：`tests/e2e/examples.spec.ts` 已就绪，导入嵌套 TS 展开为扁平 url 参数化；默认 `WE3D_E2E_BATCH` 跳过，**未运行**。
 - [ ] **执行5 — 批量 e2e + 系统检查 + 文档闭环**：

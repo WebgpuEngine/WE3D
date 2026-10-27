@@ -71,7 +71,7 @@ test.describe('WE3D examples e2e (batch)', () => {
             // 给 WebGPU 渲染留时间
             await page.waitForTimeout(2000);
 
-            // 与 env-webgpu.spec.ts 同一标准：无 console 报错 + 视觉基线比对
+            // 与 env-webgpu.spec.ts 同一标准：无 console 报错 + 视觉基线比对（跨平台文件名由 snapshotPathTemplate 去平台后缀）
             expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
             await expect(page).toHaveScreenshot(snapName(url), { maxDiffPixelRatio: 0.05 });
         });
