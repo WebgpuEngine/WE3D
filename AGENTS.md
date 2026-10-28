@@ -27,11 +27,15 @@
 
 ## 三、开发流程约定
 
-1. **提交前本地自检（CI 等价）**：推荐直接跑 `npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）；若改动涉及渲染，加跑 `npm run ci`（多一步 Playwright e2e）确认无回归。也可分步：`npm run lint` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`。
+1. **提交前本地门禁（必须，未通过不得提交 / 推送）**：任何提交前必须先跑本地门禁，全绿后再提交。
+   - 常规改动：`npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）。
+   - 涉及渲染 / e2e 用例 / 引擎渲染路径改动：先 `npm run test:baseline` 更新基线，再 `npm run ci`（= `ci:no-e2e` + `test:e2e`）确认 e2e 全绿后提交。
+   - 分步等价：`npm run lint` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
 2. **错误修复顺序**：先让构建变绿 → 建回归基线 → 加单测 → 再修错误（不盲改）。
 3. **Playwright e2e 回归**：测试对象已迁移到 `e2e-cases/`（按子目录组织，用例从 `@we3d` 导入），不再来自 `examples/`。
    - 跑全部：`npm run test:e2e`（= `playwright test`）。
    - 生成 / 更新基线：`npm run test:baseline`（= `playwright test --update-snapshots`），基线 **提交 git**。
+   - **渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）必须同步更新基线，并与代码同一次提交**，否则 `test:e2e` 截图比对会失败。
    - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为「加载无 console 报错」断言。
 4. **云端工作流（GitHub Actions，云端专有；本地无同名文件，用 npm 脚本镜像）**：
    - `.github/workflows/ci.yml`：push/PR 到 `project20261022`/`main` 时跑 `ci:no-e2e`（无 e2e、无文档）。本地提交前用 `ci:no-e2e`（或 `ci`）自测即等价。
@@ -93,4 +97,5 @@
 ## 六、Git 提交约定
 
 - **commit 信息格式**：`月日 具体内容`（例：`1022 修复 GBuffers 导入不存在符号导致 tsc 报错`）。月日取两位月 + 两位日（`MMDD`）。
+- **提交前必须先完成 §三.1 本地门禁**（涉及渲染须含 `test:baseline` 更新基线 + e2e），未通过不得提交 / 推送。
 - **不主动合并分支**：AI / 工具**不得自动执行分支合并**；分支合并（如 feature → main）一律由人工**手动**进行。
