@@ -63,12 +63,13 @@
 - **进度（2026-10-28）**：✅ 已完成。实施有修订：入口由 `src/we/export/main.ts` 改为新建 curated barrel `src/we/index.ts`（186 导出，value/type 分开）；lib 构建拆到独立 `vite.lib.config.ts`（避免破坏 examples dev）；`prepublishOnly` 改为 `lint+test+build:lib+check:exports`。详细方案见 `design/engineering/phase6-lib-packaging.md`，实施与验证见 `implementation-log.md §Phase 6`。
 
 ### Phase 7 — CI（GitHub Actions）
-- `.github/workflows/ci.yml`：`npm ci` → `npm run ci:no-e2e`（云端门禁：lint + typecheck + test + check:exports + build:lib + docs:build:force），**云端不含 playwright**（用户 2026-10-28 决策）。
-- 本地 `npm run ci` = 完整门禁**含 playwright**（… + test:e2e）；云端 `npm run ci:no-e2e` = 除 playwright 之外。
+- `.github/workflows/ci.yml`：`npm ci` → `npm run ci:no-e2e`（云端门禁：lint + typecheck + test + check:exports + build:lib，不含文档，**云端不含 playwright**，用户 2026-10-28 决策）。
+- `.github/workflows/release.yml`（新增）：打 `v*` tag 时 `build:lib` + `docs:build:force` 重建并回写 `docs/`；PR CI 不再生成/验证文档（云端重建无意义，docs 由本地 git 提交维护）。
+- 本地 `npm run ci` = 完整门禁**含 playwright**（… + test:e2e，不含文档）；云端 `npm run ci:no-e2e` = 除 playwright 之外（亦不含文档）。
 - **发布手工进行**（用户 2026-10-28 决策，npm 2027-01 起强制 2FA、CI 仅能暂存）：本地 `npm login` + `npm run publish:if-new` 发布，版本号未变则跳过；**不创建 `.github/workflows/publish.yml`**。
-- 本地等价脚本 `npm run ci` / `ci:no-e2e` + `npm run publish:if-new`（`scripts/npm-publish-if-new.mjs`）+ `npm run docs:build`（`scripts/docs-if-new.mjs`，版本未变则跳过）。
+- 本地等价脚本 `npm run ci` / `ci:no-e2e` + `npm run publish:if-new`（`scripts/npm-publish-if-new.mjs`）；文档本地用 `npm run docs:build`（`scripts/docs-if-new.mjs`，版本未变则跳过）提交，或 tag 时 `release.yml` 重建。
 - 发布前置（已确认）：`@loaders.gl/draco`、`@loaders.gl/gltf` 从 `dependencies` 移到 `devDependencies`。
-- **进度（2026-10-28）**：✅ 已完成。本地完整 `npm run ci`（含 playwright e2e，3 passed）已跑通；云端 `ci.yml` 待 push 到 `project20261022`/`main` 后由 GitHub Actions 触发验证。详细方案见 `design/engineering/phase7-ci-publish.md`，实施与验证见 `implementation-log.md §Phase 7`。
+- **进度（2026-10-28）**：✅ 已完成。本地完整 `npm run ci`（含 playwright e2e，3 passed）已跑通；后续细化：PR CI 去除文档步骤（改由 `release.yml` 在 tag 时重建）、`@loaders.gl/gltf` 用 `// @ts-ignore` 兜底 typecheck（其 `dist/` 未提交 git）。详细方案见 `design/engineering/phase7-ci-publish.md`，实施与验证见 `implementation-log.md §Phase 7`。
 
 ### Phase 8 — 错误修复落位（依托 Phase3/4 保护，分批）
 

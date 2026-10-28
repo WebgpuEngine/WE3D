@@ -22,10 +22,10 @@
 | 3. 单测 | `npm run test:run` | Vitest 单测（无 GPU 依赖） | ✅ | ✅ |
 | 4. 导出校验 | `npm run check:exports` | barrel 防漂移 | ✅ | ✅ |
 | 5. lib 打包 | `npm run build:lib` | `dist/we3d.js` + `.d.ts` | ✅ | ✅ |
-| 6. 文档 | `npm run docs:build:force` | typedoc 重建 `docs/`（手动 `docs:build` 带版本门禁，版本未变则跳过） | ✅ | ✅ |
-| 7. e2e | `npm run test:e2e` | Playwright 示例回归（WebGPU，见 `playwright.config.ts`） | ✅ | ❌ |
+| 6. e2e | `npm run test:e2e` | Playwright 示例回归（WebGPU，见 `playwright.config.ts`） | ✅ | ❌ |
 
-> 本地 `npm run ci` = 步骤 1–7（含 Playwright）；云端 `npm run ci:no-e2e` = 步骤 1–6（除 Playwright）。
+> 本地 `npm run ci` = 步骤 1–6（含 Playwright）；云端 `npm run ci:no-e2e` = 步骤 1–5（除 Playwright）。
+> **文档不在 PR CI**：本地开发者用 `npm run docs:build`（版本门禁）提交 `docs/` 更新；打 tag 发布时由 `.github/workflows/release.yml` 重建并回写仓库（见 §四 4.2）。
 > Playwright 的 `webServer` 复用 `npm run dev`（vite，`http://localhost:5173`），无需先 build。
 
 ## 三、本地等价脚本（新增）
@@ -37,19 +37,21 @@
   "typecheck": "tsc --noEmit",
   "docs:build": "node scripts/docs-if-new.mjs",
   "docs:build:force": "typedoc",
-  "ci": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run docs:build:force && npm run test:e2e",
-  "ci:no-e2e": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run docs:build:force",
+  "ci": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run test:e2e",
+  "ci:no-e2e": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib",
   "publish:if-new": "node scripts/npm-publish-if-new.mjs"
 }
 ```
 
-- **本地**：提交前跑 `npm run ci` = 完整门禁（**含 Playwright**，步骤 1–7）。
-- **云端**：CI workflow 跑 `npm run ci:no-e2e` = 除 Playwright 之外（步骤 1–6），其余与本地完全一致。
+- **本地**：提交前跑 `npm run ci` = 完整门禁（**含 Playwright**，步骤 1–6，不含文档）。
+- **云端**：CI workflow 跑 `npm run ci:no-e2e` = 除 Playwright 之外（步骤 1–5，不含文档），其余与本地完全一致。
 - **Playwright 依赖**：`test:e2e` 的 `webServer` 复用 `npm run dev`（vite），无需先 build；本地 headless WebGPU 需已安装新版 Chrome（`channel:'chromium'`，见 `playwright.config.ts`）。
-- **文档版本门禁**：手动 `npm run docs:build` 先比较 `package.json version` 与 registry，版本未变则跳过 typedoc（`scripts/docs-if-new.mjs`）；CI 门禁用 `docs:build:force` 强制生成，保持门禁验证。
+- **文档不在 PR CI**：PR 门禁不生成/验证文档（云端重建 docs 无持久意义）；开发者本地用 `npm run docs:build`（版本门禁，版本未变则跳过）提交 `docs/` 更新，`docs:build:force` 保留为手工强制重建逃生舱；打 tag 发布时由 `release.yml` 重建并回写仓库（见 §四 4.2）。
 - **`docs:build` 本机踩坑**：本机 Windows 的「安全删除→回收站」包装会导致 typedoc 报 `Could not empty the output directory`，需先 `.NET Directory.Delete` 直删 `docs/` 再跑（见 `implementation-log.md §Phase5`）；CI 为 Linux，无此问题。
 
-## 四、CI workflow（`.github/workflows/ci.yml`）
+## 四、CI / Release workflow
+
+### 4.1 PR CI（`.github/workflows/ci.yml`）
 
 ```yaml
 name: CI
@@ -70,11 +72,48 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run ci:no-e2e   # 云端门禁：lint + typecheck + test + check:exports + build:lib + docs:build（除 playwright）
+      - run: npm run ci:no-e2e   # 云端门禁：lint + typecheck + test + check:exports + build:lib（不含文档，除 playwright）
 ```
 
 - 云端不含 playwright（用户决策）；门禁命令与本地 `npm run ci:no-e2e` 完全一致。
+- **文档不在 PR CI**：PR 门禁不生成/验证文档（云端重建 docs 无持久意义，docs 由本地 git 提交维护）。文档处理见 4.2 与 §三「文档不在 PR CI」。
 - Node 22（`vite@7` 要求 node ≥ 20.19 / 22.12）；`npm ci` 依赖 `package-lock.json`（已存在）。
+
+### 4.2 Release（`.github/workflows/release.yml`）
+
+```yaml
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:lib
+      - run: npm run docs:build:force
+      - name: Commit regenerated docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "docs: regenerate for ${{ github.ref_name }}" || echo "no docs changes"
+          git push origin HEAD:${{ github.event.repository.default_branch }}
+```
+
+- 打 `v*` tag 发布时触发：重建 `docs/`（`docs:build:force`）并回写默认分支，保证发布版本文档最新。
+- npm 发布仍手工（2FA，CI 不直发）；开发者本地 `npm run docs:build`（版本门禁）也可随时提交 docs 更新。
 
 ## 五、npm 发布方案（手工 + 版本号门禁）
 
@@ -119,7 +158,7 @@ execSync('npm publish', { stdio: 'inherit' });
 - **手工使用**：本地 `npm run publish:if-new`，无需 tag，直接比较并决定是否发布。
 - **幂等**：版本号不变时重复执行永远跳过。
 - **2FA**：本地 `npm publish` 若账号开启 2FA，会在登录/发布时交互式提示输入 OTP；手工发布可正常输入，无 CI 阻断问题。
-- **重复门禁说明**：`npm publish` 会自动触发 `prepublishOnly`（= `lint && test:run && build:lib && check:exports`），与 `ci` 部分重叠；发布前建议先 `npm run ci` 确认全绿（含 playwright + typecheck + docs:build:force）。
+- **重复门禁说明**：`npm publish` 会自动触发 `prepublishOnly`（= `lint && test:run && build:lib && check:exports`），与 `ci` 部分重叠；发布前建议先 `npm run ci` 确认全绿（含 playwright + typecheck + docs:build）。
 
 ## 六、发布阻塞点：`@loaders.gl` 本地路径依赖（发布前必须处理）
 
@@ -137,11 +176,13 @@ execSync('npm publish', { stdio: 'inherit' });
 - **理由**：`src/we/index.ts`（barrel）不导出任何 gltf 模块；`@loaders.gl` 仅被 `src/we/model/gltf/gltfAtLoaders.ts` 引入且不在 barrel 导出链上，产物 `dist/we3d.js` **不 import 任何 `@loaders.gl`**；它们只服务于 examples 开发运行。
 - **与 Phase 6 决策不冲突**：Phase 6 决策 4「@loaders.gl 不考虑」指的是「不迁移 gltf 功能、不删源码」；此处只改依赖声明分类（dependencies → devDependencies），源码与功能不动。
 - **可选优化**：其余 `@loaders.gl/*`（public `4.3.4`）若确认产物不依赖，可一并移入 devDependencies，避免消费者多余安装；**首版只处理两个本地路径依赖即可**。
+- **typecheck 兜底**：`@loaders.gl/gltf` 的类型在 `src/@loaders.gl/gltf/dist/index.d.ts`，但 `dist/` 整目录未提交 git，云端 `tsc --noEmit` 报 TS2307。该库为「待迁移」临时依赖，在 `src/we/model/gltf/gltfAtLoaders.ts` 的 import 行加 `// @ts-ignore` 兜底为 `any`（本地有类型时不受影响）；`@loaders.gl/core` 为 registry 真实依赖，不受影响。
 
 ## 七、验收标准
 
-- 本地 `npm run ci` 一条命令跑通完整门禁（含 Playwright，步骤 1–7）。
-- 云端 `.github/workflows/ci.yml` 跑通 `npm run ci:no-e2e`（除 Playwright，步骤 1–6）。
+- 本地 `npm run ci` 一条命令跑通完整门禁（含 Playwright，步骤 1–6，不含文档）。
+- 云端 `.github/workflows/ci.yml` 跑通 `npm run ci:no-e2e`（除 Playwright，步骤 1–5，不含文档）。
+- 新增 `.github/workflows/release.yml`：打 `v*` tag 时重建并回写 `docs/`。
 - `npm run publish:if-new`：本地手工发布，版本号未变时输出「跳过」且不会误发布；版本号变更时执行 `npm publish`。
 - `@loaders.gl/draco`、`@loaders.gl/gltf` 已移出 `dependencies`，`npm publish` 不再因本地路径依赖失败。
 - 不再存在 `.github/workflows/publish.yml`（发布手工进行）。
@@ -152,4 +193,4 @@ execSync('npm publish', { stdio: 'inherit' });
 1. **e2e 不在云端**：Playwright 回归只在本地 `npm run ci` 里跑（云端 `ci:no-e2e` 跳过），缺失云端保护，靠本地执行 + Phase 4 基线（已接受，属用户决策）。
 2. **发布靠手工 + 2FA**：npm 2027-01 起强制 2FA，CI 无法直发（仅能暂存）；发布由开发者本地 `npm login` + `npm run publish:if-new` 完成，需开发者具备 `we3d` 的 publish 权限。
 3. **已有历史版本**：registry 已有 `0.0.0/0.0.1/0.0.2`，本地 `0.1.0` 与 `0.0.2` 不同，会正常触发发布；若 `we3d` 包名被他人占用，需改 name（冲突另议）。
-4. **`docs:build` 本机/云端差异**：本机 Windows 需先 `.NET Directory.Delete` 清 `docs/`；CI Linux 自动清空，无此问题。
+4. **文档处理变更**：PR CI 不再生成/验证文档（云端重建无意义）；文档由本地 `npm run docs:build` 提交，或打 tag 时 `release.yml` 重建回写。本机 Windows 跑 typedoc 仍需先 `.NET Directory.Delete` 清 `docs/`（`implementation-log.md §Phase5`）；CI Linux 无此问题。

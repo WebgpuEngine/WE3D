@@ -9,6 +9,7 @@
  */
 import { TypedArray } from "webgpu-utils";
 import { ModelDataLoader } from "../../core/model/ModelDataLoader";
+// @ts-ignore @loaders.gl/gltf 为待迁移本地依赖，云端 CI 无类型声明（dist/ 未提交 git），兜底为 any
 import { GLB, GLTF, GLTFBufferView, GLTFImage, GLTFLoader, GLTFScenegraph, GLTFWithBuffers } from "@loaders.gl/gltf";
 import { load } from "@loaders.gl/core";
 import { GLTFModel } from "./gltf";

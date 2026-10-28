@@ -34,8 +34,8 @@
     "test:baseline": "playwright test --update-snapshots",
     "check:exports": "node scripts/check-exports.mjs",
     "typecheck": "tsc --noEmit",
-    "ci": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run docs:build:force && npm run test:e2e",
-    "ci:no-e2e": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run docs:build:force",
+    "ci": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run test:e2e",
+    "ci:no-e2e": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib",
     "publish:if-new": "node scripts/npm-publish-if-new.mjs",
     "prepublishOnly": "npm run lint && npm run test:run && npm run build:lib && npm run check:exports"
   },
