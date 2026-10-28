@@ -233,8 +233,12 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   7. P1/P2 后续：分级 logger、`WE3DNotImplementedError`、rename 提交、清理 copy/backup/todo（5 个未完成文件，见 `phase8-ts-errors-253.md`）
 - **TS 错误提示**：`phase6` 所述「253 个 TS 错误」为历史快照，当前 `src/we` 编译 0 错误；真实待办是决策并清理 `TTP.ts.backup` / `mulitibl.ts.todo` / `shaderMaterial.ts.todo` / `capsuleGeometry.ts.todo` / `DeferDrawCommandGenerator copy.ts`，详见 `phase8-ts-errors-253.md`。
 - **验收**：各 P0 修复有单测/基线保护，不引入回归。
-- **实施记录**：（待确认后填写）
-- **验证**：（待确认后填写）
+- **实施记录**
+  - 2026-10-28 清理 5 个未完成设计文件（即 `phase8-ts-errors-253.md` §四所列 253 错误源）：删除 `core/camera/TTP.ts.backup`、`core/ibl/mulitibl.ts.todo`、`core/material/standard/shaderMaterial.ts.todo`、`core/geometry/capsuleGeometry.ts.todo`、`core/camera/DeferDrawCommandGenerator copy.ts`。
+  - 删除前确认：无任何已编译 `.ts` 文件 import 这 5 个文件（import 搜索 0 命中）；删除后 `npm run typecheck` 仍为 0 错误 → 不破坏 `src/we` 编译 / CI 门禁。
+  - 设计取舍：前 4 个承载未完成设计（TTP 逐像素透明双缓冲 / 多 IBL 探针 / volume shader 变体 / 胶囊体几何），删除即放弃这些未完成设计，后续如需落地须重写；第 5 个 `copy.ts` 为 `DeferDrawCommandGenerator.ts` 的旧副本，无独有逻辑，删除风险最低。
+- **验证**：`npm run typecheck` ✅ 0 错误；`git status` 5 文件均 `D`（已删除并暂存）。
+- **状态**：「清理 copy/backup/todo（5 个文件）」子任务 ✅ 完成；其余 P0 修复（root.ts 显存泄漏等）仍 ⬜ 未开始。
 - **备注**：
 
 ## 四、变更日志
@@ -254,3 +258,4 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 2026-10-27 | Phase 4 工程化完成 | Playwright e2e 环境就绪（`channel:'chromium'`+SwiftShader、`test:e2e`/`test:baseline` 脚本、600x600 跨平台截图基线）；env WebGPU 三角形与 box 示例跑通；**大量 WE3D 示例 e2e 验证（`e2e-cases/` 逐例）待按需逐个新增** |
 | 2026-10-27 | Phase 5 完成 | 合并 typedoc 到根目录（方案 A）：删 `doc/`（11 文件）、新建根 `typedoc.json`/`typedoc-home.md`、`package.json` 增 `docs:build`/`docs:build:watch`、更新 `AGENTS.md`；重建 `docs/` 766→727 文件（0 错误/273 警告，排除 `* copy.ts`/`*.test.ts`）；浏览器验证可用；提交 `1bd48d1` 并推送 |
 | 2026-10-28 | Phase 6 完成 | lib 打包落地：curated barrel `src/we/index.ts`（186 导出）+ `vite.lib.config.ts` + `tsconfig.lib.json` + `check:exports`；`build:lib` 产出 `dist/we3d.js`+`.d.ts`；`@we3d` 别名三处就位；e2e-cases 走 `@we3d`；更新 AGENTS.md；253 错误澄清为历史快照（5 个未完成文件暂不处理，留待 Phase 8） |
+| 2026-10-28 | Phase 8（清理） | 删除 5 个未完成设计文件（TTP.ts.backup / mulitibl.ts.todo / shaderMaterial.ts.todo / capsuleGeometry.ts.todo / DeferDrawCommandGenerator copy.ts）；0 引用、删除后 `typecheck` 仍 0 错误；前 4 个承载的未完成设计（TTP 双缓冲/多 IBL/volume/胶囊体）随之放弃；后续 P0 修复仍未开始 |
