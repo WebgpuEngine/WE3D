@@ -33,10 +33,11 @@
       "@we3d": ["./src/we/index.ts"]
     },
     "declaration": true,
-    "sourceMap": true,
+    "sourceMap": true
   },
   "include": [
     "src",
     "examples",
+    "e2e-cases"
   ]
 }
