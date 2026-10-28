@@ -75,11 +75,13 @@
 
 > ⚠️ **TS 错误提示**：`phase6` 所述「253 个 TS 错误」实为历史快照（5 个 `.todo`/`.backup`/` copy.ts` 文件在仍为 `.ts` 时的编译错误），当前 `src/we` 编译已 0 错误。Phase 8 的「TS 错误清零」应理解为「决策并清理这 5 个未完成文件」，详见 `phase8-ts-errors-253.md`。
 
-依据 `../workBuddy/core/04`：
-1. **P0-1** `root.ts` destroy key bug（显存泄漏）
-2. **P0-4** `||`→`??`（rightHand/alphaCutoff/metallicFactor/roughnessFactor/texCoord）
-3. **P0-8** `checkGPUBufferSize` 余量 + `unmap()` 调用
-4. **P0-2** `inputManager` intercept 优先级（需 UI 示例回归）
-5. **P0-7** `updateSelfAttribute()` 作用域
-6. **P0-3** pipeline 缓存 key 结构化哈希
-7. P1/P2 后续：分级 logger、`WE3DNotImplementedError`、rename 提交、清理 copy/backup/todo（5 个未完成文件，见 `phase8-ts-errors-253.md`）
+依据 `../workBuddy/core/04`（详细方案与当前代码位置见 **`phase8-p0-fixes.md`**）：
+
+**已完成的子任务**：清理 5 个未完成设计文件（TTP/mulitibl/shaderMaterial/capsuleGeometry/DeferDrawCommandGenerator 副本，见 `phase8-ts-errors-253.md`）。
+
+**剩余 6 个 P0 行为错误，按风险分批（依托 Phase3 Vitest + Phase4 Playwright 基线保护）**：
+- **Batch A（纯逻辑/低风险）**：P0-4 `||`→`??`（scene.ts:386-389 + gltf.ts:815/909/914/926）、P0-8 `checkGPUBufferSize` 余量(`baseFunction.ts:19-25`)+删 `unmap()`(`:123`)、P0-1 `root.ts:138` `.delete(i.map)`→`.delete(i.key)`。
+- **Batch B（正确性/需 e2e）**：P0-3 `DrawCommandGenerator.ts:1646` 用真实 `descriptor.depthStencil/multisample` 序列化生成缓存 key（替换字面量）、P0-7 `nodeObject.ts:747-766` 两分支每帧无条件调 `updateSelfAttribute`（因 `scene.ts:764` 每帧重置 `Box3s`）。
+- **Batch C（行为变更/高回归风险，放最后）**：P0-2 `inputManager.ts:295-380` 抽 `dispatch()` 重构 11 段，`intercept` 层可真正独占消费并阻断 `broadcastEnd`，需 UI 交互示例专项 e2e 回归。
+
+> 注意：Phase 8 的「TS 错误清零」实为历史快照（见 `phase8-ts-errors-253.md`），当前 `src/we` 编译 0 错误；本阶段只修上述 P0 行为错误。

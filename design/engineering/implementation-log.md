@@ -239,6 +239,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 设计取舍：前 4 个承载未完成设计（TTP 逐像素透明双缓冲 / 多 IBL 探针 / volume shader 变体 / 胶囊体几何），删除即放弃这些未完成设计，后续如需落地须重写；第 5 个 `copy.ts` 为 `DeferDrawCommandGenerator.ts` 的旧副本，无独有逻辑，删除风险最低。
 - **验证**：`npm run typecheck` ✅ 0 错误；`git status` 5 文件均 `D`（已删除并暂存）。
 - **状态**：「清理 copy/backup/todo（5 个文件）」子任务 ✅ 完成；其余 P0 修复（root.ts 显存泄漏等）仍 ⬜ 未开始。
+- **方案**：2026-10-28 制定《`phase8-p0-fixes.md`》——6 个 P0 行为错误按风险分三批（A 纯逻辑 / B 正确性 / C input 行为变更），逐一批次配单测 + Playwright 基线回归 + commit/push + 云端验证。已核对各 P0 当前代码位置（非早期快照行号）。
 - **备注**：
 
 ## 四、变更日志
