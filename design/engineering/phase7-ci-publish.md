@@ -120,7 +120,7 @@ jobs:
 ### 5.1 发布方式
 
 - **手工发布**：不使用 CI 自动 `npm publish`——npm 将于 2027-01 起强制 2FA，CI 自动化 token 只能「暂存/staging」、无法直发 public registry。
-- **发布流程（本地，一条命令）**：
+- **发布流程（本地）**：发布 = 版本 bump + 文档提交 + 门禁 + tag + 手工发布。因文档已从 PR CI 移出、npm 发布需 2FA，无法单条命令全自动，完整步骤见 **§5.3**。最小发布命令仍是 `npm run publish:if-new`（版本号未变则跳过，变更则 `npm publish`），但需在它之前先提交文档。
   1. `npm login`（token 写入用户级 `~/.npmrc`）。
   2. `npm run ci`（完整门禁，含 playwright）确认全绿。
   3. `npm run publish:if-new` → 版本号未变则跳过，变更则 `npm publish`。
@@ -158,7 +158,20 @@ execSync('npm publish', { stdio: 'inherit' });
 - **手工使用**：本地 `npm run publish:if-new`，无需 tag，直接比较并决定是否发布。
 - **幂等**：版本号不变时重复执行永远跳过。
 - **2FA**：本地 `npm publish` 若账号开启 2FA，会在登录/发布时交互式提示输入 OTP；手工发布可正常输入，无 CI 阻断问题。
-- **重复门禁说明**：`npm publish` 会自动触发 `prepublishOnly`（= `lint && test:run && build:lib && check:exports`），与 `ci` 部分重叠；发布前建议先 `npm run ci` 确认全绿（含 playwright + typecheck + docs:build）。
+- **重复门禁说明**：`npm publish` 会自动触发 `prepublishOnly`（= `lint && test:run && build:lib && check:exports`），与 `ci` 部分重叠；发布前建议先 `npm run ci` 确认全绿（含 playwright + typecheck）。
+
+### 5.3 本地发版完整步骤（含文档）
+
+发版需按顺序手动执行（npm 发布必须 2FA，无法脚本全自动）：
+
+1. **bump 版本**：改 `package.json` 的 `version`（如 `0.0.2` → `0.1.0`）；`package-lock.json` 同步（`npm install --package-lock-only`）。
+2. **生成并提交文档**：`npm run docs:build`（版本变更后才生成 `docs/`），随后 `git add docs && git commit -m "docs: vX.Y.Z"`。
+   - 文档已移出 PR CI，由本地 git 提交维护；版本未变时 `docs:build` 会跳过（不生成）。
+3. **本地全门禁**：`npm run ci`（含 Playwright e2e）确认全绿。
+4. **打 tag 触发云端文档重建**：`git tag vX.Y.Z && git push --tags` → 触发 `.github/workflows/release.yml` 重建 `docs/` 并回写默认分支（安全网；若第 2 步已提交则无变化、自动跳过）。
+5. **手工发布**：`npm login` + `npm run publish:if-new`（`publish` 时自动跑 `prepublishOnly` 兜底）。
+
+> 说明：步骤 4 的 `release.yml` 只负责 tag 时刻重建并回写文档；实际 npm 发布在步骤 5 由你本地完成（CI 不直发）。
 
 ## 六、发布阻塞点：`@loaders.gl` 本地路径依赖（发布前必须处理）
 
@@ -194,3 +207,17 @@ execSync('npm publish', { stdio: 'inherit' });
 2. **发布靠手工 + 2FA**：npm 2027-01 起强制 2FA，CI 无法直发（仅能暂存）；发布由开发者本地 `npm login` + `npm run publish:if-new` 完成，需开发者具备 `we3d` 的 publish 权限。
 3. **已有历史版本**：registry 已有 `0.0.0/0.0.1/0.0.2`，本地 `0.1.0` 与 `0.0.2` 不同，会正常触发发布；若 `we3d` 包名被他人占用，需改 name（冲突另议）。
 4. **文档处理变更**：PR CI 不再生成/验证文档（云端重建无意义）；文档由本地 `npm run docs:build` 提交，或打 tag 时 `release.yml` 重建回写。本机 Windows 跑 typedoc 仍需先 `.NET Directory.Delete` 清 `docs/`（`implementation-log.md §Phase5`）；CI Linux 无此问题。
+
+## 九、云端 workflow 与本地的关系
+
+GitHub Actions 的 workflow 是**云端专有自动化**（YAML 文件），本地没有同名「工作流文件」；本地用 **npm 脚本 + 手动命令** 镜像其职责：
+
+| 云端 workflow | 触发 | 云端动作 | 本地等价 |
+| --- | --- | --- | --- |
+| `.github/workflows/ci.yml` | push/PR 到 `project20261022`,`main` | `npm run ci:no-e2e`（lint + typecheck + test + check:exports + build:lib，无 e2e / 无 docs） | `npm run ci`（本地完整版，含 e2e）／提交前自测用 `ci:no-e2e` |
+| `.github/workflows/release.yml` | 打 `v*` tag | `build:lib` + `docs:build:force` + 回写 `docs/` | 见 §5.3 本地发版步骤（步骤 4 触发云端、步骤 2 本地提交文档） |
+
+- **本地「提交门禁」** = `npm run ci`（提交/推送前跑，等价于云端 `ci.yml`，仅多 Playwright e2e）。
+- **本地「发版流程」** = §5.3 的命令序列；`npm publish` 必须手工 2FA，无法脚本全自动。
+- **`release.yml` 的文档回写是安全网**：本地发版步骤 2 已自行 `git commit` 文档，二者不冲突（无变化则 `|| echo` 跳过）。
+- 云端 workflow 里的 `run: npm ci` 只是干净安装依赖（clean install），**不是** `npm run ci`，不会跑 e2e（详见 §四 4.1 注）。
