@@ -1,2 +1,2 @@
-export { default as shader_atmosphere_wlBXWK } from "../../shaders/atmosphere/integrate/common/atmosphere_wlBXWK.wgsl?raw";
+export { default as shader_atmosphere_wlBXWK } from "../../shaders/atmosphere/integrate/atmosphere_wlBXWK.wgsl?raw";
 

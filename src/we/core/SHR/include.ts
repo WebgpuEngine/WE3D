@@ -66,7 +66,7 @@ import cubePositionTextureFSWGSL from "../shaders/material/texture/cubeLocalText
 import volumeTextureFSWGSL from "../shaders/material/volume/volumeTexture.fs.wgsl?raw";
 import testRayMarchVolumeFSWGSL from "../shaders/material/volume/testRayMarchVolume.fs.wgsl?raw";
 
-import include_Phong_function_WGSL from "../shaders/material/phong/phongfunction.wgsl?raw"
+import include_Phong_function_WGSL from "../shaders/material/phong/phongFunction.wgsl?raw"
 import phongMaterialWGSL from "../shaders/material/phong/phongcolor.fs.wgsl?raw"
 
 import include_PBR_function_WGSL from "../shaders/material/PBR/PBRfunction.wgsl?raw"

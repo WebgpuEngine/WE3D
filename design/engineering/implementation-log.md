@@ -216,7 +216,8 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - `npm run ci`（完整链路，含 playwright e2e）：✅ 一次跑通（lint + typecheck + test:run + check:exports + build:lib + docs:build:force + test:e2e；e2e 3 passed）。
   - `src/we/model/gltf/gltfAtLoaders.ts`：`@loaders.gl/gltf` 为待迁移本地依赖，其类型 `dist/index.d.ts` 未提交 git，云端 `tsc` 报 TS2307；在 import 行加 `// @ts-ignore` 兜底为 any（本地有类型不受影响）。
   - `npm run ci:no-e2e`（去除文档后 = 云端实际命令）：✅ 全绿（lint + typecheck + test:run + check:exports + build:lib；typecheck 经 @ts-ignore 通过，模拟云端缺失类型仍 0 错误）。
-- **备注**：`npm run ci`（含 playwright e2e）已跑通；云端 `ci.yml` 已去除文档步骤、`@loaders.gl/gltf` 经 `@ts-ignore` 兜底，实测 `npm run ci:no-e2e` 全绿；`publish:if-new` 为手工发布用，本地需先 `npm login`。
+  - **修复 `build:lib` 云端失败（大小写 / 路径）**：`src/we/core/SHR/include.ts` 的 `?raw` 导入 `phongfunction.wgsl` 与磁盘 `phongFunction.wgsl` 大小写不符（Linux 区分大小写、Windows 不区分，故本地通过云端失败）；`src/we/core/atmosphere/integrate/baseIntergrate.ts` 导入多写 `common/` 段（实际为 `.../integrate/...` 而非 `.../integrate/common/...`）。修正后 `build:lib` 本地通过；其余 4 个 `?raw` 告警均属注释行误匹配，非构建导入。
+- **备注**：`npm run ci`（含 playwright e2e）已跑通；云端 `ci.yml` 已去除文档步骤、`@loaders.gl/gltf` 经 `@ts-ignore` 兜底、wgsl 导入大小写/路径已修正，实测 `npm run ci:no-e2e` 全绿；`publish:if-new` 为手工发布用，本地需先 `npm login`。
 
 ---
 
