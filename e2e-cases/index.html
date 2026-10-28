@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2E 测试用例目录</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e; color: #c8d6e5;
+            min-height: 100vh; padding: 40px 24px 80px;
+        }
+        .wrap { max-width: 900px; margin: 0 auto; }
+        header { margin-bottom: 32px; }
+        header h1 { font-size: 28px; font-weight: 800; color: #0f9bf2; letter-spacing: -0.5px; }
+        header .sub { margin-top: 8px; font-size: 14px; color: #576574; }
+        header .sub code { color: #c8d6e5; background: #16213e; padding: 2px 6px; border-radius: 4px; }
+        .toolbar { margin-bottom: 24px; }
+        #filterInput {
+            width: 100%; padding: 10px 14px; font-size: 14px;
+            color: #c8d6e5; background: #16213e;
+            border: 1px solid #2c3e50; border-radius: 8px; outline: none;
+        }
+        #filterInput:focus { border-color: #0f9bf2; }
+        #filterInput::placeholder { color: #576574; }
+        .group { margin-bottom: 28px; }
+        .group-title {
+            font-size: 15px; font-weight: 600; color: #0f9bf2;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            padding-bottom: 8px; margin-bottom: 12px; border-bottom: 1px solid #2c3e50;
+        }
+        .group-title .count {
+            color: #576574; font-weight: 400; font-size: 12px;
+            background: #16213e; padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+        }
+        .case-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+        .case {
+            position: relative;
+            display: flex; flex-direction: column; gap: 2px;
+            background: #16213e; border: 1px solid #2c3e50; border-radius: 8px;
+            padding: 10px 14px; transition: border-color 0.15s;
+        }
+        .case:hover { border-color: #0f9bf2; }
+        .case-link { color: #c8d6e5; font-size: 14px; font-weight: 500; text-decoration: none; }
+        .case-link:hover { color: #0f9bf2; }
+        .case-link::after { content: ""; position: absolute; inset: 0; }
+        .case-url { font-size: 11px; color: #576574; word-break: break-all; }
+        .case.hidden, .group.hidden { display: none !important; }
+        .empty { color: #576574; font-size: 14px; padding: 24px 0; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>E2E 测试用例</h1>
+            <div class="sub">共 2 个目录，6 个用例 · 通过 <code>npm run dev</code> 启动后点击访问（localhost:5173）</div>
+        </header>
+        <div class="toolbar">
+            <input id="filterInput" type="search" placeholder="搜索用例 / 目录..." autocomplete="off">
+        </div>
+        <main id="list">
+<section class="group"><h2 class="group-title">geometry <span class="count">2</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./geometry/box.html">box</a><span class="case-url">/e2e-cases/geometry/box.html</span></li>
+<li class="case"><a class="case-link" href="./geometry/sphere.html">sphere</a><span class="case-url">/e2e-cases/geometry/sphere.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">primitive <span class="count">4</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./primitive/line_list.html">line_list</a><span class="case-url">/e2e-cases/primitive/line_list.html</span></li>
+<li class="case"><a class="case-link" href="./primitive/line_strip.html">line_strip</a><span class="case-url">/e2e-cases/primitive/line_strip.html</span></li>
+<li class="case"><a class="case-link" href="./primitive/points.html">points</a><span class="case-url">/e2e-cases/primitive/points.html</span></li>
+<li class="case"><a class="case-link" href="./primitive/triangle.html">triangle</a><span class="case-url">/e2e-cases/primitive/triangle.html</span></li></ul></section>
+        </main>
+    </div>
+    <script>
+        (function () {
+            var input = document.getElementById('filterInput');
+            input.addEventListener('input', function () {
+                var q = input.value.trim().toLowerCase();
+                document.querySelectorAll('.group').forEach(function (group) {
+                    var matched = false;
+                    group.querySelectorAll('.case').forEach(function (item) {
+                        var hit = !q || item.textContent.toLowerCase().indexOf(q) !== -1;
+                        item.classList.toggle('hidden', !hit);
+                        if (hit) matched = true;
+                    });
+                    group.classList.toggle('hidden', !matched);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

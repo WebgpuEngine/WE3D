@@ -85,6 +85,7 @@
 | `npm run docs:build:force` | 强制重建 `docs/`（typedoc，云端 `release.yml` 用） |
 | `npm run docs:build:watch` | 监听模式重建 `docs/`（typedoc `--watch`） |
 | `npm run examples:generate` | 重新生成 `examples/files.json` 索引 |
+| `npm run e2e-index` | 重新生成 `e2e-cases/index.html` 索引（扫描 `e2e-cases` 一级目录下 `*.html`） |
 | `npm run ci` | 本地完整门禁：lint + typecheck + test + check:exports + build:lib + **test:e2e** |
 | `npm run ci:no-e2e` | 云端 `ci.yml` 等价：同上但 **不含 e2e / 文档** |
 | `npm run publish:if-new` | 手工发布：版本未变跳过，变更则 `npm publish`（发布前自动 `prepublishOnly`） |

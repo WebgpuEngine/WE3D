@@ -9,7 +9,7 @@ declare global {
 }
 let input: IV_Scene = {
   canvas: "render",
-  backgroudColor: [0, 0., 0., 0.],
+  backgroudColor: [0, 0, 0, 1],
   // reversedZ:true,
 };
 let scene = await initScene({

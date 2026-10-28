@@ -21,7 +21,7 @@ declare global {
 }
 let input: IV_Scene = {
   canvas: "render",
-  backgroudColor: [0, 0., 0.1, 0.91],
+  backgroudColor: [0, 0, 0, 1],
 
 };
 let scene = await initScene({

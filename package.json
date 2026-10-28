@@ -20,6 +20,7 @@
     "build:lib": "vite build --config vite.lib.config.ts",
     "preview": "vite preview",
     "examples:generate": "node scripts/generate-examples-json.mjs",
+    "e2e-index": "node scripts/generate-e2e-index.mjs",
     "docs:build": "node scripts/docs-if-new.mjs",
     "docs:build:force": "typedoc",
     "docs:build:watch": "typedoc --watch",
