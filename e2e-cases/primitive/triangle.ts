@@ -16,6 +16,7 @@ declare global {
   interface Window {
     scene: any
     DC: any
+    mesh: any
   }
 }
 let input: IV_Scene = {
@@ -123,7 +124,8 @@ const oneTriangleVertexF32A = new Float32Array(oneTriangleVertexArray);
 
 
 let inputDC: IV_DrawCommandGenerator = {
-  scene: scene
+  scene: scene,
+  parent: scene,
 }
 let DCManager = new DrawCommandGenerator(inputDC);
 
@@ -133,10 +135,10 @@ let DCManager = new DrawCommandGenerator(inputDC);
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
-    vertices: new Map([
-      ["position", oneTriangleVertexArray],
-      ["color", oneTriangleColorArray]
-    ]),
+    vertices: {
+      position: oneTriangleVertexArray,
+      color: oneTriangleColorArray,
+    },
   },
   render: {
     vertex: {
