@@ -190,15 +190,31 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 7 — CI（GitHub Actions）　⬜ 未开始
+### Phase 7 — CI（GitHub Actions）　✅ 已完成
 
-- **计划要点**
-  - `.github/workflows/ci.yml`：install → `lint` → `tsc` 门禁（初始「错误数不增加」基线）→ `test` → `docs:build` → `build:lib` →（可选）playwright →（tag 触发）`npm publish`（需 `NPM_TOKEN`）。
-  - 提供本地等价脚本。
-- **验收**：CI 跑通门禁链路。
-- **实施记录**：（待确认后填写）
-- **验证**：（待确认后填写）
-- **备注**：
+- **计划要点**（详细方案见 `./phase7-ci-publish.md`）
+  - 本地 `npm run ci` = 完整门禁**含 playwright**（lint + typecheck + test + check:exports + build:lib + docs:build + test:e2e）；云端 `npm run ci:no-e2e` = 除 playwright 之外（用户决策：云端 e2e 取消）。
+  - `.github/workflows/ci.yml`：`npm ci` → `npm run ci:no-e2e`。
+  - **发布手工进行**（用户决策：npm 2027-01 起强制 2FA、CI 仅能暂存）：本地 `npm login` + `npm run publish:if-new`，版本号未变则跳过；**不创建 publish.yml**。
+  - 新增脚本 `typecheck` / `ci` / `ci:no-e2e` / `publish:if-new` 与 `scripts/npm-publish-if-new.mjs`。
+  - 发布前置（已确认）：`@loaders.gl/draco`、`@loaders.gl/gltf` 从 `dependencies` 移到 `devDependencies`。
+- **实施记录**（2026-10-28）
+  - 新增 `.github/workflows/ci.yml`（push/PR 到 `project20261022`、`main` → `npm ci` → `npm run ci:no-e2e`）。
+  - 新增 `scripts/npm-publish-if-new.mjs`（版本号与 registry 比较，一致则跳过）。
+  - `package.json` 新增脚本 `typecheck` / `ci` / `ci:no-e2e` / `publish:if-new`。
+  - `@loaders.gl/draco`、`@loaders.gl/gltf` 从 `dependencies` 移到 `devDependencies`；`npm install --package-lock-only` 同步 lock。
+  - `docs:build` 增加版本门禁（`scripts/docs-if-new.mjs`）：版本未变则跳过 typedoc；新增 `docs:build:force` 供 CI 门禁强制生成；`ci` / `ci:no-e2e` 改用 `docs:build:force`。
+  - `package.json` version `0.1.0` → `0.0.2`（临时，用于实测 docs 版本门禁的「跳过」分支）；`package-lock.json` 同步。
+- **验证**（2026-10-28）
+  - `npm run typecheck`：✅ 通过（无类型错误）。
+  - `npm run build:lib`：✅ 通过（`dist/we3d.js` 833KB + `.d.ts`，产物不 import `@loaders.gl`）。
+  - `npm run check:exports`：✅ barrel 校验通过。
+  - `package-lock.json` 根 `dependencies` 已移除两个本地路径依赖、`devDependencies` 已含。
+  - `npm run docs:build`：✅ 版本 `0.1.0` ≠ registry `0.0.2` → 进入生成分支并成功生成 `docs/`（exit 0）。
+  - `npm run docs:build`（版本改为 `0.0.2` 后）：✅ 版本 `0.0.2` === registry `0.0.2` → 进入跳过分支，未生成 `docs/`（exit 0）。
+  - `npm run typecheck` / `npm run test:run`：✅ 版本改 `0.0.2` 后复测通过（4 tests 全绿）。
+  - `npm run ci`（完整链路，含 playwright e2e）：✅ 一次跑通（lint + typecheck + test:run + check:exports + build:lib + docs:build:force + test:e2e；e2e 3 passed）。
+- **备注**：本地完整 `npm run ci`（含 playwright e2e）已跑通；云端 `ci.yml` 仍需 push 后由远端触发验证；`publish:if-new` 为手工发布用，本地需先 `npm login`。
 
 ---
 
