@@ -9,9 +9,10 @@
 | `docs/` | typedoc 生成的项目 API 文档（产物） | 由根 `typedoc.json` 生成，CI 中自动重建，**不要手改** |
 | `design/` | **设计 / 约定类文档目录** | AI 产出的方案、分析、约定统一存这里 |
 | `examples/` | 示例目录 | 功能开发的最直接测试，也是 Playwright 的测试对象来源 |
-| `src/we/` | 源代码目录 | 引擎主体（`core/`、`model/`、`export/`、`reExport/`） |
+| `src/we/` | 源代码目录 | 引擎主体（`core/`、`model/`、`export/`、`reExport/`）；`index.ts` 是**唯一公共 API 入口**（curated barrel） |
 | `src/@loaders.gl/` | **待废弃**的 gltf 使用库临时目录 | **不分析、不纳入工程化门禁** |
 | `src/libs/` | 库文件目录 | 当前为空 |
+| `dist/` | lib 打包产物（`we3d.js` + `.d.ts`） | 由 `npm run build:lib` 生成，`.gitignore` 排除，发布时 CI 构建 |
 | `public/` | 资产目录 | 运行时静态资源（gltf / 贴图等） |
 | `images/` | `README.md` 使用的图像文件目录 | 仅文档配图 |
 
@@ -20,6 +21,8 @@
 1. **设计入口**：本文件 `AGENTS.md` 是 AI / 协作者进入仓库的第一份指引（目录约定、开发流程、发布约定均以此为准）。根目录 `README.md` 是**整个项目的说明文档**（非设计入口）。
 2. **设计产出**：所有设计、方案、约定类文件保存到 `design/` 目录。
 3. **工程化门禁范围**：`ESLint` / `tsc` 门禁仅覆盖 `src/we`（不含 `examples/`、`docs/`、`src/@loaders.gl/`），避免大范围误伤。
+4. **公共 API 入口**：`src/we/index.ts` 是唯一公开边界（curated barrel），新增公共 API 时在此显式追加，并用 `npm run check:exports` 兜底防漂移。
+5. **别名约定**：`@we3d` → `src/we/index.ts`（`vite.config.ts` 的 `resolve.alias` + `tsconfig*.json` 的 `baseUrl`/`paths`）。examples/e2e 一律从 `@we3d` 导入，不写深层相对路径。
 
 ## 三、开发流程约定
 
@@ -40,14 +43,17 @@
 - 包名：`we3d`（`https://www.npmjs.com/package/we3d`）。
 - 形态：lib 形式（ESM + `.d.ts`），**不做 web app 打包**。
 - 着色器通过 Vite `?raw` 引入，由 Vite `build.lib` 模式在打包时内联，源码零改动。
-- `prepublishOnly` 自动跑 lint + test + build + docs。
+- 依赖全部 external 化（`@loaders.gl` 后期必替换，暂不考虑），只打包 `src/we` 源码。
+- `prepublishOnly` 自动跑 lint + test + build:lib + check:exports。
 
 ## 五、脚本速查
 
 | 脚本 | 作用 |
 | --- | --- |
 | `npm run dev` | 启动 vite 开发服务器（跑 examples） |
-| `npm run build` | tsc 类型检查（src）+ Vite lib 打包到 `dist/` |
+| `npm run build` | tsc 类型检查（src）+ Vite examples 打包 |
+| `npm run build:lib` | Vite lib 打包到 `dist/`（`we3d.js` + `.d.ts`，读 `vite.lib.config.ts`） |
+| `npm run check:exports` | 校验 `src/we/index.ts` barrel 与 `src/we` 实际导出集合 |
 | `npm run lint` / `lint:fix` | ESLint 检查 / 自动修复（仅 src/we） |
 | `npm run format` / `format:check` | Prettier 格式化 / 检查 |
 | `npm run test` / `test:run` | vitest 单元测试 |

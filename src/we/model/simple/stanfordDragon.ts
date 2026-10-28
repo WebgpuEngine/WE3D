@@ -1,5 +1,5 @@
-import dragonRawData from './stanfordDragonData.ts';
-import { computeProjectedPlaneUVs, generateNormals } from './utils.ts';
+import dragonRawData from './stanfordDragonData';
+import { computeProjectedPlaneUVs, generateNormals } from './utils';
 
 const { positions, normals, triangles } = generateNormals(
   Math.PI,

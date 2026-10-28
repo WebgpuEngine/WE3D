@@ -6,7 +6,7 @@ import { vec3, Mat4, mat4, Vec3 } from "wgpu-matrix";
 import { AnimationGroup } from "../animation/animationGroup";
 import { BaseAnimation } from "../animation/BaseAnimation";
 import { SkinAnimation } from "../animation/skin";
-import { WeightMixAnimation } from "../animation/weightMixAnimation.ts";
+import { WeightMixAnimation } from "../animation/weightMixAnimation";
 import { weVec4, weVec3, weMat4, E_lifeState } from "../base/coreDefine";
 import { BaseCamera } from "../camera/baseCamera";
 import { BaseEntity } from "../entity/baseEntity";

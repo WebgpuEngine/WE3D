@@ -1,11 +1,23 @@
 {
-  "name": "we",
-  "private": true,
-  "version": "0.0.0",
+  "name": "we3d",
+  "version": "0.1.0",
   "type": "module",
+  "main": "./dist/we3d.js",
+  "module": "./dist/we3d.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/we3d.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:lib": "vite build --config vite.lib.config.ts",
     "preview": "vite preview",
     "examples:generate": "node scripts/generate-examples-json.mjs",
     "docs:build": "typedoc",
@@ -18,7 +30,9 @@
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:baseline": "playwright test --update-snapshots"
+    "test:baseline": "playwright test --update-snapshots",
+    "check:exports": "node scripts/check-exports.mjs",
+    "prepublishOnly": "npm run lint && npm run test:run && npm run build:lib && npm run check:exports"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

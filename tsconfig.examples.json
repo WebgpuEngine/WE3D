@@ -28,6 +28,10 @@
     ],
     "allowJs": true,
     "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@we3d": ["./src/we/index.ts"]
+    },
     "declaration": true,
     "sourceMap": true,
   },

@@ -60,12 +60,16 @@
 - `package.json`：`name:"we3d"`、升级 `version`、`type:module`、`main/module/types/exports`→`dist`、`files:["dist"]`、移除 `private`。
 - 处理 `@loaders.gl/*` 本地依赖：后期将相关 glTF 功能整体迁移到 `gltfTransform` 包，迁移完成后随旧依赖一并移除；**迁移前所有 `@loaders.gl` 相关问题不处理**。
 - 脚本 `build:lib` + `prepublishOnly`（lint+test+build+typedoc）。
+- **进度（2026-10-28）**：✅ 已完成。实施有修订：入口由 `src/we/export/main.ts` 改为新建 curated barrel `src/we/index.ts`（186 导出，value/type 分开）；lib 构建拆到独立 `vite.lib.config.ts`（避免破坏 examples dev）；`prepublishOnly` 改为 `lint+test+build:lib+check:exports`。详细方案见 `design/engineering/phase6-lib-packaging.md`，实施与验证见 `implementation-log.md §Phase 6`。
 
 ### Phase 7 — CI（GitHub Actions）
 - `.github/workflows/ci.yml`：install → `lint` → `tsc` 门禁（初始"错误数不增加"基线）→ `test` → `docs:build` → `build:lib` →（可选）playwright →（tag 触发）`npm publish`（需 `NPM_TOKEN`）。
 - 提供本地等价脚本。
 
 ### Phase 8 — 错误修复落位（依托 Phase3/4 保护，分批）
+
+> ⚠️ **TS 错误提示**：`phase6` 所述「253 个 TS 错误」实为历史快照（5 个 `.todo`/`.backup`/` copy.ts` 文件在仍为 `.ts` 时的编译错误），当前 `src/we` 编译已 0 错误。Phase 8 的「TS 错误清零」应理解为「决策并清理这 5 个未完成文件」，详见 `phase8-ts-errors-253.md`。
+
 依据 `../workBuddy/core/04`：
 1. **P0-1** `root.ts` destroy key bug（显存泄漏）
 2. **P0-4** `||`→`??`（rightHand/alphaCutoff/metallicFactor/roughnessFactor/texCoord）
@@ -73,4 +77,4 @@
 4. **P0-2** `inputManager` intercept 优先级（需 UI 示例回归）
 5. **P0-7** `updateSelfAttribute()` 作用域
 6. **P0-3** pipeline 缓存 key 结构化哈希
-7. P1/P2 后续：分级 logger、`WE3DNotImplementedError`、rename 提交、清理 copy/backup/todo
+7. P1/P2 后续：分级 logger、`WE3DNotImplementedError`、rename 提交、清理 copy/backup/todo（5 个未完成文件，见 `phase8-ts-errors-253.md`）

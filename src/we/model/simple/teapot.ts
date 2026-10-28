@@ -1,5 +1,5 @@
-import teapotData from './teapotData.ts';
-import { computeSurfaceNormals } from './utils.ts';
+import teapotData from './teapotData';
+import { computeSurfaceNormals } from './utils';
 
 export const mesh = {
   positions: teapotData.positions as [number, number, number][],

@@ -35,7 +35,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 3 | Vitest 单测 | 数学/修复回归用例（无 GPU 依赖） | ✅ 已完成 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
 | 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（工程化已完成，e2e 验证待补） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ✅ 已完成 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
-| 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ⬜ 未开始 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
+| 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ✅ 已完成 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
 | 7 | CI | GitHub Actions 门禁 + 发布 | ⬜ 未开始 | [engineering-plan §Phase7](./engineering-plan.md#phase-7--cigithub-actions) |
 | 8 | 错误修复落位 | 依托 Phase3/4 保护分批修 P0 | ⬜ 未开始 | [engineering-plan §Phase8](./engineering-plan.md#phase-8--错误修复落位依托-phase34-保护分批) |
 
@@ -170,17 +170,23 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 6 — Lib 打包与 npm 发布（方案 A）　⬜ 未开始
+### Phase 6 — Lib 打包与 npm 发布（方案 A）　✅ 已完成
 
-- **计划要点**
-  - `vite.config.ts` 增加 `build.lib`：`entry` = `src/we/export/main.ts`、`formats:['es']`、`fileName`，并接入 `vite-plugin-dts` 输出 `.d.ts` 到 `dist`。
-  - `package.json`：`name:"we3d"`、升级 `version`、`type:module`、`main/module/types/exports`→`dist`、`files:["dist"]`、移除 `private`。
-  - 处理 `@loaders.gl/*` 本地依赖：发布前改回公共版 `4.3.4`（依迁移文档）或移除。
-  - 脚本 `build:lib` + `prepublishOnly`（lint+test+build+typedoc）。
-- **验收**：`npm run build:lib` 产出 `dist/` 含 ESM + `.d.ts`。
-- **实施记录**：（待确认后填写）
-- **验证**：（待确认后填写）
-- **备注**：
+- **计划要点**（详细方案见 `./phase6-lib-packaging.md`）
+  - curated barrel `src/we/index.ts` + lib 构建产出 ESM + `.d.ts` 到 `dist`。
+  - `package.json` 发布元数据 + 脚本 `build:lib`/`check:exports`/`prepublishOnly`；`@we3d` 别名三处就位。
+  - `@loaders.gl` 被 tree-shake、不进产物；后期迁移 `gltfTransform`。
+- **验收**：`npm run build:lib` 产出 `dist/we3d.js` + `index.d.ts`；`npm run check:exports` 通过；产物干净。
+- **实施记录**
+  - 2026-10-28 新建 `src/we/index.ts`（186 导出，value/type 分开），删 `export/main.ts.tee` 与空 `export/`；新建 `tsconfig.lib.json` + 修 4 个 `.ts` 后缀导入；新建 `vite.lib.config.ts`（`publicDir:false`/`emptyOutDir:true`/external/dts `bundleTypes:false`）；`vite.config.ts` 仅加 `@we3d` alias。
+  - 更新 `package.json`、新建 `scripts/check-exports.mjs`；`e2e-cases` 走 `@we3d`；更新 `AGENTS.md`。
+  - 文档：`phase6-lib-packaging.md` 状态改「已实施」+ §八；新增 `phase8-ts-errors-253.md` 与 `we3d-alias-guide.md`。
+- **验证**：`npm run build:lib` ✅（`dist/we3d.js` 833 KB / gzip 188 KB + `.d.ts`）；`check:exports` ✅（186 导出无缺失）；产物外部依赖仅 `wgpu-matrix`/`js-md5`/`hdrify`，无 `@loaders.gl`。
+- **备注**
+  - 偏差1：`build.lib` 从 `vite.config.ts` 拆到独立 `vite.lib.config.ts`（避免破坏 examples dev）。
+  - 偏差2：dts v5.1.2 无 `skipDiagnostics`/`rollupTypes`，改用 `bundleTypes:false`。
+  - 偏差3：`prepublishOnly` = lint+test+build:lib+check:exports（原拟 build+typedoc）。
+  - 「253 个 TS 错误」为历史快照，当前 `src/we` 编译 0 错误；5 个未完成文件**暂不处理**，留待 Phase 8（见 `phase8-ts-errors-253.md`）。
 
 ---
 
@@ -205,7 +211,8 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   4. **P0-2** `inputManager` intercept 优先级（需 UI 示例回归）
   5. **P0-7** `updateSelfAttribute()` 作用域
   6. **P0-3** pipeline 缓存 key 结构化哈希
-  7. P1/P2 后续：分级 logger、`WE3DNotImplementedError`、rename 提交、清理 copy/backup/todo
+  7. P1/P2 后续：分级 logger、`WE3DNotImplementedError`、rename 提交、清理 copy/backup/todo（5 个未完成文件，见 `phase8-ts-errors-253.md`）
+- **TS 错误提示**：`phase6` 所述「253 个 TS 错误」为历史快照，当前 `src/we` 编译 0 错误；真实待办是决策并清理 `TTP.ts.backup` / `mulitibl.ts.todo` / `shaderMaterial.ts.todo` / `capsuleGeometry.ts.todo` / `DeferDrawCommandGenerator copy.ts`，详见 `phase8-ts-errors-253.md`。
 - **验收**：各 P0 修复有单测/基线保护，不引入回归。
 - **实施记录**：（待确认后填写）
 - **验证**：（待确认后填写）
@@ -227,3 +234,4 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 2026-10-26 | Phase 3 完成 | 搭 Vitest 基础体系（`vitest.config.ts` + `test`/`test:run`/`coverage` 脚本 + `@vitest/coverage-v8`）；样例 `math.test.ts` 4 测试通过、coverage 报告可生成；测试置于 `src/**/*.test.ts`（与源码同树）；完整用例体系由人工后续补齐（非阻塞） |
 | 2026-10-27 | Phase 4 工程化完成 | Playwright e2e 环境就绪（`channel:'chromium'`+SwiftShader、`test:e2e`/`test:baseline` 脚本、600x600 跨平台截图基线）；env WebGPU 三角形与 box 示例跑通；**大量 WE3D 示例 e2e 验证（`e2e-cases/` 逐例）待按需逐个新增** |
 | 2026-10-27 | Phase 5 完成 | 合并 typedoc 到根目录（方案 A）：删 `doc/`（11 文件）、新建根 `typedoc.json`/`typedoc-home.md`、`package.json` 增 `docs:build`/`docs:build:watch`、更新 `AGENTS.md`；重建 `docs/` 766→727 文件（0 错误/273 警告，排除 `* copy.ts`/`*.test.ts`）；浏览器验证可用；提交 `1bd48d1` 并推送 |
+| 2026-10-28 | Phase 6 完成 | lib 打包落地：curated barrel `src/we/index.ts`（186 导出）+ `vite.lib.config.ts` + `tsconfig.lib.json` + `check:exports`；`build:lib` 产出 `dist/we3d.js`+`.d.ts`；`@we3d` 别名三处就位；e2e-cases 走 `@we3d`；更新 AGENTS.md；253 错误澄清为历史快照（5 个未完成文件暂不处理，留待 Phase 8） |
