@@ -36,6 +36,7 @@
    - 跑全部：`npm run test:e2e`（= `playwright test`）。
    - 生成 / 更新基线：`npm run test:baseline`（= `playwright test --update-snapshots`），基线 **提交 git**。
    - **渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）必须同步更新基线，并与代码同一次提交**，否则 `test:e2e` 截图比对会失败。
+   - **批量适配 e2e 用例（新增 / 删除 / 改名）后必须跑 `npm run e2e-index` 刷新 `e2e-cases/index.html` 索引入口**，否则索引页与目录实际用例不一致（详见 `design/e2e-cases-convention.md` §三·适配收尾）。
    - headless WebGPU 需 `--enable-unsafe-webgpu` + 软件后端；CI 可降级为「加载无 console 报错」断言。
 4. **云端工作流（GitHub Actions，云端专有；本地无同名文件，用 npm 脚本镜像）**：
    - `.github/workflows/ci.yml`：push/PR 到 `project20261022`/`main` 时跑 `ci:no-e2e`（无 e2e、无文档）。本地提交前用 `ci:no-e2e`（或 `ci`）自测即等价。

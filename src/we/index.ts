@@ -35,6 +35,7 @@ export type { IV_SkinAnimationValue } from "./core/animation/skin";
 
 // base
 export type { I_Update, weColor3, weColor4, weVec3, weVec4, weMat4, weMat3, TypedArray, weHexColor } from "./core/base/coreDefine";
+export { weGetBinaryResourceFromGzip } from "./core/base/file/getFile";
 
 // camera
 export { BaseCamera } from "./core/camera/baseCamera";
@@ -178,3 +179,5 @@ export { DefaultTexture } from "./core/texture/defaultTexture";
 export { Texture } from "./core/texture/texture";
 export { VideoTexture } from "./core/texture/videoTexture";
 export type { IV_OptionVideoTexture, T_VIdeoSourceType } from "./core/texture/videoTexture";
+export { HDRTexture } from "./core/texture/HDRTexture";
+export { Texture2D } from "./core/texture/texture2D";

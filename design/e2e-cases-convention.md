@@ -97,11 +97,20 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 </html>
 ```
 
+### 适配收尾（每次批量适配后必跑）
+
+批量适配（新增 / 修改 / 删除用例）完成后，必须执行以下收尾，确保入口索引与截图基线同步：
+
+1. **`npm run e2e-index`** —— 重新扫描 `e2e-cases/` 一级目录下的 `*.html`，刷新 `e2e-cases/index.html` 人工入口索引。凡涉及用例新增、删除、改名，都必须重跑，否则索引页不会包含最新用例（见 §四）。
+2. **`npm run test:baseline`** —— 当背景色 / 几何 / 材质 / 相机 / 着色等**渲染结果发生变更**时，刷新对应截图基线，并随代码同一次提交（依据 `AGENTS.md` §三.3）。
+
+> 收尾顺序建议：先 `npm run e2e-index`（刷新索引入口），再 `npm run test:baseline`（刷新基线），最后按 `AGENTS.md` 门禁跑 `npm run ci` 后提交。
+
 ## 四、索引页与 URL
 
 - 生成索引：`npm run e2e-index`（脚本 `scripts/generate-e2e-index.mjs`），扫描 `e2e-cases/` 一级目录下的 `*.html`（排除 `index.html`），生成 `e2e-cases/index.html`。
 - 访问入口：`http://localhost:5173/e2e-cases/index.html`（需先 `npm run dev`）；根页 `http://localhost:5173/` 亦有 `E2E Cases` 入口。
-- 新增/删除用例后，重跑 `npm run e2e-index` 刷新索引。
+- 每次 e2e 批量适配（新增 / 删除 / 改名用例）后，**必须**重跑 `npm run e2e-index` 刷新索引（强制步骤，见 §三·适配收尾）；索引页不随用例自动更新，漏跑会导致 `e2e-cases/index.html` 与目录实际用例不一致。
 
 ## 五、本次适配范围（2026-10-28）
 

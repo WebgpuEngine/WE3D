@@ -217,13 +217,10 @@ export class VideoTexture extends BaseTexture {
      * @param this 包含video的对象
      * @returns 
      */
-    getExternalTexture(this: any): GPUExternalTexture {
-        const source: HTMLVideoElement | VideoFrame = this.video as HTMLVideoElement | VideoFrame;
-        // if (source instanceof HTMLVideoElement || source instanceof VideoFrame)
-        // this.texture = this.device.importExternalTexture({ source })
-
-        return this.device.importExternalTexture({ source: source })
-
+    getExternalTexture(scope?: any): GPUExternalTexture {
+        const self = (scope ?? this) as VideoTexture;
+        const source: HTMLVideoElement | VideoFrame = self.video as HTMLVideoElement | VideoFrame;
+        return self.device.importExternalTexture({ source: source })
     }
 
 

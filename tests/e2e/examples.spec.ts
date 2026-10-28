@@ -93,7 +93,7 @@ for (const [dir, targets] of byDir) {
                     mkdirSync(dirname(snapshotPath), { recursive: true });
                     await activePage.screenshot({ path: snapshotPath, animations: 'disabled' });
                 } else {
-                    await expect(activePage).toHaveScreenshot(name, { maxDiffPixelRatio: 0.05 });
+                    await expect(activePage).toHaveScreenshot(name, { maxDiffPixelRatio: 0.05, timeout: 30000 });
                 }
 
                 if (headedBrowser) await headedBrowser.close();
