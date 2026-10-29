@@ -63,18 +63,16 @@ let light1Entity1 = new Mesh(
 
   });
 
-let lightRadius = 3.5;
-let lightZ = 2.;
 let lightNode1 = await scene.add({
   name: "light1 Ball instance",
 
   entity: light1Entity1,
   position: [1, 1, 1],
-  update: (scope: any) => {
-    const now = Date.now() / 1000;
-    let pos = [Math.sin(now) * lightRadius, lightZ, Math.cos(now) * lightRadius];
-    scope.Position = pos;
-  }
+  // update: (scope: any) => {
+  //   const now = Date.now() / 1000;
+  //   let pos = [Math.sin(now) * lightRadius, lightZ, Math.cos(now) * lightRadius];
+  //   scope.Position = pos;
+  // }
 });//node
 
 let onelight = new PointLight(
