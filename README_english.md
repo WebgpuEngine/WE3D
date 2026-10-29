@@ -1,97 +1,139 @@
-[Chinese ](./README.md) |   [English](./README_english.md)
+[Chinese](./README.md)  |    [English](./README_english.md)
 
-# WE 3D ( webGPU engine 3D)
+# WE 3D Rendering Engine (WebGPU engine 3D)
 
-WE3D includes two parts: the base engine and the editor. (WE3D is currently in the early development stage, and the functions, modules and structure will be frequently adjusted.) ）
+WE3D consists of two major parts: the base engine and the editor. (WE3D is currently in its early development stage, so features, modules, and structure will be adjusted frequently.)
 
-1. The basic engine part includes five modules: core functions, graphics functions, model functions, physics engine integration, and animation management. This item: [https://github.com/WebgpuEngine/WE3D](https:)
-2. The editor part includes: material editor, animation editor, scene editor, and build manager to achieve visualization work. (In [the https://github.com/WebgpuEngine/editor](https:) section, todo)
-3. Demo todo  [https://github.com/WebgpuEngine/WE3D\_Demo](https:)
-4. document todo [https://github.com/WebgpuEngine/WE3D\_DOC](https:)
-5. In the later stage of WE3D, there will also be back-end services to support server-side live links, USD, Nerf workflows, 3D reconstruction, etc., as well as the expected graphics large model AI workflows.
+1. The base engine includes five modules: core functionality, graphics functionality, model functionality, physics engine integration, and animation management.
+This project: https://github.com/WebgpuEngine/WE3D
+Current development version docs: https://WebgpuEngine.github.io/WE3D
+2. npm packages
+    Install via npm:
+         npm i we3d
+         npm i webgpu-we3d
+    npm publish addresses:
+        https://www.npmjs.com/package/we3d
+        https://www.npmjs.com/package/webgpu-we3d
+    npm published version docs: https://webgpuengine.github.io/doc
+3. doing, example code: https://github.com/WebgpuEngine/example
+4. doing, demo: https://github.com/WebgpuEngine/demo
+5. todo, the editor part includes four modules: material editor, animation editor, scene editor, and build manager, to enable visual workflows. At [https://github.com/WebgpuEngine/editor](https://)
+6. todo, in later stages WE3D will also consider reducing backend services to support server-side live links, USD, NeRF workflows, 3D reconstruction, etc., as well as AI adaptation.
 
-# Engine Basics Description
+# Engine Basics
 
-* WE 3D is a web-side 3D rendering engine developed using typescript and webGPU APIs
-* The basic part of the engine covers scenes, solids, textures, materials, cameras, light sources, shadows, post-processing, ECS, GPU pickup, AA, color space, tonemapping, deferred rendering, BVH, etc.
-* The functions in graphics include: IBL, SSGI, SSR, SSAO, etc
-* Use Rapier on the Physics Engine for physics engine work;
-* In the model part: involving gltf, obj, fbx and other models;
-* The animation management section covers: keyframes, skeletal animations, deformation templates, VAT, particle systems, etc.;
-* The architecture of the rendering engine is independently designed and implemented from the bottom up, referring to Babylon, three, cesium, ue, etc.
-* Shader submission is carried out with the command collection (Draw Command, Compute Command, Copy Command) in the underlying mechanism.
-* In terms of update mechanism and event mechanism, there are multiple ways to handle update mechanism and onEvent.
+* WE 3D is a web-based 3D rendering engine developed with TypeScript and the WebGPU API.
+* The base engine covers scenes, entities, textures, materials, cameras, light sources, shadows, post-processing, ECS, GPU picking, AA, color space, tonemapping, deferred rendering, BVH, etc.
+* Graphics functionality includes: IBL, SSGI, SSR, SSAO, etc.
+* For the physics engine, Rapier is used to handle physics simulation.
+* The model part involves models such as gltf, obj, fbx, etc.
+* The animation management part covers: keyframes, skeletal animation, morph targets, particle systems, etc.
+* The rendering engine architecture is independently designed and implemented from the ground up, referencing Babylon, three, cesium, UE, etc.
+* At the low-level mechanism, shader submission is performed via a command set (Draw Command, Compute Command, Copy Command).
+* On the update mechanism and event mechanism, ECS is the core mechanism along with Event handling.
 
-# More feature descriptions
+# More Feature Descriptions
 
-* Support sRGB and display P3 color space, WE3D works in linear linear space internally, and supports color mapping output in multiple modes;
-* The light source supports ambient light, directional light, point light source, spotlight, and area light;
-* The shadow implementation is based on shadow map and supports PCSS.
-* Forward Z and reveredZ are supported in depth, and reversedZ is enabled by default.
-* MSAA and FXAA are supported, and TAA is expected to be implemented. Currently, MSAA and deferred rendering cannot be used at the same time (edge detection may be improved later, and can be used at the same time);
-* Rendering modes support forward rendering and delayed rendering, and transparent object rendering supports alpha transparency and physical transparency.
-* GBuffer one pixel  use 56bit ，include color、depth、position、normal、albedo、roughness、metallic、ao、emissive、material、id；
-* It supports mesh, lines, points, and sprite on the entity, and supports instantiation, in the form of arrays and arrayBuffer data in the form of multiple forms of attributes of data attributes.
-* It supports GLTF, OBJ, FBX, etc. on the model (in progress). It also supports simulation data, volume rendering data, and is expected to support geospatial data (TODO).
-* The material supports simple material, blinn-phong, and PBR material;
-* The camera supports orthogonal and perspective, and supports viewpot mode, multi-camera, multi-view, etc.;
-* Pickup supports two modes, GPU and CPU, using the GPU pickup function by default, and the CPU ray function is implemented with BVH and physics engine.
-* Physics engine integration is mainly Rapier (in progress);
-* The render manager supports multiple channels, including: calculation, texture, material, render target, opaque shadow, transparent shadow, depth, MSAA, forward rendering, delayed rendering, transparent rendering, sprite, sprite transparency, toneMapping, post-processing, UI, stage, and many other channels. Each channel will include two working modes: content line and timeline.
-* Post-processing is composed of manager and post-processing functions, currently there are FXAA, blue, colordemo, etc.;
-* There are four stages: default world, ui, stage1 (navigation, etc.), stage2 (maps, etc.);
-* ECS is used in many applications, such as entities, materials, light and shadow, cameras, input management, animation, textures, etc. are all managed by the concept of ECS;
-* todo: Particle System,  SSGI, SSR, SSAO, TAA,
+* Supports sRGB and Display P3 color spaces. WE3D internally works in a linear space and supports multiple color mapping output modes.
+* Light sources support ambient light, directional light, point light, spot light, and area light.
+* Shadow implementation is based on shadow maps and supports PCSS.
+* In depth, both forward Z and reversed Z are supported; reversed Z is enabled by default.
+* Supports MSAA and FXAA, with TAA planned. Currently MSAA and deferred rendering cannot be used simultaneously (this may be improved later by adding edge detection to allow simultaneous use).
+* Rendering modes support forward rendering and deferred rendering; transparent object rendering supports alpha transparency and physical transparency.
+* The rendering GBuffer uses multiple channels (56 bits per pixel), covering color, depth, position, normal, albedo, roughness, metallic, ao, emissive, material, id, etc.
+* Entities support mesh, lines, points, sprite, and instancing, with data attributes in both array form and ArrayBuffer form with various attribute combinations.
+* Models support gltf, obj, fbx, etc. (in progress). It also supports simulation data and volume rendering data, and geospatial data is planned (todo).
+* Materials support simple material, Blinn-Phong, and PBR material.
+* Cameras support orthographic and perspective, as well as viewport mode, multiple cameras, multiple views, etc.
+* Picking supports two modes: GPU-side and CPU-side. The GPU-side picking is used by default, while the CPU-side ray function is implemented with BVH and the physics engine.
+* Physics engine integration is primarily Rapier (in progress).
+* The render manager internally supports multiple channels, including: compute, texture, material, render target, opaque shadow, transparent shadow, depth, MSAA, forward rendering, deferred rendering, transparent rendering, sprite, sprite transparency, toneMapping, post-processing, ui, stage, and many others. Each channel includes two working modes: content line and time line.
+* Post-processing is composed of a manager and post-processing functions; currently there are FXAA, blue, colordemo, etc.
+* There are four stages: the default world, ui, stage1 (navigation, etc.), stage2 (maps, etc.).
+* ECS is used extensively, e.g. entities, materials, light/shadow, cameras, input management, animation, textures, etc. are all managed using the ECS concept.
+* The animation system includes: keyframes, morph targets, skeletal animation, and physics-driven animation implemented via the physics engine.
+* The volume rendering material has two implementation approaches: one is the 3D texture approach (3D sampling), and the other is the ray march shader approach (computed in real time).
+* For the atmosphere, there are real-time integration, the Bruneton approach, and the Hillaire approach.
+* Overlaid on the atmosphere are also volumetric clouds, Tyndall light effects, cloud shadows, etc.
+* todo: particle system, SSGI, SSR, SSAO, TAA.
 
-# Simple example
+# Simple Examples
 
-
-| ReversedZ                                         | material alpha blend                             | pixel level alpha transparent material           |
+| ReversedZ                                         | material alpha blend                             | pixel level alpha transparent material           |
 | ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
 | ![1763628630397](images/README/1763628630397.png) | ![1763692901994](images/README/1763692901994.png) | ![1763628670056](images/README/1763628670056.png) |
-| 高光纹理 specular texture                         | 视差纹理 parallax texture                         | 法线纹理 normal texture                           |
+| specular texture                                 | parallax texture                                  | normal texture                                    |
 | ![1763628478518](images/README/1763628478518.png) | ![1763632177789](images/README/1763632177789.png) | ![1763629809872](images/README/1763629809872.png) |
 | direction light +PCSS shadow                      | point light+PCSS shadow                           | spot light +PCSS shadow                           |
 | ![1763628678235](images/README/1763628678235.png) | ![1763628690056](images/README/1763628690056.png) | ![1763628700051](images/README/1763628700051.png) |
-| paralax texture                                   | viewpot                                           | PBR                                               |
+| point light + parallax texture                    | viewpot                                           | PBR                                               |
 | ![1763628725930](images/README/1763628725930.png) | ![1763628774853](images/README/1763628774853.png) | ![1763629421784](images/README/1763629421784.png) |
 | PBR                                               | PBR+spot+shadow                                   | PBR+point light+shadow                            |
 | ![1763628732926](images/README/1763628732926.png) | ![1763650026549](images/README/1763650026549.png) | ![1763650035163](images/README/1763650035163.png) |
-| 1024个 lights                                     | MSAA                                              | FXAA                                              |
+| 1024 lights                                       | MSAA                                              | FXAA                                              |
 | ![1763629587110](images/README/1763629587110.png) | ![1763630052789](images/README/1763630052789.png) | ![1763631597397](images/README/1763631597397.png) |
-| post process blue 3*3                             | post process red to 1                             | 延迟渲染 deferRender：PBR                         |
+| post process blue 3*3                             | post process red to 1                             | deferred render: PBR                              |
 | ![1763631648964](images/README/1763631648964.png) | ![1763631691112](images/README/1763631691112.png) | ![1763631752890](images/README/1763631752890.png) |
-| 延迟渲染 deferRender：PBR                         | 延迟渲染 deferRebder：BlinnPhong                  | 延迟渲染 deferRebder：BlinnPhong                  |
+| deferred render: PBR                              | deferred render: BlinnPhong                       | deferred render: BlinnPhong                       |
 | ![1763631817758](images/README/1763631817758.png) | ![1763631965740](images/README/1763631965740.png) | ![1763631975198](images/README/1763631975198.png) |
-| skeleton                                          | morph target                                      | gltf Fox                                          |
+| skeleton animation                                | morph target                                      | gltf Fox skeletal animation                       |
 | ![1772438077121](images/README/1772438077121.png) | ![1772438257776](images/README/1772438257776.png) | ![1772437632575](images/README/1772437632575.png) |
-| gltf Hen                                         | gltf LittlestTokyo                                |                                                   |
-| ![1772439162506](images/README/1772470423684.png) | ![1772437639746](images/README/1772437639746.png) |                                                   |
+| gltf Hen skeletal animation                       | gltf LittlestTokyo                                | rapier demo with WE3D                             |
+| ![1772470423684](images/README/1772470423684.png) | ![1782467345720](images/README/1782467345720.png) | ![1782468932611](images/README/1782468932611.png) |
+| PBR+IBL+SH                                        | PBR+IBL+SH+preview wave+skybox                    | volume render 3D texture                          |
+| ![1782468776687](images/README/1782468776687.png) | ![1782467363680](images/README/1782467363680.png) | ![1782467443074](images/README/1782467443074.png) |
+| volume render ray march                           | atmosphere real-time integration                  | atmosphere Bruneton                               |
+| ![1782608331334](images/README/1782608331334.png) | ![1783090247925](images/README/1783090247925.png) | ![1783745555533](images/README/1783745555533.png) |
+| atmosphere Hillaire LUT                           | atmosphere Hillaire ray march                     | volumetric cloud                                  |
+| ![1784266416463](images/README/1784266416463.png) | ![1785089949978](images/README/1785089949978.png) |                                                   |
+| atmosphere + cloud                                | atmosphere + cloud + shadow                       | atmosphere + cloud + Tyndall + cloud shadow       |
+|                                                   |                                                   |                                                   |
+| SSAO                                              | SSGI                                              | SSR                                               |
+|                                                   |                                                   |                                                   |
+| simulation cloud map                              | simulation contour volume render                  | simulation streamline                             |
+|                                                   |                                                   |                                                   |
+| clip global                                       | clip local                                        | clip sdf                                          |
+|                                                   |                                                   |                                                   |
+| area light                                        | physical transparency                             | A-Buffer                                          |
+|                                                   |                                                   |                                                   |
+| particle system                                   | fluid system                                      |                                                   |
+|                                                   |                                                   |                                                   |
 
-# Information reference and recommendation
+# Engineering and Development Conventions
 
-* webGPU标准：https://www.w3.org/TR/webgpu/
-* WGSL的标准：https://www.w3.org/TR/wgsl/
-* 非常好示例：https://github.com/webgpu/webgpu-samples
-* google的Dawn：https://github.com/google/dawn
-* Mozilla的wGPU：https://github.com/gfx-rs/wgpu
-* MDN的webGPU文档：https://developer.mozilla.org/zh-CN/docs/Web/API/WebGPU_API
-* 非常好的webGPU教程：https://webgpufundamentals.org/
-* 非常好的webGL2教程：https://webgl2fundamentals.org/
-* 非常好的webGL1教程：https://webglfundamentals.org/
-* dawn 的C示例：https://github.com/samdauwe/webgpu-native-examples
-* 非常实用的JS端的图形学简单数学库，这是目前主要使用的库：https://github.com/greggman/wgpu-matrix
-* 另外一个经典的图形学数学库：https://github.com/toji/gl-matrix
-* webGPU Samples https://webgpu.github.io/webgpu-samples/
-* WebGPU API reference，方便实用：https://gpuweb.github.io/types/index.html
-* webgpu-utils可以参考一下：https://github.com/greggman/webgpu-utils
-* filament可以学习与参考一些：https://github.com/google/filament
-* PBRT书籍，非常好：https://www.pbr-book.org/
-* Ray tracing的书籍：https://raytracing.github.io/
-* nvidia的书籍：https://developer.nvidia.com/gpugems/gpugems/contributors
-* gltf文档 https://registry.khronos.org/glTF/specs/2.0/
-* gltf tutorials  https://github.com/KhronosGroup/glTF-Tutorials
+* For directory structure conventions, AI working conventions, development workflow, and release conventions, see [AGENTS.md](./AGENTS.md).
+* For the engineering improvement plan (vitest / ESLint / Prettier / Playwright / CI / lib bundling), see [design/engineering-plan.md](./design/engineering-plan.md).
+* For known defects and the fix roadmap, see [design/workbuddy/core/04-问题缺陷与改进建议.md](./design/workbuddy/core/04-问题缺陷与改进建议.md).
+* Before committing to git, you must run the `examples/` verification (or key Playwright examples) to prevent source changes from breaking normal functionality.
+* Package name `we3d`, published to npm as a lib (ESM + `.d.ts`); no web app bundling.
+
+# References and Recommendations
+
+* WebGPU standard: <https://www.w3.org/TR/webgpu/>
+* WGSL standard: <https://www.w3.org/TR/wgsl/>
+* Excellent examples: <https://github.com/webgpu/webgpu-samples>
+* Google's Dawn: <https://github.com/google/dawn>
+* Mozilla's wgpu: <https://github.com/gfx-rs/wgpu>
+* MDN's WebGPU docs: <https://developer.mozilla.org/zh-CN/docs/Web/API/WebGPU_API>
+* Great WebGPU tutorial: <https://webgpufundamentals.org/>
+* Great WebGL2 tutorial: <https://webgl2fundamentals.org/>
+* Great WebGL1 tutorial: <https://webglfundamentals.org/>
+* Dawn's C examples: <https://github.com/samdauwe/webgpu-native-examples>
+* A very practical simple JS-side graphics math library, currently the main library used: <https://github.com/greggman/wgpu-matrix>
+* Another classic graphics math library: <https://github.com/toji/gl-matrix>
+* WebGPU Samples <https://webgpu.github.io/webgpu-samples/>
+* WebGPU API reference, handy and practical: <https://gpuweb.github.io/types/index.html>
+* webgpu-utils for reference: <https://github.com/greggman/webgpu-utils>
+* filament can be learned from and referenced: <https://github.com/google/filament>
+* PBRT book, excellent: <https://www.pbr-book.org/>
+* Ray tracing book: <https://raytracing.github.io/>
+* NVIDIA books: <https://developer.nvidia.com/gpugems/gpugems/contributors>
+* gltf docs <https://registry.khronos.org/glTF/specs/2.0/>
+* gltf tutorials  <https://github.com/KhronosGroup/glTF-Tutorials>
 * rapier [Rapier physics engine | Rapier](https://rapier.rs/)
-* [Bullet Real-Time Physics Simulation](https://pybullet.org/wordpress/)  https://pybullet.org/
-* CSS Color Module Level 4 https://www.w3.org/TR/css-color-4/
-* [Self Shadow](https://blog.selfshadow.com/)
+* [Bullet Real-Time Physics Simulation](https://pybullet.org/wordpress/)  <https://pybullet.org/>
+* CSS Color Module Level 4 <https://www.w3.org/TR/css-color-4/>
+* Self Shadow  <https://blog.selfshadow.com/>
+* Bruneton atmosphere: <https://ebruneton.github.io/precomputed_atmospheric_scattering/>
+* Hillaire atmosphere approach WebGPU implementation: <https://github.com/JolifantoBambla/webgpu-sky-atmosphere>
+* Sebastien Hillaire's Unreal Engine example repository, <https://github.com/sebh/UnrealEngineSkyAtmosphere>
