@@ -3,12 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * 软件 SwiftShader 版 E2E（备选配置，与默认的 playwright.config.ts「GPU 硬件版」并行保留）。
  *
- * 职责：负责生成/更新截图基线（npm run test:baseline = 本配置 --update-snapshots），
- * 因为基线必须由软件版稳定渲染产出；GPU 硬件版只读比对、不覆写基线。
+ * 职责：软件 SwiftShader 渲染的回归比对。基线由 GPU 硬件版产出（npm run test:baseline），
+ * 本配置只读比对、不生成/覆写基线。
  *
  * 运行：
- *   npm run test:baseline        → 软件版生成/更新基线
- *   npm run test:e2e:software    → 软件版自身回归（比对软件基线）
+ *   npm run test:e2e:software    → 软件版与 GPU 基线比对差值
  */
 export default defineConfig({
     testDir: './tests/e2e',

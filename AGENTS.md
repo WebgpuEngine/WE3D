@@ -33,10 +33,10 @@
    - 分步等价：`npm run lint` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
 2. **错误修复顺序**：先让构建变绿 → 建回归基线 → 加单测 → 再修错误（不盲改）。
 3. **Playwright e2e 回归**：测试对象已迁移到 `e2e-cases/`（按子目录组织，用例从 `@we3d` 导入），不再来自 `examples/`。
-   - 跑全部（GPU 硬件版）：`npm run test:e2e`（= `playwright test`，默认 GPU 配置），GPU 渲染结果与软件基线逐帧比对做差值检测，不生成基线。
-   - 软件版自身回归：`npm run test:e2e:software`（`playwright.software.config.ts`）。
-   - 生成 / 更新基线：`npm run test:baseline`（= 软件版 `--update-snapshots`），**基线只由软件版产出**，基线 **提交 git**。
-   - **渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）必须用软件版同步更新基线，并与代码同一次提交**，否则 `test:e2e` 截图比对会失败。
+   - 跑全部（GPU 硬件版）：`npm run test:e2e`（= `playwright test`，默认 GPU 配置），GPU 渲染结果与 GPU 基线逐帧比对做差值检测，不生成基线。
+   - 软件版回归：`npm run test:e2e:software`（`playwright.software.config.ts`），软件渲染结果与 GPU 基线比对差值。
+   - 生成 / 更新基线：`npm run test:baseline`（= GPU 硬件版 `--update-snapshots`），**基线由 GPU 硬件版产出**，基线 **提交 git**。
+   - **渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）必须用 GPU 硬件版同步更新基线，并与代码同一次提交**，否则 `test:e2e` 截图比对会失败。
    - **批量适配 e2e 用例（新增 / 删除 / 改名）后必须跑 `npm run e2e-index` 刷新 `e2e-cases/index.html` 索引入口**，否则索引页与目录实际用例不一致（详见 `design/e2e-cases-convention.md` §三·适配收尾）。
    - 双配置：默认 `playwright.config.ts` = GPU 硬件版（真实 GPU、**headless:true**、8 workers，参考 testCI 无头真实 GPU）；`playwright.software.config.ts` = 软件 SwiftShader 版（headless:true、2 workers），二者共用快照目录 `tests/e2e/baseline/`。软件版需 `--enable-unsafe-webgpu` + SwiftShader；GPU 版需 `--enable-unsafe-webgpu` + 真实 GPU（headless 即可，无需显示环境）。
 4. **云端工作流（GitHub Actions，云端专有；本地无同名文件，用 npm 脚本镜像）**：
@@ -85,9 +85,9 @@
 | `npm run typecheck` | tsc --noEmit 纯类型检查（不含 examples 打包） |
 | `npm run test` / `test:run` | vitest 单元测试（`vitest run`） |
 | `npm run coverage` | vitest 单测 + 覆盖率报告 |
-| `npm run test:e2e` | Playwright e2e（默认 **GPU 硬件版**，与软件基线比对差值，8 workers） |
-| `npm run test:e2e:software` | Playwright e2e（软件 SwiftShader 版自身回归） |
-| `npm run test:baseline` | 软件版生成 / 更新 Playwright 截图基线（提交 git） |
+| `npm run test:e2e` | Playwright e2e（默认 **GPU 硬件版**，与 GPU 基线比对差值，8 workers） |
+| `npm run test:e2e:software` | Playwright e2e（软件 SwiftShader 版，与 GPU 基线比对差值） |
+| `npm run test:baseline` | GPU 硬件版生成 / 更新 Playwright 截图基线（提交 git） |
 | `npm run docs:build` | 重建 `docs/`（typedoc；版本未变则跳过，`scripts/docs-if-new.mjs`） |
 | `npm run docs:build:force` | 强制重建 `docs/`（typedoc，云端 `release.yml` 用） |
 | `npm run docs:build:watch` | 监听模式重建 `docs/`（typedoc `--watch`） |

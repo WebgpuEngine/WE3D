@@ -8,9 +8,8 @@ import { defineConfig, devices } from '@playwright/test';
  *   新版 Chromium 无头模式（channel: 'chromium' 避免默认 headless shell）即可跑真实硬件 GPU，
  *   只要不加 SwiftShader 参数，Chromium 就使用本机硬件 GPU。
  * - 快照目录与软件版共用 tests/e2e/baseline/（不单独建 GPU 目录）。
- * - 本配置不生成基线；`npm run test:e2e` 用它把 GPU 渲染结果与软件基线逐帧比对，
- *   即「软件 vs GPU 硬件」的差值检测（差值 ≤ 容差则通过，超差则失败并附差异图）。
- * - 基线由软件版生成：`npm run test:baseline`（playwright.software.config.ts --update-snapshots）。
+ * - 基线由本配置（GPU 硬件版）产出：`npm run test:baseline`（本配置 --update-snapshots）；
+ *   `npm run test:e2e` 用它把 GPU 渲染结果与 GPU 基线逐帧比对（差值 ≤ 容差则通过，超差则失败并附差异图）。
  *
  * 注意：需真实 GPU（headless 即可，无需显示环境）；无 GPU 机器 requestAdapter 会失败（预期行为）。
  */

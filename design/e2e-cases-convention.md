@@ -102,7 +102,7 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 批量适配（新增 / 修改 / 删除用例）完成后，必须执行以下收尾，确保入口索引与截图基线同步：
 
 1. **`npm run e2e-index`** —— 重新扫描 `e2e-cases/` 一级目录下的 `*.html`，刷新 `e2e-cases/index.html` 人工入口索引。凡涉及用例新增、删除、改名，都必须重跑，否则索引页不会包含最新用例（见 §四）。
-2. **`npm run test:baseline`** —— 当背景色 / 几何 / 材质 / 相机 / 着色等**渲染结果发生变更**时，用**软件版**刷新对应截图基线，并随代码同一次提交（依据 `AGENTS.md` §三.3）。基线由软件 SwiftShader 版产出；默认 `npm run test:e2e` 为 GPU 硬件版，与软件基线比对差值、不覆写基线。
+2. **`npm run test:baseline`** —— 当背景色 / 几何 / 材质 / 相机 / 着色等**渲染结果发生变更**时，用**GPU 硬件版**刷新对应截图基线，并随代码同一次提交（依据 `AGENTS.md` §三.3）。基线由 GPU 硬件版产出；默认 `npm run test:e2e` 为 GPU 硬件版，与 GPU 基线比对差值、不覆写基线。
 
 > 收尾顺序建议：先 `npm run e2e-index`（刷新索引入口），再 `npm run test:baseline`（刷新基线），最后按 `AGENTS.md` 门禁跑 `npm run ci` 后提交。
 
@@ -112,7 +112,7 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 - 访问入口：`http://localhost:5173/e2e-cases/index.html`（需先 `npm run dev`）；根页 `http://localhost:5173/` 亦有 `E2E Cases` 入口。
 - 每次 e2e 批量适配（新增 / 删除 / 改名用例）后，**必须**重跑 `npm run e2e-index` 刷新索引（强制步骤，见 §三·适配收尾）；索引页不随用例自动更新，漏跑会导致 `e2e-cases/index.html` 与目录实际用例不一致。
 
-## 五、本次适配范围（2026-10-28）
+## 五、适配范围
 
 已将以下测试对象统一为纯黑单色背景（HTML 画布 `#000000` + `backgroudColor: [0,0,0,1]`），并完成 `@we3d` 导入适配：
 
@@ -124,5 +124,9 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 | 线段列表 | `e2e-cases/primitive/line_list.html` + `line_list.ts` | 棋盘格背景 → 纯黑；`[0,0,0.1,0.91]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 | 线段条带 | `e2e-cases/primitive/line_strip.html` + `line_strip.ts` | 棋盘格背景 → 纯黑；`[0,0,0.1,0.91]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 | 点 | `e2e-cases/primitive/points.html` + `points.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0.95]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 环境光 | `e2e-cases/lights/AmbientLight.html` + `AmbientLight.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 方向光 | `e2e-cases/lights/DirectionalLight_1.html` + `DirectionalLight_1.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 点光源 | `e2e-cases/lights/pointLight.html` + `pointLight.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 聚光灯 | `e2e-cases/lights/spotLight.html` + `spotLight.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 
-> 注：背景色改动会影响截图基线，需重跑 `npm run test:baseline` 刷新对应基线（`geometry-box.png`、`geometry-sphere.png`、`primitive-triangle.png`、`primitive-line_list.png`、`primitive-line_strip.png`、`primitive-points.png`）。
+> 注：背景色改动会影响截图基线，需重跑 `npm run test:baseline` 刷新对应基线（`geometry-box.png`、`geometry-sphere.png`、`primitive-triangle.png`、`primitive-line_list.png`、`primitive-line_strip.png`、`primitive-points.png`、`lights-AmbientLight.png`、`lights-DirectionalLight-1.png`、`lights-pointLight.png`、`lights-spotLight.png`）。
