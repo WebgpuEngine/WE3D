@@ -26,8 +26,8 @@ export default defineConfig({
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
     // 本地与 CI 统一为 4：SwiftShader 软渲染是 CPU 密集，8 workers 会把 CPU 打满 100% 互相争抢，
-    // 导致单用例变慢并偶发截图超时；降到 4 单用例更快、偶发更少且机器有余量。
-    workers: 4,
+    // 导致单用例变慢并偶发截图超时；降到 2 单用例更快、偶发更少且机器有余量。
+    workers: 2,
     reporter: 'list',
     use: {
         baseURL: 'http://localhost:5173',
