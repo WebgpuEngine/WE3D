@@ -102,7 +102,7 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 批量适配（新增 / 修改 / 删除用例）完成后，必须执行以下收尾，确保入口索引与截图基线同步：
 
 1. **`npm run e2e-index`** —— 重新扫描 `e2e-cases/` 一级目录下的 `*.html`，刷新 `e2e-cases/index.html` 人工入口索引。凡涉及用例新增、删除、改名，都必须重跑，否则索引页不会包含最新用例（见 §四）。
-2. **`npm run test:baseline`** —— 当背景色 / 几何 / 材质 / 相机 / 着色等**渲染结果发生变更**时，刷新对应截图基线，并随代码同一次提交（依据 `AGENTS.md` §三.3）。
+2. **`npm run test:baseline`** —— 当背景色 / 几何 / 材质 / 相机 / 着色等**渲染结果发生变更**时，用**软件版**刷新对应截图基线，并随代码同一次提交（依据 `AGENTS.md` §三.3）。基线由软件 SwiftShader 版产出；默认 `npm run test:e2e` 为 GPU 硬件版，与软件基线比对差值、不覆写基线。
 
 > 收尾顺序建议：先 `npm run e2e-index`（刷新索引入口），再 `npm run test:baseline`（刷新基线），最后按 `AGENTS.md` 门禁跑 `npm run ci` 后提交。
 

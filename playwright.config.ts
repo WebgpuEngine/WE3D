@@ -1,67 +1,57 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Phase 4 — Playwright 示例回归（E2E）
- * 说明见 design/engineering/phase4-playwright-e2e.md
+ * GPU 硬件版 E2E（默认配置，被 `playwright test` 直接加载）。
  *
- * WebGPU 策略（事项4，参考 testCI 项目的可用配置）：
- * - 必须用 `channel: 'chromium'`（新版 headless Chrome）；默认的 headless shell
- *   不暴露 WebGPU（navigator.gpu 为 undefined）。务必配合以下启动参数：
- *     --enable-unsafe-webgpu           暴露 navigator.gpu（需安全上下文，如 http://localhost）
- *     --use-webgpu-adapter=swiftshader 无独立 GPU 时用 SwiftShader 软件适配器
- *     --enable-unsafe-swiftshader      允许 SwiftShader 用于 WebGPU
- * - headless 默认开启（与 testCI 一致）。若 headless WebGPU 不可用，由 spec 内降级为
- *   headed 重试；两者都失败则 spec 显式报错（见 e2e/env-webgpu.spec.ts）。
- * - webServer：复用 `npm run dev`（vite），默认 http://localhost:5173。
- * - 基线目录：tests/e2e/baseline/（提交 git）；test-results/ 等瞬时产物忽略。
+ * 与软件版（playwright.software.config.ts）并行保留：
+ * - 本配置走真实 GPU 适配器（无 swiftshader），headless:true —— 参考 testCI：
+ *   新版 Chromium 无头模式（channel: 'chromium' 避免默认 headless shell）即可跑真实硬件 GPU，
+ *   只要不加 SwiftShader 参数，Chromium 就使用本机硬件 GPU。
+ * - 快照目录与软件版共用 tests/e2e/baseline/（不单独建 GPU 目录）。
+ * - 本配置不生成基线；`npm run test:e2e` 用它把 GPU 渲染结果与软件基线逐帧比对，
+ *   即「软件 vs GPU 硬件」的差值检测（差值 ≤ 容差则通过，超差则失败并附差异图）。
+ * - 基线由软件版生成：`npm run test:baseline`（playwright.software.config.ts --update-snapshots）。
+ *
+ * 注意：需真实 GPU（headless 即可，无需显示环境）；无 GPU 机器 requestAdapter 会失败（预期行为）。
  */
 export default defineConfig({
     testDir: './tests/e2e',
-    // 基线截图统一存放于 tests/e2e/baseline/（事项5，提交 git 不忽略）
+    // 基线统一存放于 tests/e2e/baseline/（与软件版共用同一目录，提交 git）
     snapshotDir: './tests/e2e/baseline',
-    // 跨平台：去掉 Playwright 默认拼上的 -<项目名>-<平台> 后缀（如 -chromium-win32），
-    // 使同一基线可在 win/linux/darwin 间共享（参考 testCI 项目配置）。
+    // 跨平台：去掉 Playwright 默认拼上的 -<项目名>-<平台> 后缀，使同一基线可在 win/linux/darwin 间共享。
     snapshotPathTemplate: '{snapshotDir}/{testFilePath}-snapshots/{arg}{ext}',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    // 本地与 CI 统一为 4：SwiftShader 软渲染是 CPU 密集，8 workers 会把 CPU 打满 100% 互相争抢，
-    // 导致单用例变慢并偶发截图超时；降到 2 单用例更快、偶发更少且机器有余量。
-    workers: 2,
+    // 并发 8：真实 GPU 硬件渲染，8 个 worker 并行比对软件基线。
+    workers: 8,
     reporter: 'list',
     use: {
         baseURL: 'http://localhost:5173',
-        // 固定视口 + 浅色 + 关闭动画，确保截图大小一致、稳定（参考 testCI）
         viewport: { width: 600, height: 600 },
         colorScheme: 'light',
         reducedMotion: 'reduce',
         screenshot: 'only-on-failure',
-        // 关键：新版 headless Chrome（非默认 shell），才能跑 WebGPU
+        // 新版 headless Chrome（非默认 shell）暴露 WebGPU，并直接跑真实硬件 GPU
         channel: 'chromium',
         headless: true,
         launchOptions: {
             args: [
+                // 仅暴露 WebGPU，不加 SwiftShader 参数 → 走本机真实 GPU 适配器
                 '--enable-unsafe-webgpu',
-                '--use-webgpu-adapter=swiftshader',
-                '--enable-unsafe-swiftshader',
             ],
         },
     },
     projects: [
         {
-            name: 'chromium',
+            name: 'chromium-gpu',
             use: {
                 ...devices['Desktop Chrome'],
-                // 覆盖设备预设的 1280x720 视口（项目级 use 会覆盖顶层 viewport），统一 600x600 截图标准
                 viewport: { width: 600, height: 600 },
                 channel: 'chromium',
                 headless: true,
                 launchOptions: {
-                    args: [
-                        '--enable-unsafe-webgpu',
-                        '--use-webgpu-adapter=swiftshader',
-                        '--enable-unsafe-swiftshader',
-                    ],
+                    args: ['--enable-unsafe-webgpu'],
                 },
             },
         },
@@ -73,8 +63,7 @@ export default defineConfig({
         timeout: 120000,
     },
     expect: {
-        // 参考 testCI：跨平台 SwiftShader 像素有微小差异，放宽到可接受范围。
-        // 基准值 0.05；env 三角形为确定性渲染，后续可校准收紧（见方案文档 §3.5）。
+        // GPU 与软件基线比对的容差；若 GPU/驱动差异偏大可按需放宽。
         toHaveScreenshot: { maxDiffPixelRatio: 0.05 },
     },
 });
