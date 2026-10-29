@@ -126,6 +126,10 @@ export type { IV_PointLight } from "./core/light/pointLight";
 export { SpotLight } from "./core/light/SpotLight";
 export type { IV_SpotLight } from "./core/light/SpotLight";
 
+// ibl
+export { IBL } from "./core/ibl/ibl";
+export type { IV_IBL } from "./core/ibl/ibl";
+
 // material
 export { BaseMaterial } from "./core/material/baseMaterial";
 export { ColorMaterial } from "./core/material/standard/colorMaterial";
@@ -167,11 +171,15 @@ export { BasePostProcess } from "./core/postprocess/basePostProcess";
 export type { IV_PostProcess } from "./core/postprocess/basePostProcess";
 export { FXAA } from "./core/postprocess/FXAA";
 export type { I_FXAAValues } from "./core/postprocess/FXAA";
+export { Blur3x3 } from "./core/postprocess/blur3x3";
+export { PP_RedToOne } from "./core/postprocess/RedToOne";
 
 // texture
 export { E_TextureChannel } from "./core/texture/base";
 export type { I_BaseTexture, T_textureSourceType, I_BaseSampler, I_mipmap } from "./core/texture/base";
 export { BaseTexture } from "./core/texture/baseTexture";
+export { PrefilteredCubemap } from "./core/texture/prefilteredCubemap";
+export type { I_PrefilteredCubmap } from "./core/texture/prefilteredCubemap";
 export { CubeTexture } from "./core/texture/cubeTexxture";
 export type { IV_CubeTexture } from "./core/texture/cubeTexxture";
 export { DefaultCubeTexture } from "./core/texture/defaultCubeTexture";
