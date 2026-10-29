@@ -24,20 +24,20 @@ let camera = new PerspectiveCamera({
   aspect: scene.aspect,
   near: 0.1,
   far: 10,
-  position: [0, 0, 1],
+  position: [0, 1, 2],
   lookAt: [0, 0, 0],
   // update: (scope: any) => {
   //   const now = Date.now() / 1000;
   //   scope.Position = vec3.fromValues(Math.sin(now) * radius, Y, Math.cos(now) * radius);
   // },
-  viewport: {
-    x: 0,
-    y: 0,
-    width: 300,
-    height: 300,
-    minDepth: 0,
-    maxDepth: 1
-  },
+  // viewport: {
+  //   x: 0,
+  //   y: 0,
+  //   width: 300,
+  //   height: 300,
+  //   minDepth: 0,
+  //   maxDepth: 1
+  // },
   // controlType:"arcball",
 });
 await scene.add(camera);

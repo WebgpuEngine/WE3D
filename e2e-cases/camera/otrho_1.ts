@@ -25,7 +25,7 @@ let orthCamera = new OrthographicCamera({
   bottom: -2,
   near: 0.1,
   far: 100,
-  position: [0, 0, 2],
+  position: [0, 1, 2],
   lookAt: [0, 0, 0],
   // controlType:"arcball",
   // update: (scope: any) => {
