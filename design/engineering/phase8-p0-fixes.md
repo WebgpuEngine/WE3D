@@ -179,9 +179,12 @@ private dispatch(event: Event, type: E_InputEvent) {
   - [x] P0-4：`scene.ts:386-389` + `gltf.ts:815/909/914/926` 改 `??`；补单测 + 模型 e2e
         - 代码：`scene.ts:386-389`、`gltf.ts:815/914/926` 改 `??`；`gltf.ts:909/921/933` 的 `texCoord` 由 `if (x)` 改 `if (x != undefined)`（921/933 与 909 同类型 falsy-0 隐患，一并治理）。
         - 单测：`src/we/core/scene/scene.test.ts`（rightHand=false / scaleFactorToKm=0 / lengthUnit="" 均保留）。`gltf.ts` 解析在浏览器/WebGPU 异步加载器内，node 不可实例化，metallic=0 等由模型 e2e 验证（见 `ci:no-e2e` 已全绿，e2e 待下一步 GPU 基线比对）。
-  - [ ] P0-8：`checkGPUBufferSize` 余量修正；删 `unmap()`；补单测 **（下一步处理）**
+  - [x] P0-8：`checkGPUBufferSize` 余量修正（`size += (4 - remainder)`）；删 `unmap()`；补单测
+        - 代码：`src/we/core/command/baseFunction.ts`：`checkGPUBufferSize` 余量改为补足到 4 倍数；`createGPUBufferByType` 删除对未映射 buffer 的 `buffer.unmap()`（无 `mappedAtCreation`，调用即违反 WebGPU 规范）。
+        - 单测：`src/we/core/command/baseFunction.test.ts`（对齐 1→4/4→4/5→8/7→8/11→12；createEmptyGPUBuffer/createUniformBuffer 的 buffer size 必为 4 倍数；写入后不调用 `unmap`）。
+        - node 无真实 WebGPU 运行时（仅 `@webgpu/types`/`webgpu-utils`），真 headless 设备测试不可行；按方案以「代码审查 + mock 回归 + e2e 出图」验证。`npm run ci` 全绿（偶发失败 `video_1_videoElement`/`inside_outside` 为 headless 基础设施 flake，重跑均通过，与改动无关）。
   - [x] P0-1：`root.ts:138` `.delete(i.map)`→`.delete(i.key)`；补单测（`src/we/core/organization/root.test.ts` 覆盖 key 删除 / else 分支 / 幂等）。
-  - [x] 跑 `npm run ci:no-e2e`（lint+typecheck+test+check:exports+build:lib 全绿，10 单测通过）；commit + push 待人工确认（云端验证）。
+  - [x] 跑 `npm run ci`（lint+typecheck+test+check:exports+build:lib+e2e 全绿，16 单测通过；e2e 偶发 flake 重跑通过）；commit + push。
 - [ ] **Batch B**
   - [ ] P0-3：`initPipeLine` 用真实 descriptor 序列化生成 key；补单测（size===2）
   - [ ] P0-7：`nodeObject.update` 两分支无条件调 `updateSelfAttribute`；补单测

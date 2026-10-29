@@ -19,7 +19,7 @@ function isArrayBufferView(v: any): v is ArrayBufferView {
 export function checkGPUBufferSize(size: number): number {
     const remainder = size % 4;
     if (remainder != 0) {
-        size += remainder;
+        size += (4 - remainder);
     }
     return size;
 }
@@ -120,7 +120,9 @@ function createGPUBufferByType(device: GPUDevice, label: string, usage: GPUBuffe
         else {
             device.queue.writeBuffer(buffer, 0, (ensureData.dataArray as ArrayBufferView).buffer, offsetUse, lengthUse);
         }
-        buffer.unmap();
+        // 注意：buffer 由 createBuffer({size,usage}) 创建，无 mappedAtCreation，
+        // 未经 mapAsync 映射，调用 unmap() 会抛 InvalidStateError（WebGPU 规范）。
+        // 因此此处不调用 unmap()，仅 writeBuffer 即可完成数据写入。
     }
     return buffer;
 }
