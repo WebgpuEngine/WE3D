@@ -812,7 +812,7 @@ export class GLTFModel extends BaseModel {
                  * 该值必须大于或等于0且小于或等于1。
                  * 必填：否，默认值：0.5
                  */
-                const alphaCutoff = perMaterialData.alphaCutoff || 0.5;
+                const alphaCutoff = perMaterialData.alphaCutoff ?? 0.5;
                 /**
                  * 使用data2:i32进行传输
                  */
@@ -906,31 +906,31 @@ export class GLTFModel extends BaseModel {
                 if (pbrMetallicRoughness && pbrMetallicRoughness.baseColorTexture?.index != undefined) {
                     albedoTexture = await this.getRes(T_ModelResKind.texture, pbrMetallicRoughness.baseColorTexture?.index, { format: "rgba8unorm-srgb", premultipliedAlpha: true }) as Texture;
                     albedoForPbr.texture = albedoTexture;
-                    if (pbrMetallicRoughness.baseColorTexture.texCoord) {
+                    if (pbrMetallicRoughness.baseColorTexture.texCoord != undefined) {
                         albedoForPbr.data1 = pbrMetallicRoughness.baseColorTexture.texCoord;
                     }
                 }
                 //metallic
-                const metallicFactor = pbrMetallicRoughness?.metallicFactor || 1;
+                const metallicFactor = pbrMetallicRoughness?.metallicFactor ?? 1;
                 let metallicTexture: Texture;
                 const metallicForPbr: I_TextureForPBR = { value: metallicFactor };
                 if (pbrMetallicRoughness && pbrMetallicRoughness.metallicRoughnessTexture?.index != undefined) {
                     metallicTexture = await this.getRes(T_ModelResKind.texture, pbrMetallicRoughness.metallicRoughnessTexture?.index, { format: "rgba8unorm" }) as Texture;
                     metallicForPbr.texture = metallicTexture;
                     metallicForPbr.channel = E_TextureChannel.B;
-                    if (pbrMetallicRoughness.metallicRoughnessTexture.texCoord) {
+                    if (pbrMetallicRoughness.metallicRoughnessTexture.texCoord != undefined) {
                         metallicForPbr.data1 = pbrMetallicRoughness.metallicRoughnessTexture.texCoord;
                     }
                 }
                 //roughness
-                const roughnessFactor = pbrMetallicRoughness?.roughnessFactor || 1;
+                const roughnessFactor = pbrMetallicRoughness?.roughnessFactor ?? 1;
                 let roughnessTexture: Texture;
                 const roughnessForPbr: I_TextureForPBR = { value: roughnessFactor };
                 if (pbrMetallicRoughness && pbrMetallicRoughness.metallicRoughnessTexture?.index != undefined) {
                     roughnessTexture = await this.getRes(T_ModelResKind.texture, pbrMetallicRoughness.metallicRoughnessTexture?.index, { format: "rgba8unorm" }) as Texture;
                     roughnessForPbr.texture = roughnessTexture;
                     roughnessForPbr.channel = E_TextureChannel.G;
-                    if (pbrMetallicRoughness.metallicRoughnessTexture.texCoord) {
+                    if (pbrMetallicRoughness.metallicRoughnessTexture.texCoord != undefined) {
                         roughnessForPbr.data1 = pbrMetallicRoughness.metallicRoughnessTexture.texCoord;
                     }
                 }

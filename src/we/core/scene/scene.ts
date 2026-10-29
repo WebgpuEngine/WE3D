@@ -383,10 +383,10 @@ export class Scene {
 
         //场景单位
         if (value.baseUnit) {
-            this.baseUnit.scaleFactorToKm = value.baseUnit.scaleFactorToKm || 1 / 1000;
-            this.baseUnit.lengthUnit = value.baseUnit.lengthUnit || "m";
-            this.baseUnit.axisUp = value.baseUnit.axisUp || "Y";
-            this.baseUnit.rightHand = value.baseUnit.rightHand || true;
+            this.baseUnit.scaleFactorToKm = value.baseUnit.scaleFactorToKm ?? 1 / 1000;
+            this.baseUnit.lengthUnit = value.baseUnit.lengthUnit ?? "m";
+            this.baseUnit.axisUp = value.baseUnit.axisUp ?? "Y";
+            this.baseUnit.rightHand = value.baseUnit.rightHand ?? true;
         }
         //是否使用反向Z
         if (value.reversedZ !== undefined && typeof value.reversedZ == "boolean") {

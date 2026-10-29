@@ -135,7 +135,7 @@ export abstract class RootGPU implements I_UUID {
         if (this.resourcesGPU) {
             for (const i of this.mapList) {
                 if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
-                    (this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>).delete(i.map);
+                    (this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>).delete(i.key);
                 }
                 else
                     this.resourcesGPU.delete(i.key, i.type);
