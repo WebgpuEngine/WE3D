@@ -102,9 +102,9 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
 # 工程化与开发约定
 
 * 目录结构约定、AI 工作约定、开发流程与发布约定见 [AGENTS.md](./AGENTS.md)。
-* 工程化补齐方案（vitest / ESLint / Prettier / Playwright / CI / lib 打包）见 [design/engineering-plan.md](./design/engineering-plan.md)。
+* 工程化方案（vitest / ESLint / Prettier / Playwright / CI / lib 打包）见 [design/engineering-plan.md](./design/engineering-plan.md)。
 * 已知缺陷与修复路线见 [design/workbuddy/core/04-问题缺陷与改进建议.md](./design/workbuddy/core/04-问题缺陷与改进建议.md)。
-* 提交 git 前必须跑 `examples/` 验证（或 Playwright 关键示例），防止源码改动破坏正常功能。
+* 提交 git 前必须跑 e2e 验证（或 Playwright 关键示例），防止源码改动破坏正常功能。
 * 包名 `we3d`，以 lib 形式（ESM + `.d.ts`）发布到 npm，不做 web app 打包。
 
 # 资料参考与推荐

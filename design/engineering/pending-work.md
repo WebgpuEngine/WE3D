@@ -51,6 +51,18 @@
 - 说明：2026-10-26 已搭 Vitest 基础体系（`vitest.config.ts` + `package.json` 的 `test`/`test:run`/`coverage` + `src/we/core/math/math.test.ts` 样例，4 测试通过，coverage 报告可生成）。**后续数学/几何/ID/修复回归用例按需补充，不再作为阻塞 Phase 的待办**。
 - 备注：`coverage` 脚本已于 2026-10-26 补上（含 `@vitest/coverage-v8` 提供者）；测试置于 `src/**/*.test.ts`（非独立 `test/` 目录），与计划微调。
 
+### 7. BlinnPhong 示例光方向反射异常（`examples/system/MSAA/BlinnPhong/phong_sphere_1.html`）
+- 状态：⬜ 待排查 / 待修复（用户 2026-10-29 反馈）
+- 关联：`examples/system/MSAA/BlinnPhong/phong_sphere_1.html`
+- 说明：该示例（MSAA + BlinnPhong 高光球体）的**光方向反射**存在问题，具体表现为光照高光 / 反射方向与预期不符（疑似光照向量、法线或 half-vector 计算方向错误）。属渲染效果异常，需后续排查 BlinnPhong 着色器或相关光照 uniforms 设置。
+- 待办：复现并定位根因后修复；若涉及渲染结果变更，须同步更新 GPU 基线（`npm run test:baseline`）并提交。
+
+### 8. MSAA 法线异常（疑似与 #7 重叠，典型分层形象）
+- 状态：⬜ 待排查 / 待修复（用户 2026-10-29 反馈）
+- 关联：`examples/system/MSAA/PBR/pbr_1.html`；与 **#7** `phong_sphere_1.html` **极大概率重叠同一根因**
+- 说明：`examples/system/MSAA/` 下的**法线**目前看有问题，典型表现为**法线造成分层形象**（法线方向 / 法线重建 / 采样方式错误导致的分层 / banding 假象）。PBR 示例 `pbr_1.html` 可复现，BlinnPhong 示例（#7 光方向反射异常）很可能同源——二者均落在同一 MSAA 渲染 / 着色路径上。
+- 待办：优先将 #7 与 #8 **合并排查** MSAA 法线处理（法线插值、分辨率 / MSAA resolve、法线重建公式），定位根因后一并修复；若涉及渲染结果变更，须同步更新 GPU 基线（`npm run test:baseline`）并提交。
+
 ## 二、变更记录
 | 日期 | 动作 | 说明 |
 | --- | --- | --- |
