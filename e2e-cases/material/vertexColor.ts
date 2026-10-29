@@ -1,11 +1,5 @@
 
-import { PerspectiveCamera } from "../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../src/we/core/scene/base";
-import { initScene } from "../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../src/we/core/entity/mesh/mesh";
-import { VertexColorMaterial } from "../../src/we/core/material/standard/vertexColorMaterial";
+import { PerspectiveCamera, IV_Scene, initScene, IV_MeshEntity, Mesh, VertexColorMaterial, E_ToneMappingType } from "@we3d";
 
 declare global {
   interface Window {
@@ -17,7 +11,7 @@ let input: IV_Scene = {
   canvas: "render",
   backgroudColor: [0, 0., 0., 0.],
   // reversedZ:true,
-  toneMapping: "linear",
+  toneMapping: E_ToneMappingType.linear,
 };
 let scene = await initScene({
   initConfig: input,

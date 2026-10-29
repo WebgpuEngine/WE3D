@@ -21,6 +21,7 @@
    - **HTML 画布层**：`canvas` 的 CSS 背景设为纯黑 `#000000`，**不得**使用棋盘格、渐变、图片等任何纹理背景。
    - **引擎场景层**：`IV_Scene.backgroudColor` 设为不透明纯黑 `[0, 0, 0, 1]`（归一化 RGBA，顺序 `[r, g, b, a]`，取值 0~1）。
 3. 二者一致（均纯黑），确保 WebGPU 清屏色与页面背景色完全相同，无透明/合成差异。
+4. **例外——透明相关用例不改变背景色**：涉及透明度测试的用例（如 `e2e-cases/transparent/`）需靠不同背景色来分辨透明/半透明效果，故**保留原始背景**（HTML 棋盘格纹理 + `backgroudColor` 透明 `[0,0,0,0]`），不改为纯黑；此类用例仅做 `@we3d` 导入适配。
 
 ## 三、适配方法（本次已据此适配全部测试对象，日后新增照此执行）
 
@@ -128,5 +129,19 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 | 方向光 | `e2e-cases/lights/DirectionalLight_1.html` + `DirectionalLight_1.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 | 点光源 | `e2e-cases/lights/pointLight.html` + `pointLight.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 | 聚光灯 | `e2e-cases/lights/spotLight.html` + `spotLight.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 铁桶 PBR | `e2e-cases/material/pbr_list_iron.html` + `pbr_list_iron.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 锈蚀 PBR | `e2e-cases/material/pbr_rust.html` + `pbr_rust.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 球体 PBR | `e2e-cases/material/pbr_sphere.html` + `pbr_sphere.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；修正 script src |
+| Phong 法线 | `e2e-cases/material/phong_normal.html` + `phong_normal.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；修正 script src |
+| Phong 球体 | `e2e-cases/material/phong_sphere.html` + `phong_sphere.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；修正 script src |
+| 透明距离 | `e2e-cases/transparent/alpha_distance_1.html` + `alpha_distance_1.ts` | 仅深层相对导入 → `@we3d`（背景保持，透明用例例外） |
+| 贴图距离 | `e2e-cases/transparent/img_distance_test_1.html` + `img_distance_test_1.ts` | 仅深层相对导入 → `@we3d`（背景保持，透明用例例外） |
+| 像素透明 | `e2e-cases/transparent/img_pixcel_alpha_1.html` + `img_pixcel_alpha_1.ts` | 仅深层相对导入 → `@we3d`（背景保持，透明用例例外） |
+| PBR 方向光 | `e2e-cases/shadow/PBR_dirlight_1.html` + `PBR_dirlight_1.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| PBR 点光 | `e2e-cases/shadow/PBR_point_oneEntity_1.html` + `PBR_point_oneEntity_1.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| PBR 聚光 | `e2e-cases/shadow/PBR_spot_0.html` + `PBR_spot_0.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| Phong 方向光 | `e2e-cases/shadow/phong_dirlight_sphere.html` + `phong_dirlight_sphere.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；修正 script src |
+| Phong 点光 | `e2e-cases/shadow/phong_pointLight_1.html` + `phong_pointLight_1.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；修正 script src |
+| Phong 聚光 | `e2e-cases/shadow/phong_spot_1.html` + `phong_spot_1.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；修正 script src |
 
-> 注：背景色改动会影响截图基线，需重跑 `npm run test:baseline` 刷新对应基线（`geometry-box.png`、`geometry-sphere.png`、`primitive-triangle.png`、`primitive-line_list.png`、`primitive-line_strip.png`、`primitive-points.png`、`lights-AmbientLight.png`、`lights-DirectionalLight-1.png`、`lights-pointLight.png`、`lights-spotLight.png`）。
+> 注：背景色改动会影响截图基线，需重跑 `npm run test:baseline` 刷新对应基线（`geometry-box.png`、`geometry-sphere.png`、`primitive-triangle.png`、`primitive-line-list.png`、`primitive-line-strip.png`、`primitive-points.png`、`lights-AmbientLight.png`、`lights-DirectionalLight-1.png`、`lights-pointLight.png`、`lights-spotLight.png`、`material-pbr-list-iron.png`、`material-pbr-rust.png`、`material-pbr-sphere.png`、`material-phong-normal.png`、`material-phong-sphere.png`、`transparent-alpha-distance-1.png`、`transparent-img-distance-test-1.png`、`transparent-img-pixcel-alpha-1.png`、`shadow-PBR-dirlight-1.png`、`shadow-PBR-point-oneEntity-1.png`、`shadow-PBR-spot-0.png`、`shadow-phong-dirlight-sphere.png`、`shadow-phong-pointLight-1.png`、`shadow-phong-spot-1.png`）。

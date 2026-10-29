@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            /* remove the default margin          */
+            height: 100%;
+            /* make the html,body fill the page   */
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            /* e2e 约定：纯黑色单色背景，便于截图基线比对 */
+            background-color: #000000;
+        }
+    </style>
+    <script src="./phong_normal.ts" type="module"></script>
+</head>
+
+<body>
+    <canvas id="render"></canvas>
+
+</body>
+
+</html>
