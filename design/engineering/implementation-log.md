@@ -221,7 +221,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 8 — 错误修复落位（依托 Phase3/4 保护，分批）　⬜ 未开始
+### Phase 8 — 错误修复落位（依托 Phase3/4 保护，分批）　✅ 全部完成
 
 - **计划要点**（依据 `../workBuddy/core/04`）
   1. **P0-1** `root.ts` destroy key bug（显存泄漏）
@@ -237,10 +237,13 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
   - 2026-10-28 清理 5 个未完成设计文件（即 `phase8-ts-errors-253.md` §四所列 253 错误源）：删除 `core/camera/TTP.ts.backup`、`core/ibl/mulitibl.ts.todo`、`core/material/standard/shaderMaterial.ts.todo`、`core/geometry/capsuleGeometry.ts.todo`、`core/camera/DeferDrawCommandGenerator copy.ts`。
   - 删除前确认：无任何已编译 `.ts` 文件 import 这 5 个文件（import 搜索 0 命中）；删除后 `npm run typecheck` 仍为 0 错误 → 不破坏 `src/we` 编译 / CI 门禁。
   - 设计取舍：前 4 个承载未完成设计（TTP 逐像素透明双缓冲 / 多 IBL 探针 / volume shader 变体 / 胶囊体几何），删除即放弃这些未完成设计，后续如需落地须重写；第 5 个 `copy.ts` 为 `DeferDrawCommandGenerator.ts` 的旧副本，无独有逻辑，删除风险最低。
-- **验证**：`npm run typecheck` ✅ 0 错误；`git status` 5 文件均 `D`（已删除并暂存）。
-- **状态**：「清理 copy/backup/todo（5 个文件）」子任务 ✅ 完成；其余 P0 修复（root.ts 显存泄漏等）仍 ⬜ 未开始。
+  - **Batch A（2026-10-30）✅**：P0-4 `||`→`??`（`scene.ts`/`gltf.ts`，含 `texCoord` falsy-0 一并治理）、P0-8 `baseFunction.ts` `checkGPUBufferSize` 余量补足 4 倍数 + 删对未映射 buffer 的 `unmap()`、P0-1 `root.ts` `.delete(i.map)`→`.delete(i.key)`。单测：`scene.test.ts`、`baseFunction.test.ts`（纯逻辑）+ `baseFunction.browser.test.ts`（vitest browser 真实 device）、`root.test.ts`。
+  - **Batch B（2026-10-30）✅**：P0-3 `DrawCommandGenerator.ts` 用 `stableStringify` 序列化真实 `descriptor.depthStencil/multisample` 生成缓存 key（替换字面量）、P0-7 `nodeObject.ts` `DirectInWorldSpace=true`（else）分支补 `updateSelfAttribute`。单测：`DrawCommandGenerator.test.ts`（size===2）、`nodeObject.test.ts`。
+  - **Batch C（2026-10-30）✅**：P0-2 `inputManager.ts` 抽 `dispatch(event, type)` 重构 6 段（touch/click/dblclick 5 个事件已注释未实现），`intercept` 层返回 true 独占消费阻断后续层。单测：`inputManager.test.ts`（TDD 先红后绿）。实测无控制器注册 intercept 层、e2e-cases 无 UI 用例 → UI 专项回归无需执行。
+- **验证**：`npm run typecheck` ✅ 0 错误；`git status` 5 文件均 `D`（已删除并暂存）；`npm run ci:no-e2e` 全绿（19 node 单测 + 4 浏览器真实 device + lint/typecheck/check:exports/build:lib）。
+- **状态**：✅ 全部完成——清理 5 个未完成文件 + 6 个 P0 行为错误全部修复、补单测、`ci:no-e2e` 全绿并提交推送（详见 `phase8-p0-fixes.md`）。
 - **方案**：2026-10-28 制定《`phase8-p0-fixes.md`》——6 个 P0 行为错误按风险分三批（A 纯逻辑 / B 正确性 / C input 行为变更），逐一批次配单测 + Playwright 基线回归 + commit/push + 云端验证。已核对各 P0 当前代码位置（非早期快照行号）。
-- **备注**：
+- **备注**：P0-2 初版标「高回归风险」因担心行为变更，实测后下调（intercept 层当前无使用方）；P0-7 初版「两分支每帧无条件调」描述有误，实际仅 else 分支缺失；P0-7 遗留 `SpaceType===physical` 节点待物理引擎落地后处理。
 
 ## 四、变更日志
 
@@ -260,3 +263,4 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 2026-10-27 | Phase 5 完成 | 合并 typedoc 到根目录（方案 A）：删 `doc/`（11 文件）、新建根 `typedoc.json`/`typedoc-home.md`、`package.json` 增 `docs:build`/`docs:build:watch`、更新 `AGENTS.md`；重建 `docs/` 766→727 文件（0 错误/273 警告，排除 `* copy.ts`/`*.test.ts`）；浏览器验证可用；提交 `1bd48d1` 并推送 |
 | 2026-10-28 | Phase 6 完成 | lib 打包落地：curated barrel `src/we/index.ts`（186 导出）+ `vite.lib.config.ts` + `tsconfig.lib.json` + `check:exports`；`build:lib` 产出 `dist/we3d.js`+`.d.ts`；`@we3d` 别名三处就位；e2e-cases 走 `@we3d`；更新 AGENTS.md；253 错误澄清为历史快照（5 个未完成文件暂不处理，留待 Phase 8） |
 | 2026-10-28 | Phase 8（清理） | 删除 5 个未完成设计文件（TTP.ts.backup / mulitibl.ts.todo / shaderMaterial.ts.todo / capsuleGeometry.ts.todo / DeferDrawCommandGenerator copy.ts）；0 引用、删除后 `typecheck` 仍 0 错误；前 4 个承载的未完成设计（TTP 双缓冲/多 IBL/volume/胶囊体）随之放弃；后续 P0 修复仍未开始 |
+| 2026-10-30 | Phase 8 完成 | 6 个 P0 行为错误全部修复（Batch A：P0-4/P0-8/P0-1；Batch B：P0-3/P0-7；Batch C：P0-2），各补单测；`ci:no-e2e` 全绿（19 node 单测 + 4 浏览器真实 device）；逐批 commit + push |
