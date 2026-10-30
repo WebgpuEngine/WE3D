@@ -74,7 +74,7 @@
 - [x] **执行3 — 用例源目录与自动探测（2026-10-27 重构）**：目标目录由 `examples/` 全量扫描改为 `e2e-cases/`（一级目录 + 直接放置 html）；`tests/e2e/examples-e2e.ts` 改为运行期自动探测 `e2e-cases/*/*.html`，去掉静态清单、多级树与显式 html 指定；已删除 `scripts/generate-e2e-examples.mjs` 与 `test:generate`。
 - [x] **执行4 — 批量链 + 缺失基线自动生成**：`tests/e2e/examples.spec.ts` 按一级目录分组遍历，缺失基线时自动 `page.screenshot` 生成（不再依赖 `WE3D_E2E_BATCH` 跳过）；首个用例 `geometry/box` 已跑通（基线 `geometry-box.png` 已生成并比对通过）。
 - [ ] **执行5 — 批量 e2e + 系统检查 + 文档闭环**：
-  - [x] 文档闭环：新增 `design/webgpu-playwright-headless.md`（WebGPU + Playwright 无头测试跨项目技术指南）。
+  - [x] 文档闭环：新增 `design/gpu-e2e/webgpu-playwright-headless.md`（WebGPU + Playwright 无头测试跨项目技术指南）。
   - [ ] 批量 e2e + 系统检查：**待后续在 `e2e-cases/` 下补充更多用例页**，直接跑 `npx playwright test tests/e2e/examples.spec.ts` 即自动纳入并生成基线；再做系统性检查（console 报错、需修正示例标记）并收口。
 
 ## 五、工作量与风险
