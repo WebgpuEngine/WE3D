@@ -1,11 +1,9 @@
-import { ECSManager } from "../organization/manager";
-import { Clock } from "../scene/clock";
-import { AnimationGroup } from "./animationGroup";
-import { I_AnimationWeightForMergePlay } from "./base";
+import { ECSManager } from '../organization/manager';
+import { Clock } from '../scene/clock';
+import { AnimationGroup } from './animationGroup';
+import { I_AnimationWeightForMergePlay } from './base';
 
 export class AnimationGroupManager extends ECSManager<AnimationGroup> {
-
-
     /** todo 权重组
      * 要求：
      * 1、只适用：关键帧动画、骨骼动画
@@ -17,9 +15,8 @@ export class AnimationGroupManager extends ECSManager<AnimationGroup> {
      * 4、权重组中的动画，只能在权重组中播放，不能在其他组中播放。
      *    A、先进行权重组中的动画，再进行list中的update
      *    B、list使用一次weight数组扁平化进行排除或者push到新的数组中。
-    */
+     */
     weightList: Map<string, I_AnimationWeightForMergePlay[]> = new Map();
-
 
     update(clock: Clock): void {
         for (const perOne of this.list) {

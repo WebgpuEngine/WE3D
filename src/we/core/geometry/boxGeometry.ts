@@ -1,37 +1,30 @@
-import { vec3 } from "wgpu-matrix";
-import {
-    BaseGeometry,
-    IV_Gemetry,
-    
-} from "./baseGeometry";
+import { vec3 } from 'wgpu-matrix';
+import { BaseGeometry, IV_Gemetry } from './baseGeometry';
 
 interface boxParameters {
-    width: number,
-    height: number,
-    depth: number,
-    widthSegments: number,
-    heightSegments: number,
-    depthSegments: number,
+    width: number;
+    height: number;
+    depth: number;
+    widthSegments: number;
+    heightSegments: number;
+    depthSegments: number;
 }
 export interface optionBoxGemetry extends IV_Gemetry {
-    width?: number,
-    height?: number,
-    depth?: number,
-    widthSegments?: number,
-    heightSegments?: number,
-    depthSegments?: number,
-
+    width?: number;
+    height?: number;
+    depth?: number;
+    widthSegments?: number;
+    heightSegments?: number;
+    depthSegments?: number;
 }
 
 export class BoxGeometry extends BaseGeometry {
-
-
     /**box的参数 */
     parameters!: boxParameters;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    numberOfVertices !: number;
+    numberOfVertices!: number;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    groupStart !: number;
+    groupStart!: number;
 
     constructor(input?: optionBoxGemetry) {
         if (input == undefined) {
@@ -41,60 +34,66 @@ export class BoxGeometry extends BaseGeometry {
                 depth: 1,
                 widthSegments: 1,
                 heightSegments: 1,
-                depthSegments: 1
-            }
+                depthSegments: 1,
+            };
         }
         super(input);
-        this.type = "BoxGeometry";
-        this.init(input)
+        this.type = 'BoxGeometry';
+        this.init(input);
     }
 
     init(input: IV_Gemetry) {
-
         this.parameters = {
             width: 1,
             height: 1,
             depth: 1,
             widthSegments: 1,
             heightSegments: 1,
-            depthSegments: 1
+            depthSegments: 1,
         };
-        if ("width" in input)
-            this.parameters.width = Math.floor(input.width as number);
-        if ("height" in input)
-            this.parameters.height = Math.floor(input.height as number);
-        if ("depth" in input)
-            this.parameters.depth = Math.floor(input.depth as number);
-        if ("widthSegments" in input)
+        if ('width' in input) this.parameters.width = Math.floor(input.width as number);
+        if ('height' in input) this.parameters.height = Math.floor(input.height as number);
+        if ('depth' in input) this.parameters.depth = Math.floor(input.depth as number);
+        if ('widthSegments' in input)
             this.parameters.widthSegments = Math.floor(input.widthSegments as number);
-        if ("heightSegments" in input)
+        if ('heightSegments' in input)
             this.parameters.heightSegments = Math.floor(input.heightSegments as number);
-        if ("depthSegments" in input)
+        if ('depthSegments' in input)
             this.parameters.depthSegments = Math.floor(input.depthSegments as number);
 
         this.numberOfVertices = 0;
         this.groupStart = 0;
 
+        const { width, height, depth, widthSegments, heightSegments, depthSegments } =
+            this.parameters;
+        const x = 0,
+            y = 1,
+            z = 2;
 
-        const { width, height, depth, widthSegments, heightSegments, depthSegments } = this.parameters;
-        const x = 0, y = 1, z = 2;
-
-        this.buildPlane(z, y, x, - 1, - 1, depth, height, width, depthSegments, heightSegments, 0); // px
-        this.buildPlane(z, y, x, 1, - 1, depth, height, - width, depthSegments, heightSegments, 1); // nx
+        this.buildPlane(z, y, x, -1, -1, depth, height, width, depthSegments, heightSegments, 0); // px
+        this.buildPlane(z, y, x, 1, -1, depth, height, -width, depthSegments, heightSegments, 1); // nx
         this.buildPlane(x, z, y, 1, 1, width, depth, height, widthSegments, depthSegments, 2); // py
-        this.buildPlane(x, z, y, 1, - 1, width, depth, - height, widthSegments, depthSegments, 3); // ny
-        this.buildPlane(x, y, z, 1, - 1, width, height, depth, widthSegments, heightSegments, 4); // pz
-        this.buildPlane(x, y, z, - 1, - 1, width, height, - depth!, widthSegments, heightSegments, 5); // nz
+        this.buildPlane(x, z, y, 1, -1, width, depth, -height, widthSegments, depthSegments, 3); // ny
+        this.buildPlane(x, y, z, 1, -1, width, height, depth, widthSegments, heightSegments, 4); // pz
+        this.buildPlane(x, y, z, -1, -1, width, height, -depth!, widthSegments, heightSegments, 5); // nz
 
         this.createWrieFrame();
         this._already = true;
     }
 
     /**copy from three.js */
-    buildPlane(u: number, v: number, w: number,
-        udir: number, vdir: number,
-        width: number, height: number, depth: number,
-        gridX: number, gridY: number, materialIndex: number,
+    buildPlane(
+        u: number,
+        v: number,
+        w: number,
+        udir: number,
+        vdir: number,
+        width: number,
+        height: number,
+        depth: number,
+        gridX: number,
+        gridY: number,
+        materialIndex: number,
         // indices: number[], vertices: number[], normals: number[], uvs: number[],
         // numberOfVertices: number, groupStart: number
     ) {
@@ -126,11 +125,9 @@ export class BoxGeometry extends BaseGeometry {
         // generate vertices, normals and uvs
 
         for (let iy = 0; iy < gridY1; iy++) {
-
             const y = iy * segmentHeight - heightHalf;
 
             for (let ix = 0; ix < gridX1; ix++) {
-
                 const x = ix * segmentWidth - widthHalf;
 
                 // set values to correct vector component
@@ -147,7 +144,7 @@ export class BoxGeometry extends BaseGeometry {
 
                 vector[u] = 0;
                 vector[v] = 0;
-                vector[w] = depth > 0 ? 1 : - 1;
+                vector[w] = depth > 0 ? 1 : -1;
 
                 // now apply vector to normal buffer
 
@@ -156,14 +153,12 @@ export class BoxGeometry extends BaseGeometry {
                 // uvs
 
                 uvs.push(ix / gridX);
-                uvs.push(1 - (iy / gridY));
+                uvs.push(1 - iy / gridY);
 
                 // counters
 
                 vertexCounter += 1;
-
             }
-
         }
 
         // indices
@@ -173,9 +168,7 @@ export class BoxGeometry extends BaseGeometry {
         // 3. so we need to generate six (2*3) indices per segment
 
         for (let iy = 0; iy < gridY; iy++) {
-
             for (let ix = 0; ix < gridX; ix++) {
-
                 const a = this.numberOfVertices + ix + gridX1 * iy;
                 const b = this.numberOfVertices + ix + gridX1 * (iy + 1);
                 const c = this.numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
@@ -189,9 +182,7 @@ export class BoxGeometry extends BaseGeometry {
                 // increase counter
 
                 groupCount += 6;
-
             }
-
         }
 
         // add a group to the geometry. this will ensure multi material support
@@ -206,7 +197,6 @@ export class BoxGeometry extends BaseGeometry {
         // update total number of vertices
 
         this.numberOfVertices += vertexCounter;
-
     }
     destroy() {
         this._destroy = false;
@@ -216,8 +206,8 @@ export class BoxGeometry extends BaseGeometry {
             uv: [],
             indeices: [],
             materialStep: [],
-            color:[],
-        }
+            color: [],
+        };
     }
 
     // /**
@@ -376,5 +366,4 @@ export class BoxGeometry extends BaseGeometry {
     //     let vsa: I_vsAttributes[] = [position, uv, normal];
     //     return vsa;
     // }
-
 }

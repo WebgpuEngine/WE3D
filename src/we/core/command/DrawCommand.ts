@@ -1,50 +1,48 @@
-import { E_renderForDC } from "../base/coreDefine";
-import { isI_pointerStruct } from "../bufferBlock/pointer";
-import { BaseEntity } from "../entity/baseEntity";
-import { E_TransparentType, E_materialTypeForBindGroup } from "../material/base";
-import { BaseMaterial } from "../material/baseMaterial";
-import { PBRMaterial } from "../material/PBR/PBRMaterial";
-import { Scene } from "../scene/scene";
-import { I_drawMode, I_drawModeIndexed, } from "./base";
-import { BaseDrawCommand, I_drawCallOption, IV_BaseDrawCommand } from "./BaseDrawCommand";
-
-
+import { E_renderForDC } from '../base/coreDefine';
+import { isI_pointerStruct } from '../bufferBlock/pointer';
+import { BaseEntity } from '../entity/baseEntity';
+import { E_TransparentType, E_materialTypeForBindGroup } from '../material/base';
+import { BaseMaterial } from '../material/baseMaterial';
+import { PBRMaterial } from '../material/PBR/PBRMaterial';
+import { Scene } from '../scene/scene';
+import { I_drawMode, I_drawModeIndexed } from './base';
+import { BaseDrawCommand, I_drawCallOption, IV_BaseDrawCommand } from './BaseDrawCommand';
 
 export interface I_DrawInputValueMaterial {
     /**material 所有者 */
-    owner: BaseMaterial,
-    /**material类型 
+    owner: BaseMaterial;
+    /**material类型
      * 1、不同类型的material的type，其bind group不同
-    */
-    type: E_materialTypeForBindGroup,
+     */
+    type: E_materialTypeForBindGroup;
     /**透明类型 :透明材质才需要.todo：备用
-    */
-    transparentType?: E_TransparentType,
+     */
+    transparentType?: E_TransparentType;
     // dynamic: boolean
 }
 interface I_DrawInputValueTarget {
-    UUID?: string,
-    type: E_renderForDC,//"camera" | "light"
+    UUID?: string;
+    type: E_renderForDC; //"camera" | "light"
 }
 /**
- * DrawCommand input value 
+ * DrawCommand input value
  */
 export interface IV_DrawCommand extends IV_BaseDrawCommand {
-    scene: Scene,
+    scene: Scene;
     /**基础信息 */
     baseInfo: {
-        parent?: BaseEntity,
-        /**material 
+        parent?: BaseEntity;
+        /**material
          * 1、有值：渲染material
          * 2、无值：渲染depth
-        */
-        material?: I_DrawInputValueMaterial
+         */
+        material?: I_DrawInputValueMaterial;
         /**draw 目标，
          * 1、有值：camera或light
          * 2、无值：NDC等
          */
-        traget?: I_DrawInputValueTarget
-    },
+        traget?: I_DrawInputValueTarget;
+    };
 }
 /**
  * DrawCommand 是Entity的渲染命令
@@ -61,18 +59,18 @@ export class DrawCommand extends BaseDrawCommand {
     /**draw 目标，
      * 1、有值：camera或light
      * 2、无值：NDC等
-    */
+     */
     traget: I_DrawInputValueTarget | undefined;
 
     constructor(input: IV_DrawCommand) {
         super(input);
         this.inputValues = input;
         if (input.scene != undefined) this.scene = input.scene;
-        else throw new Error("DrawCommand: scene 不能为空");
+        else throw new Error('DrawCommand: scene 不能为空');
         if (input.baseInfo?.traget) this.traget = input.baseInfo.traget;
-        else throw new Error("DrawCommand: baseInfo.traget 不能为空");
+        else throw new Error('DrawCommand: baseInfo.traget 不能为空');
         if (input.baseInfo?.parent) this.parent = input.baseInfo.parent;
-        else throw new Error("DrawCommand: baseInfo.parent 不能为空");
+        else throw new Error('DrawCommand: baseInfo.parent 不能为空');
         if (input.baseInfo?.material) this.material = input.baseInfo.material;
     }
 
@@ -82,7 +80,7 @@ export class DrawCommand extends BaseDrawCommand {
      */
     uniformBufferList: any[] = [];
     destroy() {
-        console.warn("DrawCommand destroy:", this.label);
+        console.warn('DrawCommand destroy:', this.label);
         this.uniformBufferList = [];
         this.pipeline = {} as GPURenderPipeline;
         // this.scene = null;
@@ -106,33 +104,47 @@ export class DrawCommand extends BaseDrawCommand {
     //     return commandBuffer;
     // }
 
-    override  doDraw(option: I_drawCallOption) {
+    override doDraw(option: I_drawCallOption) {
         // console.log(this.label);
         const passEncoder = option.passEncoder;
         for (const i in this.vertexBuffers) {
             if (isI_pointerStruct(this.vertexBuffers[i])) {
                 const verticesBuffer = this.vertexBuffers[i];
-                passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.gpuBufferView.buffer, verticesBuffer.gpuBufferView.offset, verticesBuffer.gpuBufferView.size);//四个参数： slot, buffer, offset, size
-            }
-            else {
+                passEncoder.setVertexBuffer(
+                    parseInt(i),
+                    verticesBuffer.gpuBufferView.buffer,
+                    verticesBuffer.gpuBufferView.offset,
+                    verticesBuffer.gpuBufferView.size,
+                ); //四个参数： slot, buffer, offset, size
+            } else {
                 const verticesBuffer = this.vertexBuffers[i];
                 if (verticesBuffer.offset !== undefined && verticesBuffer.byteSize !== undefined)
-                    passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer, verticesBuffer.offset, verticesBuffer.byteSize);//四个参数： slot, buffer, offset, size
-                else
-                    passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer);//四个参数： slot, buffer, offset, size
+                    passEncoder.setVertexBuffer(
+                        parseInt(i),
+                        verticesBuffer.buffer,
+                        verticesBuffer.offset,
+                        verticesBuffer.byteSize,
+                    ); //四个参数： slot, buffer, offset, size
+                else passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer); //四个参数： slot, buffer, offset, size
             }
         }
-        if (option.mergeID?.includes("__")) {
+        if (option.mergeID?.includes('__')) {
             // light ,忽略viewport
-        }
-        else if (option.mergeID !== undefined) {
+        } else if (option.mergeID !== undefined) {
             const viewport = this.scene.cameraManager.getCameraByUUID(option.mergeID).viewport;
             if (viewport != undefined) {
                 let minDepth = 0;
                 let maxDepth = 1;
                 minDepth = viewport.minDepth == undefined ? 0 : viewport.minDepth;
                 maxDepth = viewport.maxDepth == undefined ? 1 : viewport.maxDepth;
-                passEncoder.setViewport(viewport.x, viewport.y, viewport.width, viewport.height, minDepth, maxDepth);
+                passEncoder.setViewport(
+                    viewport.x,
+                    viewport.y,
+                    viewport.width,
+                    viewport.height,
+                    minDepth,
+                    maxDepth,
+                );
             }
         }
         // 无值：NDC等
@@ -142,53 +154,71 @@ export class DrawCommand extends BaseDrawCommand {
             }
         }
         // this.traget  有值：camera或light
-        else if (this.inputValues.baseInfo?.traget
+        else if (
+            this.inputValues.baseInfo?.traget
             // && option.mergeID
         ) {
             for (const i in this.bindGroups) {
                 if (i == '0') {
                     let group0;
-                    if (option.mergeID !== undefined)  //renderManager 运行时传入的UUID
-                        group0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(option.mergeID, this.traget.type).bindGroup;
-                    else if (this.traget.UUID !== undefined)//DCG 创建DC 初始化传入的UUID
-                        group0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(this.traget.UUID, this.traget.type).bindGroup;
+                    if (option.mergeID !== undefined)
+                        //renderManager 运行时传入的UUID
+                        group0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(
+                            option.mergeID,
+                            this.traget.type,
+                        ).bindGroup;
+                    else if (this.traget.UUID !== undefined)
+                        //DCG 创建DC 初始化传入的UUID
+                        group0 = this.scene.getSystemBindGroupAndBindGroupLayoutForZero(
+                            this.traget.UUID,
+                            this.traget.type,
+                        ).bindGroup;
                     else {
-                        throw new Error("DrawCommand doDraw: traget.UUID is undefined , mergeID is undefined");
+                        throw new Error(
+                            'DrawCommand doDraw: traget.UUID is undefined , mergeID is undefined',
+                        );
                     }
                     passEncoder.setBindGroup(parseInt(i), group0);
-                }
-                else if (i == '1') {
+                } else if (i == '1') {
                     if (this.parent !== undefined)
-                        passEncoder.setBindGroup(parseInt(i), this.parent.getBindGroupAndBindGroupLayout().bindGroup);
+                        passEncoder.setBindGroup(
+                            parseInt(i),
+                            this.parent.getBindGroupAndBindGroupLayout().bindGroup,
+                        );
                     else {
                         if (this.bindGroups[i] !== undefined)
                             passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
                     }
-                }
-                else if (i == '2') {
+                } else if (i == '2') {
                     if (this.material !== undefined) {
-                        const bindGroup = this.material.owner.getBindGroup(this.material.type, option.mergeID!, option.renderPassName!);
+                        const bindGroup = this.material.owner.getBindGroup(
+                            this.material.type,
+                            option.mergeID!,
+                            option.renderPassName!,
+                        );
                         if (bindGroup != undefined)
                             passEncoder.setBindGroup(parseInt(i), bindGroup);
                         else
-                            throw new Error("DrawCommand doDraw: material is undefined and bindGroup is undefined");
-                    }
-                    else {
+                            throw new Error(
+                                'DrawCommand doDraw: material is undefined and bindGroup is undefined',
+                            );
+                    } else {
                         if (this.bindGroups[i] !== undefined)
                             passEncoder.setBindGroup(parseInt(i), this.bindGroups[i]);
                     }
-                }
-                else if (i == '3' && this.material && this.material.owner instanceof PBRMaterial) {
+                } else if (
+                    i == '3' &&
+                    this.material &&
+                    this.material.owner instanceof PBRMaterial
+                ) {
                     if (this.bindGroups[i] !== undefined && this.scene.IBL !== undefined) {
                         const iblBindGroup = this.scene.IBL.bindGroup();
                         passEncoder.setBindGroup(parseInt(i), iblBindGroup);
                     }
                 }
-
             }
-        }
-        else {
-            throw new Error("DrawCommand doDraw: traget is undefined and mergeID is undefined");
+        } else {
+            throw new Error('DrawCommand doDraw: traget is undefined and mergeID is undefined');
         }
         if (option.renderPassName && option.mergeID && option.drawModeData) {
             // throw new Error("Method not implemented");
@@ -197,10 +227,12 @@ export class DrawCommand extends BaseDrawCommand {
             }
             // 绘制实例 :单个instance。测试模拟single instance模式，raw模式
             else {
-                this.drawInstacnce(passEncoder, option.drawModeData as I_drawMode | I_drawModeIndexed);
+                this.drawInstacnce(
+                    passEncoder,
+                    option.drawModeData as I_drawMode | I_drawModeIndexed,
+                );
             }
-        }
-        else {
+        } else {
             // // 绘制实例 :函数返回多个instance数组(merge instance模式).主要的工作模式
             // if (typeof this.drawMode === "function") {
             //     if (this.traget !== undefined) {
@@ -213,7 +245,7 @@ export class DrawCommand extends BaseDrawCommand {
             //     }
             // }
             // // 绘制实例 :多个instance数组。测试模拟merge
-            // else 
+            // else
             if (Array.isArray(this.drawMode)) {
                 this.drawInstacnceArray(passEncoder, this.drawMode);
             }
@@ -223,5 +255,4 @@ export class DrawCommand extends BaseDrawCommand {
             }
         }
     }
-
 }

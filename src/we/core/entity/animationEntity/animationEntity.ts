@@ -1,9 +1,8 @@
-import { E_AnimationType } from "../../animation/base";
-import { Clock } from "../../scene/clock";
-import { EntityBundleMaterial } from "../entityBundleMaterial";
+import { E_AnimationType } from '../../animation/base';
+import { Clock } from '../../scene/clock';
+import { EntityBundleMaterial } from '../entityBundleMaterial';
 
 export abstract class AnimationEntity extends EntityBundleMaterial {
-
     //////////////////////////////////////////////////////////////////
     //动画相关
     /** 动画类型 :Set<E_AnimationType>*/
@@ -20,37 +19,42 @@ export abstract class AnimationEntity extends EntityBundleMaterial {
         this._animationType.add(animationType);
     }
     /** todo :20260209
-     * 需要适配动画复合类型：124的权限组合（shader也需要适配） 
+     * 需要适配动画复合类型：124的权限组合（shader也需要适配）
      * 获取动画类型 */
     getAnimationKind(): E_AnimationType {
         return this.AnimationType;
     }
-    /** 是否是变形目标动画 
+    /** 是否是变形目标动画
      * 说明：
      * 1、不太可能同时有变形目标动画和骨骼动画，仅作为可能判断
      * 2、keyFrame动画:目前共用了MatrixWorld进行，故不设置：1的动画类型
      * 3、其他类型，目前未开始，暂时不设置(GPU shader相同)。
-    */
+     */
     isMorphTargetAnimation(): boolean {
-        return this.getAnimationKind() == E_AnimationType.morphTarget || this.getAnimationKind() as number == 6;
+        return (
+            this.getAnimationKind() == E_AnimationType.morphTarget ||
+            (this.getAnimationKind() as number) == 6
+        );
     }
     /**
-     * 是否是骨骼动画 
+     * 是否是骨骼动画
      * 说明：
      * 1、不太可能同时有变形目标动画和骨骼动画，仅作为可能判断
      * 2、keyFrame动画:目前共用了MatrixWorld进行，故不设置：1的动画类型
      * 3、其他类型，目前未开始，暂时不设置(GPU shader相同)。
-     * @returns 
+     * @returns
      */
     isSkeletonAnimation(): boolean {
-        return this.getAnimationKind() == E_AnimationType.skeleton || this.getAnimationKind() as number == 6;
+        return (
+            this.getAnimationKind() == E_AnimationType.skeleton ||
+            (this.getAnimationKind() as number) == 6
+        );
     }
 
     // override async init(scene: Scene): Promise<any> {
     //     await super.init(scene);
     //     // await this.updateAnimationBuffer();
     // }
-
 
     /** 初始化或更新动画buffer */
     abstract updateAnimationBuffer(): Promise<void>;
@@ -68,6 +72,6 @@ export abstract class AnimationEntity extends EntityBundleMaterial {
      */
     override async updateSelf(clock: Clock) {
         super.updateSelf(clock);
-        await this.updateAnimationBuffer();        //更新animation buffer
+        await this.updateAnimationBuffer(); //更新animation buffer
     }
 }

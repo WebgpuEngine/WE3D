@@ -8,31 +8,35 @@
  * 2、无功能性扩展，只是共性收集与处理
  * 3、非共性或功能不相同的，各自实现
  */
-import { E_lifeState, E_renderForDC } from "../base/coreDefine";
-import { I_drawMode, I_drawModeIndexed, isDrawModeIndexed } from "../command/base";
-import { DrawCommand } from "../command/DrawCommand";
-import { isIndexGPUBufferBundle, isVSGPUBufferBundle, IV_DC, I_vsAttribute } from "../command/DrawCommandGenerator";
-import { BaseGeometry } from "../geometry/baseGeometry";
-import { BaseLight } from "../light/baseLight";
-import { I_BundleOfMaterialForMSAA, I_materialBundleOutput } from "../material/base";
-import { BaseMaterial } from "../material/baseMaterial";
-import { boundingBox } from "../math/Box";
-import { E_renderPassName } from "../scene/renderManager";
+import { E_lifeState, E_renderForDC } from '../base/coreDefine';
+import { I_drawMode, I_drawModeIndexed, isDrawModeIndexed } from '../command/base';
+import { DrawCommand } from '../command/DrawCommand';
+import {
+    isIndexGPUBufferBundle,
+    isVSGPUBufferBundle,
+    IV_DC,
+    I_vsAttribute,
+} from '../command/DrawCommandGenerator';
+import { BaseGeometry } from '../geometry/baseGeometry';
+import { BaseLight } from '../light/baseLight';
+import { I_BundleOfMaterialForMSAA, I_materialBundleOutput } from '../material/base';
+import { BaseMaterial } from '../material/baseMaterial';
+import { boundingBox } from '../math/Box';
+import { E_renderPassName } from '../scene/renderManager';
 
-import { I_EntityAttributes, IV_BaseEntity, E_entityType } from "./base";
-import { BaseEntity } from "./baseEntity";
-import { createIndexBuffer, createVerticesBuffer } from "../command/baseFunction";
+import { I_EntityAttributes, IV_BaseEntity, E_entityType } from './base';
+import { BaseEntity } from './baseEntity';
+import { createIndexBuffer, createVerticesBuffer } from '../command/baseFunction';
 
 import {
     computeNormalsArrayFromPositionsAndIndices,
     computeNormalsArrayFromPositionsNoIndex,
-    convertPositionsWithIndicesToPositionNonIndex
-} from "../math/baseFunction";
-import { Scene } from "../scene/scene";
-import { NodeObject } from "../organization/nodeObject";
-import { vec3, Vec3 } from "wgpu-matrix";
-import { I_VertexBufferEntry } from "../command/BaseDrawCommand";
-
+    convertPositionsWithIndicesToPositionNonIndex,
+} from '../math/baseFunction';
+import { Scene } from '../scene/scene';
+import { NodeObject } from '../organization/nodeObject';
+import { vec3, Vec3 } from 'wgpu-matrix';
+import { I_VertexBufferEntry } from '../command/BaseDrawCommand';
 
 export abstract class EntityBundleMaterial extends BaseEntity {
     /**mesh的geometry内部对象，获取attribute使用 */
@@ -44,7 +48,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     /** 顶点数据 */
     attributes: I_EntityAttributes = {
         vertices: {},
-        vertexStepMode: [],//"vertex",
+        vertexStepMode: [], //"vertex",
         // indices: [],
     };
     // _pologyMode: pologyMode = "triangle";
@@ -64,10 +68,10 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             if (indices) {
                 this.attributes.indices = indices;
             }
-            this.attributes.vertexStepMode = new Array(Object.keys(attributes).length).fill("vertex");
-
-        }
-        else if (input.attributes.data) {
+            this.attributes.vertexStepMode = new Array(Object.keys(attributes).length).fill(
+                'vertex',
+            );
+        } else if (input.attributes.data) {
             const attributes = input.attributes.data.vertices;
             for (const key in attributes) {
                 this.attributes.vertices[key] = attributes[key];
@@ -77,46 +81,55 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             }
             if (input.attributes.data.vertexStepMode) {
                 this.attributes.vertexStepMode = input.attributes.data.vertexStepMode;
+            } else {
+                this.attributes.vertexStepMode = new Array(Object.keys(attributes).length).fill(
+                    'vertex',
+                );
             }
-            else {
-                this.attributes.vertexStepMode = new Array(Object.keys(attributes).length).fill("vertex");
-            }
-        }
-        else {
-            throw new Error("Mesh must have geometry or attribute data");
+        } else {
+            throw new Error('Mesh must have geometry or attribute data');
         }
         if (input.material == undefined) {
-            console.warn("Mesh constructor: material is undefined");
-        }
-        else
-            this._material = input.material;
+            console.warn('Mesh constructor: material is undefined');
+        } else this._material = input.material;
     }
     override async init(scene: Scene): Promise<any> {
         if (this.kind == E_entityType.mesh && this.attributes.vertices.normal == undefined) {
-            if (Array.isArray(this.attributes.vertices.position) &&
+            if (
+                Array.isArray(this.attributes.vertices.position) &&
                 Array.isArray(this.attributes.indices) &&
                 this.attributes.indices != undefined &&
-                Object.keys(this.attributes.vertices).length == 1) {
-                this.attributes.vertices.position = convertPositionsWithIndicesToPositionNonIndex(this.attributes.vertices.position, this.attributes.indices);
-                this.attributes.vertices.normal = computeNormalsArrayFromPositionsNoIndex(this.attributes.vertices.position);
+                Object.keys(this.attributes.vertices).length == 1
+            ) {
+                this.attributes.vertices.position = convertPositionsWithIndicesToPositionNonIndex(
+                    this.attributes.vertices.position,
+                    this.attributes.indices,
+                );
+                this.attributes.vertices.normal = computeNormalsArrayFromPositionsNoIndex(
+                    this.attributes.vertices.position,
+                );
                 this.attributes.indices = undefined;
-
-            }
-            else if (Array.isArray(this.attributes.vertices.position)) {
+            } else if (Array.isArray(this.attributes.vertices.position)) {
                 if (this.attributes.indices) {
-                    this.attributes.vertices.normal = computeNormalsArrayFromPositionsAndIndices(this.attributes.vertices.position, this.attributes.indices as number[]);
-                }
-                else {
-                    this.attributes.vertices.normal = computeNormalsArrayFromPositionsNoIndex(this.attributes.vertices.position);
+                    this.attributes.vertices.normal = computeNormalsArrayFromPositionsAndIndices(
+                        this.attributes.vertices.position,
+                        this.attributes.indices as number[],
+                    );
+                } else {
+                    this.attributes.vertices.normal = computeNormalsArrayFromPositionsNoIndex(
+                        this.attributes.vertices.position,
+                    );
                 }
             }
         }
         if (this.kind == E_entityType.mesh && this.inputValues.invertNormal === true) {
             if (Array.isArray(this.attributes.vertices.normal))
                 // invertNormals(this.attributes.vertices.normal as number[]);
-                this.attributes.vertices.normal = this.attributes.vertices.normal.map((item) => -item);
+                this.attributes.vertices.normal = this.attributes.vertices.normal.map(
+                    (item) => -item,
+                );
             else {
-                console.warn("Mesh constructor: normal is not array");
+                console.warn('Mesh constructor: normal is not array');
             }
         }
         super.init(scene);
@@ -128,19 +141,17 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         this._material = undefined;
     }
     /**三段式初始化的第三段
-    * 覆写 Root的function,因为材料类需要GPUDevice 
-    */
+     * 覆写 Root的function,因为材料类需要GPUDevice
+     */
     async readyForGPU() {
         await this._material.init(this.scene);
         if (this._material.getTransparent() === true) {
-            this._cullMode = "none";//透明具有双面性
+            this._cullMode = 'none'; //透明具有双面性
         }
         if (this._material.DoubleSided) {
-            this._cullMode = "none";
+            this._cullMode = 'none';
         }
     }
-
-
 
     detachData(): void {
         this.inputValues.attributes.geometry = undefined;
@@ -164,8 +175,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         //更新状态，需要重新初始化
         else if (this._material.getReady() == E_lifeState.updated) {
             readyForMaterial = true;
-        }
-        else {
+        } else {
             readyForMaterial = false;
         }
         return readyForMaterial;
@@ -173,7 +183,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     /**
      * 获取blend状态
      * 20251008，目前获取blend的状态不在使用此function
-     * @returns 
+     * @returns
      */
     getBlend(): GPUBlendState[] {
         return this._material.getBlend();
@@ -191,19 +201,20 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             return super.generateBox(position);
         }
         //gltf 模型的box，需要从模型中获取
-        else if (this.inputValues.attributes &&
+        else if (
+            this.inputValues.attributes &&
             this.inputValues.attributes.data &&
             this.inputValues.attributes.data.vertices &&
             this.inputValues.attributes.data.vertices.position &&
-            isVSGPUBufferBundle(this.inputValues.attributes.data.vertices.position)) {
+            isVSGPUBufferBundle(this.inputValues.attributes.data.vertices.position)
+        ) {
             const box: boundingBox = {
                 min: this.inputValues.attributes.data.vertices.position.min,
                 max: this.inputValues.attributes.data.vertices.position.max,
             };
             return box;
-        }
-        else {
-            console.warn("EntityBundleMaterial: generateBox, position is empty");
+        } else {
+            console.warn('EntityBundleMaterial: generateBox, position is empty');
         }
     }
     /**
@@ -212,8 +223,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     generateBoxAndSphere(): void {
         if (this.checkStatus()) {
             let position: number[] = [];
-            if (this.attributes.vertices["position"]) {
-                position = this.attributes.vertices["position"] as number[];
+            if (this.attributes.vertices['position']) {
+                position = this.attributes.vertices['position'] as number[];
                 // if (position.length)
                 {
                     this.boundingBox = this.generateBox(position);
@@ -224,11 +235,14 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     }
     /** 获取当前entity的原始包围盒的最大尺寸 ,cubeUV使用*/
     getBoundingBoxMaxSize(): number {
-        if (this.boundingBox == undefined)
-            this.generateBoxAndSphere();
+        if (this.boundingBox == undefined) this.generateBoxAndSphere();
         const box3 = this.boundingBox;
         if (box3) {
-            return Math.max(box3.max[0] - box3.min[0], box3.max[1] - box3.min[1], box3.max[2] - box3.min[2]);
+            return Math.max(
+                box3.max[0] - box3.min[0],
+                box3.max[1] - box3.min[1],
+                box3.max[2] - box3.min[2],
+            );
         }
         return 0;
     }
@@ -255,7 +269,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     // }
     // /**
     //  * 格式化shader代码
-    //  * @param template 
+    //  * @param template
     //  * @returns string
     //  */
     // formatShaderCode(template: I_singleShaderTemplate, wireFrame: boolean = false): string {
@@ -296,8 +310,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     // }
     // /**
     //  * 获取VS 部分uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
-    //  * @param startBinding 
-    //  * @returns uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final 
+    //  * @param startBinding
+    //  * @returns uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final
     //  */
     // getVSUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate, startBinding: number = 0, wireFrame: boolean = false): I_EntityBundleOutput {
     //     /**
@@ -324,7 +338,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     //     }
     //     return {
     //         bindingNumber: bindingNumber,
-    //         // uniformGroup: this.bindGroup, 
+    //         // uniformGroup: this.bindGroup,
     //         shaderTemplateFinal
     //     };
     // }
@@ -337,58 +351,58 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     _drawModeTemplate!: I_drawMode | I_drawModeIndexed;
     /**
      * 获取drawMode 格式化的模板,如果没有则创建一个
-     * @returns I_drawMode | I_drawModeIndexed 
+     * @returns I_drawMode | I_drawModeIndexed
      */
     getDrawModeTemplate(): I_drawMode | I_drawModeIndexed {
         if (this._drawModeTemplate == undefined || this._vertexAndIndexBuffersUpdated == true) {
             this._vertexAndIndexBuffersUpdated = false;
             let drawMode: I_drawMode | I_drawModeIndexed;
-            if (this.inputValues.drawMode != undefined) {//这个drawMode 是用户输入的drawMode，基本不会使用，只有在手工设置drawMode时才会使用（比如：单项内容测试）
+            if (this.inputValues.drawMode != undefined) {
+                //这个drawMode 是用户输入的drawMode，基本不会使用，只有在手工设置drawMode时才会使用（比如：单项内容测试）
                 drawMode = this.inputValues.drawMode;
-            }
-            else {
+            } else {
                 const drawModeMesh: I_drawMode = {
                     vertexCount: 0,
                     firstInstance: 0,
                     instanceCount: 1,
                 };
                 const drawModeIndexMesh: I_drawModeIndexed = {
-                    indexCount: 0,//this.attributes.indices.length,
+                    indexCount: 0, //this.attributes.indices.length,
                     instanceCount: 1,
                     firstIndex: 0,
                     baseVertex: 0,
                     firstInstance: 0,
-                }
+                };
                 //index mode
                 if (Array.isArray(this.attributes.indices) && this.attributes.indices.length > 0) {
                     drawModeIndexMesh.indexCount = this.attributes.indices.length;
                     drawModeIndexMesh.instanceCount = this.instance.numInstances;
                     drawMode = drawModeIndexMesh;
-                }
-                else if (this.attributes.indices && isIndexGPUBufferBundle(this.attributes.indices)) {
+                } else if (
+                    this.attributes.indices &&
+                    isIndexGPUBufferBundle(this.attributes.indices)
+                ) {
                     drawModeIndexMesh.indexCount = this.attributes.indices.count;
                     drawModeIndexMesh.instanceCount = this.instance.numInstances;
                     drawMode = drawModeIndexMesh;
                 }
                 //non-index mode
                 else {
-                    if (this.attributes.vertices["position"]) {
-                        const pos = this.attributes.vertices["position"]!;
+                    if (this.attributes.vertices['position']) {
+                        const pos = this.attributes.vertices['position']!;
                         if (isVSGPUBufferBundle(pos)) {
                             drawModeMesh.vertexCount = pos.count;
-                        }
-                        else if ("count" in pos) {//I_vsAttribute | I_vsAttributeMerge |I_vsGPUBufferBundle
+                        } else if ('count' in pos) {
+                            //I_vsAttribute | I_vsAttributeMerge |I_vsGPUBufferBundle
                             drawModeMesh.vertexCount = pos.count;
-                        }
-                        else if (Array.isArray(pos)) {// array[]
+                        } else if (Array.isArray(pos)) {
+                            // array[]
                             drawModeMesh.vertexCount = pos.length / 3;
+                        } else {
+                            throw new Error('position is not array or GPUBufferBundle');
                         }
-                        else {
-                            throw new Error("position is not array or GPUBufferBundle");
-                        }
-                    }
-                    else {
-                        throw new Error("position is not array or GPUBufferBundle");
+                    } else {
+                        throw new Error('position is not array or GPUBufferBundle');
                     }
                     drawModeMesh.instanceCount = this.instance.numInstances;
                     drawMode = drawModeMesh;
@@ -401,7 +415,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     /**
      * 可见的实例ID数组,每帧更新
      */
-    _visibleInstanceIDBundle: { count: number, firstInstance: number }[] = []
+    _visibleInstanceIDBundle: { count: number; firstInstance: number }[] = [];
     /**
      * 获取实例化的drawMode数组
      * 1、DC 进行实例化优化使用
@@ -414,7 +428,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     getDrawModeArrayOfInstances(
         UUID: string,
         kind: E_renderForDC,
-        wireFrameDrawModeTemplate?: I_drawMode | I_drawModeIndexed
+        wireFrameDrawModeTemplate?: I_drawMode | I_drawModeIndexed,
     ): I_drawMode[] | I_drawModeIndexed[] {
         /**步骤
          * 1、获取entity drawMode模板
@@ -430,11 +444,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         let drawMode: I_drawMode | I_drawModeIndexed;
         if (wireFrameDrawModeTemplate != undefined) {
             drawMode = wireFrameDrawModeTemplate;
-        }
-        else {
+        } else {
             drawMode = this.getDrawModeTemplate();
         }
-
 
         //2、可见性
         // 可见的实例ID数组
@@ -449,9 +461,10 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             visibleOfNode = perNode.getVisibleAndParents();
             enableOfNode = perNode.getEnableAndParents();
             if (kind == E_renderForDC.camera) {
-                visibleInBVH = this.scene.cameraManager.getCameraByUUID(UUID).getVisibleInBVH(perNode);
-            }
-            else if (kind == E_renderForDC.light) {
+                visibleInBVH = this.scene.cameraManager
+                    .getCameraByUUID(UUID)
+                    .getVisibleInBVH(perNode);
+            } else if (kind == E_renderForDC.light) {
                 const light = this.scene.lightsManager.getLightByMergeID(UUID);
                 if (light != false && light instanceof BaseLight)
                     visibleInBVH = light.getVisibleInBVH(perNode, UUID);
@@ -464,7 +477,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         }
 
         //3、聚合instance bundle，形成 instance ID 连续的实例ID
-        const visibleInstanceIDBundle: { count: number, firstInstance: number }[] = [];
+        const visibleInstanceIDBundle: { count: number; firstInstance: number }[] = [];
         let firstInstance = visibleInstanceIDArray[0];
         // let instanceCount = visibleInstanceIDArray.length;
         let lastVisibleInstanceID = visibleInstanceIDArray[0];
@@ -473,21 +486,20 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         let lastInBundle = false;
         for (const i in visibleInstanceIDArray) {
             const id = visibleInstanceIDArray[i];
-            if (i == "0") {
+            if (i == '0') {
                 firstInstance = id;
                 lastVisibleInstanceID = id;
                 continue;
             }
             if (id != lastVisibleInstanceID + 1) {
                 visibleInstanceIDBundle.push({
-                    count: lastVisibleInstanceID - firstInstance + 1,//+1=包含当前实例ID
+                    count: lastVisibleInstanceID - firstInstance + 1, //+1=包含当前实例ID
                     firstInstance: firstInstance,
                 });
                 firstInstance = id;
                 lastVisibleInstanceID = id;
                 lastInBundle = true;
-            }
-            else {
+            } else {
                 lastVisibleInstanceID = id;
                 lastInBundle = false;
             }
@@ -501,29 +513,34 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         }
         //4、实例化drawMode数组
         // 数组：实例化的drawMode数组
-        const instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = this.fillDrawDataToAarray(visibleInstanceIDBundle, drawMode);
+        const instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = this.fillDrawDataToAarray(
+            visibleInstanceIDBundle,
+            drawMode,
+        );
         this._visibleInstanceIDBundle = visibleInstanceIDBundle;
         //5、返回
         return instanceDrawArray;
     }
     /**
      * 按照实例ID bundle数据，填充drawMode数组
-     * @param visibleInstanceIDBundle 
-     * @param drawMode 
-     * @returns 
+     * @param visibleInstanceIDBundle
+     * @param drawMode
+     * @returns
      */
-    fillDrawDataToAarray(visibleInstanceIDBundle: { count: number, firstInstance: number }[], drawMode: I_drawMode | I_drawModeIndexed) {
+    fillDrawDataToAarray(
+        visibleInstanceIDBundle: { count: number; firstInstance: number }[],
+        drawMode: I_drawMode | I_drawModeIndexed,
+    ) {
         const instanceDrawArray: I_drawMode[] | I_drawModeIndexed[] = [];
         for (const perPart of visibleInstanceIDBundle) {
             const instanceDraw: I_drawMode | I_drawModeIndexed = {
-                ...drawMode
+                ...drawMode,
             };
             instanceDraw.instanceCount = perPart.count;
             instanceDraw.firstInstance = perPart.firstInstance;
             if (isDrawModeIndexed(drawMode)) {
                 (instanceDrawArray as I_drawModeIndexed[]).push(instanceDraw as I_drawModeIndexed);
-            }
-            else {
+            } else {
                 (instanceDrawArray as I_drawMode[]).push(instanceDraw as I_drawMode);
             }
         }
@@ -531,17 +548,17 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     }
     /**
      * 按照每个实例，获取drawMode数组。透明实体使用
-     * @param UUID 
-     * @param kind 
-     * @returns 
+     * @param UUID
+     * @param kind
+     * @returns
      */
     getDrawModeArrayOfPerInstance(
         UUID: string,
         kind: E_renderForDC,
     ): {
-        instance: NodeObject,
-        distance: number,
-        drawData: I_drawMode[] | I_drawModeIndexed[]
+        instance: NodeObject;
+        distance: number;
+        drawData: I_drawMode[] | I_drawModeIndexed[];
     }[] {
         /**步骤
          * 1、获取entity drawMode模板
@@ -558,15 +575,16 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         //2、可见性
         // 可见的实例ID数组
         // let visibleInstanceIDArray: number[] = [];
-        const visibleInstanceIDArray: ({
-            instance: NodeObject,
+        const visibleInstanceIDArray: {
+            instance: NodeObject;
             // instanceIdArray: number[],
-            distance: number,
-            drawData: I_drawMode[] | I_drawModeIndexed[]
-        })[] = [];
+            distance: number;
+            drawData: I_drawMode[] | I_drawModeIndexed[];
+        }[] = [];
 
         // 没有透明渲染，直接返回空数组，不进行可见性判断。
-        if (this.renderPassArray[E_renderPassName.transparent].length == 0) return visibleInstanceIDArray;
+        if (this.renderPassArray[E_renderPassName.transparent].length == 0)
+            return visibleInstanceIDArray;
 
         // 遍历所有实例ID：可见性可用性判断
         // if (scope.attributes.indices) {
@@ -583,8 +601,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 const camera = this.scene.cameraManager.getCameraByUUID(UUID);
                 visibleInBVH = camera.getVisibleInBVH(perNode);
                 worldPositionOfUUID = camera.worldPosition;
-            }
-            else if (kind == E_renderForDC.light) {
+            } else if (kind == E_renderForDC.light) {
                 const light = this.scene.lightsManager.getLightByMergeID(UUID);
                 if (light != false && light instanceof BaseLight) {
                     worldPositionOfUUID = light.worldPosition;
@@ -602,20 +619,22 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 };
                 const firstInstance = Number(i) * this.instance.numInstances;
                 const instanceDraw: I_drawMode | I_drawModeIndexed = {
-                    ...drawMode
+                    ...drawMode,
                 };
                 instanceDraw.instanceCount = this.instance.numInstances;
                 instanceDraw.firstInstance = firstInstance;
                 if (isDrawModeIndexed(drawMode)) {
-                    (visibleInstanceIDArray[iOfInstance].drawData as I_drawModeIndexed[]).push(instanceDraw as I_drawModeIndexed);
-                }
-                else {
-                    (visibleInstanceIDArray[iOfInstance].drawData as I_drawMode[]).push(instanceDraw as I_drawMode);
+                    (visibleInstanceIDArray[iOfInstance].drawData as I_drawModeIndexed[]).push(
+                        instanceDraw as I_drawModeIndexed,
+                    );
+                } else {
+                    (visibleInstanceIDArray[iOfInstance].drawData as I_drawMode[]).push(
+                        instanceDraw as I_drawMode,
+                    );
                 }
                 iOfInstance++;
             }
         }
-
 
         //5、返回
         return visibleInstanceIDArray;
@@ -638,10 +657,10 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         // UUID: string,
         bundle: {
             vs: {
-                code: string,
-                entryPoint?: string,
-            }
-            fs?: I_materialBundleOutput,
+                code: string;
+                entryPoint?: string;
+            };
+            fs?: I_materialBundleOutput;
             // fs?: {
             //     materialType: E_materialTypeForBindGroup,
             //     code: string,
@@ -650,18 +669,18 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             // }
         },
         vsOnly: boolean = false,
-        scope: EntityBundleMaterial = this
+        scope: EntityBundleMaterial = this,
     ): IV_DC {
         // if (scope.boundingBox == undefined)
         //     scope.generateBoxAndSphere();
-        let boundingBoxMaxSize = scope.getBoundingBoxMaxSize();//生成 shader 中的cubeVecUV使用
+        let boundingBoxMaxSize = scope.getBoundingBoxMaxSize(); //生成 shader 中的cubeVecUV使用
         if (boundingBoxMaxSize === 0) boundingBoxMaxSize = 1;
 
         let fragment = undefined;
         if (bundle.fs) {
             fragment = {
                 code: bundle.fs.code,
-                entryPoint: bundle.fs.entryPoint || "fs",
+                entryPoint: bundle.fs.entryPoint || 'fs',
                 aliasName: bundle.fs.aliasName,
             };
         }
@@ -676,9 +695,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             render: {
                 vertex: {
                     code: bundle.vs.code,
-                    entryPoint: bundle.vs.entryPoint || "vs",
+                    entryPoint: bundle.vs.entryPoint || 'vs',
                     constants: {
-                        "boundingBoxMaxSize": boundingBoxMaxSize,
+                        boundingBoxMaxSize: boundingBoxMaxSize,
                     },
                 },
                 fragment,
@@ -694,18 +713,18 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 UUID: scope.UUID,
                 ID: scope.ID,
                 renderID: scope.ID,
-            }
-        }
+            },
+        };
         if (bundle.fs) {
             valueDC.system!.material = {
                 owner: scope._material,
                 type: bundle.fs.materialType,
-            }
+            };
         }
         if (scope._dynamicAttribute) {
             valueDC.dynamic = {
                 vs: true,
-            }
+            };
         }
         // // 如果是动态材质，需要在DrawCommand中添加dynamic属性,并每帧重新生成bind group
         // if (bundle.fsBundle && bundle.fsBundle.shaderTemplateFinal.material?.dynamic === true) {
@@ -716,16 +735,15 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         // }
         if (scope.inputValues.primitive) {
             valueDC.render.primitive = scope.inputValues.primitive;
-        }
-        else {
+        } else {
             if (scope.kind == E_entityType.lines) {
-                valueDC.render.primitive!.topology = "line-list";
+                valueDC.render.primitive!.topology = 'line-list';
             }
         }
 
-        if (vsOnly){
+        if (vsOnly) {
             delete valueDC.render.fragment;
-            valueDC.label += " vsOnly";
+            valueDC.label += ' vsOnly';
         }
         return valueDC;
     }
@@ -734,11 +752,11 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 生成opacity DC，并push到对应队列
-     * 
+     *
      * 1、支持的类型：
-     *      A、不透明 
+     *      A、不透明
      *      B、TO
-     * 
+     *
      * 2、生成类型
      *      A、MSAA+infor
      *      B、MSAA defer+info
@@ -748,41 +766,59 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @param TO 透明物体的uniform和shader模板
      * @param specialMaterial 指定的材质，比如：线框（WireFrameMaterial），用于生成线框的MSAA
      */
-    generateOpacityDC(
-        vsAliasName: string,
-        _material?: BaseMaterial
-    ): DrawCommand {
-        const vsCode = this.scene.shaderRegister.getAliasShaderName(vsAliasName, this.getUserCodeVS(), this.getUserCodeFunction());
+    generateOpacityDC(vsAliasName: string, _material?: BaseMaterial): DrawCommand {
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(
+            vsAliasName,
+            this.getUserCodeVS(),
+            this.getUserCodeFunction(),
+        );
         let material = this._material;
         if (_material) material = _material;
         let dc: DrawCommand;
-        if (this.MSAA === true) {   //输出两个DC（MSAA 和 info forward）
+        if (this.MSAA === true) {
+            //输出两个DC（MSAA 和 info forward）
             const uniformsMaterialMSAA: I_BundleOfMaterialForMSAA = material.getOpacity_MSAA();
-            {//MSAA 部分,输出MSAA DC队列
-                const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.MSAA }, false, this);
-                valueDC.system!.MSAA = "MSAA";
+            {
+                //MSAA 部分,输出MSAA DC队列
+                const valueDC = this.generateInputValueOfDC(
+                    E_renderForDC.camera,
+                    { vs: { code: vsCode }, fs: uniformsMaterialMSAA.MSAA },
+                    false,
+                    this,
+                );
+                valueDC.system!.MSAA = 'MSAA';
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
                 // this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
                 this.renderPassArray[E_renderPassName.MSAA].push(dc);
             }
-            {//info forward 部分,输出info forward DC队列
-                const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialMSAA.inforForward }, false, this);
-                valueDC.system!.MSAA = "MSAAinfo";
+            {
+                //info forward 部分,输出info forward DC队列
+                const valueDC = this.generateInputValueOfDC(
+                    E_renderForDC.camera,
+                    { vs: { code: vsCode }, fs: uniformsMaterialMSAA.inforForward },
+                    false,
+                    this,
+                );
+                valueDC.system!.MSAA = 'MSAAinfo';
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
             }
-        }
-        else {//正常的前向渲染输出,只输出一个DC（defer 或  forward）
+        } else {
+            //正常的前向渲染输出,只输出一个DC（defer 或  forward）
             //mesh VS 模板输出
             let uniformsMaterial: I_materialBundleOutput;
             if (this.deferColor) {
                 uniformsMaterial = material.getOpacity_DeferColor();
-            }
-            else {
+            } else {
                 uniformsMaterial = material.getOpacity_Forward();
             }
             //材质的shader 模板输出，
             {
-                const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterial }, false, this);
+                const valueDC = this.generateInputValueOfDC(
+                    E_renderForDC.camera,
+                    { vs: { code: vsCode }, fs: uniformsMaterial },
+                    false,
+                    this,
+                );
                 dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
             }
         }
@@ -794,14 +830,12 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @param sht VS shader 模板
      */
     // createForwardDC(camera: BaseCamera): void {
-    createForwardDC(sht: string = "entity.mesh"): void {
-
+    createForwardDC(sht: string = 'entity.mesh'): void {
         // let UUID = camera.UUID;
         if (this.kind === E_entityType.lines) {
-            sht = "entity.lines";
-        }
-        else if (this.kind === E_entityType.points) {
-            sht = "entity.points";
+            sht = 'entity.lines';
+        } else if (this.kind === E_entityType.points) {
+            sht = 'entity.points';
         }
         const dc = this.generateOpacityDC(sht) as DrawCommand;
         // this.cameraDC[UUID][E_renderPassName.forward].push(dc);
@@ -813,39 +847,53 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      *      1、目前VS的SHT，只使用了一个通用的SHT_MeshShadowMapVS
      * @param sht VS shader 模板
      */
-    createShadowMapDC(sht: string = "entity.shadowmap"): void {
+    createShadowMapDC(sht: string = 'entity.shadowmap'): void {
         if (this.inputValues.shadow?.generate === false) {
             return;
         }
         //mesh VS 模板输出
         // let vsCode = this.scene.shaderRegister.getAliasShaderName(sht);
-        const vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
-        const valueDC = this.generateInputValueOfDC(E_renderForDC.light, { vs: { code: vsCode } }, true);
-        valueDC.label = "shadowmap:" + valueDC.label;
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(
+            sht,
+            this.getUserCodeVS(),
+            this.getUserCodeFunction(),
+        );
+        const valueDC = this.generateInputValueOfDC(
+            E_renderForDC.light,
+            { vs: { code: vsCode } },
+            true,
+        );
+        valueDC.label = 'shadowmap:' + valueDC.label;
         const dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
         this.renderPassArray[E_renderPassName.shadowmapOpaque]!.push(dc);
     }
     createShadowMapTransparentDC(): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     /**
      * 为mesh创建透明渲染的DrawCommand，包含TO、TT、TTP、TTPF.
      * lines和points 需要override该方法。
-     * @param camera 
+     * @param camera
      */
-    createTransparent(sht: string = "entity.mesh"): void {
-        if (this.transparent === false)
-            return;
+    createTransparent(sht: string = 'entity.mesh'): void {
+        if (this.transparent === false) return;
         //材质的shader 模板输出，
         // let vsCode = this.scene.shaderRegister.getAliasShaderName(sht);
-        const vsCode = this.scene.shaderRegister.getAliasShaderName(sht, this.getUserCodeVS(), this.getUserCodeFunction());
+        const vsCode = this.scene.shaderRegister.getAliasShaderName(
+            sht,
+            this.getUserCodeVS(),
+            this.getUserCodeFunction(),
+        );
         //获取TTTT，然后分别判断并执行
         const uniformsMaterialTT = this._material.getFS_TT();
-        const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, { vs: { code: vsCode }, fs: uniformsMaterialTT });
+        const valueDC = this.generateInputValueOfDC(E_renderForDC.camera, {
+            vs: { code: vsCode },
+            fs: uniformsMaterialTT,
+        });
 
         //设置为透明
-        valueDC.transparent = this.getBlend();//材质的透明混合参数
-        valueDC.label = "TT mesh:" + this.Name || this.ID.toString();
+        valueDC.transparent = this.getBlend(); //材质的透明混合参数
+        valueDC.label = 'TT mesh:' + this.Name || this.ID.toString();
         // valueDC.label = this.ID.toString();
         const dcTT: DrawCommand = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
         this.renderPassArray[E_renderPassName.transparent]!.push(dcTT);
@@ -864,15 +912,20 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     /**
      * 更新顶点数据，
      * 1、如果是数组形式，直接更新
-     * 2、如果是I_vsAttribute，更新data   
+     * 2、如果是I_vsAttribute，更新data  
      * 3、其他暂时不支持，没有必要
      * @param name 顶点数据的名称
      * @param data 顶点数据
      * @param option 顶点数据的类型和步长
-     * @returns 
+     * @returns
      */
-    setVertexBuffer(name: string, data: number[], option?: { type?: "float32" | "int32" | "uint32", stride?: number }) {
-        if (this._dynamicAttribute && this.vertexPointers[name]) {//必须判断vertexPointers[name]是否存在，否则会报错(创建后，visible=false ，没有进行创建DC)，
+    setVertexBuffer(
+        name: string,
+        data: number[],
+        option?: { type?: 'float32' | 'int32' | 'uint32'; stride?: number },
+    ) {
+        if (this._dynamicAttribute && this.vertexPointers[name]) {
+            //必须判断vertexPointers[name]是否存在，否则会报错(创建后，visible=false ，没有进行创建DC)，
             const replaceTarget = this.attributes.vertices[name];
             // if (isVSGPUBufferBundle(this.attributes.vertices[name]) && isI_vsAttributeMerge(replaceTarget)) {
             if (Array.isArray(replaceTarget)) {
@@ -884,17 +937,16 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                  * 二、GPUBuffer
                  * 1、删除旧的vertexBuffer，
                  * 2、创建新的vertexBuffer
-                 *  
+                 *
                  * 三、更新this.cameraDC
-                 *  
+                 *
                  * 四、更新shadowmapDC
-                 * 
+                 *
                  */
                 //1.1 更新this.attributes.vertices[name]
-                if ("format" in replaceTarget && "data" in replaceTarget) {
+                if ('format' in replaceTarget && 'data' in replaceTarget) {
                     (this.attributes.vertices[name] as I_vsAttribute).data = data;
-                }
-                else {
+                } else {
                     this.attributes.vertices[name] = data;
                 }
 
@@ -905,29 +957,31 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 vertexBuffer.destroy();
 
                 let arrayBuffer;
-                if (option?.type == "int32") {
+                if (option?.type == 'int32') {
                     arrayBuffer = new Int32Array(data);
-                }
-                else if (option?.type == "uint32") {
+                } else if (option?.type == 'uint32') {
                     arrayBuffer = new Uint32Array(data);
-                }
-                else if (option?.type == "float32") {
+                } else if (option?.type == 'float32') {
                     arrayBuffer = new Float32Array(data);
-                }
-                else {
+                } else {
                     arrayBuffer = new Float32Array(data);
                     // console.warn(" setVertexAndIndexBuffers(), 只支持int32, uint32, float32类型设置.");
                     // return;
                 }
                 //2.2 创建新的vertexBuffer
-                const vertexBufferNew = createVerticesBuffer(this.device, `${this.ID} rebuild ${name} `, arrayBuffer);
+                const vertexBufferNew = createVerticesBuffer(
+                    this.device,
+                    `${this.ID} rebuild ${name} `,
+                    arrayBuffer,
+                );
                 // this.resourcesGPU.verticesDynamic.set(this.attributes.vertices[name], vertexBufferNew);
                 this.vertexPointers[name].gpuBuffer = vertexBufferNew;
 
-
                 //3.1  更新cameraDC队列
                 for (const i in this.renderPassArray) {
-                    for (const perDC of this.renderPassArray[i as keyof typeof this.renderPassArray]) {
+                    for (const perDC of this.renderPassArray[
+                        i as keyof typeof this.renderPassArray
+                    ]) {
                         for (const perVertexBuffer of perDC.vertexBuffers) {
                             if (perVertexBuffer.name == name) {
                                 (perVertexBuffer as I_VertexBufferEntry).buffer = vertexBufferNew;
@@ -947,17 +1001,16 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 // }
                 this._vertexAndIndexBuffersUpdated = true;
             } else {
-                console.warn(" setVertexAndIndexBuffers(), 只支持数组形式的顶点数据.");
+                console.warn(' setVertexAndIndexBuffers(), 只支持数组形式的顶点数据.');
                 return;
             }
-        }
-        else {
-            console.log("setVertexAndIndexBuffers(),需要在初始化参数中设置dynamicAttribute为true");
+        } else {
+            console.log('setVertexAndIndexBuffers(),需要在初始化参数中设置dynamicAttribute为true');
         }
     }
-    setIndexBuffer(data: number[], option?: { stride?: number, wireFrame?: boolean }) {
+    setIndexBuffer(data: number[], option?: { stride?: number; wireFrame?: boolean }) {
         if (this._dynamicAttribute && this.vertexPointers.indices) {
-            const wireFrame = "wireframe";
+            const wireFrame = 'wireframe';
             let isWireFrame = false;
             if (option?.wireFrame == true) {
                 isWireFrame = true;
@@ -970,11 +1023,11 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                  * 二、GPUBuffer
                  * 1、删除旧的vertexBuffer，
                  * 2、创建新的vertexBuffer
-                 *  
+                 *
                  * 三、更新this.cameraDC
-                 *  
+                 *
                  * 四、更新shadowmapDC
-                 * 
+                 *
                  */
                 const replaceTarget = this.attributes.indices;
                 if (Array.isArray(replaceTarget) && data.length > 0) {
@@ -984,10 +1037,16 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     let indexBuffer = this.vertexPointers.indices.gpuBuffer;
                     indexBuffer.destroy();
                     //2.2 创建新的indexBuffer
-                    indexBuffer = createIndexBuffer(this.device, `${this.ID} rebuild indices `, new Uint32Array(data));
+                    indexBuffer = createIndexBuffer(
+                        this.device,
+                        `${this.ID} rebuild indices `,
+                        new Uint32Array(data),
+                    );
                     //3.1 更新cameraDC队列
                     for (const i in this.renderPassArray) {
-                        for (const perDC of this.renderPassArray[i as keyof typeof this.renderPassArray]) {
+                        for (const perDC of this.renderPassArray[
+                            i as keyof typeof this.renderPassArray
+                        ]) {
                             if (perDC.label.includes(wireFrame) && isWireFrame === false) {
                                 continue;
                             }
@@ -1008,15 +1067,13 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     //         }
                     // }
                     this._vertexAndIndexBuffersUpdated = true;
-                }
-                else {
-                    console.warn("setIndexBuffer(), 只支持数组形式的索引数据.");
+                } else {
+                    console.warn('setIndexBuffer(), 只支持数组形式的索引数据.');
                     return;
                 }
             }
-        }
-        else {
-            console.log("setIndexBuffer(),需要在初始化参数中设置dynamicAttribute为true");
+        } else {
+            console.log('setIndexBuffer(),需要在初始化参数中设置dynamicAttribute为true');
         }
     }
 }

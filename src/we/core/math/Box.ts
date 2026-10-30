@@ -1,20 +1,18 @@
-
 export interface Box2 {
-    min: [number, number],//{ x: number, y: number },
-    max: [number, number],//{ x: number, y: number },
+    min: [number, number]; //{ x: number, y: number },
+    max: [number, number]; //{ x: number, y: number },
 }
 
 export interface Box3 {
-    min: [number, number, number],
-    max: [number, number, number]
+    min: [number, number, number];
+    max: [number, number, number];
 }
 export type boundingBox = Box3;
-
 
 export function generateBox2(position: number[]): Box2 {
     const box: Box2 = {
         min: [0, 0],
-        max: [0, 0]
+        max: [0, 0],
     };
     for (let i = 0; i < position.length; i += 3) {
         if (i == 0) {
@@ -25,31 +23,31 @@ export function generateBox2(position: number[]): Box2 {
             box.max[1] = position[i + 1];
         }
         if (position[i] > box.max[0]) {
-            box.max[0] = position[i]
+            box.max[0] = position[i];
         }
         if (position[i] < box.min[0]) {
-            box.min[0] = position[i]
+            box.min[0] = position[i];
         }
         if (position[i + 1] > box.max[1]) {
-            box.max[1] = position[i + 1]
+            box.max[1] = position[i + 1];
         }
         if (position[i + 1] < box.min[1]) {
-            box.min[1] = position[i + 1]
+            box.min[1] = position[i + 1];
         }
     }
-    return box
+    return box;
 }
 
 /**
  * attribute position 计算点集的AABB
  * @param position 点集，每个点占3个元素，[x,y,z,x,y,z,...]
- * @returns 
+ * @returns
  */
 export function generateBox3(position: number[]): Box3 {
     const box: Box3 = {
         min: [0, 0, 0],
         max: [0, 0, 0],
-    }
+    };
     for (let i = 0; i < position.length; i += 3) {
         if (i == 0) {
             box.min[0] = position[i];
@@ -59,22 +57,22 @@ export function generateBox3(position: number[]): Box3 {
             box.max[1] = position[i + 1];
         }
         if (position[i] > box.max[0]) {
-            box.max[0] = position[i]
+            box.max[0] = position[i];
         }
         if (position[i] < box.min[0]) {
-            box.min[0] = position[i]
+            box.min[0] = position[i];
         }
         if (position[i + 1] > box.max[1]) {
-            box.max[1] = position[i + 1]
+            box.max[1] = position[i + 1];
         }
         if (position[i + 1] < box.min[1]) {
-            box.min[1] = position[i + 1]
+            box.min[1] = position[i + 1];
         }
         if (position[i + 2] > box.max[2]) {
-            box.max[2] = position[i + 2]
+            box.max[2] = position[i + 2];
         }
         if (position[i + 2] < box.min[2]) {
-            box.min[2] = position[i + 2]
+            box.min[2] = position[i + 2];
         }
     }
     return box;
@@ -129,7 +127,7 @@ export function generateBox2ByArrayBox2s(Box2s: Box2[]): Box2 {
 /**
  * 计算点集的AABB盒
  * @param points 点集，每个点占3个元素，[[x,y,z],[x,y,z],...]
- * @returns 
+ * @returns
  */
 export function computeAABB(points: [number, number, number][]): Box3 {
     const min: [number, number, number] = [0, 0, 0];

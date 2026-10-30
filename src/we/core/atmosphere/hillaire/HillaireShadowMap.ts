@@ -1,7 +1,7 @@
-import { mat4 } from "wgpu-matrix";
-import { Scene } from "../../scene/scene";
-import { AtmosphereHillaire } from "./atmosphereHillaire";
-import { V_weShadowMapFormat } from "../../base/coreDefine";
+import { mat4 } from 'wgpu-matrix';
+import { Scene } from '../../scene/scene';
+import { AtmosphereHillaire } from './atmosphereHillaire';
+import { V_weShadowMapFormat } from '../../base/coreDefine';
 
 export class HillaireShadowMap {
     scene: Scene;
@@ -22,13 +22,12 @@ export class HillaireShadowMap {
         this.device = scene.device;
         this.hillaireAtmosphere = hillaireAtmosphere;
         this.depthShadowMapTexture = scene.device.createTexture({
-            label: "defaultHillaireShadowMap-1x1",
+            label: 'defaultHillaireShadowMap-1x1',
             size: [1, 1],
             format: V_weShadowMapFormat,
             usage: GPUTextureUsage.TEXTURE_BINDING,
         });
         this.defaultShadowMapGPUTextureView = this.depthShadowMapTexture.createView();
-
 
         this.shadowMapVP = new ArrayBuffer(2 * 16 * 4);
         this.shadowMapVPView = new Float32Array(this.shadowMapVP);
@@ -50,16 +49,22 @@ export class HillaireShadowMap {
             lodMinClamp: 0,
             lodMaxClamp: 32,
             maxAnisotropy: 1,
-            compare: this.scene.reversedZ.isReversedZ ? "greater" : "less"
+            compare: this.scene.reversedZ.isReversedZ ? 'greater' : 'less',
         });
     }
     /** 更新阴影图VP矩阵，和 bindgroup1 绑定的资源 */
     updateShadowMapVP() {
-        if (this.hillaireAtmosphere.sunShadowMap) {//更新VP矩阵的arraybuffer
-            this.shadowMapVPView.set(this.hillaireAtmosphere.lights[0].directionalLight.getMVP()[0]);
+        if (this.hillaireAtmosphere.sunShadowMap) {
+            //更新VP矩阵的arraybuffer
+            this.shadowMapVPView.set(
+                this.hillaireAtmosphere.lights[0].directionalLight.getMVP()[0],
+            );
         }
-        if (this.hillaireAtmosphere.moonShadowMap) {//更新VP矩阵的arraybuffer
-            this.shadowMapVPView.set(this.hillaireAtmosphere.lights[1].directionalLight.getMVP()[0]);
+        if (this.hillaireAtmosphere.moonShadowMap) {
+            //更新VP矩阵的arraybuffer
+            this.shadowMapVPView.set(
+                this.hillaireAtmosphere.lights[1].directionalLight.getMVP()[0],
+            );
         }
         //如果使用shadowmap
         if (this.hillaireAtmosphere.sunShadowMap || this.hillaireAtmosphere.moonShadowMap) {
@@ -73,16 +78,22 @@ export class HillaireShadowMap {
     }
     /** 获取指定光源的阴影地图 */
     getShowShadowMap(id: number): GPUTextureView {
-        let shadowMap: GPUTextureView = this.defaultShadowMapGPUTextureView;//默认的占位1*1的阴影图
+        let shadowMap: GPUTextureView = this.defaultShadowMapGPUTextureView; //默认的占位1*1的阴影图
         if (this.hillaireAtmosphere.sunShadowMap && id === 0) {
             // getShadowMapDepthTextureView_ByIdAndMatrixID
             const id = this.hillaireAtmosphere.lights[0].directionalLight.ID;
-            shadowMap = this.scene.lightsManager.getShadowMapDepthTextureView_ByIdAndMatrixID(id, 0);
+            shadowMap = this.scene.lightsManager.getShadowMapDepthTextureView_ByIdAndMatrixID(
+                id,
+                0,
+            );
         }
         if (this.hillaireAtmosphere.moonShadowMap && id === 1) {
             // getShadowMapDepthTextureView_ByIdAndMatrixID
             const id = this.hillaireAtmosphere.lights[1].directionalLight.ID;
-            shadowMap = this.scene.lightsManager.getShadowMapDepthTextureView_ByIdAndMatrixID(id, 0);
+            shadowMap = this.scene.lightsManager.getShadowMapDepthTextureView_ByIdAndMatrixID(
+                id,
+                0,
+            );
         }
         return shadowMap;
     }

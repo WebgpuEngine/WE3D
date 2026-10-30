@@ -1,20 +1,17 @@
-import { Scene } from "../scene/scene";
-import { E_GBufferNames } from "../gbuffers/base";
-import { BaseInputControl } from "../input/baseInputControl";
-import { E_InputControlType, E_InputEvent, E_InputPriority } from "../input/base";
-import { IV_Pickup, IV_PickupInitValue, pickupTargetOfIDs } from "./base";
-import { pickupManager } from "./pickupManager";
-
-
-
+import { Scene } from '../scene/scene';
+import { E_GBufferNames } from '../gbuffers/base';
+import { BaseInputControl } from '../input/baseInputControl';
+import { E_InputControlType, E_InputEvent, E_InputPriority } from '../input/base';
+import { IV_Pickup, IV_PickupInitValue, pickupTargetOfIDs } from './base';
+import { pickupManager } from './pickupManager';
 
 export interface I_PickupedMouseKey {
-    x: number | undefined,
-    y: number | undefined,
-    buttons: number | undefined,
-    ctrlKey: boolean | undefined,
-    shiftKey: boolean | undefined,
-    altKey: boolean | undefined,
+    x: number | undefined;
+    y: number | undefined;
+    buttons: number | undefined;
+    ctrlKey: boolean | undefined;
+    shiftKey: boolean | undefined;
+    altKey: boolean | undefined;
 }
 export class Pickup extends BaseInputControl {
     //I_UUID
@@ -28,11 +25,11 @@ export class Pickup extends BaseInputControl {
     scene: Scene;
     device: GPUDevice;
     /** IDs 拾取结果缓冲区 */
-    resultBuffer: GPUBuffer
-    /** 拾取结果大小,4字节(u32) 
+    resultBuffer: GPUBuffer;
+    /** 拾取结果大小,4字节(u32)
      *  目前时ID的大小，如果需要worldposition，需要额外申请一个GBuffer
-    */
-    pickupSize = 4;//u32=4bytes
+     */
+    pickupSize = 4; //u32=4bytes
     /** IDGBuffer */
     GBufferOfID: GPUTexture | undefined;
     /** 世界位置GBuffer */
@@ -72,35 +69,46 @@ export class Pickup extends BaseInputControl {
             size: this.pickupSize,
             usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
-        if (typeof this.input.action == "function") {
+        if (typeof this.input.action == 'function') {
             this.registerEvent(E_InputEvent.pointerup, E_InputPriority.broadcastStart, this);
             this.registerEvent(E_InputEvent.pointerdown, E_InputPriority.broadcastStart, this);
             this.registerEvent(E_InputEvent.pointermove, E_InputPriority.broadcastStart, this);
-        }
-        else {
-            if (this.input.action.onEvent == "up" || this.input.action.onEvent == undefined) {
+        } else {
+            if (this.input.action.onEvent == 'up' || this.input.action.onEvent == undefined) {
                 this.registerEvent(E_InputEvent.pointerup, E_InputPriority.broadcastStart, this);
-            }
-            else if (this.input.action.onEvent == "down") {
+            } else if (this.input.action.onEvent == 'down') {
                 this.registerEvent(E_InputEvent.pointerdown, E_InputPriority.broadcastStart, this);
-            }
-            else if (this.input.action.onEvent == "move") {
+            } else if (this.input.action.onEvent == 'move') {
                 this.registerEvent(E_InputEvent.pointermove, E_InputPriority.broadcastStart, this);
             }
         }
     }
     __destroy() {
-        if (typeof this.input.action == "function") {
+        if (typeof this.input.action == 'function') {
             this.removeRegisterEvent(E_InputEvent.pointerup, E_InputPriority.broadcastStart, this);
-            this.removeRegisterEvent(E_InputEvent.pointerdown, E_InputPriority.broadcastStart, this);
-            this.removeRegisterEvent(E_InputEvent.pointermove, E_InputPriority.broadcastStart, this);
-        }
-        else {
-            if (this.input.action.onEvent == "down") {
-                this.removeRegisterEvent(E_InputEvent.pointerdown, E_InputPriority.broadcastStart, this);
-            }
-            else if (this.input.action.onEvent == "up") {
-                this.removeRegisterEvent(E_InputEvent.pointerup, E_InputPriority.broadcastStart, this);
+            this.removeRegisterEvent(
+                E_InputEvent.pointerdown,
+                E_InputPriority.broadcastStart,
+                this,
+            );
+            this.removeRegisterEvent(
+                E_InputEvent.pointermove,
+                E_InputPriority.broadcastStart,
+                this,
+            );
+        } else {
+            if (this.input.action.onEvent == 'down') {
+                this.removeRegisterEvent(
+                    E_InputEvent.pointerdown,
+                    E_InputPriority.broadcastStart,
+                    this,
+                );
+            } else if (this.input.action.onEvent == 'up') {
+                this.removeRegisterEvent(
+                    E_InputEvent.pointerup,
+                    E_InputPriority.broadcastStart,
+                    this,
+                );
             }
         }
     }
@@ -112,26 +120,39 @@ export class Pickup extends BaseInputControl {
      * 拾取目标,每帧调用,根据当前记录的鼠标键,拾取目标
      */
     async update() {
-        if (typeof this.input.action == "function") {
+        if (typeof this.input.action == 'function') {
             if (this._event != undefined) {
-                await (this.input.action as (scope: any, event: Event) => Promise<any>)(this, this._event!);
+                await (this.input.action as (scope: any, event: Event) => Promise<any>)(
+                    this,
+                    this._event!,
+                );
             }
-        }
-        else {
-            if (this.pickupKey.x != undefined && this.pickupKey.y != undefined
-                && (this.pickupKey.buttons !== undefined || (this.input.action.button === undefined && this.input.action.onEvent === "move"))) {
-                if (this.pickupKey.buttons === this.input.action.button || this.input.action.onEvent === "move") {
+        } else {
+            if (
+                this.pickupKey.x != undefined &&
+                this.pickupKey.y != undefined &&
+                (this.pickupKey.buttons !== undefined ||
+                    (this.input.action.button === undefined &&
+                        this.input.action.onEvent === 'move'))
+            ) {
+                if (
+                    this.pickupKey.buttons === this.input.action.button ||
+                    this.input.action.onEvent === 'move'
+                ) {
                     let isKey = false;
                     if (this.input.action.key === undefined) {
                         isKey = true;
-                    }
-                    else if (this.input.action.key === "ctrl" || this.pickupKey.ctrlKey === true) {
+                    } else if (
+                        this.input.action.key === 'ctrl' ||
+                        this.pickupKey.ctrlKey === true
+                    ) {
                         isKey = true;
-                    }
-                    else if (this.input.action.key === "shift" || this.pickupKey.shiftKey === true) {
+                    } else if (
+                        this.input.action.key === 'shift' ||
+                        this.pickupKey.shiftKey === true
+                    ) {
                         isKey = true;
-                    }
-                    else if (this.input.action.key === "alt" || this.pickupKey.altKey === true) {
+                    } else if (this.input.action.key === 'alt' || this.pickupKey.altKey === true) {
                         isKey = true;
                     }
                     if (isKey) {
@@ -148,11 +169,13 @@ export class Pickup extends BaseInputControl {
     async getTargetID(x: number, y: number): Promise<pickupTargetOfIDs | false> {
         if (this.GBufferOfID == undefined) {
             if (this.scene.defaultCamera) {
-                this.GBufferOfID = this.scene.cameraManager.getGBufferTextureByUUID(this.scene.defaultCamera.UUID, E_GBufferNames.id);
+                this.GBufferOfID = this.scene.cameraManager.getGBufferTextureByUUID(
+                    this.scene.defaultCamera.UUID,
+                    E_GBufferNames.id,
+                );
                 // this.GBufferOfWorldPosition = this.scene.cameraManager.getGBufferTextureByUUID(this.scene.defaultCamera.UUID, E_GBufferNames.worldPosition);
-            }
-            else {
-                console.warn("pickup failed,default camera not found");
+            } else {
+                console.warn('pickup failed,default camera not found');
                 return false;
             }
         }
@@ -172,36 +195,40 @@ export class Pickup extends BaseInputControl {
                 ids = {
                     stageID: stageID,
                     nodeID: nodeID,
-                    instanceID: instance
-                }
-            }
-            else {
+                    instanceID: instance,
+                };
+            } else {
                 console.warn('pickup failed,x:', x, 'y:', y);
                 return false;
             }
             return ids;
-
         }
         return false;
     }
-    async copyTextureToBuffer(texture: GPUTexture, x: number, y: number): Promise<Uint32Array | false> {
+    async copyTextureToBuffer(
+        texture: GPUTexture,
+        x: number,
+        y: number,
+    ): Promise<Uint32Array | false> {
         if (x > this.scene.surface.size.width || y > this.scene.surface.size.height) return false;
         const commandEncoder = this.device.createCommandEncoder();
         // Encode a command to copy the results to a mappable buffer.
-        const source: GPUTexelCopyTextureInfo = {//这里应该是GPUTexelCopyTextureInfo,@webgpu/types没有这个，GPUImageCopyTexture是GPUTexelCopyTextureInfo集成;
+        const source: GPUTexelCopyTextureInfo = {
+            //这里应该是GPUTexelCopyTextureInfo,@webgpu/types没有这个，GPUImageCopyTexture是GPUTexelCopyTextureInfo集成;
             texture: texture,
             origin: {
                 x,
-                y
-            }
-        }
-        const destination: GPUTexelCopyBufferInfo = {//GPUTexelCopyBufferInfo,@webgpu/types没有这个,用GPUImageCopyBuffer代替
-            buffer: this.resultBuffer
+                y,
+            },
+        };
+        const destination: GPUTexelCopyBufferInfo = {
+            //GPUTexelCopyBufferInfo,@webgpu/types没有这个,用GPUImageCopyBuffer代替
+            buffer: this.resultBuffer,
         };
         const size: GPUExtent3DStrict = {
             width: 1,
-            height: 1
-        }
+            height: 1,
+        };
 
         commandEncoder.copyTextureToBuffer(source, destination, size);
 
@@ -220,9 +247,9 @@ export class Pickup extends BaseInputControl {
     receiveInput(event: Event, _type: E_InputEvent): boolean {
         this._event = event;
         switch ((event as PointerEvent).pointerType) {
-            case "mouse": {
+            case 'mouse': {
                 this.eventValues.mouseValue.buttons = (event as PointerEvent).buttons;
-                this.eventValues.mouseValue.downOrUP = "up";
+                this.eventValues.mouseValue.downOrUP = 'up';
                 this.eventValues.mouseValue.ctrlKey = (event as PointerEvent).ctrlKey;
                 this.eventValues.mouseValue.altKey = (event as PointerEvent).altKey;
                 this.eventValues.mouseValue.shiftKey = (event as PointerEvent).shiftKey;
@@ -241,7 +268,7 @@ export class Pickup extends BaseInputControl {
                 // console.log(mouse.x, mouse.y, this.pickupKey.x, this.pickupKey.y,rect.x,rect.y);
                 break;
             }
-            case "touch":
+            case 'touch':
                 this.eventValues.mouseValue.buttons = 0;
                 // this._pointer = event as PointerEvent;
                 break;
@@ -249,7 +276,7 @@ export class Pickup extends BaseInputControl {
         return false;
     }
     getInputValue() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     clean(): void {
         this.pickupKey.buttons = undefined;

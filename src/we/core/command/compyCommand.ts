@@ -1,5 +1,5 @@
 export abstract class CopyCommand {
-    name = "copy";
+    name = 'copy';
     device!: GPUDevice;
     abstract copy(commandEncoder: GPUCommandEncoder): any;
 }

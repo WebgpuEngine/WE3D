@@ -1,6 +1,6 @@
-import { Scene } from "../scene/scene";
-import { HDRTexture } from "../texture/HDRTexture";
-import { PrefilteredCubemap } from "../texture/prefilteredCubemap";
+import { Scene } from '../scene/scene';
+import { HDRTexture } from '../texture/HDRTexture';
+import { PrefilteredCubemap } from '../texture/prefilteredCubemap';
 
 // interface iblItem {
 //     AABB: number[];
@@ -11,27 +11,44 @@ import { PrefilteredCubemap } from "../texture/prefilteredCubemap";
 //     prefilteredCubeMap: GPUTexture;
 // }
 export interface IV_IBL {
-
     enable: boolean;
     // iblCount: number;
     dfgLutUrl?: string;
     use_ibl?: number;
     ibl: {
         sh: [
-            number, number, number,
-            number, number, number,
-            number, number, number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
 
-            number, number, number,
-            number, number, number,
-            number, number, number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
 
-            number, number, number,
-            number, number, number,
-            number, number, number,
-        ],
-        prefilteredCubeMap: string,
-    },
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+        ];
+        prefilteredCubeMap: string;
+    };
     shAlreadyPreMultiplyConst: boolean;
 }
 export class IBL {
@@ -39,9 +56,8 @@ export class IBL {
     device: GPUDevice;
     input: IV_IBL | undefined;
 
-
     // iblArray!: iblItem[];
-    dfgLutUrl: string = "/IBL/brdfLut/dfg_lut_128.hdr";
+    dfgLutUrl: string = '/IBL/brdfLut/dfg_lut_128.hdr';
 
     enable_ibl: boolean = false;
     use_ibl: number = 0;
@@ -77,8 +93,7 @@ export class IBL {
         this.device = scene.device;
         this.scene = scene;
         this._init();
-        if (this.scene.IBL)
-            this.scene.IBL.destroy();
+        if (this.scene.IBL) this.scene.IBL.destroy();
         this.scene.IBL = this;
     }
     destroy() {
@@ -91,25 +106,25 @@ export class IBL {
         this.initStorageBuffer();
         if (this._brdfLUT == undefined) {
             this._brdfLUT = this.device.createTexture({
-                label: "defaultBrdfLUT-1x1",
+                label: 'defaultBrdfLUT-1x1',
                 // format: "rg11b10ufloat",
-                format: "rgba32float",
+                format: 'rgba32float',
                 size: [1, 1],
                 usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-                dimension: "2d",
+                dimension: '2d',
             });
-            this._brdfLutSampler = this.scene.resourcesGPU.getSampler("nearest");
+            this._brdfLutSampler = this.scene.resourcesGPU.getSampler('nearest');
         }
         if (this._prefilteredCubeMap == undefined) {
             this._prefilteredCubeMap = this.device.createTexture({
-                label: "defaultPrefilteredCubeMap-1x1x6",
-                format: "rg11b10ufloat",
+                label: 'defaultPrefilteredCubeMap-1x1x6',
+                format: 'rg11b10ufloat',
                 size: [1, 1, 6 * this.iblCount],
                 usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-                dimension: "2d",
+                dimension: '2d',
                 // mipLevelCount: 5,
             });
-            this._prefilteredCubeMapSampler = this.scene.resourcesGPU.getSampler("cube");
+            this._prefilteredCubeMapSampler = this.scene.resourcesGPU.getSampler('cube');
         }
         this.initBindGroup();
     }
@@ -168,24 +183,32 @@ export class IBL {
         this.bufferView.count[0] = this.iblCount;
         this.bufferView.filament_sh[0] = this.shAlreadyPreMultiplyConst ? 1 : 0;
         this.bufferView.use_ibl[0] = this.use_ibl;
-        this.bufferView.mip_level[0] = 5;// this.mip_level;
+        this.bufferView.mip_level[0] = 5; // this.mip_level;
         this.bufferView.array_sh.set(this.input.ibl.sh.flat());
         // this.bufferView.array_sh.set(this.input.ibl.map((item) => item.sh).flat());//ok,多组的情况
         this.device.queue.writeBuffer(this.bufferGPU, 0, this.buffer);
     }
     async initTexutre(input?: IV_IBL) {
         if (this.brdfLUT == undefined) {
-            this.brdfLUT = new HDRTexture({
-                source: this.dfgLutUrl,
-                // format: "rgba32float",
-            }, this.device, this.scene);
+            this.brdfLUT = new HDRTexture(
+                {
+                    source: this.dfgLutUrl,
+                    // format: "rgba32float",
+                },
+                this.device,
+                this.scene,
+            );
             await this.brdfLUT.init();
         }
 
         if (input && this.prefilteredCubeMap == undefined) {
-            this.prefilteredCubeMap = new PrefilteredCubemap({
-                source: input.ibl.prefilteredCubeMap,
-            }, this.device, this.scene);
+            this.prefilteredCubeMap = new PrefilteredCubemap(
+                {
+                    source: input.ibl.prefilteredCubeMap,
+                },
+                this.device,
+                this.scene,
+            );
             await this.prefilteredCubeMap.init();
         }
         this.mip_level = this.prefilteredCubeMap.mipmapLevel - 1;
@@ -193,13 +216,13 @@ export class IBL {
     }
     initBindGroup() {
         this._bindGroupLayout = this.device.createBindGroupLayout({
-            label: "IBL",
+            label: 'IBL',
             entries: [
                 {
                     binding: 0,
                     visibility: GPUShaderStage.FRAGMENT,
                     buffer: {
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
                         // type: "storage",
                     },
                 },
@@ -207,8 +230,8 @@ export class IBL {
                     binding: 1,
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: {
-                        sampleType: "float",
-                        viewDimension: "cube",
+                        sampleType: 'float',
+                        viewDimension: 'cube',
                         multisampled: false,
                     },
                 },
@@ -216,39 +239,38 @@ export class IBL {
                     binding: 2,
                     visibility: GPUShaderStage.FRAGMENT,
                     sampler: {
-                        type: "filtering",
+                        type: 'filtering',
                     },
                 },
                 {
                     binding: 3,
                     visibility: GPUShaderStage.FRAGMENT,
-                    texture:
-                        this.brdfLUT ? this.brdfLUT.textureLayout : {
-                            sampleType: "unfilterable-float",
-                            viewDimension: "2d",
-                            multisampled: false,
-                        },
+                    texture: this.brdfLUT
+                        ? this.brdfLUT.textureLayout
+                        : {
+                              sampleType: 'unfilterable-float',
+                              viewDimension: '2d',
+                              multisampled: false,
+                          },
                     // {
                     //     sampleType: "float",
                     //     viewDimension: "2d",
                     //     multisampled: false,
                     // },
-
                 },
                 {
                     binding: 4,
                     visibility: GPUShaderStage.FRAGMENT,
                     sampler: {
-                        type: this.brdfLUT ? this.brdfLUT.samplerLayout.type : "non-filtering",
+                        type: this.brdfLUT ? this.brdfLUT.samplerLayout.type : 'non-filtering',
                         // type: "non-filtering",
                         // type: this.brdfLUT.samplerLayout.type,
                     },
                 },
-
             ],
         });
         this._bindGroup = this.device.createBindGroup({
-            label: "IBL",
+            label: 'IBL',
             layout: this.bindGroupLayout(),
             entries: [
                 {
@@ -258,7 +280,7 @@ export class IBL {
                 {
                     binding: 1,
                     resource: this.getPrefilteredCubeMap().createView({
-                        dimension: "cube",
+                        dimension: 'cube',
                     }),
                     // resource: this._prefilteredCubeMap.createView({
                     //     dimension: "cube",
@@ -284,8 +306,7 @@ export class IBL {
         if (this.prefilteredCubeMap) {
             // console.log("使用prefilteredCubeMap");
             return this.prefilteredCubeMap.texture;
-        }
-        else {
+        } else {
             // console.log("使用内置prefilteredCubeMap");
             return this._prefilteredCubeMap;
         }
@@ -294,8 +315,7 @@ export class IBL {
         if (this.prefilteredCubeMap) {
             // console.log("使用prefilteredCubeMapSampler");
             return this.prefilteredCubeMap.sampler;
-        }
-        else {
+        } else {
             // console.log("使用内置prefilteredCubeMapSampler");
             return this._prefilteredCubeMapSampler;
         }
@@ -304,8 +324,7 @@ export class IBL {
         if (this.brdfLUT) {
             // console.log("使用brdfLUT");
             return this.brdfLUT.texture;
-        }
-        else {
+        } else {
             // console.log("使用内置brdfLUT");
             return this._brdfLUT;
         }
@@ -314,8 +333,7 @@ export class IBL {
         if (this.brdfLUT) {
             // console.log("使用brdfLUTSampler");
             return this.brdfLUT.sampler;
-        }
-        else {
+        } else {
             // console.log("使用内置brdfLUTSampler");
             return this._brdfLutSampler;
         }
@@ -327,5 +345,4 @@ export class IBL {
     bindGroup(): GPUBindGroup {
         return this._bindGroup;
     }
-
 }

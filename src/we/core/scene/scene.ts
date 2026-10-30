@@ -1,43 +1,48 @@
-import { IV_NodeSpace } from "../organization/nodeSpace";
-import { IV_Node, NodeObject } from "../organization/nodeObject";
-import { Texture } from "../texture/texture";
-import { E_renderForDC, V_weLinearFormat } from "../base/coreDefine";
-import { copyTextureToTexture } from "../base/coreFunction";
-import { BaseCamera } from "../camera/baseCamera";
-import { CameraManager } from "../camera/cameraManager";
-import { I_bindGroupAndGroupLayout, T_rpdInfomationOfMSAA } from "../command/base";
-import { EntityManager } from "../entity/entityManager";
-import { InputManager } from "../input/inputManager";
-import { AmbientLight } from "../light/ambientLight";
-import { LightsManager } from "../light/lightsManager";
-import { MaterialManager } from "../material/materialManager";
-import { generateBox3ByArrayBox3s, type boundingBox } from "../math/Box";
-import { generateSphereFromBox3, type boundingSphere } from "../math/sphere";
-import { pickupManager } from "../pickup/pickupManager";
-import { PostProcessManager } from "../postprocess/postProcessManager";
-import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
-import { eventOfScene, IV_Scene, IJ_Scene, userDefineEventCall, E_ToneMappingType, I_SceneBaseUnit } from "./base";
-import { Clock } from "./clock";
-import { RenderManager } from "./renderManager";
-import { BaseEntity } from "../entity/baseEntity";
-import { AnimationManager } from "../animation/animationManager";
-import { AnimationGroupManager } from "../animation/animationGroupManager";
-import { SkinsManager } from "../animation/skinsManager";
-import { RootManager } from "./rootManager";
-import { TextureManager } from "../texture/textureManager";
-import { DrawCommandGenerator } from "../command/DrawCommandGenerator";
-import { MemoryBlockManager } from "../bufferBlock/MBM";
-import { Pointers } from "../bufferBlock/pointer";
-import { BlockPointerCoordinator } from "../bufferBlock/BPC";
-import { I_BolRebulidPercent, I_BolSize, I_BolStrideSizeOfUpdate } from "../bufferBlock/base";
+import { IV_NodeSpace } from '../organization/nodeSpace';
+import { IV_Node, NodeObject } from '../organization/nodeObject';
+import { Texture } from '../texture/texture';
+import { E_renderForDC, V_weLinearFormat } from '../base/coreDefine';
+import { copyTextureToTexture } from '../base/coreFunction';
+import { BaseCamera } from '../camera/baseCamera';
+import { CameraManager } from '../camera/cameraManager';
+import { I_bindGroupAndGroupLayout, T_rpdInfomationOfMSAA } from '../command/base';
+import { EntityManager } from '../entity/entityManager';
+import { InputManager } from '../input/inputManager';
+import { AmbientLight } from '../light/ambientLight';
+import { LightsManager } from '../light/lightsManager';
+import { MaterialManager } from '../material/materialManager';
+import { generateBox3ByArrayBox3s, type boundingBox } from '../math/Box';
+import { generateSphereFromBox3, type boundingSphere } from '../math/sphere';
+import { pickupManager } from '../pickup/pickupManager';
+import { PostProcessManager } from '../postprocess/postProcessManager';
+import { ResourceManagerOfGPU } from '../resources/resourcesGPU';
+import {
+    eventOfScene,
+    IV_Scene,
+    IJ_Scene,
+    userDefineEventCall,
+    E_ToneMappingType,
+    I_SceneBaseUnit,
+} from './base';
+import { Clock } from './clock';
+import { RenderManager } from './renderManager';
+import { BaseEntity } from '../entity/baseEntity';
+import { AnimationManager } from '../animation/animationManager';
+import { AnimationGroupManager } from '../animation/animationGroupManager';
+import { SkinsManager } from '../animation/skinsManager';
+import { RootManager } from './rootManager';
+import { TextureManager } from '../texture/textureManager';
+import { DrawCommandGenerator } from '../command/DrawCommandGenerator';
+import { MemoryBlockManager } from '../bufferBlock/MBM';
+import { Pointers } from '../bufferBlock/pointer';
+import { BlockPointerCoordinator } from '../bufferBlock/BPC';
+import { I_BolRebulidPercent, I_BolSize, I_BolStrideSizeOfUpdate } from '../bufferBlock/base';
 // import type { PBRMaterial } from "../material/PBR/PBRMaterial";
-import { ShaderRegister } from "../SHR/shaderRegister";
-import { IBL } from "../ibl/ibl";
-import { FeatureManager } from "../organization/featureManager";
-
+import { ShaderRegister } from '../SHR/shaderRegister';
+import { IBL } from '../ibl/ibl';
+import { FeatureManager } from '../organization/featureManager';
 
 export class Scene {
-
     ///////////////////////////////////////////////////////////////
     //基础内容。base content.
     clock: Clock;
@@ -51,46 +56,46 @@ export class Scene {
     flags: {
         /**是否 reSize */
         reSize: {
-            status: boolean,
+            status: boolean;
             width: number;
             height: number;
-        },
+        };
         /** 是否进行实时渲染*/
         realTimeRender: boolean;
     } = {
-            reSize: {
-                status: false,
-                width: 0,
-                height: 0,
-            },
-            realTimeRender: true,
-        }
+        reSize: {
+            status: false,
+            width: 0,
+            height: 0,
+        },
+        realTimeRender: true,
+    };
     /**场景的表面尺寸 */
     surface: {
         size: {
             width: number;
             height: number;
-        },
-    } = {
-            size: {
-                width: 0,
-                height: 0,
-            }
         };
+    } = {
+        size: {
+            width: 0,
+            height: 0,
+        },
+    };
     backgroudColor: number[] = [0, 0, 0, 1];
     /**场景单位 */
     baseUnit: I_SceneBaseUnit = {
-        axisUp: "Y",
+        axisUp: 'Y',
         rightHand: true,
-        lengthUnit: "m",
+        lengthUnit: 'm',
         scaleFactorToKm: 1 / 1000,
     };
-    /** 阴影地图重建时间 
+    /** 阴影地图重建时间
      * 用途:
      * 1、阴影地图重建时间，用于判断是否需要重新绑定与阴影地图相关的资源；
      *      比如：hillaire大气层的lutSkyview，lutAP，renderRayMarching
-     * 
-    */
+     *
+     */
     shadowMapRebuildTime: number = 0;
     /** 设置阴影地图重建时间 */
     setShadowMapRebuildTime() {
@@ -122,20 +127,20 @@ export class Scene {
      */
     webGPUFeatures: GPUFeatureName[] = [
         // "core-features-and-limits",
-        "depth-clip-control",
-        "depth32float-stencil8",
-        "texture-compression-bc",
-        "texture-compression-bc-sliced-3d",
-        "texture-compression-etc2",
-        "texture-compression-astc",
-        "texture-compression-astc-sliced-3d",
-        "timestamp-query",
-        "indirect-first-instance",
+        'depth-clip-control',
+        'depth32float-stencil8',
+        'texture-compression-bc',
+        'texture-compression-bc-sliced-3d',
+        'texture-compression-etc2',
+        'texture-compression-astc',
+        'texture-compression-astc-sliced-3d',
+        'timestamp-query',
+        'indirect-first-instance',
         // "shader-f16",
-        "rg11b10ufloat-renderable",
-        "bgra8unorm-storage",
-        "float32-filterable",
-        "float32-blendable",
+        'rg11b10ufloat-renderable',
+        'bgra8unorm-storage',
+        'float32-filterable',
+        'float32-blendable',
         // "clip-distances",
         // "dual-source-blending",
         // "subgroups",
@@ -150,44 +155,44 @@ export class Scene {
     ];
     /**webgpu的特性是否支持的输出 */
     webGPUFeaturesSupported: GPUFeatureName[] = [];
-    /**webgpu的限制配置 
-     * https://gpuweb.github.io/gpuweb/#gpusupportedlimits     * 
+    /**webgpu的限制配置
+     * https://gpuweb.github.io/gpuweb/#gpusupportedlimits     *
      * 1、maxColorAttachmentBytesPerSample: 最大颜色附件的字节数，每个样本的字节数。默认64
      * 2、有初始化参数可用申请限制，todo；
-    */
+     */
     webGPULimits: Record<string, number> = {
-        maxColorAttachmentBytesPerSample: 128,//64,
-    }
+        maxColorAttachmentBytesPerSample: 128, //64,
+    };
     /**
      * depth: 配套finalTarget的深度纹理， 为了在DC中的RAW模式中可以使用深度而设置的
      * id: 配套finalTarget的id纹理， pickup使用
      * NDC: 是否为NDC模式。默认=false
-      */
+     */
     finalTarget: {
         /**
          * 默认：false
          * NDC，测试使用或Raw模式下需要使用
-         * 
+         *
          */
-        NDC: boolean,
-        color: GPUTexture | undefined,
-        colorPostProcess: GPUTexture | undefined,
+        NDC: boolean;
+        color: GPUTexture | undefined;
+        colorPostProcess: GPUTexture | undefined;
         /**
          * NDC模式下有深度纹理
          */
-        depth: GPUTexture | undefined,
+        depth: GPUTexture | undefined;
         /**
          * NDC模式下不需要id纹理
          * camera模式的最终输出，需要，pickup使用
          */
-        id: GPUTexture | undefined,
+        id: GPUTexture | undefined;
     } = {
-            NDC: false,
-            color: undefined,
-            colorPostProcess: undefined,
-            depth: undefined,
-            id: undefined
-        }
+        NDC: false,
+        color: undefined,
+        colorPostProcess: undefined,
+        depth: undefined,
+        id: undefined,
+    };
     //////////////////////////////
     /**
      * 保留！
@@ -199,72 +204,71 @@ export class Scene {
      * 颜色空间和线性空间的配置
      */
     colorSpaceAndLinearSpace: {
-        colorSpace: PredefinedColorSpace,//"srgb"|"display-p3",
-        linearSpace: GPUTextureFormat,
-        hdr: boolean,
+        colorSpace: PredefinedColorSpace; //"srgb"|"display-p3",
+        linearSpace: GPUTextureFormat;
+        hdr: boolean;
     } = {
-            colorSpace: "srgb",
-            linearSpace: V_weLinearFormat,
-            hdr: false,
-        };
+        colorSpace: 'srgb',
+        linearSpace: V_weLinearFormat,
+        hdr: false,
+    };
 
     /** 色调映射，默认：ACES     */
     toneMappingType: E_ToneMappingType = E_ToneMappingType.ACES;
     /////////////////////////////////////////////////////////////
-    //about Z ,deferRender 
+    //about Z ,deferRender
 
     /**深度模式
      * 参数化配置所有用到的深度模式相关的参数
      */
     depthMode: {
         /**深度输出的纹理格式 */
-        depthDefaultFormat: GPUTextureFormat,// = "depth32float"
+        depthDefaultFormat: GPUTextureFormat; // = "depth32float"
         /**正常Z的清除值 */
-        depthClearValueOfZ: number,//= 1.0
+        depthClearValueOfZ: number; //= 1.0
         /**反向Z的清除值 */
-        depthClearValueOfReveredZ: number,//= 0.0
+        depthClearValueOfReveredZ: number; //= 0.0
         /**depthStencil 模板参数 */
-        depthStencil: GPUDepthStencilState,
-        depthStencilTT: GPUDepthStencilState,
-        depthStencilMSAA: GPUDepthStencilState,
-        depthStencilMSAAinfo: GPUDepthStencilState,
+        depthStencil: GPUDepthStencilState;
+        depthStencilTT: GPUDepthStencilState;
+        depthStencilMSAA: GPUDepthStencilState;
+        depthStencilMSAAinfo: GPUDepthStencilState;
     } = {
-            depthDefaultFormat: "depth32float",
-            depthClearValueOfZ: 1.0,
-            depthClearValueOfReveredZ: 0.0,
-            depthStencil: {
-                depthWriteEnabled: true,
-                depthCompare: 'greater',//reverseZZ
-                format: "depth32float",
-            },
-            depthStencilTT: {
-                depthWriteEnabled: false,
-                depthCompare: 'greater',
-                format: "depth32float",
-            },
-            depthStencilMSAA: {
-                depthWriteEnabled: true,
-                depthCompare: 'greater',
-                format: "depth32float",
-            },
-            depthStencilMSAAinfo: {
-                depthWriteEnabled: false,
-                depthCompare: 'greater-equal',
-                format: "depth32float",
-            },
-        };
+        depthDefaultFormat: 'depth32float',
+        depthClearValueOfZ: 1.0,
+        depthClearValueOfReveredZ: 0.0,
+        depthStencil: {
+            depthWriteEnabled: true,
+            depthCompare: 'greater', //reverseZZ
+            format: 'depth32float',
+        },
+        depthStencilTT: {
+            depthWriteEnabled: false,
+            depthCompare: 'greater',
+            format: 'depth32float',
+        },
+        depthStencilMSAA: {
+            depthWriteEnabled: true,
+            depthCompare: 'greater',
+            format: 'depth32float',
+        },
+        depthStencilMSAAinfo: {
+            depthWriteEnabled: false,
+            depthCompare: 'greater-equal',
+            format: 'depth32float',
+        },
+    };
 
     /**是否使用反向Z的标志位 */
     reversedZ: {
-        isReversedZ: boolean,
-        cleanValue: number,
-        depthCompare: GPUCompareFunction,
-    } =
-        {
-            isReversedZ: true,
-            cleanValue: 0,
-            depthCompare: 'greater',
-        }
+        isReversedZ: boolean;
+        cleanValue: number;
+        depthCompare: GPUCompareFunction;
+    } = {
+        isReversedZ: true,
+        cleanValue: 0,
+        depthCompare: 'greater',
+    };
     //////////////////////////////////////////////////////////
     //boundingBox
     boundingBox!: boundingBox;
@@ -278,7 +282,7 @@ export class Scene {
      * 2、MSAARender：MSAA渲染，MSAA=true
      * 3、forwardRender：前向渲染，MSAA=false
      */
-    renderMode: "deferRender" | "MSAARender" | "forwardRender" = "forwardRender";
+    renderMode: 'deferRender' | 'MSAARender' | 'forwardRender' = 'forwardRender';
     /**是否使用MSAA，只有renderMode为MSAARender时，才有效。 默认：false     */
     MSAA: boolean = false;
     ////////////////////////////////////////////////////////////////////////////////
@@ -336,14 +340,16 @@ export class Scene {
     /**每帧循环用户自定义更新function */
     userDefineUpdateArray: userDefineEventCall[] = [];
     /** BOL配置 */
-    configBOL: {
-        /** BOL合并更新间距阈值*/
-        updateStrideSize?: I_BolStrideSizeOfUpdate,
-        /** BOL大小 */
-        size?: I_BolSize,
-        /** BOL重建百分比 */
-        rebuildPecent?: I_BolRebulidPercent,
-    } | undefined;
+    configBOL:
+        | {
+              /** BOL合并更新间距阈值*/
+              updateStrideSize?: I_BolStrideSizeOfUpdate;
+              /** BOL大小 */
+              size?: I_BolSize;
+              /** BOL重建百分比 */
+              rebuildPecent?: I_BolRebulidPercent;
+          }
+        | undefined;
 
     constructor(value: IV_Scene) {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +358,7 @@ export class Scene {
         //默认值初始化
         if (value.modeNDC && value.modeNDC === true) {
             this.finalTarget.NDC = true;
-            console.warn("NDC 模式,限于测试和自定义shader使用。");
+            console.warn('NDC 模式,限于测试和自定义shader使用。');
         }
         this.clock = new Clock();
         this.inputValue = value;
@@ -369,14 +375,13 @@ export class Scene {
         }
         if (value.renderMode) {
             this.renderMode = value.renderMode;
-            if (value.renderMode == "MSAARender") {
+            if (value.renderMode == 'MSAARender') {
                 this.MSAA = true;
-            }
-            else {
+            } else {
                 this.MSAA = false;
             }
         }
-        console.log("WE3D renderMode:", this.renderMode);
+        console.log('WE3D renderMode:', this.renderMode);
         if (value.premultipliedAlpha !== undefined) {
             this.premultipliedAlpha = value.premultipliedAlpha;
         }
@@ -384,33 +389,35 @@ export class Scene {
         //场景单位
         if (value.baseUnit) {
             this.baseUnit.scaleFactorToKm = value.baseUnit.scaleFactorToKm ?? 1 / 1000;
-            this.baseUnit.lengthUnit = value.baseUnit.lengthUnit ?? "m";
-            this.baseUnit.axisUp = value.baseUnit.axisUp ?? "Y";
+            this.baseUnit.lengthUnit = value.baseUnit.lengthUnit ?? 'm';
+            this.baseUnit.axisUp = value.baseUnit.axisUp ?? 'Y';
             this.baseUnit.rightHand = value.baseUnit.rightHand ?? true;
         }
         //是否使用反向Z
-        if (value.reversedZ !== undefined && typeof value.reversedZ == "boolean") {
+        if (value.reversedZ !== undefined && typeof value.reversedZ == 'boolean') {
             this.reversedZ = {
                 isReversedZ: value.reversedZ,
-                cleanValue: value.reversedZ ? this.depthMode.depthClearValueOfReveredZ : this.depthMode.depthClearValueOfZ,
-                depthCompare: value.reversedZ ? "greater-equal" : 'less-equal',
-            }
+                cleanValue: value.reversedZ
+                    ? this.depthMode.depthClearValueOfReveredZ
+                    : this.depthMode.depthClearValueOfZ,
+                depthCompare: value.reversedZ ? 'greater-equal' : 'less-equal',
+            };
         }
         //深度模板的默认设置，根据input初始化后的参数，再次赋值
         this.depthMode.depthStencil = {
             depthWriteEnabled: true,
             depthCompare: this.reversedZ.depthCompare,
-            format: this.depthMode.depthDefaultFormat//'depth32float',
+            format: this.depthMode.depthDefaultFormat, //'depth32float',
         };
         this.depthMode.depthStencilTT = {
             depthWriteEnabled: false,
             depthCompare: this.reversedZ.depthCompare,
-            format: this.depthMode.depthDefaultFormat//'depth32float',
+            format: this.depthMode.depthDefaultFormat, //'depth32float',
         };
         this.depthMode.depthStencilMSAA = {
             depthWriteEnabled: true,
             depthCompare: this.reversedZ.depthCompare,
-            format: this.depthMode.depthDefaultFormat//'depth32float',
+            format: this.depthMode.depthDefaultFormat, //'depth32float',
         };
         this.depthMode.depthStencilMSAAinfo = {
             /**
@@ -419,7 +426,7 @@ export class Scene {
              */
             depthWriteEnabled: true,
             depthCompare: this.reversedZ.depthCompare,
-            format: this.depthMode.depthDefaultFormat//'depth32float',
+            format: this.depthMode.depthDefaultFormat, //'depth32float',
         };
 
         //是否有背景色
@@ -437,10 +444,12 @@ export class Scene {
     }
 
     getDPR() {
-        if (this.inputValue.useDevicePixelRatio == undefined || this.inputValue.useDevicePixelRatio === true) {
-            this.dpr = window.devicePixelRatio || 1
-        }
-        else {
+        if (
+            this.inputValue.useDevicePixelRatio == undefined ||
+            this.inputValue.useDevicePixelRatio === true
+        ) {
+            this.dpr = window.devicePixelRatio || 1;
+        } else {
             this.dpr = 1;
         }
         return this.dpr;
@@ -450,8 +459,7 @@ export class Scene {
      * 初始化GPU设备
      */
     async _init() {
-        if (!("gpu" in navigator)) throw new Error("WebGPU not supported.");
-
+        if (!('gpu' in navigator)) throw new Error('WebGPU not supported.');
 
         const adapter = await navigator.gpu.requestAdapter();
         if (!adapter) throw new Error("Couldn't request WebGPU adapter.");
@@ -459,36 +467,38 @@ export class Scene {
         let device: GPUDevice;
         ///////////////////////////////////////////////////////////////////////////
 
-        //1、扩展与限制 
+        //1、扩展与限制
         // console.log("WebGPU limits:", adapter.limits);
         for (const i in this.webGPULimits) {
             const hardwareMax = adapter.limits[i as keyof GPUSupportedLimits] as number;
             if (this.webGPULimits[i] > hardwareMax) {
-                throw new Error(`WebGPU device not meet minimum requirements. ${i}=${this.webGPULimits[i]}`);
+                throw new Error(
+                    `WebGPU device not meet minimum requirements. ${i}=${this.webGPULimits[i]}`,
+                );
             }
         }
 
         const supportedFeatures: GPUFeatureName[] = this.webGPUFeatures
-            .filter(g => adapter.features.has(g))
-            .map(g => g);
+            .filter((g) => adapter.features.has(g))
+            .map((g) => g);
         //2、申请
         {
             // Request higher limit of max color attachments bytes per sample.
             device = await adapter.requestDevice({
-                requiredLimits: this.webGPULimits,// { maxColorAttachmentBytesPerSample: limitsOfWE.maxColorAttachmentBytesPerSample },
-                requiredFeatures: supportedFeatures
+                requiredLimits: this.webGPULimits, // { maxColorAttachmentBytesPerSample: limitsOfWE.maxColorAttachmentBytesPerSample },
+                requiredFeatures: supportedFeatures,
             });
         }
         // 3、 输出当前支持的特性与限制
-        console.log("当前支持的特性：");
+        console.log('当前支持的特性：');
         for (const f of supportedFeatures) {
             const enabled = device.features.has(f);
-            console.log(`       ${f}:`, enabled ? "✅ 已启用" : "❌ 不支持");
+            console.log(`       ${f}:`, enabled ? '✅ 已启用' : '❌ 不支持');
             if (enabled) {
                 this.webGPUFeaturesSupported.push(f);
             }
         }
-        console.log("当前webGPU的limits:");
+        console.log('当前webGPU的limits:');
         for (const i in this.webGPULimits) {
             console.log(`       ${i}:`, this.webGPULimits[i]);
         }
@@ -499,22 +509,21 @@ export class Scene {
         this.device = device;
 
         this.canvas = document.getElementById(this.inputValue.canvas) as HTMLCanvasElement;
-        // 焦点     
-        this.canvas.tabIndex = 0
-        this.canvas.focus()
+        // 焦点
+        this.canvas.tabIndex = 0;
+        this.canvas.focus();
 
         this.context = this.canvas.getContext('webgpu') as GPUCanvasContext;
         this.presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-
-
-
 
         const dpr = this.getDPR();
         const style = getComputedStyle(this.canvas);
         let width: number = parseFloat(style.width);
         let height: number = parseFloat(style.height);
         width = Math.ceil(Math.max(1, Math.min(width * dpr, device.limits.maxTextureDimension2D)));
-        height = Math.ceil(Math.max(1, Math.min(height * dpr, device.limits.maxTextureDimension2D)));
+        height = Math.ceil(
+            Math.max(1, Math.min(height * dpr, device.limits.maxTextureDimension2D)),
+        );
         this.reSize(width, height);
 
         this.textureManager = new TextureManager(this);
@@ -523,7 +532,7 @@ export class Scene {
         this.memoryBlockManager = new MemoryBlockManager(this);
         this.BPC = new BlockPointerCoordinator(this);
         this.pointers = this.BPC.pointers;
-        this.renderManager = new RenderManager(this);//需要在entityManager等需要push DC 的ECS之前初始化
+        this.renderManager = new RenderManager(this); //需要在entityManager等需要push DC 的ECS之前初始化
         // this.commonResource = new CommonResource(device);
         this.resourcesGPU = new ResourceManagerOfGPU(this);
 
@@ -542,30 +551,30 @@ export class Scene {
         this.IBL = new IBL(this);
     }
     getResourceDefaultPBR() {
-        const one = this.resourcesGPU.weMaterialOfString.get("defaultPBR");
+        const one = this.resourcesGPU.weMaterialOfString.get('defaultPBR');
         if (one) return one;
         else {
-            throw new Error("default defaultPBR 不存在");
+            throw new Error('default defaultPBR 不存在');
         }
     }
     getResourceDefaultTexture(): Texture {
-        const one = this.resourcesGPU.weTextureOfString.get("default");
+        const one = this.resourcesGPU.weTextureOfString.get('default');
         if (one) return one;
         else {
-            throw new Error("default Texture 不存在");
+            throw new Error('default Texture 不存在');
         }
     }
     getResourceDefaultGPUTexture(): GPUTexture {
-        const one = this.resourcesGPU.textureOfString.get("default");
+        const one = this.resourcesGPU.textureOfString.get('default');
         if (one) return one;
         else {
-            throw new Error("default GPUTexture 不存在");
+            throw new Error('default GPUTexture 不存在');
         }
     }
     /**
      * 用途：为entity的storay buffer占位使用，//2026040，entity细分之后，不再使用
      * 获取oneStorageMatrix的GPUBuffer
-     * @returns 
+     * @returns
      */
     // getResourceOneStorageMatrix(): GPUBuffer {
     //     let one = this.resourcesGPU.storageBuffer.get("oneStorageMatrix");
@@ -576,41 +585,49 @@ export class Scene {
     // }
 
     /**
-     * 
+     *
      *format "rgba16float"|"rgba8unorm"|"bgra8unorm"
      * colorSpace  "display-p3" | "srgb"
-     * @returns 
+     * @returns
      */
     configure() {
-        const usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING;
+        const usage =
+            GPUTextureUsage.RENDER_ATTACHMENT |
+            GPUTextureUsage.COPY_DST |
+            GPUTextureUsage.TEXTURE_BINDING;
 
-        const hasP3Display = window.matchMedia('(color-gamut: p3)').matches || window.matchMedia('(color-gamut: rec2020)').matches;
+        const hasP3Display =
+            window.matchMedia('(color-gamut: p3)').matches ||
+            window.matchMedia('(color-gamut: rec2020)').matches;
         const hasHighDynamicRange = window.matchMedia('(dynamic-range: high)').matches;
 
-        this.colorSpaceAndLinearSpace.colorSpace = hasP3Display ? "display-p3" : "srgb";
+        this.colorSpaceAndLinearSpace.colorSpace = hasP3Display ? 'display-p3' : 'srgb';
         this.colorSpaceAndLinearSpace.hdr = hasHighDynamicRange;
 
-        {//非加载场景模式
-            if (hasP3Display) {//P3
+        {
+            //非加载场景模式
+            if (hasP3Display) {
+                //P3
                 (this.context as GPUCanvasContext).configure({
                     device: this.device,
-                    format: V_weLinearFormat,//'rgba16float',
-                    colorSpace: "display-p3",
-                    toneMapping: { mode: "extended" },
-                    alphaMode: this.premultipliedAlpha ? "premultiplied" : "opaque", //'premultiplied',//预乘透明度
-                    usage
+                    format: V_weLinearFormat, //'rgba16float',
+                    colorSpace: 'display-p3',
+                    toneMapping: { mode: 'extended' },
+                    alphaMode: this.premultipliedAlpha ? 'premultiplied' : 'opaque', //'premultiplied',//预乘透明度
+                    usage,
                 });
-                this.colorFormatOfLinearSpace = V_weLinearFormat;//"rgba16float";
-            }
-            else {
-                try {//尝试V_weLinearFormat
+                this.colorFormatOfLinearSpace = V_weLinearFormat; //"rgba16float";
+            } else {
+                try {
+                    //尝试V_weLinearFormat
                     (this.context as GPUCanvasContext).configure({
                         device: this.device,
                         format: V_weLinearFormat,
-                        alphaMode: this.premultipliedAlpha ? "premultiplied" : "opaque", //'premultiplied',//预乘透明度
-                        usage
+                        alphaMode: this.premultipliedAlpha ? 'premultiplied' : 'opaque', //'premultiplied',//预乘透明度
+                        usage,
                     });
-                } catch (_error) {//如果V_weLinearFormat失败，尝试this.presentationFormat
+                } catch (_error) {
+                    //如果V_weLinearFormat失败，尝试this.presentationFormat
                     /**
                      * todo:20260503
                      * GBuffers 未匹配this.presentationFormat，而是使用V_weLinearFormat
@@ -618,8 +635,8 @@ export class Scene {
                     (this.context as GPUCanvasContext).configure({
                         device: this.device,
                         format: this.presentationFormat,
-                        alphaMode: this.premultipliedAlpha ? "premultiplied" : "opaque", //'premultiplied',//预乘透明度
-                        usage
+                        alphaMode: this.premultipliedAlpha ? 'premultiplied' : 'opaque', //'premultiplied',//预乘透明度
+                        usage,
                     });
                     this.colorFormatOfLinearSpace = this.presentationFormat;
                 }
@@ -635,7 +652,7 @@ export class Scene {
      * @param height 高度
      */
     reSize(width: number, height: number) {
-        console.log("Scene Size:", width, height);
+        console.log('Scene Size:', width, height);
         if (width != this.surface.size.width || height != this.surface.size.height) {
             this.surface.size.width = width;
             this.surface.size.height = height;
@@ -653,25 +670,37 @@ export class Scene {
                 this.finalTarget.depth.destroy();
             }
             this.finalTarget.color = this.device.createTexture({
-                label: "finalTarget color",
+                label: 'finalTarget color',
                 size: [width, height],
                 format: this.colorFormatOfLinearSpace,
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                usage:
+                    GPUTextureUsage.RENDER_ATTACHMENT |
+                    GPUTextureUsage.COPY_SRC |
+                    GPUTextureUsage.COPY_DST |
+                    GPUTextureUsage.TEXTURE_BINDING,
                 // sampleCount: this.MSAA ? 4 : 1,
             });
             this.finalTarget.colorPostProcess = this.device.createTexture({
-                label: "finalTarget color post process for uniform ",
+                label: 'finalTarget color post process for uniform ',
                 size: [width, height],
                 format: this.colorFormatOfLinearSpace,
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                usage:
+                    GPUTextureUsage.RENDER_ATTACHMENT |
+                    GPUTextureUsage.COPY_SRC |
+                    GPUTextureUsage.COPY_DST |
+                    GPUTextureUsage.TEXTURE_BINDING,
                 // sampleCount: this.MSAA ? 4 : 1,
             });
             if (this.finalTarget.NDC === true) {
                 this.finalTarget.depth = this.device.createTexture({
-                    label: "finalTarget.depth",
+                    label: 'finalTarget.depth',
                     size: [width, height],
                     format: this.depthMode.depthDefaultFormat,
-                    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+                    usage:
+                        GPUTextureUsage.RENDER_ATTACHMENT |
+                        GPUTextureUsage.COPY_SRC |
+                        GPUTextureUsage.COPY_DST |
+                        GPUTextureUsage.TEXTURE_BINDING,
                     // sampleCount: this.MSAA ? 4 : 1,
                 });
                 this.rpdNDC = undefined;
@@ -683,8 +712,7 @@ export class Scene {
      * 监听画布大小变化
      */
     async obServerSize() {
-
-        const observer = new ResizeObserver(entries => {
+        const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 //即使在100%的比例，devicePixcel得到的size还是大于contentRect，在pickup时，定位会不准
                 // const width = entry.devicePixelContentBoxSize[0].inlineSize;
@@ -711,9 +739,7 @@ export class Scene {
         await this.obServerSize();
     }
 
-    load(_config: IJ_Scene) {
-
-    }
+    load(_config: IJ_Scene) {}
     ////////////////////////////////////////////////////////////////////////////////////////////
     // update event
 
@@ -745,14 +771,14 @@ export class Scene {
         }
     }
     /**获取用户字自定义 call function的状态 */
-    getUserDefineEventStateByName(name: string, state: boolean): { name: string, state: boolean } {
+    getUserDefineEventStateByName(name: string, state: boolean): { name: string; state: boolean } {
         for (const i of this.userDefineUpdateArray) {
             if (i.name == name) {
                 i.state = state;
                 return { name, state };
             }
         }
-        return { name: "false", state: false };
+        return { name: 'false', state: false };
     }
     /**当前帧是否resize 了窗口大小*/
     isResized(): boolean {
@@ -761,7 +787,7 @@ export class Scene {
 
     /**每帧循环 onBeforeUpdate */
     async onBeforeUpdate() {
-        this.Box3s = [];//清空包围盒，但不影响上一级计算的boundingBox
+        this.Box3s = []; //清空包围盒，但不影响上一级计算的boundingBox
         if (this.flags.reSize.status === true) {
             // console.log("reseize event at onBeforeRender");
             this.reSize(this.flags.reSize.width, this.flags.reSize.height);
@@ -788,7 +814,6 @@ export class Scene {
     }
 
     async update() {
-
         this.onUpdate();
 
         //texture manager
@@ -827,9 +852,9 @@ export class Scene {
         //其他管理器更新（大气层）,在后处理之前
         this.otherManager.update(this.clock);
 
-        this.postProcessManager.update(this.clock);//push command to render manager array
+        this.postProcessManager.update(this.clock); //push command to render manager array
 
-        //particle manager and update DCCC        
+        //particle manager and update DCCC
 
         //更新包围盒数据，下一帧使用
         this.generateBox();
@@ -842,14 +867,13 @@ export class Scene {
         this.updateUserDefineEvent(eventOfScene.onBeforeRender);
     }
 
-
     async updateBVH() {
         this.generateBundleOfCameraAndBVH();
     }
     /**
      * 生成相机（包括camera 和 light的shadowmap）和BVH的bundle
      */
-    async generateBundleOfCameraAndBVH() { }
+    async generateBundleOfCameraAndBVH() {}
 
     //每帧清除数据
     async cleanUp() {
@@ -858,29 +882,29 @@ export class Scene {
     }
 
     run() {
-
         this.clock.update();
         const perFrameRun = async () => {
-            if (this.flags.realTimeRender) {//是否开启实时更新
+            if (this.flags.realTimeRender) {
+                //是否开启实时更新
                 //时间更新
                 const timerNow = Date.now();
                 const _timerLast = timerNow;
                 this.clock.update();
                 await this.onBeforeUpdate();
-                await this.pickup();//pickup 在当前帧的update开始之前
+                await this.pickup(); //pickup 在当前帧的update开始之前
                 await this.update();
                 await this.onAfterUpdate();
                 await this.onBeforeRender();
                 this.render();
                 await this.onAfterRender();
-                // await this.renderToneMappingAndMSAA();//test 
+                // await this.renderToneMappingAndMSAA();//test
                 await this.showGBuffersVisualize();
                 await this.renderToSurface();
                 await this.cleanUp();
                 requestAnimationFrame(perFrameRun);
             }
-        }
-        requestAnimationFrame(perFrameRun)
+        };
+        requestAnimationFrame(perFrameRun);
     }
     /**每帧循环 onRender */
     async onRender() {
@@ -889,11 +913,11 @@ export class Scene {
     render() {
         this.onRender();
         // this.lightManger.render()
-        this.renderManager.render();        //包括不透明和透明，depth
+        this.renderManager.render(); //包括不透明和透明，depth
     }
-    /**每帧循环 onAfterRender 
+    /**每帧循环 onAfterRender
      * 1、用户自定义事件
-    */
+     */
     async onAfterRender() {
         // copyTextureToTexture(
         //     this.device,
@@ -915,11 +939,10 @@ export class Scene {
     //     this.cameraManager.renderToneMapping();
     // }
 
-
     async pickup() {
         await this.pickupManager.update(this.clock);
     }
-    async showGBuffersVisualize() { }
+    async showGBuffersVisualize() {}
 
     async renderToSurface() {
         const defaultCamera = this.cameraManager.defaultCamera;
@@ -931,37 +954,51 @@ export class Scene {
             // let finalColorOfGBuffer = this.cameraManager.GBufferManager.GBuffer[defaultCamera.UUID].forward.deferColor;
             // copyTextureToTexture(this.device, finalColorOfGBuffer, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
 
-
             //适用于还有后续操作的情况，比如：多camera窗口，viewport，GBuffer可视化等
-            copyTextureToTexture(this.device, this.finalTarget.color!, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
-        }
-
-        else {
+            copyTextureToTexture(
+                this.device,
+                this.finalTarget.color!,
+                (this.context as GPUCanvasContext).getCurrentTexture(),
+                { width: this.surface.size.width, height: this.surface.size.height },
+            );
+        } else {
             // if (this.finalTarget.NDC == true) {
             //     console.warn("非NDC 模式下，但开启了modeNDC 模式.");
             //     //this.finalTarget.NDC = false;
             // }
             if (this.finalTarget.NDC == true) {
-                copyTextureToTexture(this.device, this.finalTarget.color!, (this.context as GPUCanvasContext).getCurrentTexture(), { width: this.surface.size.width, height: this.surface.size.height });
-            }
-            else {
-                console.log("没有默认相机或相机未初始化完成,也未开启NDC 模式。");
+                copyTextureToTexture(
+                    this.device,
+                    this.finalTarget.color!,
+                    (this.context as GPUCanvasContext).getCurrentTexture(),
+                    { width: this.surface.size.width, height: this.surface.size.height },
+                );
+            } else {
+                console.log('没有默认相机或相机未初始化完成,也未开启NDC 模式。');
             }
         }
     }
 
-
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
     getBackgroudColor(): [number, number, number, number] {
         const premultipliedAlpha: boolean = this.premultipliedAlpha;
         if (premultipliedAlpha) {
-            return [this.backgroudColor[0] * this.backgroudColor[3], this.backgroudColor[1] * this.backgroudColor[3], this.backgroudColor[2] * this.backgroudColor[3], this.backgroudColor[3]];
-        }
-        else {
-            return [this.backgroudColor[0], this.backgroudColor[1], this.backgroudColor[2], this.backgroudColor[3]];
+            return [
+                this.backgroudColor[0] * this.backgroudColor[3],
+                this.backgroudColor[1] * this.backgroudColor[3],
+                this.backgroudColor[2] * this.backgroudColor[3],
+                this.backgroudColor[3],
+            ];
+        } else {
+            return [
+                this.backgroudColor[0],
+                this.backgroudColor[1],
+                this.backgroudColor[2],
+                this.backgroudColor[3],
+            ];
         }
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -969,7 +1006,6 @@ export class Scene {
 
     /** 世界坐标的Box */
     generateBox(): boundingBox {
-
         this.boundingBox = generateBox3ByArrayBox3s(this.Box3s);
         return this.boundingBox;
     }
@@ -988,14 +1024,12 @@ export class Scene {
         return this.boundingSphere;
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //add 
+    //add
     async addChild(child: NodeObject | BaseEntity | IV_Node, modelAttachValue?: IV_NodeSpace) {
         if (child instanceof AmbientLight) {
             this.lightsManager.ambientLight = child;
             return child;
-        }
-        else
-            return await this.root.addChild(child, modelAttachValue);
+        } else return await this.root.addChild(child, modelAttachValue);
     }
     add = this.addChild;
     remove(child: NodeObject) {
@@ -1005,30 +1039,30 @@ export class Scene {
         const parent = child.Parent;
         if (parent) {
             parent.removeChild(child);
-        }
-        else {
-            console.warn("未找到对应的子节点", child);
+        } else {
+            console.warn('未找到对应的子节点', child);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //uniform , RPD,CATs 部分
 
-
     /**
-     * 
+     *
      * @param UUID UUID,camera的UUID是正常的UUID，light的UUID是merge的UUID，通过“__”分割shadowmap的index（默认=0，point有6个：0-5）
      * @param kind 渲染的类型
-     * @returns 
+     * @returns
      */
-    getSystemBindGroupAndBindGroupLayoutForZero(UUID: string, kind: E_renderForDC): I_bindGroupAndGroupLayout {
+    getSystemBindGroupAndBindGroupLayoutForZero(
+        UUID: string,
+        kind: E_renderForDC,
+    ): I_bindGroupAndGroupLayout {
         let bindGroup: GPUBindGroup;
         let bindGroupLayout: GPUBindGroupLayout;
         if (kind == E_renderForDC.light) {
             bindGroupLayout = this.getBindGroupLayoutZeroOfLight();
             bindGroup = this.getBindGroupZeroOfLight(UUID);
-        }
-        else if (kind == E_renderForDC.camera) {
+        } else if (kind == E_renderForDC.camera) {
             bindGroupLayout = this.getBindGroupLayoutZeroOfCamera();
             bindGroup = this.getBindGroupZeroOfCamera(UUID);
         }
@@ -1042,48 +1076,49 @@ export class Scene {
     getBindGroupLayoutZeroOfCamera(): GPUBindGroupLayout {
         if (this._bindGroupLayoutZeroOfCamera === undefined) {
             const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                label: "System BGLD(0) Camera",
+                label: 'System BGLD(0) Camera',
                 entries: [
                     {
                         binding: 0,
                         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                         buffer: {
-                            type: "uniform"
-                        }
+                            type: 'uniform',
+                        },
                     },
                     {
                         binding: 1,
                         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                         buffer: {
-                            type: "read-only-storage"
-                        }
+                            type: 'read-only-storage',
+                        },
                     },
                     {
                         binding: 2,
                         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                         buffer: {
-                            type: "read-only-storage"
-                        }
+                            type: 'read-only-storage',
+                        },
                     },
                     {
                         binding: 3,
                         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                         texture: {
-                            sampleType: "depth",
-                            viewDimension: "2d-array",
+                            sampleType: 'depth',
+                            viewDimension: '2d-array',
                             multisampled: false,
-                        }
+                        },
                     },
                     {
                         binding: 4,
                         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                         sampler: {
-                            type: "comparison"
-                        }
-                    }
-                ]
-            }
-            this._bindGroupLayoutZeroOfCamera = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
+                            type: 'comparison',
+                        },
+                    },
+                ],
+            };
+            this._bindGroupLayoutZeroOfCamera =
+                this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
         }
         return this._bindGroupLayoutZeroOfCamera;
     }
@@ -1093,50 +1128,54 @@ export class Scene {
             const camera = this.cameraManager.getCameraByUUID(UUID);
             if (camera) {
                 const entriesGroup: GPUBindGroupEntry[] = [
-                    { //camera uniform MVP
+                    {
+                        //camera uniform MVP
                         binding: 0,
                         resource: {
-                            buffer: camera.systemUniformBuffersOfGPU,//更新在perlight的updateSelf（）中
-                        }
+                            buffer: camera.systemUniformBuffersOfGPU, //更新在perlight的updateSelf（）中
+                        },
                     },
-                    { //lights uniform 
+                    {
+                        //lights uniform
                         binding: 1,
                         resource: {
-                            buffer: this.lightsManager.getLightsUniformForSystem(),//更新在lightManager.update()
-                        }
+                            buffer: this.lightsManager.getLightsUniformForSystem(), //更新在lightManager.update()
+                        },
                     },
-                    {//shadow map matrix uniform 
+                    {
+                        //shadow map matrix uniform
                         binding: 2,
                         resource: {
-                            buffer: this.lightsManager.getShadowMapUniformForSystem(),//更新在lightManager.update()
-                        }
+                            buffer: this.lightsManager.getShadowMapUniformForSystem(), //更新在lightManager.update()
+                        },
                     },
-                    { //shadow map depth texture
+                    {
+                        //shadow map depth texture
                         binding: 3,
-                        resource: this.lightsManager.shadowMapTexture.createView({ dimension: "2d-array" }),
+                        resource: this.lightsManager.shadowMapTexture.createView({
+                            dimension: '2d-array',
+                        }),
                     },
-                    {//shadow map sampler 
+                    {
+                        //shadow map sampler
                         binding: 4,
-                        resource:
-                            this.reversedZ.isReversedZ ?
-                                this.device.createSampler({
-                                    compare: "greater-equal",
-                                })
-                                :
-                                this.device.createSampler({
-                                    compare: 'less',
-                                })
-                    }
+                        resource: this.reversedZ.isReversedZ
+                            ? this.device.createSampler({
+                                  compare: 'greater-equal',
+                              })
+                            : this.device.createSampler({
+                                  compare: 'less',
+                              }),
+                    },
                 ];
                 const bindGroupDescriptor: GPUBindGroupDescriptor = {
-                    label: "System BGD(0) Camera:" + UUID,
+                    label: 'System BGD(0) Camera:' + UUID,
                     layout: this.getBindGroupLayoutZeroOfCamera(),
                     entries: entriesGroup,
-                }
-                this._bindGroupZeroOfCamera[UUID] = this.device.createBindGroup(bindGroupDescriptor);
-            }
-            else
-                throw new Error("获取Camera失败");
+                };
+                this._bindGroupZeroOfCamera[UUID] =
+                    this.device.createBindGroup(bindGroupDescriptor);
+            } else throw new Error('获取Camera失败');
         }
         return this._bindGroupZeroOfCamera[UUID];
     }
@@ -1145,18 +1184,19 @@ export class Scene {
     getBindGroupLayoutZeroOfLight(): GPUBindGroupLayout {
         if (this._bindGroupLayoutZeroOfLight === undefined) {
             const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                label: "System BGLD(0) Light",
+                label: 'System BGLD(0) Light',
                 entries: [
                     {
                         binding: 0,
                         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                         buffer: {
-                            type: "uniform"
-                        }
-                    }
-                ]
-            }
-            this._bindGroupLayoutZeroOfLight = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
+                            type: 'uniform',
+                        },
+                    },
+                ],
+            };
+            this._bindGroupLayoutZeroOfLight =
+                this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
         }
         return this._bindGroupLayoutZeroOfLight;
     }
@@ -1164,20 +1204,20 @@ export class Scene {
         if (this._bindGroupZeroOfLight[UUID] == undefined) {
             const mvpGPUBuffer = this.lightsManager.getOneLightMVP_ByMergeID(UUID);
             if (!mvpGPUBuffer) {
-                throw new Error("getBindGroup0OfLight error,mvpGPUBuffer is undefined");
+                throw new Error('getBindGroup0OfLight error,mvpGPUBuffer is undefined');
             }
             const bindGroupDescriptor: GPUBindGroupDescriptor = {
-                label: "System BGD(0) Light:" + UUID,
+                label: 'System BGD(0) Light:' + UUID,
                 layout: this.getBindGroupLayoutZeroOfLight(),
                 entries: [
                     {
                         binding: 0,
                         resource: {
-                            buffer: mvpGPUBuffer,//更新在perlight的updateSelf()中更新MVP,lightmanager.updateSytemUniformOfShadowMap()更结构中的GPUBuffer
-                        }
-                    }
-                ]
-            }
+                            buffer: mvpGPUBuffer, //更新在perlight的updateSelf()中更新MVP,lightmanager.updateSytemUniformOfShadowMap()更结构中的GPUBuffer
+                        },
+                    },
+                ],
+            };
             this._bindGroupZeroOfLight[UUID] = this.device.createBindGroup(bindGroupDescriptor);
         }
         return this._bindGroupZeroOfLight[UUID];
@@ -1207,45 +1247,42 @@ export class Scene {
     }
     /**
      * 获取RPD，DCG使用
-     * @param UUID 
-     * @param kind 
+     * @param UUID
+     * @param kind
      * @returns GPURenderPassDescriptor
      */
-    getRenderPassDescriptor(UUID: string, kind: E_renderForDC, _MSAA?: T_rpdInfomationOfMSAA): GPURenderPassDescriptor {
+    getRenderPassDescriptor(
+        UUID: string,
+        kind: E_renderForDC,
+        _MSAA?: T_rpdInfomationOfMSAA,
+    ): GPURenderPassDescriptor {
         if (kind == E_renderForDC.camera) {
             if (this.MSAA && _MSAA != undefined) {
-                if (_MSAA == "MSAA")
-                    return this.cameraManager.getRPD_MSAA_ByUUID(UUID);
-                else
-                    return this.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
-            }
-            else {
+                if (_MSAA == 'MSAA') return this.cameraManager.getRPD_MSAA_ByUUID(UUID);
+                else return this.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
+            } else {
                 const rdp = this.cameraManager.getRPDByUUID(UUID);
-                if (rdp)
-                    return rdp;
-                else
-                    throw new Error("获取RPD失败");
+                if (rdp) return rdp;
+                else throw new Error('获取RPD失败');
             }
-        }
-        else {
+        } else {
             const rdp = this.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
-            if (rdp)
-                return rdp;
-            else
-                throw new Error("获取RPD失败");
+            if (rdp) return rdp;
+            else throw new Error('获取RPD失败');
         }
     }
-    getRenderPassDescriptorOfTransparent(UUID: string, _kind: E_renderForDC): GPURenderPassDescriptor {
+    getRenderPassDescriptorOfTransparent(
+        UUID: string,
+        _kind: E_renderForDC,
+    ): GPURenderPassDescriptor {
         const rdp = this.cameraManager.getRpdOfTransparentByUUID(UUID);
-        if (rdp)
-            return rdp;
-        else
-            throw new Error("获取RPD失败");
+        if (rdp) return rdp;
+        else throw new Error('获取RPD失败');
     }
     // /**
     //  * 获取颜色附件目标，DCG使用
-    //  * @param UUID 
-    //  * @param kind 
+    //  * @param UUID
+    //  * @param kind
     //  * @returns GPUColorTargetState[]
     //  */
     // getColorAttachmentTargets(UUID: string, kind: E_renderForDC, _MSAA?: T_rpdInfomationOfMSAA): GPUColorTargetState[] {
@@ -1322,7 +1359,7 @@ export class Scene {
     rpdNDC: GPURenderPassDescriptor | undefined;
     /**
      * rpd for NDC
-     * @returns 
+     * @returns
      */
     getRenderPassDescriptorForNDC(): GPURenderPassDescriptor {
         // if (this.MSAA) {
@@ -1331,7 +1368,7 @@ export class Scene {
         //             {
         //                 view: this.finalTarget.color!.createView(),
         //                 resolveTarget: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
-        //                 clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
+        //                 clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置
         //                 loadOp: 'clear',
         //                 storeOp: "store"
         //             }
@@ -1339,7 +1376,7 @@ export class Scene {
         //         depthStencilAttachment: {
         //             view: this.finalTarget.depth!.createView(),
 
-        //             depthClearValue: this.reversedZ.cleanValue,// 1.0,                
+        //             depthClearValue: this.reversedZ.cleanValue,// 1.0,
         //             depthLoadOp: 'clear',// depthLoadOp: 'load',
         //             depthStoreOp: 'store',
 
@@ -1348,8 +1385,7 @@ export class Scene {
         //     return renderPassDescriptor;
         // }
         // else
-        if (this.rpdNDC)
-            return this.rpdNDC;
+        if (this.rpdNDC) return this.rpdNDC;
         else {
             // let colorAttachments: GPURenderPassColorAttachment[] = [];
             const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -1359,16 +1395,16 @@ export class Scene {
                         view: this.finalTarget.color!.createView(),
                         // view: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
                         // clearValue: this.backgroudColor,//未预乘alpha
-                        clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置 
+                        clearValue: this.getBackgroudColor(), //预乘alpha,需要在初始化的时候设置
                         // clearValue: [0.5, 0.5, 0.5, 1],
                         loadOp: 'clear',
-                        storeOp: "store"
-                    }
+                        storeOp: 'store',
+                    },
                 ],
                 depthStencilAttachment: {
                     view: this.finalTarget.depth!.createView(),
                     depthClearValue: this.reversedZ.cleanValue,
-                    depthLoadOp: 'clear',// depthLoadOp: 'load',
+                    depthLoadOp: 'clear', // depthLoadOp: 'load',
                     depthStoreOp: 'store',
                 },
             };
@@ -1386,5 +1422,4 @@ export class Scene {
     getEntityByID(id: number): any {
         return this.entityManager.getByID(id);
     }
-
 }

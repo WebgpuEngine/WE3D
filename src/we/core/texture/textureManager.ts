@@ -1,11 +1,9 @@
-import { ECSManager } from "../organization/manager";
-import { Clock } from "../scene/clock";
-import { E_renderPassName } from "../scene/renderManager";
-import { BaseTexture } from "./baseTexture";
-
+import { ECSManager } from '../organization/manager';
+import { Clock } from '../scene/clock';
+import { E_renderPassName } from '../scene/renderManager';
+import { BaseTexture } from './baseTexture';
 
 export class TextureManager extends ECSManager<BaseTexture> {
-
     update(clock: Clock): void {
         this.checkDestroy();
         for (const i of this.list) {
@@ -18,5 +16,4 @@ export class TextureManager extends ECSManager<BaseTexture> {
             }
         }
     }
-
 }

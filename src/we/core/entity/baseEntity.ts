@@ -1,27 +1,25 @@
-
-import { boundingBox, generateBox3 } from "../math/Box";
-import { boundingSphere, generateSphereFromBox3 } from "../math/sphere";
+import { boundingBox, generateBox3 } from '../math/Box';
+import { boundingSphere, generateSphereFromBox3 } from '../math/sphere';
 import {
     E_entityType,
     I_entityInstance,
     IV_BaseEntity,
     I_optionShadowEntity,
     I_locationInterpolate,
-} from "./base";
-import { E_lifeState, E_renderForDC, weVec2 } from "../base/coreDefine";
-import { Clock } from "../scene/clock";
-import { I_bindGroupAndGroupLayout, I_drawMode, I_drawModeIndexed } from "../command/base";
-import { EntityManager } from "./entityManager";
-import { Scene } from "../scene/scene";
-import { DrawCommandGenerator } from "../command/DrawCommandGenerator";
-import { E_renderPassName } from "../scene/renderManager";
-import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix";
-import { NodeObject } from "../organization/nodeObject";
-import { NodeSpace } from "../organization/nodeSpace";
-import { I_pointerCreateParams, I_pointerStruct } from "../bufferBlock/pointer";
-import { E_BOLBufferType } from "../bufferBlock/base";
-import { DrawCommand } from "../command/DrawCommand";
-
+} from './base';
+import { E_lifeState, E_renderForDC, weVec2 } from '../base/coreDefine';
+import { Clock } from '../scene/clock';
+import { I_bindGroupAndGroupLayout, I_drawMode, I_drawModeIndexed } from '../command/base';
+import { EntityManager } from './entityManager';
+import { Scene } from '../scene/scene';
+import { DrawCommandGenerator } from '../command/DrawCommandGenerator';
+import { E_renderPassName } from '../scene/renderManager';
+import { mat4, Mat4, vec3, Vec3 } from 'wgpu-matrix';
+import { NodeObject } from '../organization/nodeObject';
+import { NodeSpace } from '../organization/nodeSpace';
+import { I_pointerCreateParams, I_pointerStruct } from '../bufferBlock/pointer';
+import { E_BOLBufferType } from '../bufferBlock/base';
+import { DrawCommand } from '../command/DrawCommand';
 
 export abstract class BaseEntity extends NodeSpace {
     ////////////////////////////////////////////////////////////////////
@@ -37,7 +35,7 @@ export abstract class BaseEntity extends NodeSpace {
      *   B、包括：
      *          quadDrawBeforeDeferRender
      *          quadDrawAfterDeferRender
-     *          
+     *
      *          stage1
      *          stage2
      *          ui
@@ -45,9 +43,9 @@ export abstract class BaseEntity extends NodeSpace {
     /**内部实例化数量，默认为1 */
     instance: I_entityInstance = {
         numInstances: 1,
-    }
+    };
     /**     剔除模式    默认=back      */
-    _cullMode: GPUCullMode = "back";
+    _cullMode: GPUCullMode = 'back';
     /**MSAA */
     MSAA: boolean = false;
     /**
@@ -70,14 +68,14 @@ export abstract class BaseEntity extends NodeSpace {
     kind!: E_entityType;
 
     /**uniform :  st_entity 数据     */
-    _entityCommonByteSize = 32;//以byte计算
+    _entityCommonByteSize = 32; //以byte计算
 
     /** storage array
      * 每个instance的st_instance_info size
      * 1、每个instance的结构大小 ，st_instance_info 大小=16
      * 2、instance数量（M=1，动态，程序中）
      */
-    _instanceInfoByteSize = 16;//以byte计算
+    _instanceInfoByteSize = 16; //以byte计算
 
     /**storage array(初始化默认一个矩阵，即一个instance)
      * 每个instance的world matrix大小(固定的)
@@ -86,7 +84,7 @@ export abstract class BaseEntity extends NodeSpace {
      * 3、2个矩阵，分别是world矩阵和逆矩阵
      */
     _instanceWorldMatrixByteSize = 16 * 4 * 2;
-    /** 顶点属性的插值模式       
+    /** 顶点属性的插值模式
      */
     locationInterpolate: I_locationInterpolate | undefined;
 
@@ -94,10 +92,9 @@ export abstract class BaseEntity extends NodeSpace {
      */
     getStringOfLocationInterpolate(): string {
         if (!this.locationInterpolate) {
-            return "";
-        }
-        else {
-            let locationOfString = "";
+            return '';
+        } else {
+            let locationOfString = '';
             for (const i in this.locationInterpolate) {
                 const perLocationInterpolate = this.locationInterpolate[i];
                 locationOfString += ` interpolate:${perLocationInterpolate.type},${perLocationInterpolate.sampling}} `;
@@ -135,38 +132,39 @@ export abstract class BaseEntity extends NodeSpace {
         name: string;
         byteSize: number;
     }[] = [
-            {
-                name: "instances",
-                byteSize: this._instanceInfoByteSize
-            },
-            {
-                name: "wolrdMatrix",
-                byteSize: this._instanceWorldMatrixByteSize
-            }];
+        {
+            name: 'instances',
+            byteSize: this._instanceInfoByteSize,
+        },
+        {
+            name: 'wolrdMatrix',
+            byteSize: this._instanceWorldMatrixByteSize,
+        },
+    ];
 
     bufferPointers: {
         uniformCommonEntity: I_pointerStruct | undefined;
         instances: I_pointerStruct | undefined;
         wolrdMatrix: I_pointerStruct | undefined;
     } = {
-            uniformCommonEntity: undefined,
-            instances: undefined,
-            wolrdMatrix: undefined
-        };
+        uniformCommonEntity: undefined,
+        instances: undefined,
+        wolrdMatrix: undefined,
+    };
 
     /** 顶点buffer 列表:有DCG生成的顶点buffer和index buffer
      *  1、有DCG写入
-    */
+     */
     vertexPointers: {
         [key: string]: {
             pointer?: I_pointerStruct;
             gpuBuffer?: any;
-        }
+        };
     } = {};
     /**
      * 外部实例化数组
      * 说明：
-     * 1、由EntityManager.add()指向赋值：entity.outSideInstance = instances; 
+     * 1、由EntityManager.add()指向赋值：entity.outSideInstance = instances;
      * 2、checkStorageBuffer() 检查是否需要更新storage buffer
      * 3、updateSelf() 中调用，
      *         this.updateUniformCommonEntity(clock);  //更新vs、fs的uniform
@@ -180,7 +178,6 @@ export abstract class BaseEntity extends NodeSpace {
     outSideInstance: NodeObject[] = [];
     /** 上一帧外部实例化数量 */
     outSideInstanceCountPreFrame: number = 0;
-
 
     /** inside实例化矩阵数组，每个内部实例一个矩阵 */
     _insideInstanceMatrix: Mat4[] = [];
@@ -224,21 +221,21 @@ export abstract class BaseEntity extends NodeSpace {
     //延迟渲染，color模式，todo：先绘制color，depth，材质集中在一起处理，需要一个shader进行处理，即，合批shader
     deferRenderColor!: boolean;
     renderPassArray: {
-        [E_renderPassName.sprite]: DrawCommand[],
-        [E_renderPassName.MSAA]: DrawCommand[],
-        [E_renderPassName.forward]: DrawCommand[],
-        [E_renderPassName.transparent]: DrawCommand[],
-        [E_renderPassName.shadowmapOpaque]: DrawCommand[],
-        [E_renderPassName.shadowmapTransparent]: DrawCommand[],
+        [E_renderPassName.sprite]: DrawCommand[];
+        [E_renderPassName.MSAA]: DrawCommand[];
+        [E_renderPassName.forward]: DrawCommand[];
+        [E_renderPassName.transparent]: DrawCommand[];
+        [E_renderPassName.shadowmapOpaque]: DrawCommand[];
+        [E_renderPassName.shadowmapTransparent]: DrawCommand[];
         // [key in E_renderPassName]?: DrawCommand[]
     } = {
-            [E_renderPassName.sprite]: [],
-            [E_renderPassName.MSAA]: [],
-            [E_renderPassName.forward]: [],
-            [E_renderPassName.transparent]: [],
-            [E_renderPassName.shadowmapOpaque]: [],
-            [E_renderPassName.shadowmapTransparent]: [],
-        };
+        [E_renderPassName.sprite]: [],
+        [E_renderPassName.MSAA]: [],
+        [E_renderPassName.forward]: [],
+        [E_renderPassName.transparent]: [],
+        [E_renderPassName.shadowmapOpaque]: [],
+        [E_renderPassName.shadowmapTransparent]: [],
+    };
     /**
      * DrawCommand 生成器
      */
@@ -256,9 +253,9 @@ export abstract class BaseEntity extends NodeSpace {
      * 初始化状态(_state)
      * 上级group的状态（可见性、使用性）
      */
-    abstract checkStatus(): boolean
+    abstract checkStatus(): boolean;
     /** 生成原始包围盒和原始包围球 */
-    abstract generateBoxAndSphere(): void
+    abstract generateBoxAndSphere(): void;
     /** 获取混合模式 */
     abstract getBlend(): GPUBlendState[];
     /** 获取是否透明 */
@@ -267,46 +264,46 @@ export abstract class BaseEntity extends NodeSpace {
     /**延迟渲染的深度渲染：单像素模延迟 ，不透明*/
     // abstract createDeferDepthDC(camera: BaseCamera): void
     /**前向渲染 不透明 */
-    abstract createForwardDC(): void
+    abstract createForwardDC(): void;
     /**透明渲染 */
-    abstract createTransparent(): void
+    abstract createTransparent(): void;
 
     /**渲染shadowmap 不透明*/
-    abstract createShadowMapDC(): void
+    abstract createShadowMapDC(): void;
     /**渲染shadowmap 透明模式 */
-    abstract createShadowMapTransparentDC(): void
+    abstract createShadowMapTransparentDC(): void;
 
     /**获取uniform 和shader模板输出，其中包括了uniform 对应的layout到resourceGPU的map
      * 涉及三个部分：
      * 1、uniformGroups：uniform多组，至少有group0(system),group1(entity)。
      * 2、shaderTemplateFinal：shader模板输出，包括了shader代码和groupAndBindingString。
      * 3、enity 和material的uniform layout 到ResourceGPU的Map操作
-     * @param startBinding 
-     * @returns  uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final 
+     * @param startBinding
+     * @returns  uniformGroups: T_uniformGroups[], shaderTemplateFinal: I_ShaderTemplate_Final
      */
     // abstract getVSUniformAndShaderTemplateFinal(SHT_VS: I_ShaderTemplate, startBinding: number): I_EntityBundleOutput;
     /**判断在camera或light的可见性 ，并获取实例化的drawMode数组*/
     abstract getDrawModeArrayOfInstances(
         UUID: string,
         kind: E_renderForDC,
-        wireFrameDrawModeTemplate?: I_drawMode | I_drawModeIndexed
+        wireFrameDrawModeTemplate?: I_drawMode | I_drawModeIndexed,
     ): I_drawMode[] | I_drawModeIndexed[];
     /**获取每个实例的drawMode数组 ,透明渲染使用*/
     abstract getDrawModeArrayOfPerInstance(
         UUID: string,
         kind: E_renderForDC,
     ): {
-        instance: NodeObject,
-        distance: number,
-        drawData: I_drawMode[] | I_drawModeIndexed[]
-    }[]
+        instance: NodeObject;
+        distance: number;
+        drawData: I_drawMode[] | I_drawModeIndexed[];
+    }[];
 
     inputValues: IV_BaseEntity;
 
     constructor(input: IV_BaseEntity) {
         super(input);
         this.inputValues = input;
-        this.type = "entity";
+        this.type = 'entity';
         this._state = E_lifeState.constructing;
         this.input = input;
         // if (input.attributes?.locationInterpolate) {
@@ -346,12 +343,12 @@ export abstract class BaseEntity extends NodeSpace {
         }
         for (const i in this.vertexPointers) {
             if (this.vertexPointers[i as keyof typeof this.vertexPointers].pointer != undefined) {
-                const perPointer: I_pointerStruct = this.vertexPointers[i as keyof typeof this.vertexPointers].pointer!;
+                const perPointer: I_pointerStruct =
+                    this.vertexPointers[i as keyof typeof this.vertexPointers].pointer!;
                 // console.log("===entity destroy release pointer", perPointer.pointerID);
                 this.scene.pointers.releasePointer(perPointer.pointerID);
             }
         }
-
     }
     /**
      * 检查内部instance是否合法
@@ -359,21 +356,21 @@ export abstract class BaseEntity extends NodeSpace {
     checkInstance() {
         if (this.instance.index) {
             if (this.instance.index.length < this.instance.numInstances) {
-                throw new Error("instance.index 长度必须大于等于 instance.numInstances");
+                throw new Error('instance.index 长度必须大于等于 instance.numInstances');
             }
-        }
-        else if (this.instance.position) {
+        } else if (this.instance.position) {
             if (this.instance.numInstances > this.instance.position.length) {
-                throw new Error("instance.position 长度必须大于等于 instance.numInstances");
+                throw new Error('instance.position 长度必须大于等于 instance.numInstances');
             }
             this.instance.numInstances = this.instance.position.length / 3;
         }
-        let posLen = 0, rotLen = 0, scaleLen = 0;
+        let posLen = 0,
+            rotLen = 0,
+            scaleLen = 0;
         if (this.instance.position) {
             posLen = this.instance.position.length;
-        }
-        else {
-            throw new Error("instance.position 必须有");
+        } else {
+            throw new Error('instance.position 必须有');
         }
         if (this.instance.rotate) {
             rotLen = this.instance.rotate.length;
@@ -383,10 +380,10 @@ export abstract class BaseEntity extends NodeSpace {
         }
 
         if (rotLen != 0 && rotLen / 4 != posLen / 3) {
-            throw new Error("position rotate 长度必须相同");
+            throw new Error('position rotate 长度必须相同');
         }
         if (scaleLen != 0 && scaleLen != posLen) {
-            throw new Error("position scale 长度必须相同");
+            throw new Error('position scale 长度必须相同');
         }
     }
 
@@ -409,8 +406,10 @@ export abstract class BaseEntity extends NodeSpace {
         }
         if (this.instance.index && this.instance.numInstances != this.instance.index.length) {
             this.instance.numInstances = this.instance.index.length;
-        }
-        else if (this.instance.position && this.instance.numInstances != this.instance.position.length / 3) {
+        } else if (
+            this.instance.position &&
+            this.instance.numInstances != this.instance.position.length / 3
+        ) {
             this.instance.numInstances = this.instance.position.length / 3;
         }
         const insideMatrix: Mat4[] = [];
@@ -421,21 +420,38 @@ export abstract class BaseEntity extends NodeSpace {
             }
             const perMatrix = mat4.identity();
             if (scaleEnable) {
-                const perScale = vec3.fromValues(this.instance.scale![index * 3 + 0], this.instance.scale![index * 3 + 1], this.instance.scale![index * 3 + 2]);
+                const perScale = vec3.fromValues(
+                    this.instance.scale![index * 3 + 0],
+                    this.instance.scale![index * 3 + 1],
+                    this.instance.scale![index * 3 + 2],
+                );
                 mat4.scale(perMatrix, perScale, perMatrix);
             }
             if (rotateEnable) {
-                const perAxis = vec3.fromValues(this.instance.rotate![index * 3] + 0, this.instance.rotate![index * 3] + 1, this.instance.rotate![index * 3] + 2);
+                const perAxis = vec3.fromValues(
+                    this.instance.rotate![index * 3] + 0,
+                    this.instance.rotate![index * 3] + 1,
+                    this.instance.rotate![index * 3] + 2,
+                );
                 const perAngle = this.instance.rotate![index * 3 + 3];
-                if (perAngle != 0 && (this.instance.rotate![index * 3 + 0] != 0 || this.instance.rotate![index * 3 + 1] != 0 || this.instance.rotate![index * 3 + 2] != 0)) {
+                if (
+                    perAngle != 0 &&
+                    (this.instance.rotate![index * 3 + 0] != 0 ||
+                        this.instance.rotate![index * 3 + 1] != 0 ||
+                        this.instance.rotate![index * 3 + 2] != 0)
+                ) {
                     mat4.axisRotate(perMatrix, perAxis, perAngle, perMatrix);
                 }
             }
             if (positionEnable) {
-                const perPosition = vec3.fromValues(this.instance.position![index * 3 + 0], this.instance.position![index * 3 + 1], this.instance.position![index * 3 + 2]);
+                const perPosition = vec3.fromValues(
+                    this.instance.position![index * 3 + 0],
+                    this.instance.position![index * 3 + 1],
+                    this.instance.position![index * 3 + 2],
+                );
                 mat4.setTranslation(perMatrix, perPosition, perMatrix);
             }
-            mat4.multiply(this.matrixWorld, perMatrix, perMatrix);     // 先缩放，再旋转，最后平移，然后乘以world matrix ，得到instance的world matrix，在shader中的VS是再次的局部坐标*这个world matrix，得到顶点的world position
+            mat4.multiply(this.matrixWorld, perMatrix, perMatrix); // 先缩放，再旋转，最后平移，然后乘以world matrix ，得到instance的world matrix，在shader中的VS是再次的局部坐标*这个world matrix，得到顶点的world position
             insideMatrix.push(perMatrix);
         }
         return insideMatrix;
@@ -449,7 +465,7 @@ export abstract class BaseEntity extends NodeSpace {
         if (this._state == E_lifeState.finished) return;
         this._state = E_lifeState.initializing;
         this.MSAA = scene.MSAA;
-        this.deferColor = scene.renderMode == "deferRender" ? true : false;
+        this.deferColor = scene.renderMode == 'deferRender' ? true : false;
 
         await super.init(scene);
         // 初始化common uniform
@@ -458,7 +474,7 @@ export abstract class BaseEntity extends NodeSpace {
         this.checkStorageBuffer(this.storageBufferList);
 
         this.transparent = this.getTransparent();
-        this.DCG = this.scene.DCG;//new DrawCommandGenerator({ scene: this.scene, parent: this });
+        this.DCG = this.scene.DCG; //new DrawCommandGenerator({ scene: this.scene, parent: this });
 
         this.createDrawCommands();
         this._state = E_lifeState.finished;
@@ -469,15 +485,13 @@ export abstract class BaseEntity extends NodeSpace {
         //创建透明DC
         if (this.transparent === true) {
             this.createTransparent();
-        }
-        else {
+        } else {
             this.createForwardDC();
         }
         //创建透明shadowmapDC
         if (this.transparent === true) {
             // this.createShadowMapTransparentDC();
-        }
-        else {
+        } else {
             this.createShadowMapDC();
         }
     }
@@ -527,7 +541,7 @@ export abstract class BaseEntity extends NodeSpace {
     /** 生成世界坐标的sphere，基于当前entity的原始包围球，不涉及变换 */
     generateSphere(box: boundingBox): boundingSphere {
         if (this.boundingBox == undefined) {
-            console.error("boundingBox 没有计算");
+            console.error('boundingBox 没有计算');
         }
         return generateSphereFromBox3(box);
     }
@@ -570,14 +584,17 @@ export abstract class BaseEntity extends NodeSpace {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * 更新entity
-     * @param clock 
+     * @param clock
      * @param updateSelftFN 是否call updateSelf()
-     * @returns 
+     * @returns
      */
     update(clock: Clock, updateSelftFN: boolean = true): boolean {
-
         //判断初始化状态是否为完成，判断状态，判断是否有外部实例
-        if (this._state === E_lifeState.finished && this.checkStatus() && this.getInstancesCount()) {
+        if (
+            this._state === E_lifeState.finished &&
+            this.checkStatus() &&
+            this.getInstancesCount()
+        ) {
             super.update(clock, updateSelftFN);
             return true;
         }
@@ -621,9 +638,9 @@ export abstract class BaseEntity extends NodeSpace {
      * @param clock 时钟
      */
     updateSelf(clock: Clock) {
-        this.updateUniformCommonEntity(clock);   //todo,暂时更新，后续按需进行更新
-        this.updateInstanceBuffer();            //更新instance buffer
-        this.updateWorldMatrixBuffer(clock);    //更新world matrix buffer
+        this.updateUniformCommonEntity(clock); //todo,暂时更新，后续按需进行更新
+        this.updateInstanceBuffer(); //更新instance buffer
+        this.updateWorldMatrixBuffer(clock); //更新world matrix buffer
         //检查是否有新摄像机，有进行更新
         // this.checkUpgradeCameras();
         //检查是否有新光源，有进行更新
@@ -631,12 +648,12 @@ export abstract class BaseEntity extends NodeSpace {
     }
 
     /**
-    * 获取instance总数量：内部instance*外部instance
-    * @param outside 是否只获取外部instance数量
-    *      true表示只获取外部instance数量，
-    *      false表示获取内部instance数量*外部instance数量
-    * @returns number
-    */
+     * 获取instance总数量：内部instance*外部instance
+     * @param outside 是否只获取外部instance数量
+     *      true表示只获取外部instance数量，
+     *      false表示获取内部instance数量*外部instance数量
+     * @returns number
+     */
     getInstancesCount(): number {
         return this.outSideInstance.length;
     }
@@ -645,21 +662,23 @@ export abstract class BaseEntity extends NodeSpace {
      */
     getInstanceCountTotal(): number {
         const outsideInstanceCount = this.getInstancesCount();
-        return this.instance.numInstances * outsideInstanceCount
+        return this.instance.numInstances * outsideInstanceCount;
     }
 
     /** 检查相关storage buffer的状态，根据instance数量进行创建、更新或保持。
-     * 
+     *
      * 1、preUpdate 中调用
-     * 
+     *
      * 2、目前uniform 和 storage的offset 最小值为256byte
-     * 
-    * @param bufferList buffer list
+     *
+     * @param bufferList buffer list
      */
-    checkStorageBuffer(bufferList: {
-        name: string;
-        byteSize: number;
-    }[]) {
+    checkStorageBuffer(
+        bufferList: {
+            name: string;
+            byteSize: number;
+        }[],
+    ) {
         for (const perBuffer of bufferList) {
             /**
              * 1、获取外部实例化数量：没有的情况下，默认1个
@@ -679,35 +698,47 @@ export abstract class BaseEntity extends NodeSpace {
             const instanceCount = this.getInstancesCount() || 1;
 
             //2.1 计算需要的pointer数量：目前以4个pointer为最小单位。
-            const stridePointerCount = Math.ceil(instanceCount / this.outsideInstanceCountOfDefaultStride);//1/4=1，5/4=2
+            const stridePointerCount = Math.ceil(
+                instanceCount / this.outsideInstanceCountOfDefaultStride,
+            ); //1/4=1，5/4=2
 
             //2.2 计算需要的pointer长度
-            const strideSizeOfInstances = Math.ceil(stridePointerCount * perBuffer.byteSize * this.outsideInstanceCountOfDefaultStride / this.storageOffsetStrideSize) * this.storageOffsetStrideSize;
+            const strideSizeOfInstances =
+                Math.ceil(
+                    (stridePointerCount *
+                        perBuffer.byteSize *
+                        this.outsideInstanceCountOfDefaultStride) /
+                        this.storageOffsetStrideSize,
+                ) * this.storageOffsetStrideSize;
 
             //3、判断是否新建
             if (this.bufferPointers[nameOfPointer] == undefined) {
-                this.flagInstanceArrayBufferReNew = true;//更新需要reNew的时间
+                this.flagInstanceArrayBufferReNew = true; //更新需要reNew的时间
                 const pointerParams: I_pointerCreateParams = {
                     name: `Entity:${this.ID.toString()},${perBuffer.name}:count=${instanceCount},size=${strideSizeOfInstances}`,
                     byteSize: strideSizeOfInstances,
                     type: E_BOLBufferType.storage,
-                    viewType: "f32",//不使用view，各自更新各自的buffer
+                    viewType: 'f32', //不使用view，各自更新各自的buffer
                 };
-                this.bufferPointers[nameOfPointer] = this.scene.pointers.createPointer(pointerParams, this);
+                this.bufferPointers[nameOfPointer] = this.scene.pointers.createPointer(
+                    pointerParams,
+                    this,
+                );
                 // console.log("EntityID:", this.ID, perBuffer.name, "创建大小:", sizeOfInstances, "指针ID:", this.bufferPointers[nameOfPointer].pointerID, "实例数量:", instanceCount);
-
             }
             //4、判断是否重建
             else if (this.bufferPointers[nameOfPointer].byteLength != strideSizeOfInstances) {
-                this.flagInstanceArrayBufferReNew = true;//更新需要reNew的时间
-                const newPointer = this.scene.pointers.resizePointer(this.bufferPointers[nameOfPointer].pointerID, strideSizeOfInstances);
+                this.flagInstanceArrayBufferReNew = true; //更新需要reNew的时间
+                const newPointer = this.scene.pointers.resizePointer(
+                    this.bufferPointers[nameOfPointer].pointerID,
+                    strideSizeOfInstances,
+                );
                 if (newPointer) {
                     newPointer.name = `${this.ID.toString()} ${perBuffer.name}:count=${instanceCount},size=${strideSizeOfInstances}`;
                     this.bufferPointers[nameOfPointer] = newPointer;
                     // console.log("Resize ~ EntityID:", this.ID, "实例数量:", instanceCount, perBuffer.name, `Resize pointer:${newPointer.pointerID},size:${sizeOfInstances},offset:${newPointer.offset}`);
-                }
-                else {
-                    throw new Error("更新实例化数组与GPU实例化数组失败");
+                } else {
+                    throw new Error('更新实例化数组与GPU实例化数组失败');
                 }
             }
         }
@@ -734,18 +765,23 @@ export abstract class BaseEntity extends NodeSpace {
     }
 
     intUniformCommonEntity() {
-        const offsetSize = Math.ceil(this._entityCommonByteSize / this.uniformOffsetStrideSize) * this.uniformOffsetStrideSize;
+        const offsetSize =
+            Math.ceil(this._entityCommonByteSize / this.uniformOffsetStrideSize) *
+            this.uniformOffsetStrideSize;
         const pointerParams: I_pointerCreateParams = {
-            name: this.ID.toString() + " uniform",
-            byteSize: offsetSize,//uniform data 的bytesize大小
+            name: this.ID.toString() + ' uniform',
+            byteSize: offsetSize, //uniform data 的bytesize大小
             type: E_BOLBufferType.uniform,
-            viewType: "u8",//由于data是ArrayBuffer,按照u8处理
+            viewType: 'u8', //由于data是ArrayBuffer,按照u8处理
         };
-        this.bufferPointers.uniformCommonEntity = this.scene.pointers.createPointer(pointerParams, this);
+        this.bufferPointers.uniformCommonEntity = this.scene.pointers.createPointer(
+            pointerParams,
+            this,
+        );
     }
     /**
      * 被update调用，更新vs、fs的uniform
-     * 
+     *
      * this.flagUpdateForPerInstance 影响是否单独更新每个instance，使用用户更新的update（）的结果，或连续的结果
      */
     updateUniformCommonEntity(clock: Clock, _updateParent: boolean = true): void {
@@ -766,14 +802,13 @@ export abstract class BaseEntity extends NodeSpace {
             st_entityViews.last_time[0] = clock.last;
             st_entityViews.instance_count[0] = this.getInstancesCount();
             st_entityViews.vs_offset[0] = this.vsOffset;
-            st_entityViews.animation_kind[0] = 0;//this.getAnimationKind();
-            st_entityViews.morpht_target_count[0] = 0;//this.MorphtTargetCount;
-            st_entityViews.joints_count[0] = 0;//this.getVertexCount();
-            st_entityViews.joint_weights_count[0] = 0;// this.JointsMatCount;
+            st_entityViews.animation_kind[0] = 0; //this.getAnimationKind();
+            st_entityViews.morpht_target_count[0] = 0; //this.MorphtTargetCount;
+            st_entityViews.joints_count[0] = 0; //this.getVertexCount();
+            st_entityViews.joint_weights_count[0] = 0; // this.JointsMatCount;
             this.scene.pointers.updatePointerWriteTime(this.bufferPointers.uniformCommonEntity);
         }
     }
-
 
     /** 更新|初始化实例化数组 */
     updateInstanceBuffer() {
@@ -788,11 +823,26 @@ export abstract class BaseEntity extends NodeSpace {
                     //内部instance
                     for (let j = 0; j < this.instance.numInstances; j++) {
                         // let instanceIndex = Number(i) * Number(j) * this._instanceInfoByteSize;
-                        const instanceIndex = (Number(i) * this.instance.numInstances + Number(j)) * this._instanceInfoByteSize + offset;
+                        const instanceIndex =
+                            (Number(i) * this.instance.numInstances + Number(j)) *
+                                this._instanceInfoByteSize +
+                            offset;
                         const st_instance_infoViews = {
-                            node_id: new Uint32Array(this.bufferPointers.instances.cpuBuffer, instanceIndex, 1),
-                            stage_id: new Uint32Array(this.bufferPointers.instances.cpuBuffer, instanceIndex + 4, 1),
-                            uv: new Float32Array(this.bufferPointers.instances.cpuBuffer, instanceIndex + 8, 2),
+                            node_id: new Uint32Array(
+                                this.bufferPointers.instances.cpuBuffer,
+                                instanceIndex,
+                                1,
+                            ),
+                            stage_id: new Uint32Array(
+                                this.bufferPointers.instances.cpuBuffer,
+                                instanceIndex + 4,
+                                1,
+                            ),
+                            uv: new Float32Array(
+                                this.bufferPointers.instances.cpuBuffer,
+                                instanceIndex + 8,
+                                2,
+                            ),
                         };
                         st_instance_infoViews.node_id[0] = perNode.ID;
                         st_instance_infoViews.stage_id[0] = perNode.stageID;
@@ -800,9 +850,8 @@ export abstract class BaseEntity extends NodeSpace {
                     }
                 }
                 this.scene.pointers.updatePointerWriteTime(this.bufferPointers.instances);
-            }
-            else {
-                throw new Error("更新实例化数组与GPU实例化数组失败");
+            } else {
+                throw new Error('更新实例化数组与GPU实例化数组失败');
             }
         }
     }
@@ -818,9 +867,9 @@ export abstract class BaseEntity extends NodeSpace {
         }
         return this._insideInstanceMatrix[i];
     }
-    /** 更新|初始化 world matrix 数组（cpu and gpu） 
+    /** 更新|初始化 world matrix 数组（cpu and gpu）
      * 1、生成所有的instance 的矩阵，连续的，不考虑可见性与可用性；后期增加判断，避免重复计算
-    */
+     */
     updateWorldMatrixBuffer(_clock?: Clock) {
         //update：cpu and gpu
         if (this.bufferPointers.wolrdMatrix) {
@@ -830,26 +879,30 @@ export abstract class BaseEntity extends NodeSpace {
                 const perNode = this.outSideInstance[i];
                 //内部instance
                 for (let j = 0; j < this.instance.numInstances; j++) {
-                    const instanceIndex = (Number(i) * this.instance.numInstances + Number(j)) * this._instanceWorldMatrixByteSize + offset;
+                    const instanceIndex =
+                        (Number(i) * this.instance.numInstances + Number(j)) *
+                            this._instanceWorldMatrixByteSize +
+                        offset;
                     //array buffer view ，全部为0的arraybuffer，参见checkStorageBuffer
-                    const worldMatrix = new Float32Array(this.bufferPointers.wolrdMatrix.cpuBuffer, instanceIndex, 16 * 2);
+                    const worldMatrix = new Float32Array(
+                        this.bufferPointers.wolrdMatrix.cpuBuffer,
+                        instanceIndex,
+                        16 * 2,
+                    );
                     //20260628 修改
                     // let matrixWorld = mat4.multiply(this.getMatrixWorldOfInstance(perNode), this.getInsideInstanceMatrix(j));//内部矩阵乘以外部矩阵，得到世界矩阵
-                    let matrixWorld = mat4.multiply(this.matrix, this.getInsideInstanceMatrix(j));   //先是内部矩阵* 内部instance矩阵
-                    matrixWorld = mat4.multiply(matrixWorld, perNode.matrixWorld);                   //再是 内部总矩阵* 外部instance矩阵
-                    const invertMatrixWorld = mat4.invert(matrixWorld);           //todo 待应用，世界逆矩阵
+                    let matrixWorld = mat4.multiply(this.matrix, this.getInsideInstanceMatrix(j)); //先是内部矩阵* 内部instance矩阵
+                    matrixWorld = mat4.multiply(matrixWorld, perNode.matrixWorld); //再是 内部总矩阵* 外部instance矩阵
+                    const invertMatrixWorld = mat4.invert(matrixWorld); //todo 待应用，世界逆矩阵
                     //20260628 修改
                     worldMatrix.set([...matrixWorld, ...invertMatrixWorld]);
                 }
             }
             this.scene.pointers.updatePointerWriteTime(this.bufferPointers.wolrdMatrix);
-        }
-        else {
-            throw new Error("更新世界矩阵数组与GPU世界矩阵数组失败");
+        } else {
+            throw new Error('更新世界矩阵数组与GPU世界矩阵数组失败');
         }
     }
-
-
 
     /**
      * 获取用户自定义的shader代码
@@ -885,17 +938,18 @@ export abstract class BaseEntity extends NodeSpace {
          *      A、判断 flagInstanceArrayBufferReNew ，
          *      B、如果=true ，更新，并重置为false
          *      C、返回值
-         * 
+         *
          */
         let createBindGroup = false;
         //undefined，创建
         if (this.bindGroup == undefined && this.bindGroupLayout == undefined) {
             //////////////////////////////////////////////////
             //bind group  layout
-            const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = this.generateGPUBindGroupLayoutDescriptor();
-            this.bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);;
+            const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor =
+                this.generateGPUBindGroupLayoutDescriptor();
+            this.bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
             //////////////////////////////////////////////////
-            //bind group  
+            //bind group
             createBindGroup = true;
         }
         //当前帧有instance变化，更新
@@ -913,41 +967,44 @@ export abstract class BaseEntity extends NodeSpace {
             const bindGroupDescriptor: GPUBindGroupDescriptor = {
                 label: `entity:${this.ID}`,
                 layout: this.bindGroupLayout,
-                entries: entries
-            }
+                entries: entries,
+            };
             this.bindGroup = this.device.createBindGroup(bindGroupDescriptor);
-            this.flagInstanceArrayBufferReNew = false;//重置为false
+            this.flagInstanceArrayBufferReNew = false; //重置为false
         }
 
         return {
             bindGroup: this.bindGroup,
-            bindGroupLayout: this.bindGroupLayout
-        }
+            bindGroupLayout: this.bindGroupLayout,
+        };
     }
     generateGPUBindGroupLayoutDescriptor(): GPUBindGroupLayoutDescriptor {
         return {
             label: `entity:${this.ID}`,
             entries: [
-                {//@group(1) @binding(0) var<uniform> u_entity_base:st_entity;
+                {
+                    //@group(1) @binding(0) var<uniform> u_entity_base:st_entity;
                     binding: 0,
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
-                        type: "uniform"
-                    }
+                        type: 'uniform',
+                    },
                 },
-                {//@group(1) @binding(1) var<storage> u_entity_instances: array<st_instance_info>;      //length=instance count
+                {
+                    //@group(1) @binding(1) var<storage> u_entity_instances: array<st_instance_info>;      //length=instance count
                     binding: 1,
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
-                        type: "read-only-storage"
-                    }
+                        type: 'read-only-storage',
+                    },
                 },
-                {//@group(1) @binding(2) var<storage> world_matrix: array<mat4x4f>;          //length=instance count;
+                {
+                    //@group(1) @binding(2) var<storage> world_matrix: array<mat4x4f>;          //length=instance count;
                     binding: 2,
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
-                        type: "read-only-storage"
-                    }
+                        type: 'read-only-storage',
+                    },
                 },
                 // {//@group(1) @binding(3) var<storage> morph_matrix: array<f32>;              //length=instance count * morph target count * vertex count
                 //     binding: 3,
@@ -963,8 +1020,8 @@ export abstract class BaseEntity extends NodeSpace {
                 //         type: "read-only-storage"
                 //     }
                 // },
-            ]
-        }
+            ],
+        };
     }
     checkPointerRebuildTime(): boolean {
         //当前帧匹配，调试模式下，使用手工调用rebuild，不能精确匹配。非手工模式可以
@@ -976,10 +1033,9 @@ export abstract class BaseEntity extends NodeSpace {
         // )
 
         //匹配手工和当前帧模式
-        if (this.bufferPointers.uniformCommonEntity?.rebuildTime
-            ||
-            this.bufferPointers.instances?.rebuildTime
-            ||
+        if (
+            this.bufferPointers.uniformCommonEntity?.rebuildTime ||
+            this.bufferPointers.instances?.rebuildTime ||
             this.bufferPointers.wolrdMatrix?.rebuildTime
         ) {
             //重新设置为0
@@ -998,16 +1054,19 @@ export abstract class BaseEntity extends NodeSpace {
     generateGPUBindGroupEntries(): GPUBindGroupEntry[] {
         const entries: GPUBindGroupEntry[] = [];
         for (const i in this.bufferPointers) {
-            const binding = this.getBindingOfBindGroup(i);//获取绑定的顺序
+            const binding = this.getBindingOfBindGroup(i); //获取绑定的顺序
             const perEntry: GPUBindGroupEntry = {
                 binding: binding,
                 resource: {
-                    buffer: this.bufferPointers[i as keyof typeof this.bufferPointers]!.gpuBufferView.buffer,
-                    offset: this.bufferPointers[i as keyof typeof this.bufferPointers]!.gpuBufferView.offset,
-                    size: this.bufferPointers[i as keyof typeof this.bufferPointers]!.gpuBufferView.size,
-                }
-            }
-            entries.push(perEntry)
+                    buffer: this.bufferPointers[i as keyof typeof this.bufferPointers]!
+                        .gpuBufferView.buffer,
+                    offset: this.bufferPointers[i as keyof typeof this.bufferPointers]!
+                        .gpuBufferView.offset,
+                    size: this.bufferPointers[i as keyof typeof this.bufferPointers]!.gpuBufferView
+                        .size,
+                },
+            };
+            entries.push(perEntry);
         }
         return entries;
     }
@@ -1016,16 +1075,16 @@ export abstract class BaseEntity extends NodeSpace {
      * 说明：
      *  1、bufferGPU使用的对象，没有使用Map。原因是需要有通用的占位Storage buffer，直接指向对象可以共享占位GPUBuffer。
      *  2、对象不能保障顺序，所以需要一个单独绑定的顺序。
-     * @param name 
+     * @param name
      * @returns number
      */
     getBindingOfBindGroup(name: string): number {
         switch (name) {
-            case "uniformCommonEntity":
+            case 'uniformCommonEntity':
                 return 0;
-            case "instances":
+            case 'instances':
                 return 1;
-            case "wolrdMatrix":
+            case 'wolrdMatrix':
                 return 2;
             // case "morphMatrix":
             //     return 3;
@@ -1034,7 +1093,4 @@ export abstract class BaseEntity extends NodeSpace {
         }
         throw new Error(`未找到绑定${name}`);
     }
-
-
 }
-

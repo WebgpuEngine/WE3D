@@ -1,12 +1,11 @@
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
-import { I_UUID } from "../organization/root";
-import { E_InputControlType, E_InputEvent, E_InputPriority } from "./base";
-import { InputManager } from "./inputManager";
-
+import { WeGenerateID, WeGenerateUUID } from '../math/baseFunction';
+import { I_UUID } from '../organization/root';
+import { E_InputControlType, E_InputEvent, E_InputPriority } from './base';
+import { InputManager } from './inputManager';
 
 /**
  * 顶级的input 控制类
- * 
+ *
  * 可扩展多种子类，以扩展CameraControl，预计扩展多控制器（多路输入，双人游戏类的那种）
  */
 export abstract class BaseInputControl implements I_UUID {
@@ -14,64 +13,64 @@ export abstract class BaseInputControl implements I_UUID {
     _id: number;
 
     inputValues: any;
-    type: string = "";
+    type: string = '';
     kind: E_InputControlType;
     UUID: string;
     _isDestroy: boolean = false;
     manager: InputManager;
     eventValues: {
         keyValue: {
-            keyCode: KeyboardEvent["code"] | undefined,//string
-            ctrlKey: boolean,
-            altKey: boolean,
-            shiftKey: boolean,
-            downOrUP: "down" | "up" | undefined,
+            keyCode: KeyboardEvent['code'] | undefined; //string
+            ctrlKey: boolean;
+            altKey: boolean;
+            shiftKey: boolean;
+            downOrUP: 'down' | 'up' | undefined;
+        };
+        mouseValue: {
+            x: number | undefined;
+            y: number | undefined;
+            buttons: number; //-1表示无按键
+            downOrUP: 'down' | 'up' | undefined;
+            alreadyUp: boolean;
+            move: boolean;
+            ctrlKey: boolean;
+            altKey: boolean;
+            shiftKey: boolean;
+        };
+        key: KeyboardEvent | undefined;
+        wheel: WheelEvent | undefined;
+        pointer: PointerEvent | undefined;
+        touch: TouchEvent | undefined;
+        mouse: MouseEvent | undefined;
+        click: MouseEvent | undefined;
+        dblclick: MouseEvent | undefined;
+    } = {
+        pointer: undefined,
+        key: undefined,
+        wheel: undefined,
+        touch: undefined,
+        mouse: undefined,
+        click: undefined,
+        dblclick: undefined,
+        keyValue: {
+            keyCode: undefined, //string
+            ctrlKey: false,
+            altKey: false,
+            shiftKey: false,
+            downOrUP: undefined,
         },
         mouseValue: {
-            x: number | undefined,
-            y: number | undefined,
-            buttons: number,//-1表示无按键
-            downOrUP: "down" | "up" | undefined,
-            alreadyUp: boolean,
-            move: boolean,
-            ctrlKey: boolean,
-            altKey: boolean,
-            shiftKey: boolean,
+            x: 0,
+            y: 0,
+            buttons: -1,
+            downOrUP: undefined,
+            alreadyUp: false,
+            move: false,
+            ctrlKey: false,
+            altKey: false,
+            shiftKey: false,
         },
-        key: KeyboardEvent | undefined,
-        wheel: WheelEvent | undefined,
-        pointer: PointerEvent | undefined,
-        touch: TouchEvent | undefined,
-        mouse: MouseEvent | undefined,
-        click: MouseEvent | undefined,
-        dblclick: MouseEvent | undefined,
-    } = {
-            pointer: undefined,
-            key: undefined,
-            wheel: undefined,
-            touch: undefined,
-            mouse: undefined,
-            click: undefined,
-            dblclick: undefined,
-            keyValue: {
-                keyCode: undefined,//string
-                ctrlKey: false,
-                altKey: false,
-                shiftKey: false,
-                downOrUP: undefined,
-            },
-            mouseValue: {
-                x: 0,
-                y: 0,
-                buttons: -1,
-                downOrUP: undefined,
-                alreadyUp: false,
-                move: false,
-                ctrlKey: false,
-                altKey: false,
-                shiftKey: false,
-            },
-        }
+    };
 
     constructor(type: E_InputControlType, manager: InputManager) {
         this.kind = type;
@@ -79,11 +78,10 @@ export abstract class BaseInputControl implements I_UUID {
         this._id = WeGenerateID();
         if (manager) {
             this.manager = manager;
+        } else {
+            throw new Error('InputManager is required');
         }
-        else {
-            throw new Error("InputManager is required");
-        }
-        this.manager.add(this);//添加到inputManager的list中,注册事件本身到ECS的list中
+        this.manager.add(this); //添加到inputManager的list中,注册事件本身到ECS的list中
     }
 
     abstract __destroy(): any;
@@ -99,10 +97,18 @@ export abstract class BaseInputControl implements I_UUID {
      * @param control 控制器
      * @returns 是否注册成功
      */
-    registerEvent(event: E_InputEvent, priority: E_InputPriority, control: BaseInputControl): boolean {
+    registerEvent(
+        event: E_InputEvent,
+        priority: E_InputPriority,
+        control: BaseInputControl,
+    ): boolean {
         return this.manager.registerEvent(event, priority, control);
     }
-    removeRegisterEvent(event: E_InputEvent, priority: E_InputPriority, entity: BaseInputControl): void {
+    removeRegisterEvent(
+        event: E_InputEvent,
+        priority: E_InputPriority,
+        entity: BaseInputControl,
+    ): void {
         return this.manager.removeRegisterEvent(event, priority, entity);
     }
     /**
@@ -127,7 +133,7 @@ export abstract class BaseInputControl implements I_UUID {
 
     /**
      * 获取当前帧的控制器所需输入值
-     *   
+     *
      * @returns eventValues 或 控制器自定义的数据结构
      */
     abstract getInputValue(): any;

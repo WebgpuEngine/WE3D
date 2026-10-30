@@ -1,6 +1,4 @@
-export async function weGetResource(_param: string): Promise<any> {
-
-}
+export async function weGetResource(_param: string): Promise<any> {}
 export async function weGetImageByUrl(param: string): Promise<ImageBitmap> {
     const response = await fetch(param);
     const imageBitmap = await createImageBitmap(await response.blob());
@@ -14,28 +12,26 @@ export async function weGetBinaryByUrl(param: string): Promise<ArrayBuffer> {
 export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayBuffer> {
     const response = await fetch(param);
     // 在解压前判断是否存在传输压缩
-    if (response.headers.get('content-encoding') === 'gzip') {        // 浏览器已自动解压，直接拿原始gz二进制，不再走DecompressionStream
+    if (response.headers.get('content-encoding') === 'gzip') {
+        // 浏览器已自动解压，直接拿原始gz二进制，不再走DecompressionStream
         return await response.arrayBuffer();
-    } else {        // 无传输压缩，手动解压
+    } else {
+        // 无传输压缩，手动解压
         if (!response.ok) {
             throw new Error(`资源请求失败，状态码：${response.status} ${response.statusText}`);
         }
         if (!response.body) {
-            throw new Error("响应体为空，无二进制流可解压");
+            throw new Error('响应体为空，无二进制流可解压');
         }
         const decompressionStream = new DecompressionStream('gzip');
         const decompressedStream = response.body.pipeThrough(decompressionStream);
         if (!decompressedStream) {
-            throw new Error("获取压缩流失败");
+            throw new Error('获取压缩流失败');
         }
-        const decompressedArrayBuffer = await new Response(
-            decompressedStream
-        ).arrayBuffer();
+        const decompressedArrayBuffer = await new Response(decompressedStream).arrayBuffer();
         return decompressedArrayBuffer;
     }
-
 }
-
 
 // /**
 //  * 拉取gzip二进制文件并流式解压，返回解压后的ArrayBuffer
@@ -94,7 +90,6 @@ export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayB
 //     }
 // }
 
-
 // export async function weGetImagesByUrl(param: string[]): Promise<ImageBitmap[]> {
 //     let all: any[] = [];
 //     let allImages: ImageBitmap[] = [];
@@ -132,16 +127,19 @@ export async function weGetImagesByUrl(param: string[]): Promise<ImageBitmap[]> 
 }
 
 export interface I_VideoOption {
-    loop?: boolean,
+    loop?: boolean;
     // autoplay?: boolean,//默认必须的
-    muted?: boolean,
-    controls?: boolean,
-    waitFor?: "canplaythrough" | "loadedmetadata",
-    model?: "copy" | "External",
+    muted?: boolean;
+    controls?: boolean;
+    waitFor?: 'canplaythrough' | 'loadedmetadata';
+    model?: 'copy' | 'External';
 }
-export async function weGetVidoeByUrl(param: string, options: I_VideoOption): Promise<HTMLVideoElement> {
-    const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
+export async function weGetVidoeByUrl(
+    param: string,
+    options: I_VideoOption,
+): Promise<HTMLVideoElement> {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
     video.src = param;
     video.muted = options.muted ?? true;
     video.loop = options.loop ?? true;

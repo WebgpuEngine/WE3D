@@ -1,55 +1,50 @@
-import { E_lifeState } from "../base/coreDefine";
-import { weGetImagesByUrl } from "../base/file/getFile";
-import { E_resourceKind } from "../resources/resourcesGPU";
-import { Scene } from "../scene/scene";
-import { I_BaseTexture } from "./base";
-import { IV_CubeTexture } from "./cubeTexxture";
-import { Texture } from "./texture";
-
+import { E_lifeState } from '../base/coreDefine';
+import { weGetImagesByUrl } from '../base/file/getFile';
+import { E_resourceKind } from '../resources/resourcesGPU';
+import { Scene } from '../scene/scene';
+import { I_BaseTexture } from './base';
+import { IV_CubeTexture } from './cubeTexxture';
+import { Texture } from './texture';
 
 export interface IV_CubeArrayTexture extends I_BaseTexture {
     /**
-    * cube 
-    * 6个面
-    * 顺序：
-    * +x,-x,+y,-y,+z,-z 
-    * */
-    source: string[]
+     * cube
+     * 6个面
+     * 顺序：
+     * +x,-x,+y,-y,+z,-z
+     * */
+    source: string[];
 }
 
 export class CubeArrayTexture extends Texture {
-
     constructor(input: IV_CubeTexture, device: GPUDevice, scene?: Scene) {
         super(input, device, scene);
-        if (typeof input.source !== "string") {
+        if (typeof input.source !== 'string') {
             throw new Error("cube texture's source must be string url");
         }
         this._upsideDownY = false;
     }
 
     async readyForGPU(): Promise<any> {
-
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
             this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
-        }
-        else {
-            const allImages: ImageBitmap[] = await weGetImagesByUrl(
-                [
-                    source + '_px.jpg',
-                    source + '_nx.jpg',
-                    source + '_py.jpg',
-                    source + '_ny.jpg',
-                    source + '_pz.jpg',
-                    source + '_nz.jpg',
-                ]
-            );
+        } else {
+            const allImages: ImageBitmap[] = await weGetImagesByUrl([
+                source + '_px.jpg',
+                source + '_nx.jpg',
+                source + '_py.jpg',
+                source + '_ny.jpg',
+                source + '_pz.jpg',
+                source + '_nz.jpg',
+            ]);
             if (allImages.length != 6) {
                 throw new Error("cube texture's source must be 6 urls");
             }
 
             let premultipliedAlpha = false;
-            if (this.inputValues.premultipliedAlpha != undefined)//有input.premultipliedAlpha
+            if (this.inputValues.premultipliedAlpha != undefined)
+                //有input.premultipliedAlpha
                 premultipliedAlpha = this.inputValues.premultipliedAlpha;
             else {
                 premultipliedAlpha = true;
@@ -57,7 +52,7 @@ export class CubeArrayTexture extends Texture {
 
             // console.log(imageBitmaps)
             this.texture = this.device.createTexture({
-                dimension: "2d",
+                dimension: '2d',
                 textureBindingViewDimension: 'cube',
                 // Create a 2d array texture.
                 // Assume each image has the same size.
@@ -72,8 +67,12 @@ export class CubeArrayTexture extends Texture {
                 const imageBitmap = allImages[i];
                 this.device.queue.copyExternalImageToTexture(
                     { source: imageBitmap, flipY: this._upsideDownY },
-                    { texture: this.texture, origin: [0, 0, i], premultipliedAlpha: premultipliedAlpha },
-                    [imageBitmap.width, imageBitmap.height]
+                    {
+                        texture: this.texture,
+                        origin: [0, 0, i],
+                        premultipliedAlpha: premultipliedAlpha,
+                    },
+                    [imageBitmap.width, imageBitmap.height],
                 );
             }
             if (this.texture.mipLevelCount > 1) {
@@ -85,10 +84,9 @@ export class CubeArrayTexture extends Texture {
                 type: E_resourceKind.textureOfString,
             });
         }
-        this.setTextureLayoutsampleType("float");
-        this.setTextureLayoutDimension("cube")
+        this.setTextureLayoutsampleType('float');
+        this.setTextureLayoutDimension('cube');
         this._state = E_lifeState.finished;
         return this._state;
     }
-
 }

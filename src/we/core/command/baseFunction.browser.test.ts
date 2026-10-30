@@ -6,7 +6,9 @@ import { createUniformBuffer, createEmptyGPUBuffer, createStorageBuffer } from '
 async function getDevice(): Promise<GPUDevice> {
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) {
-        throw new Error('WebGPU adapter 不可用：请确认 headless Chromium 已启用（见 vitest.browser.config.ts 的 providerOptions.launch）');
+        throw new Error(
+            'WebGPU adapter 不可用：请确认 headless Chromium 已启用（见 vitest.browser.config.ts 的 providerOptions.launch）',
+        );
     }
     return adapter.requestDevice();
 }
@@ -18,8 +20,22 @@ describe('GPUBuffer 创建 — 真实 device（P0-8）', () => {
     });
 
     it('createEmptyGPUBuffer 的 size 必为 4 的倍数（P0-8 对齐修复）', () => {
-        expect(createEmptyGPUBuffer(device, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, 5, 'align5').size).toBe(8);
-        expect(createEmptyGPUBuffer(device, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, 12, 'align12').size).toBe(12);
+        expect(
+            createEmptyGPUBuffer(
+                device,
+                GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                5,
+                'align5',
+            ).size,
+        ).toBe(8);
+        expect(
+            createEmptyGPUBuffer(
+                device,
+                GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                12,
+                'align12',
+            ).size,
+        ).toBe(12);
     });
 
     it('createUniformBuffer 在真实 device 上可正常创建（修复后无非法 unmap 抛错）', () => {

@@ -1,10 +1,10 @@
-import { weVec3, weVec4 } from "../../core/base/coreDefine";
-import { mat4 } from "wgpu-matrix";
-import { BaseEntity } from "../../core/entity/baseEntity";
-import { GLTFModel } from "./gltf";
-import { T_ModelResKind } from "../../core/model/BaseModel";
-import { TypedArray } from "webgpu-utils";
-import { NodeObject, newNode } from "../../core/organization/nodeObject";
+import { weVec3, weVec4 } from '../../core/base/coreDefine';
+import { mat4 } from 'wgpu-matrix';
+import { BaseEntity } from '../../core/entity/baseEntity';
+import { GLTFModel } from './gltf';
+import { T_ModelResKind } from '../../core/model/BaseModel';
+import { TypedArray } from 'webgpu-utils';
+import { NodeObject, newNode } from '../../core/organization/nodeObject';
 
 /**
  * 实例化节点到实例化场景中
@@ -12,19 +12,23 @@ import { NodeObject, newNode } from "../../core/organization/nodeObject";
  * @param nodeID 节点id
  * @param parent 父节点
  * @param root 根节点
- * 
+ *
  * 一、未处理的情况与问题
  *   1、mesh有多个primitive，目前只处理了第一个primitive。
  *         A、一个实体的点线面可能都存在
  *         B、非相关实体，但对于后续操作，比如动画由相同的操作
- * 
+ *
  * 二、同时处理的数据
  *  1、meshAndskinBundle：即、骨骼动画
- * 
- *         
+ *
+ *
  */
-export async function addNode(gltf: GLTFModel, nodeID: number, parent: NodeObject, root: NodeObject): Promise<any> {
-
+export async function addNode(
+    gltf: GLTFModel,
+    nodeID: number,
+    parent: NodeObject,
+    root: NodeObject,
+): Promise<any> {
     const node = gltf.DataLoader.getNode(nodeID);
     //存在骨骼动画，就添加到meshAndSkinBundle中
     if (node.mesh != undefined && node.skin != undefined) {
@@ -36,19 +40,17 @@ export async function addNode(gltf: GLTFModel, nodeID: number, parent: NodeObjec
     // console.log(oneNode.ID, oneNode.Name);
     ////////////////////////////////////////////////
     //如果当前节点有mesh，就添加到parent中
-    if (node.mesh !== undefined && typeof node.mesh == "number") {//有mesh，就添加到parent中
-        const mesh = await gltf.getRes(T_ModelResKind.entity, node.mesh) as BaseEntity;
+    if (node.mesh !== undefined && typeof node.mesh == 'number') {
+        //有mesh，就添加到parent中
+        const mesh = (await gltf.getRes(T_ModelResKind.entity, node.mesh)) as BaseEntity;
         if (node.matrix !== undefined) {
             // mesh.setMatrix(node.matrix);
-        }
-        else {
+        } else {
             if (node.scale !== undefined) {
                 // mesh.setScale(node.scale);
-            }
-            else if (node.rotation !== undefined) {
+            } else if (node.rotation !== undefined) {
                 // mesh.setRotation(node.rotation);
-            }
-            else if (node.translation !== undefined) {
+            } else if (node.translation !== undefined) {
                 // mesh.setPosition(node.translation);
             }
         }
@@ -96,8 +98,7 @@ export async function addNode(gltf: GLTFModel, nodeID: number, parent: NodeObjec
     }
     ////////////////////////////////////////////////
     //如果当前节点有附件skin
-    if ("skin" in node) {
-
+    if ('skin' in node) {
     }
     ////////////////////////////////////////////////
     //如果当前节点有附件extensions
@@ -134,14 +135,16 @@ export function convertLineIndexLoopToList(indexFan: Uint32Array | Uint16Array, 
     return indexList;
 }
 
-
 /**
  * 从顶点位置和索引计算法线
  * @param {Float32Array} positions - 顶点位置数组（格式：[x0,y0,z0, x1,y1,z1, ...]）
  * @param {Uint16Array|Uint32Array} indices - 三角面索引数组（格式：[i0,i1,i2, i3,i4,i5, ...]）
  * @returns {Float32Array} 顶点法线数组（格式与 positions 一致）
  */
-export function computeNormalsFromPositionsAndIndices(positions: Float32Array, indices: Uint16Array | Uint32Array): Float32Array {
+export function computeNormalsFromPositionsAndIndices(
+    positions: Float32Array,
+    indices: Uint16Array | Uint32Array,
+): Float32Array {
     // 1. 初始化法线数组为 0
     const normals = new Float32Array(positions.length);
     const stride = 3; // 每个顶点 3 个分量（x,y,z）
@@ -154,21 +157,9 @@ export function computeNormalsFromPositionsAndIndices(positions: Float32Array, i
         const i2 = indices[i + 2];
 
         // 获取三个顶点的位置
-        const p0 = [
-            positions[i0 * stride],
-            positions[i0 * stride + 1],
-            positions[i0 * stride + 2]
-        ];
-        const p1 = [
-            positions[i1 * stride],
-            positions[i1 * stride + 1],
-            positions[i1 * stride + 2]
-        ];
-        const p2 = [
-            positions[i2 * stride],
-            positions[i2 * stride + 1],
-            positions[i2 * stride + 2]
-        ];
+        const p0 = [positions[i0 * stride], positions[i0 * stride + 1], positions[i0 * stride + 2]];
+        const p1 = [positions[i1 * stride], positions[i1 * stride + 1], positions[i1 * stride + 2]];
+        const p2 = [positions[i2 * stride], positions[i2 * stride + 1], positions[i2 * stride + 2]];
 
         // 计算边向量
         const v1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
@@ -178,17 +169,13 @@ export function computeNormalsFromPositionsAndIndices(positions: Float32Array, i
         const faceNormal = [
             v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
-            v1[0] * v2[1] - v1[1] * v2[0]
+            v1[0] * v2[1] - v1[1] * v2[0],
         ];
 
         // 归一化面法线（避免长度异常）
         const len = Math.sqrt(faceNormal[0] ** 2 + faceNormal[1] ** 2 + faceNormal[2] ** 2);
         if (len < 1e-6) continue; // 跳过退化的三角面
-        const n = [
-            faceNormal[0] / len,
-            faceNormal[1] / len,
-            faceNormal[2] / len
-        ];
+        const n = [faceNormal[0] / len, faceNormal[1] / len, faceNormal[2] / len];
 
         // 将面法线累加到三个顶点的法线中
         normals[i0 * stride] += n[0];
@@ -231,21 +218,9 @@ export function computeNormalsFromPositionsNoIndex(positions: Float32Array): Flo
     // 2. 遍历所有三角面，计算面法线并累加到顶点
     for (let i = 0; i < positions.length; i += 3 * 3) {
         // 获取三个顶点的位置,逆时针顺序(0,1,2,一定，否则法线指向内部)，计算法线时需要注意，法线指向外部
-        const p0 = [
-            positions[i + 0],
-            positions[i + 1],
-            positions[i + 2]
-        ];
-        const p1 = [
-            positions[i + 3],
-            positions[i + 4],
-            positions[i + 5]
-        ];
-        const p2 = [
-            positions[i + 6],
-            positions[i + 7],
-            positions[i + 8]
-        ];
+        const p0 = [positions[i + 0], positions[i + 1], positions[i + 2]];
+        const p1 = [positions[i + 3], positions[i + 4], positions[i + 5]];
+        const p2 = [positions[i + 6], positions[i + 7], positions[i + 8]];
 
         // 计算边向量
         const v1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
@@ -255,21 +230,16 @@ export function computeNormalsFromPositionsNoIndex(positions: Float32Array): Flo
         const faceNormal = [
             v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
-            v1[0] * v2[1] - v1[1] * v2[0]
+            v1[0] * v2[1] - v1[1] * v2[0],
         ];
 
         // 归一化面法线（避免长度异常）
         const len = Math.sqrt(faceNormal[0] ** 2 + faceNormal[1] ** 2 + faceNormal[2] ** 2);
         let n = [0, 1, 0];
-        if (len < 1e-6) { // 跳过退化的三角面
-
-        }
-        else {
-            n = [
-                faceNormal[0] / len,
-                faceNormal[1] / len,
-                faceNormal[2] / len
-            ];
+        if (len < 1e-6) {
+            // 跳过退化的三角面
+        } else {
+            n = [faceNormal[0] / len, faceNormal[1] / len, faceNormal[2] / len];
         }
 
         // 将面法线累加到三个顶点的法线中
@@ -297,7 +267,7 @@ export function invertNormals(normals: number[]): void {
 
 // /**
 //  * 获取accessor的componentType(int8,uint8,sint16,uint16,uint32,float32)对应的byte size
-//  * @param componentType 
+//  * @param componentType
 //  * @returns number
 //  */
 // export function getComponentTypeSize(componentType: number): number {
@@ -326,7 +296,7 @@ export function invertNormals(normals: number[]): void {
 
 // /**
 //  * 获取accessor的type（SCALAR|VEC2|VEC3|VEC4|MAT2|MAT3|MAT4）对应的组件内部构成数量
-//  * @param type 
+//  * @param type
 //  * @returns number
 //  */
 // export function getTypeSize(type: string): number {
@@ -361,16 +331,16 @@ export function invertNormals(normals: number[]): void {
 // /**
 //  * 获取accessor的多规格size
 //  * @param accessor 对象
-//  * @returns 
-//  * 
+//  * @returns
+//  *
 //  *  size: number, 数量*组件（SCALAR|VEC2|VEC3|VEC4|MAT2|MAT3|MAT4）
-//  * 
+//  *
 //  *  unitByteSize: number ，单位组件byte大小=组件内数量（SCALAR|VEC2|VEC3|VEC4|MAT2|MAT3|MAT4）*组件类型byte(int8,uint8,sint16,uint16,uint32,float32)大小
-//  * 
+//  *
 //  *  byteStride: number, 字节跨度
-//  * 
+//  *
 //  *  componentSize: number, 组件数量（SCALAR|VEC2|VEC3|VEC4|MAT2|MAT3|MAT4）
-//  * 
+//  *
 //  *  componentTypeSize: number, 组件类型byte(int8,uint8,sint16,uint16,uint32,float32)大小
 //  */
 // export function getAccessorSize(accessor: GLTFAccessor, bufferView: GLTFBufferView): {
@@ -415,7 +385,7 @@ export function invertNormals(normals: number[]): void {
 // }
 // /**
 //  * 获取accessor的byte stride，用于计算accessor中引用bufferView的byte offset
-//  * @param accessor 
+//  * @param accessor
 //  * @returns number
 //  * 1、如果bufferView有byteStride，直接返回。
 //  * 2、如果没有，根据accessor的type和componentType计算。
@@ -433,7 +403,7 @@ export function invertNormals(normals: number[]): void {
 // }
 // /**
 //  * 获取accessor的index format，用于绑定到DC的index buffer
-//  * @param accessor 
+//  * @param accessor
 //  * @returns GPUIndexFormat
 //  */
 // export function getAccessorTypeForGPUIndexFormat(accessor: GLTFAccessor): GPUIndexFormat {
@@ -454,7 +424,7 @@ export function invertNormals(normals: number[]): void {
 // }
 // /**
 //  * 获取accessor的vertex format，用于绑定到DC的vertex buffer
-//  * @param accessor 
+//  * @param accessor
 //  * @returns { format: GPUVertexFormat, wgslFormat: string }
 //  */
 // export function getAccessorTypeForGPUVertexFormat(accessor: GLTFAccessor): { format: GPUVertexFormat, wgslFormat: string } {
@@ -582,7 +552,6 @@ export function invertNormals(normals: number[]): void {
 //     }
 //     return { format: format, wgslFormat: wgslFormat };
 
-
 //     // else if (type == "MAT2") {
 //     //     return "float32x4";
 //     // }
@@ -594,14 +563,13 @@ export function invertNormals(normals: number[]): void {
 //     // }
 // }
 
-
 // /**
 //  * 检查bufferView是否包含VEC3类型的accessor，
 //  * 如果包含，且componentType为5120(u8)、5121(u16)、5122(u16)、5123(i16)中的一种，
 //  * 则需要新构建buffer
 //  * @param bufferView 要检查的bufferView
 //  * @param accessors 所有accessor
-//  * @returns 
+//  * @returns
 //  */
 // export function checkRebulidBufferForVec3(accessor: GLTFAccessor): boolean {
 //     if (accessor.type == "VEC3") {
@@ -612,14 +580,13 @@ export function invertNormals(normals: number[]): void {
 //     return false;
 // }
 
-
 // /**
 //  * 创建BufferSource ，根据componentType和byteOffset，从ArrayBuffer中创建对应的ArrayBufferView
 //  * @param data 原始数据
 //  * @param componentType 组件类型
 //  * @param byteOffset 偏移量
 //  * @param countOfComponent 组件数量
-//  * @returns 
+//  * @returns
 //  */
 // export function getBufferSourceOfArrayBuffer(data: ArrayBuffer, componentType: number, byteOffset: number, countOfComponent: number):
 //     Int8Array | Uint8Array | Int16Array | Uint16Array | Uint32Array | Float32Array {
@@ -650,18 +617,18 @@ export function invertNormals(normals: number[]): void {
 // }
 
 // /**
-//  * 将有跨度的accessor数据源，转换为无跨度的数据 
+//  * 将有跨度的accessor数据源，转换为无跨度的数据
 //  * @param data 原始数据 ArrayBuffer
 //  * @param byteOffset 偏移量 ,accessor的byteOffset
 //  * @param type 类型 (scalar, vec2, vec3, vec4, mat2, mat3, mat4)
 //  * @param componentType 组件类型 (5120, 5121, 5122, 5123, 5125, 5126)
 //  * @param stride 跨度
 //  * @param count 数量
-//  * @returns 
+//  * @returns
 //  */
 // export function getArrayBufferViewByStrideAndCount(data: ArrayBuffer, byteOffset: number, type: string, componentType: number, stride: number, count: number) {
 //     let size = stride * count;
-//     // let bufferView = new Int8Array(data, byteOffset, size); 
+//     // let bufferView = new Int8Array(data, byteOffset, size);
 //     let dataView = new DataView(data, byteOffset, size);
 
 //     let componentUnitCount = getTypeSize(type);
@@ -728,48 +695,45 @@ export function invertNormals(normals: number[]): void {
  * @param index 索引
  * @param value 值
  */
-export function writeArayBufferViewForSparse(Buffer: TypedArray, type: string, componentType: number, index: number, value: any, sparseIndex: number) {
+export function writeArayBufferViewForSparse(
+    Buffer: TypedArray,
+    type: string,
+    componentType: number,
+    index: number,
+    value: any,
+    sparseIndex: number,
+) {
     let bufferView;
     if (componentType == 5120) {
         bufferView = new Int8Array(Buffer.buffer, Buffer.byteOffset, Buffer.length);
-    }
-    else if (componentType == 5121) {
+    } else if (componentType == 5121) {
         bufferView = new Uint8Array(Buffer.buffer, Buffer.byteOffset, Buffer.length);
-    }
-    else if (componentType == 5122) {
+    } else if (componentType == 5122) {
         bufferView = new Int16Array(Buffer.buffer, Buffer.byteOffset, Buffer.length / 2);
-    }
-    else if (componentType == 5123) {
+    } else if (componentType == 5123) {
         bufferView = new Uint16Array(Buffer.buffer, Buffer.byteOffset, Buffer.length / 2);
-    }
-    else if (componentType == 5125) {
+    } else if (componentType == 5125) {
         bufferView = new Uint32Array(Buffer.buffer, Buffer.byteOffset, Buffer.length / 4);
-    }
-    else if (componentType == 5126) {
+    } else if (componentType == 5126) {
         bufferView = new Float32Array(Buffer.buffer, Buffer.byteOffset, Buffer.length);
-    }
-    else {
+    } else {
         throw new Error(`GLTFModel:  component type ${componentType} not support`);
     }
-    if (type == "SCALAR") {
+    if (type == 'SCALAR') {
         bufferView[index] = value[sparseIndex];
-    }
-    else if (type == "VEC2") {
+    } else if (type == 'VEC2') {
         bufferView[index * 2] = value[sparseIndex * 2];
         bufferView[index * 2 + 1] = value[sparseIndex * 2 + 1];
-    }
-    else if (type == "VEC3") {
+    } else if (type == 'VEC3') {
         bufferView[index * 3] = value[sparseIndex * 3];
         bufferView[index * 3 + 1] = value[sparseIndex * 3 + 1];
         bufferView[index * 3 + 2] = value[sparseIndex * 3 + 2];
-    }
-    else if (type == "VEC4") {
+    } else if (type == 'VEC4') {
         bufferView[index * 4] = value[sparseIndex * 4];
         bufferView[index * 4 + 1] = value[sparseIndex * 4 + 1];
         bufferView[index * 4 + 2] = value[sparseIndex * 4 + 2];
         bufferView[index * 4 + 3] = value[sparseIndex * 4 + 3];
-    }
-    else {
+    } else {
         throw new Error(`GLTFModel:  type ${type} not support`);
     }
 }

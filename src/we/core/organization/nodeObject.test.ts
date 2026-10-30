@@ -6,10 +6,19 @@ beforeAll(() => {
     const num = 1;
     const flags: Record<string, number> = {};
     for (const k of [
-        'COPY_SRC', 'COPY_DST', 'TEXTURE_BINDING', 'STORAGE_BINDING',
-        'RENDER_ATTACHMENT', 'TRANSIENT_ATTACHMENT',
-        'VERTEX', 'INDEX', 'UNIFORM', 'INDIRECT', 'QUERY_RESOLVE',
-        'MAP_READ', 'MAP_WRITE',
+        'COPY_SRC',
+        'COPY_DST',
+        'TEXTURE_BINDING',
+        'STORAGE_BINDING',
+        'RENDER_ATTACHMENT',
+        'TRANSIENT_ATTACHMENT',
+        'VERTEX',
+        'INDEX',
+        'UNIFORM',
+        'INDIRECT',
+        'QUERY_RESOLVE',
+        'MAP_READ',
+        'MAP_WRITE',
     ]) {
         flags[k] = num;
     }

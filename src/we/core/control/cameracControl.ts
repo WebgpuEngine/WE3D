@@ -1,11 +1,7 @@
-
-
-import { BaseCamera } from "../camera/baseCamera"
-import { E_InputControlType, E_InputEvent, E_InputPriority } from "../input/base";
-import { BaseInputControl } from "../input/baseInputControl";
-import { InputManager } from "../input/inputManager";
-
-
+import { BaseCamera } from '../camera/baseCamera';
+import { E_InputControlType, E_InputEvent, E_InputPriority } from '../input/base';
+import { BaseInputControl } from '../input/baseInputControl';
+import { InputManager } from '../input/inputManager';
 
 interface digital {
     forward: boolean;
@@ -20,7 +16,7 @@ interface analog {
     y: number;
     zoom: number;
     touching: boolean;
-};
+}
 // interface mouse {
 //     x: number,
 //     y: number,
@@ -53,8 +49,8 @@ export type InputHandlerForCamera = (this: any) => InputForCamera;
 
 export interface IV_CamreaControl {
     // window: Window,
-    canvas: HTMLCanvasElement,//const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-    camera: BaseCamera,
+    canvas: HTMLCanvasElement; //const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+    camera: BaseCamera;
     // parent: any,
 }
 
@@ -75,19 +71,19 @@ export abstract class CamreaControl extends BaseInputControl {
         x: 0,
         y: 0,
         zoom: 0,
-        touching: false
+        touching: false,
     };
     window: Window;
     // _mouse!: mouse;
     _pointer: PointerEvent | MouseEvent | TouchEvent | undefined;
     _key: KeyboardEvent | undefined;
 
-    event: Array<{ target: any, type: string, callback: (this: any) => void, option: any }> = [];
+    event: Array<{ target: any; type: string; callback: (this: any) => void; option: any }> = [];
 
     // inputHandler: InputHandlerForCamera;
 
     constructor(option: IV_CamreaControl, manager: InputManager) {
-        super(E_InputControlType.Camera, manager)
+        super(E_InputControlType.Camera, manager);
         this.inputValues = option;
         this._canvas = option.canvas;
         this._camera = option.camera;
@@ -120,18 +116,17 @@ export abstract class CamreaControl extends BaseInputControl {
     /**
      * 获取相机控制器的输入值
      * 1、arcball、wasd相同，都是用此函数
-     * 
-     * @returns 
+     *
+     * @returns
      */
     getInputValue(): InputForCamera {
-
         const out = {
             digital: this._digital,
             analog: {
                 x: this._analog.x,
                 y: this._analog.y,
                 zoom: this._analog.zoom,
-                touching: this.eventValues.mouseValue.downOrUP === "down",//是否正在拖动
+                touching: this.eventValues.mouseValue.downOrUP === 'down', //是否正在拖动
             },
             pointer: this._pointer,
             key: this._key,
@@ -161,21 +156,21 @@ export abstract class CamreaControl extends BaseInputControl {
             x: 0,
             y: 0,
             zoom: 0,
-            touching: false
+            touching: false,
         };
         this._pointer = undefined;
         this._key = undefined;
 
-        let downOrUP = this.eventValues.mouseValue.downOrUP;        //鼠标按键状态，down 或 up;down 需要有保持状态
-        let buttons = this.eventValues.mouseValue.buttons;          //鼠标按键状态，down 或 up;down 需要有保持状态
-        let alreadyUp = this.eventValues.mouseValue.alreadyUp;      //mouse up key，是否已释放
+        let downOrUP = this.eventValues.mouseValue.downOrUP; //鼠标按键状态，down 或 up;down 需要有保持状态
+        let buttons = this.eventValues.mouseValue.buttons; //鼠标按键状态，down 或 up;down 需要有保持状态
+        let alreadyUp = this.eventValues.mouseValue.alreadyUp; //mouse up key，是否已释放
 
-        if (downOrUP === "down") {
+        if (downOrUP === 'down') {
             buttons = this.eventValues.mouseValue.buttons;
         }
         // 鼠标键释放，且未触发alreadyUp ，则将buttons 保持，alreadyUp 设为true
-        else if (this.eventValues.mouseValue.downOrUP === "up" && alreadyUp === false) {
-            alreadyUp = true;//下一帧使用
+        else if (this.eventValues.mouseValue.downOrUP === 'up' && alreadyUp === false) {
+            alreadyUp = true; //下一帧使用
         }
         //没有鼠标按键事件，buttons 设为-1
         else if (this.eventValues.mouseValue.downOrUP === undefined) {
@@ -198,7 +193,7 @@ export abstract class CamreaControl extends BaseInputControl {
             click: undefined,
             dblclick: undefined,
             keyValue: {
-                keyCode: undefined,//string
+                keyCode: undefined, //string
                 ctrlKey: false,
                 altKey: false,
                 shiftKey: false,
@@ -207,7 +202,7 @@ export abstract class CamreaControl extends BaseInputControl {
             mouseValue: {
                 x: undefined,
                 y: undefined,
-                buttons,//鼠标按键是在down 下设置并保持，在up状态重置，并保持。
+                buttons, //鼠标按键是在down 下设置并保持，在up状态重置，并保持。
                 downOrUP,
                 alreadyUp,
                 move: false,
@@ -215,7 +210,7 @@ export abstract class CamreaControl extends BaseInputControl {
                 altKey: false,
                 shiftKey: false,
             },
-        }
+        };
     }
     receiveInput(event: Event, type: E_InputEvent): boolean {
         switch (type) {
@@ -224,7 +219,7 @@ export abstract class CamreaControl extends BaseInputControl {
                 this.eventValues.keyValue.ctrlKey = (event as KeyboardEvent).ctrlKey;
                 this.eventValues.keyValue.altKey = (event as KeyboardEvent).altKey;
                 this.eventValues.keyValue.shiftKey = (event as KeyboardEvent).shiftKey;
-                this.eventValues.keyValue.downOrUP = "down";
+                this.eventValues.keyValue.downOrUP = 'down';
                 // console.log((event as KeyboardEvent).code);
                 switch ((event as KeyboardEvent).code) {
                     // Minus  减号
@@ -232,27 +227,27 @@ export abstract class CamreaControl extends BaseInputControl {
                     // NumpadSubtract   数字键减号
                     // NumpadAdd  数字键加号
                     case 'KeyW':
-                    case "ArrowUp":
+                    case 'ArrowUp':
                         this._digital.forward = true;
                         break;
                     case 'KeyS':
-                    case "ArrowDown":
+                    case 'ArrowDown':
                         this._digital.backward = true;
                         break;
                     case 'KeyA':
-                    case "ArrowLeft":
+                    case 'ArrowLeft':
                         this._digital.left = true;
                         break;
                     case 'KeyD':
-                    case "ArrowRight":
+                    case 'ArrowRight':
                         this._digital.right = true;
                         break;
                     case 'KeyE':
-                    case "PageUp":
+                    case 'PageUp':
                         this._digital.up = true;
                         break;
                     case 'PageDown':
-                    case "KeyC":
+                    case 'KeyC':
                         this._digital.down = true;
                         break;
                 }
@@ -262,46 +257,46 @@ export abstract class CamreaControl extends BaseInputControl {
                 this.eventValues.keyValue.ctrlKey = (event as KeyboardEvent).ctrlKey;
                 this.eventValues.keyValue.altKey = (event as KeyboardEvent).altKey;
                 this.eventValues.keyValue.shiftKey = (event as KeyboardEvent).shiftKey;
-                this.eventValues.keyValue.downOrUP = "up";
+                this.eventValues.keyValue.downOrUP = 'up';
                 switch ((event as KeyboardEvent).code) {
                     case 'KeyW':
-                    case "ArrowUp":
+                    case 'ArrowUp':
                         this._digital.forward = true;
                         break;
                     case 'KeyS':
-                    case "ArrowDown":
+                    case 'ArrowDown':
                         this._digital.backward = true;
                         break;
                     case 'KeyA':
-                    case "ArrowLeft":
+                    case 'ArrowLeft':
                         this._digital.left = true;
                         break;
                     case 'KeyD':
-                    case "ArrowRight":
+                    case 'ArrowRight':
                         this._digital.right = true;
                         break;
                     case 'KeyR':
-                    case "PageUp":
+                    case 'PageUp':
                         this._digital.up = true;
                         break;
                     case 'PageDown':
-                    case "KeyC":
+                    case 'KeyC':
                         this._digital.down = true;
                         break;
                 }
                 break;
             case E_InputEvent.pointerdown:
                 switch ((event as PointerEvent).pointerType) {
-                    case "mouse":
+                    case 'mouse':
                         this.eventValues.mouseValue.buttons = (event as PointerEvent).buttons;
-                        this.eventValues.mouseValue.downOrUP = "down";
+                        this.eventValues.mouseValue.downOrUP = 'down';
                         this.eventValues.mouseValue.ctrlKey = (event as PointerEvent).ctrlKey;
                         this.eventValues.mouseValue.altKey = (event as PointerEvent).altKey;
                         this.eventValues.mouseValue.shiftKey = (event as PointerEvent).shiftKey;
                         this._pointer = event as MouseEvent;
                         // console.log("cameraControal", this.eventValues.mouseValue.buttons)
                         break;
-                    case "touch":
+                    case 'touch':
                         this.eventValues.mouseValue.buttons = 0;
                         this._pointer = event as PointerEvent;
                         break;
@@ -310,15 +305,15 @@ export abstract class CamreaControl extends BaseInputControl {
                 break;
             case E_InputEvent.pointerup:
                 switch ((event as PointerEvent).pointerType) {
-                    case "mouse":
+                    case 'mouse':
                         this.eventValues.mouseValue.buttons = (event as PointerEvent).buttons;
-                        this.eventValues.mouseValue.downOrUP = "up";
+                        this.eventValues.mouseValue.downOrUP = 'up';
                         this.eventValues.mouseValue.ctrlKey = (event as PointerEvent).ctrlKey;
                         this.eventValues.mouseValue.altKey = (event as PointerEvent).altKey;
                         this.eventValues.mouseValue.shiftKey = (event as PointerEvent).shiftKey;
                         this._pointer = event as MouseEvent;
                         break;
-                    case "touch":
+                    case 'touch':
                         this.eventValues.mouseValue.buttons = 0;
                         this._pointer = event as PointerEvent;
                         break;
@@ -326,7 +321,7 @@ export abstract class CamreaControl extends BaseInputControl {
                 break;
             case E_InputEvent.pointermove:
                 switch ((event as PointerEvent).pointerType) {
-                    case "mouse":
+                    case 'mouse':
                         this.eventValues.mouseValue.x = (event as PointerEvent).clientX;
                         this.eventValues.mouseValue.y = (event as PointerEvent).clientY;
                         this.eventValues.mouseValue.ctrlKey = (event as PointerEvent).ctrlKey;
@@ -334,13 +329,14 @@ export abstract class CamreaControl extends BaseInputControl {
                         this.eventValues.mouseValue.shiftKey = (event as PointerEvent).shiftKey;
                         this.eventValues.mouseValue.move = true;
                         this._pointer = event as MouseEvent;
-                        if ((event as MouseEvent).buttons  !== 0) {//左键
+                        if ((event as MouseEvent).buttons !== 0) {
+                            //左键
                             this._analog.x += (event as MouseEvent).movementX;
                             this._analog.y += (event as MouseEvent).movementY;
                             // console.log("mouse movement", (event as MouseEvent).movementX, (event as MouseEvent).movementY);
                         }
                         break;
-                    case "touch":
+                    case 'touch':
                         this.eventValues.mouseValue.buttons = 0;
                         this._pointer = event as PointerEvent;
                         break;
@@ -353,8 +349,7 @@ export abstract class CamreaControl extends BaseInputControl {
         return false;
     }
     abstract init(): any;
-    abstract update(deltaTime: number): boolean
-
+    abstract update(deltaTime: number): boolean;
 
     set camera(camera: BaseCamera) {
         this._camera = camera;

@@ -1,11 +1,11 @@
-import { createEmptyGPUBuffer } from "../command/baseFunction";
-import { WeGenerateUUID } from "../math/baseFunction";
-import { I_UUID } from "../organization/root";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { E_BOLState, V_BolStrideSizeOfUpdate, E_BOLBufferType } from "./base";
-import { BlockPointerCoordinator } from "./BPC";
-import { Pointers } from "./pointer";
+import { createEmptyGPUBuffer } from '../command/baseFunction';
+import { WeGenerateUUID } from '../math/baseFunction';
+import { I_UUID } from '../organization/root';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { E_BOLState, V_BolStrideSizeOfUpdate, E_BOLBufferType } from './base';
+import { BlockPointerCoordinator } from './BPC';
+import { Pointers } from './pointer';
 
 /** 指针结构 */
 export interface I_pointerInfoInBOL {
@@ -46,9 +46,9 @@ export interface IV_BOL {
          *  A、适用于静态VS的属性数据；
          *  B、或其他CPU端不再操作的数据，不考虑类型。
          * 2、如果为false，则BOL状态根据容量适用设定状态
-        */
+         */
         released?: boolean;
-    }
+    };
     /** buffer 类型 */
     type: E_BOLBufferType;
     /** BOL ID 、id由BPC生成    */
@@ -60,12 +60,11 @@ export interface IV_BOL {
      */
     updateStrideSize?: number;
 
-    /** BOL重建触发阈值 
-     * 1、默认0.3 
+    /** BOL重建触发阈值
+     * 1、默认0.3
      * 2、staticVS 没有重建触发阈值。
      */
     rebuildPecent?: number;
-
 }
 /**
  * BOL偏移量和长度映射类
@@ -73,7 +72,7 @@ export interface IV_BOL {
  * 2、更新偏移量和长度时，需要更新CPU和GPU中的buffer（重新写入数据）。
  */
 export class BlockOffsetLength implements I_UUID {
-    parent: BlockPointerCoordinator
+    parent: BlockPointerCoordinator;
     device: GPUDevice;
     clock: Clock;
     // rebuildTime: number = 0;
@@ -82,9 +81,9 @@ export class BlockOffsetLength implements I_UUID {
     pointers: Pointers;
     name: string = 'BOL';
     type: E_BOLBufferType;
-    /** BOL大小，单位：字节。 
+    /** BOL大小，单位：字节。
      * 默认大小64K,也是最小值。
-    */
+     */
     size: {
         total: number;
         used: number;
@@ -92,12 +91,12 @@ export class BlockOffsetLength implements I_UUID {
         released: number;
         lastFree: number;
     } = {
-            total: 2 * 1024 * 1024,
-            used: 0,
-            free: 64 * 1024,
-            released: 0,
-            lastFree: 64 * 1024,
-        };
+        total: 2 * 1024 * 1024,
+        used: 0,
+        free: 64 * 1024,
+        released: 0,
+        lastFree: 64 * 1024,
+    };
     /** release阈值，默认0.3，
      * 1、staticVS 没有重建触发阈值。
      */
@@ -109,7 +108,13 @@ export class BlockOffsetLength implements I_UUID {
     updateStrideSize: number = 64 * 1024;
 
     /** GPUBufferUsageFlags类型 */
-    usage: GPUBufferUsageFlags = GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC;
+    usage: GPUBufferUsageFlags =
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.UNIFORM |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.COPY_SRC;
 
     UUID: string = '';
     _isDestroy: boolean = false;
@@ -117,11 +122,11 @@ export class BlockOffsetLength implements I_UUID {
     _id: number = 1;
     state: E_BOLState = E_BOLState.open;
 
-    /** 最后一次分配的偏移量 
+    /** 最后一次分配的偏移量
      * 1、默认从0开始分配。
      * 2、每次分配，偏移量增加指针大小。
      * 3、rebuild时，偏移量重置为0，然后按照每次分配的指针大小，更新此值。
-    */
+     */
     lastOffset: number = 0;
     cpuBuffer!: ArrayBuffer;
     gpuBuffer!: GPUBuffer;
@@ -133,9 +138,8 @@ export class BlockOffsetLength implements I_UUID {
     }
     addPointerInBOL(id: number) {
         if (this.pointerIdList.has(id)) {
-            throw new Error("pointerID already in BOL");
-        }
-        else {
+            throw new Error('pointerID already in BOL');
+        } else {
             this.pointerIdList.add(id);
         }
     }
@@ -186,7 +190,10 @@ export class BlockOffsetLength implements I_UUID {
         this.pointers = parent.pointers;
         this.device = parent.device;
         this.clock = parent.clock;
-        this.updateStrideSize = (input.updateStrideSize || V_BolStrideSizeOfUpdate[this.type as keyof typeof V_BolStrideSizeOfUpdate]) || 0;
+        this.updateStrideSize =
+            input.updateStrideSize ||
+            V_BolStrideSizeOfUpdate[this.type as keyof typeof V_BolStrideSizeOfUpdate] ||
+            0;
         this.rebuildPecent = input.rebuildPecent || 0.3;
         this.name = input.name;
         if (input.id != undefined) {
@@ -195,25 +202,32 @@ export class BlockOffsetLength implements I_UUID {
         this.UUID = WeGenerateUUID();
         if (input.type == E_BOLBufferType.static) {
             this.usage = GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST;
-        }
-        else if (input.type == E_BOLBufferType.VS) {
+        } else if (input.type == E_BOLBufferType.VS) {
             this.usage = GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST;
-        }
-        else if (input.type == E_BOLBufferType.uniform) {
-            this.usage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX;
-        }
-        else if (input.type == E_BOLBufferType.storage) {
-            this.usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM;
-        }
-        else {
-            //    this.usage 
+        } else if (input.type == E_BOLBufferType.uniform) {
+            this.usage =
+                GPUBufferUsage.UNIFORM |
+                GPUBufferUsage.COPY_DST |
+                GPUBufferUsage.COPY_SRC |
+                GPUBufferUsage.VERTEX;
+        } else if (input.type == E_BOLBufferType.storage) {
+            this.usage =
+                GPUBufferUsage.STORAGE |
+                GPUBufferUsage.COPY_DST |
+                GPUBufferUsage.COPY_SRC |
+                GPUBufferUsage.VERTEX |
+                GPUBufferUsage.UNIFORM;
+        } else {
+            //    this.usage
         }
         this.type = input.type;
         let size = this.inputValues.size;
         let complementOfNumber = size % 4;
         if (complementOfNumber !== 0) {
             complementOfNumber = 4 - complementOfNumber;
-            console.warn(`BOL ${this.name} size is not 4's multiple, add ${complementOfNumber} bytes.`);
+            console.warn(
+                `BOL ${this.name} size is not 4's multiple, add ${complementOfNumber} bytes.`,
+            );
         }
         size += complementOfNumber;
         this.size = {
@@ -222,10 +236,9 @@ export class BlockOffsetLength implements I_UUID {
             free: size,
             released: 0,
             lastFree: size,
-        }
+        };
         this.init();
     }
-
 
     destroy(): boolean {
         this.gpuBuffer.destroy();
@@ -247,7 +260,12 @@ export class BlockOffsetLength implements I_UUID {
     init() {
         this.cpuBuffer = new ArrayBuffer(this.inputValues.size);
         const label = `BOL ${this.name}`;
-        this.gpuBuffer = createEmptyGPUBuffer(this.device, this.usage, this.inputValues.size, label);
+        this.gpuBuffer = createEmptyGPUBuffer(
+            this.device,
+            this.usage,
+            this.inputValues.size,
+            label,
+        );
         if (this.inputValues.data) {
             this.device.queue.writeBuffer(this.gpuBuffer, 0, this.inputValues.data.buffer);
         }
@@ -259,8 +277,8 @@ export class BlockOffsetLength implements I_UUID {
      * 2、更新指针的offset和byteLength
      */
     rebuild() {
-        console.log("-------------------------------------------------rebuild",this.type);
-        /**         
+        console.log('-------------------------------------------------rebuild', this.type);
+        /**
          * 步骤：
          * 1、设置flagWriteAll为true，以及size重置
          * 2、slice 一个新副本，作为原数据
@@ -275,7 +293,7 @@ export class BlockOffsetLength implements I_UUID {
         this.state = E_BOLState.rebuilding;
         //1、设置flagWriteAll为true，以及size重置
         this.flagWriteAll = true;
-        let offset = 0;     //当前偏移量 
+        let offset = 0; //当前偏移量
         this.size.used = 0;
         this.size.free = this.size.total;
         this.size.released = 0;
@@ -290,21 +308,33 @@ export class BlockOffsetLength implements I_UUID {
                 continue;
             }
             //4.1 重新写入数据到cpuBuffer
-            const oneViewOfClone = new Uint8Array(cloneBuffer, oldPointerStruct.offset, oldPointerStruct.byteLength);
-            const oneViewOfRebuild = new Uint8Array(this.cpuBuffer, offset, oldPointerStruct.byteLength);
+            const oneViewOfClone = new Uint8Array(
+                cloneBuffer,
+                oldPointerStruct.offset,
+                oldPointerStruct.byteLength,
+            );
+            const oneViewOfRebuild = new Uint8Array(
+                this.cpuBuffer,
+                offset,
+                oldPointerStruct.byteLength,
+            );
             oneViewOfRebuild.set(oneViewOfClone);
 
             //4.2 更新指针的offset和byteLength
-            this.pointers.updatePointerOffset(oldPointerStruct.pointerID, offset, this.ID, this.clock.now);
+            this.pointers.updatePointerOffset(
+                oldPointerStruct.pointerID,
+                offset,
+                this.ID,
+                this.clock.now,
+            );
 
             //4.3 聚合更新的Map
             this.pointerOffsetMap.set(offset, oldPointerStruct.pointerID);
 
             //4.4 更新lastOffset和size
-            this.updateSizeOfUsed("add", oldPointerStruct.byteLength, offset);
+            this.updateSizeOfUsed('add', oldPointerStruct.byteLength, offset);
             offset += oldPointerStruct.byteLength;
             this.lastOffset = offset;
-
         }
         this.state = E_BOLState.open;
         // this.rebuildTime = this.clock.now;
@@ -383,7 +413,6 @@ export class BlockOffsetLength implements I_UUID {
                 //更新pointer的writeTime=0,表示已经更新过
                 pointer.writeTime = 0;
             }
-
         }
         //提交最后一个指针的偏移量和长度
         if (lastAtEndOfPointer != 0) {
@@ -399,9 +428,7 @@ export class BlockOffsetLength implements I_UUID {
                 this.device.queue.writeBuffer(this.gpuBuffer, 0, this.cpuBuffer);
                 this.flagWriteAll = false;
                 // console.log(this.type);
-
-            }
-            else {
+            } else {
                 this.generateUpdateOffsetAndLenght(clock);
                 for (const i of this.updateOffsetAndLenght) {
                     this.device.queue.writeBuffer(this.gpuBuffer, i[0], this.cpuBuffer, i[0], i[1]);
@@ -418,11 +445,11 @@ export class BlockOffsetLength implements I_UUID {
      * @param pointerID 指针ID
      * @param pointerID 指针大小，单位：字节
      * @returns 指针信息
-    */
+     */
     allocatePointer(pointerID: number, byteSize: number): I_pointerInfoInBOL {
         const offset = this.lastOffset;
         if (offset + byteSize > this.size.total) {
-            throw new Error("BOL size not enough");
+            throw new Error('BOL size not enough');
         }
         // if (this.type == E_BOLBufferType.storage)
         // console.log(` BOL allocate pointer ${this.type} ,last offset: ${this.lastOffset} and offset256:${this.lastOffset / 256} , pointer: ${pointerID} ${offset} ${byteSize}`);
@@ -435,12 +462,12 @@ export class BlockOffsetLength implements I_UUID {
             // BOL: this.BOL,
             cpuBuffer: this.cpuBuffer,
             gpuBuffer: this.gpuBuffer,
-        }
-        this.addPointerInBOL(pointerID);     //添加指针ID到pointerIdList
-        this.pointerOffsetMap.set(offset, pointerID);//更新pointer的Offse tMap的映射
+        };
+        this.addPointerInBOL(pointerID); //添加指针ID到pointerIdList
+        this.pointerOffsetMap.set(offset, pointerID); //更新pointer的Offse tMap的映射
         // this.updatePointerOffsetMap();
 
-        this.updateSizeOfUsed("add", byteSize, offset); //更新BOL的size使用量
+        this.updateSizeOfUsed('add', byteSize, offset); //更新BOL的size使用量
         return pointerInfo;
     }
     updatePointerOffsetMap() {
@@ -449,9 +476,8 @@ export class BlockOffsetLength implements I_UUID {
             const pointer = this.pointers.getPointer(i);
             if (pointer != undefined) {
                 this.pointerOffsetMap.set(pointer.offset, i);
-            }
-            else {
-                throw new Error("pointerID not found");
+            } else {
+                throw new Error('pointerID not found');
             }
         }
     }
@@ -465,43 +491,38 @@ export class BlockOffsetLength implements I_UUID {
     releasePointer(pointerID: number) {
         const pointerStruct = this.pointers.getPointer(pointerID);
         if (pointerStruct == undefined) {
-            console.warn("pointerID not found");
+            console.warn('pointerID not found');
             return;
         }
         const index = this.hasPointerInBOL(pointerID);
         if (index == false) {
-            console.warn("pointerID not found");
+            console.warn('pointerID not found');
             return;
-        }
-        else {
+        } else {
             // console.log("BOL release pointer", pointerID);
         }
         this.removePointerInBOL(pointerID);
         this.pointerOffsetMap.delete(pointerStruct.offset);
-        this.updateSizeOfUsed("remove", pointerStruct.byteLength);
+        this.updateSizeOfUsed('remove', pointerStruct.byteLength);
     }
     /** 更新BOL的size使用量
      * @param option add或remove
      * @param byteSize 指针大小，单位：字节
      */
-    updateSizeOfUsed(option: "add" | "remove", byteSize: number, offset?: number,) {
-        if (option == "remove") {
+    updateSizeOfUsed(option: 'add' | 'remove', byteSize: number, offset?: number) {
+        if (option == 'remove') {
             this.size.free += byteSize;
             this.size.used -= byteSize;
-            if (this.size.used > 0)
-                this.size.released += byteSize;
+            if (this.size.used > 0) this.size.released += byteSize;
             else {
                 this.size.released = 0;
                 this.size.lastFree = this.size.total;
             }
-
-        }
-        else {
-
+        } else {
             this.size.used += byteSize;
             this.size.free -= byteSize;
             if (offset == undefined) {
-                throw new Error("offset or byteLength is undefined");
+                throw new Error('offset or byteLength is undefined');
                 return;
             }
             this.size.lastFree = this.size.total - (offset + byteSize);
@@ -509,7 +530,7 @@ export class BlockOffsetLength implements I_UUID {
     }
     checkRebuild(): boolean {
         if (this.checkUpdate()) {
-            const percent = this.size.released / this.size.total ;
+            const percent = this.size.released / this.size.total;
             if (percent >= this.rebuildPecent) {
                 return true;
             }
@@ -517,11 +538,13 @@ export class BlockOffsetLength implements I_UUID {
         return false;
     }
     checkUpdate(): boolean {
-        if (this._isDestroy ||
+        if (
+            this._isDestroy ||
             this.state == E_BOLState.released ||
             this.type == E_BOLBufferType.static ||
             this.state == E_BOLState.rebuilding
-        ) return false;
+        )
+            return false;
         return true;
     }
     set State(state: E_BOLState) {
@@ -530,5 +553,4 @@ export class BlockOffsetLength implements I_UUID {
     get State() {
         return this.state;
     }
-
 }

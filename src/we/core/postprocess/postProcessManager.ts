@@ -1,11 +1,9 @@
-import { ECSManager } from "../organization/manager";
-import { Clock } from "../scene/clock";
-import { E_renderPassName } from "../scene/renderManager";
-import { BasePostProcess } from "./basePostProcess";
+import { ECSManager } from '../organization/manager';
+import { Clock } from '../scene/clock';
+import { E_renderPassName } from '../scene/renderManager';
+import { BasePostProcess } from './basePostProcess';
 
 export class PostProcessManager extends ECSManager<BasePostProcess> {
-
-
     update(clock: Clock): void {
         this.checkDestroy();
         for (const perOne of this.list) {
@@ -23,5 +21,4 @@ export class PostProcessManager extends ECSManager<BasePostProcess> {
             await perOne.onResize();
         }
     }
-
 }

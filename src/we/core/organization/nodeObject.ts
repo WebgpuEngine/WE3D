@@ -2,22 +2,22 @@
 // some JSON
 ///////////////////////////////////////////////////////////
 
-import { vec3, Mat4, mat4, Vec3 } from "wgpu-matrix";
-import { AnimationGroup } from "../animation/animationGroup";
-import { BaseAnimation } from "../animation/BaseAnimation";
-import { SkinAnimation } from "../animation/skin";
-import { WeightMixAnimation } from "../animation/weightMixAnimation";
-import { weVec4, weVec3, weMat4, E_lifeState } from "../base/coreDefine";
-import { BaseCamera } from "../camera/baseCamera";
-import { BaseEntity } from "../entity/baseEntity";
-import { BaseLight } from "../light/baseLight";
-import type { BaseModel } from "../model/BaseModel";
-import { BaseParticle } from "../particle/baseParticle";
-import { Clock } from "../scene/clock";
-import { E_renderPassName } from "../scene/renderManager";
-import { Scene } from "../scene/scene";
-import { IV_NodeSpace, NodeSpace } from "./nodeSpace";
-import { PhysicBody } from "../physics/physicBody";
+import { vec3, Mat4, mat4, Vec3 } from 'wgpu-matrix';
+import { AnimationGroup } from '../animation/animationGroup';
+import { BaseAnimation } from '../animation/BaseAnimation';
+import { SkinAnimation } from '../animation/skin';
+import { WeightMixAnimation } from '../animation/weightMixAnimation';
+import { weVec4, weVec3, weMat4, E_lifeState } from '../base/coreDefine';
+import { BaseCamera } from '../camera/baseCamera';
+import { BaseEntity } from '../entity/baseEntity';
+import { BaseLight } from '../light/baseLight';
+import type { BaseModel } from '../model/BaseModel';
+import { BaseParticle } from '../particle/baseParticle';
+import { Clock } from '../scene/clock';
+import { E_renderPassName } from '../scene/renderManager';
+import { Scene } from '../scene/scene';
+import { IV_NodeSpace, NodeSpace } from './nodeSpace';
+import { PhysicBody } from '../physics/physicBody';
 
 /** 空间类型,需要Scene的BVH开启或物理引擎开启
  * 1、BVH使用instance Mesh 的AABB信息
@@ -25,7 +25,7 @@ import { PhysicBody } from "../physics/physicBody";
  */
 export enum E_BVHSpaceType {
     /** 无空间属性 ,非instance mesh 节点或可忽略*/
-    none = "none",
+    none = 'none',
 
     /** 固定空间，不移动 。一般为：创建后就不改变位置的节点（WE和物理引擎都是）。
      * 1、不考虑物理引擎，固定位置，只供BVH使用
@@ -33,45 +33,45 @@ export enum E_BVHSpaceType {
      *     A、root ECS及自身将忽略位置更新；
      *     B、如果有动画的（关键帧且与位置相关），则不能设置为fixed。
      * 3、物理引擎中没有刚体，碰撞体类型为sensor。
-    */
-    fixed = "fixed",
+     */
+    fixed = 'fixed',
 
     /** 动态空间位置。we程序驱动。一般为：从WE传递到物理引擎。
      * 1、不考虑物理碰撞，位置可变。只供BVH使用。
      * 2、WE空间中，动态移动，一般为程序控制或者动画控制。
      * 3、物理引擎中没有刚体，碰撞体类型为sensor。
      */
-    dynamic = "dynamic",
+    dynamic = 'dynamic',
 
     /** 物理引擎驱动，位置受物理引擎控制。 一般为：从物理引擎传递到WE。
      * 1、若具有物理引擎属性，则NodeObject的更新位置了信息，不受parent的影响（也不再使用parent的matrixWorld矩阵）。
      * 2、NodeObject位置受物理引擎控制，同时必须具有physics属性。
      * 3、初始化的position等信息为世界坐标下的。
-    */
-    physical = "physical",
+     */
+    physical = 'physical',
 }
 
-
-
 export interface NodeObjectJSON {
-    type: string,
-    name: string,
-    id: number,
+    type: string;
+    name: string;
+    id: number;
     // renderID: number,
-    UUID: string,
-    position: number[],
-    scale: number[] | undefined,
-    rotate: {
-        axis: number[],
-        angleInRadians: number,
-    } | undefined,
-    quaternion: weVec4 | undefined,
-    enable: boolean,
-    visible: boolean,
-    matrix: number[],
-    matrixWorld: number[],
-    parent: number,
-    children: number[],
+    UUID: string;
+    position: number[];
+    scale: number[] | undefined;
+    rotate:
+        | {
+              axis: number[];
+              angleInRadians: number;
+          }
+        | undefined;
+    quaternion: weVec4 | undefined;
+    enable: boolean;
+    visible: boolean;
+    matrix: number[];
+    matrixWorld: number[];
+    parent: number;
+    children: number[];
 }
 /**
  * model 空间属性附加参数
@@ -79,22 +79,22 @@ export interface NodeObjectJSON {
  * 2、有entity的instance节点，必须设置为非none
  */
 export interface IV_AttachSpaceAttributeToNodeModel {
-    name?: string,
-    position?: weVec3,
-    scale?: weVec3,
-    rotate?: weVec4,
-    quaternion?: weVec4,
-    matrix?: weMat4,
+    name?: string;
+    position?: weVec3;
+    scale?: weVec3;
+    rotate?: weVec4;
+    quaternion?: weVec4;
+    matrix?: weMat4;
 }
 
 //////////////////////////////////////////////////////////////NodeObject////////////////////////////////////////////////////////////////////////////////////////
 export interface IV_Node extends IV_NodeSpace {
     /** 空间类型 ,默认none*/
-    spaceType?: E_BVHSpaceType,
+    spaceType?: E_BVHSpaceType;
 
-    entity?: BaseEntity,
+    entity?: BaseEntity;
 
-    physicalBody?: PhysicBody,
+    physicalBody?: PhysicBody;
 
     // /** 实例化的节点对象,延迟，目前没有必须要实现，
     //  * 实例化nodeObject时，需要进行整体的clone和数据的深度copy。
@@ -134,7 +134,7 @@ export class NodeObject extends NodeSpace {
     _spaceType: E_BVHSpaceType = E_BVHSpaceType.none;
     /** 设置空间类型 */
     set SpaceType(value: E_BVHSpaceType | string) {
-        if (typeof value === "string") {
+        if (typeof value === 'string') {
             if (value in E_BVHSpaceType) {
                 this._spaceType = value as E_BVHSpaceType;
             } else {
@@ -169,8 +169,7 @@ export class NodeObject extends NodeSpace {
                 this.Entity = input.entity;
                 if (input.spaceType) {
                     this.SpaceType = input.spaceType;
-                }
-                else {
+                } else {
                     this.SpaceType = E_BVHSpaceType.dynamic;
                 }
             }
@@ -181,17 +180,17 @@ export class NodeObject extends NodeSpace {
             // if (input.particle) this.Particle = input.particle;
             // if (input.animation) this.Animation = input.animation;
         }
-        this.updateMatrixWorld();//更新 world matrix
+        this.updateMatrixWorld(); //更新 world matrix
         this.updateWorldPosition(); //更新 world position
-        this.updateSelfAttribute();//更新自身属性，AABB
+        this.updateSelfAttribute(); //更新自身属性，AABB
     }
-    /**是否直接在世界坐标下 
+    /**是否直接在世界坐标下
      * 1、如果为true，则position等信息均为世界坐标下的；
      *      A、更新顺序，还是按照RootECS的更新顺序；
      *      B、更新时，将忽略parent的matrixWorld，直接使用position等信息更新matrix（matrixWorld=matrix）；
      * 2、如果为false，则position等信息为本地坐标下的；
      * 3、物理引擎驱动，需要为true
-    */
+     */
 
     /**是否需要更新全局矩阵 */
     needUpdateWorldMatrix: boolean = true;
@@ -204,7 +203,6 @@ export class NodeObject extends NodeSpace {
     set DirectInWorldSpace(value: boolean) {
         this._directInWorldSpace = value;
     }
-
 
     /** stageID*/
     stageID: number = 0;
@@ -220,7 +218,6 @@ export class NodeObject extends NodeSpace {
     /**  子节点 child nodes     */
     _children: NodeObject[] = [];
 
-
     /** renderID，use for pickup generate by stage      */
     _renderID!: number;
     set renderID(id: number) {
@@ -229,11 +226,10 @@ export class NodeObject extends NodeSpace {
     get renderID() {
         return this._renderID;
     }
-    /** 模型对象 model object     
+    /** 模型对象 model object
      * 如果此节点为模型实例化的根节点，则_modelOrigin为模型对象。
-    */
+     */
     _modelOrigin: BaseModel | undefined;
-
 
     /** 实体对象 entity object     */
     _entity: BaseEntity | undefined;
@@ -244,7 +240,6 @@ export class NodeObject extends NodeSpace {
         this._entity = entity;
     }
 
-
     /** 粒子对象 particle object     */
     _particle: BaseParticle[] | undefined;
     get Particle(): BaseParticle[] | undefined {
@@ -254,12 +249,11 @@ export class NodeObject extends NodeSpace {
     //     this._particle = particle;
     // }
 
-
-    /** 动画对象 animation object     
+    /** 动画对象 animation object
      * 1、有数据，则存在动画。
      * 2、每个元素为一个动画对象。
-    */
-    _animation: BaseAnimation[] = [];//| undefined;
+     */
+    _animation: BaseAnimation[] = []; //| undefined;
     get Animation(): BaseAnimation[] {
         return this._animation;
     }
@@ -267,9 +261,9 @@ export class NodeObject extends NodeSpace {
         this._animation = animation;
     }
 
-    /** 动画组对象 animation group object     
+    /** 动画组对象 animation group object
      * 1、gltf等模型使用
-    */
+     */
     _animationGroup: AnimationGroup[] | undefined;
     get AnimationGroup(): AnimationGroup[] | undefined {
         return this._animationGroup;
@@ -278,7 +272,7 @@ export class NodeObject extends NodeSpace {
         this._animationGroup = animationGroup;
     }
 
-    /** 骨架动画数据  SkinAnimation object 
+    /** 骨架动画数据  SkinAnimation object
      * 目前只设计了一个蒙皮动画。同一节点上不存在多个蒙皮动画。
      */
     _skinAnimation: SkinAnimation[] = [];
@@ -289,12 +283,12 @@ export class NodeObject extends NodeSpace {
         this._skinAnimation = skinAnimation;
     }
 
-    /** 骨架皮肤数据  ArrayBuffer of  jointsMat 
-    *  1、有数据，则存在骨骼动画。
-    *  2、工作流(每个NodeObject的逆绑定矩阵（世界逆绑定矩阵）=NodeObject的matrixWorld*inverseBindMatrix)
-    *      A、获得matrixWorld，
-    *      B、根据jointsMat，计算出每个joint的world matrix。
-    */
+    /** 骨架皮肤数据  ArrayBuffer of  jointsMat
+     *  1、有数据，则存在骨骼动画。
+     *  2、工作流(每个NodeObject的逆绑定矩阵（世界逆绑定矩阵）=NodeObject的matrixWorld*inverseBindMatrix)
+     *      A、获得matrixWorld，
+     *      B、根据jointsMat，计算出每个joint的world matrix。
+     */
     _jointsMat: ArrayBuffer | undefined;
     get JointsMat(): ArrayBuffer | undefined {
         return this._jointsMat;
@@ -303,10 +297,9 @@ export class NodeObject extends NodeSpace {
         this._jointsMat = skeletonSkin;
     }
 
-
-    /**  morphTarget 目标值数据  ArrayBuffer of  morphTargetMat 
+    /**  morphTarget 目标值数据  ArrayBuffer of  morphTargetMat
      *  1、有数据，则存在morphTarget动画。
-    */
+     */
     _morphTarget: ArrayBuffer | undefined;
     get MorphTarget(): ArrayBuffer | undefined {
         return this._morphTarget;
@@ -314,7 +307,6 @@ export class NodeObject extends NodeSpace {
     set MorphTarget(morphTarget: ArrayBuffer) {
         this._morphTarget = morphTarget;
     }
-
 
     /**
      * 权重动画 weight animation object
@@ -330,7 +322,6 @@ export class NodeObject extends NodeSpace {
     set WeightMixAnimation(weightMix: WeightMixAnimation) {
         this._weightMixAnimation = weightMix;
     }
-
 
     /**
      * 节点是否可见,如果不在root的树，则visible为false，但没有删除，还在资源池中
@@ -350,7 +341,6 @@ export class NodeObject extends NodeSpace {
         return this.visible;
     }
 
-
     /**
      * 向上递归，判断是否可见
      * 1、通过parent.type 判断是否为root节点
@@ -361,11 +351,9 @@ export class NodeObject extends NodeSpace {
         }
         if (this.Parent == undefined) {
             return false;
-        }
-        else if (this.Parent.type == "root") {
+        } else if (this.Parent.type == 'root') {
             return true;
-        }
-        else {
+        } else {
             return this.Visible && this.Parent.getVisibleAndParents();
         }
     }
@@ -392,11 +380,9 @@ export class NodeObject extends NodeSpace {
         }
         if (this.Parent == undefined) {
             return false;
-        }
-        else if (this.Parent.type == "root") {
+        } else if (this.Parent.type == 'root') {
             return true;
-        }
-        else {
+        } else {
             return this.Enable && this.Parent.getEnableAndParents();
         }
     }
@@ -406,15 +392,13 @@ export class NodeObject extends NodeSpace {
     // /**是否为模型的子节点 */
     // belongModel?: BaseModel | undefined;
 
-
-
     /**
      * 三段式初始化的第二步：init()
-     * 
-     * @param scene 
-     * @param parent 
-     * @param renderID 
-     * @returns 
+     *
+     * @param scene
+     * @param parent
+     * @param renderID
+     * @returns
      */
     async init(scene: Scene, parent?: NodeObject, _renderID?: number): Promise<any> {
         super.init(scene);
@@ -436,7 +420,6 @@ export class NodeObject extends NodeSpace {
      * 7、需要注销BVH和物理引擎中的相关数据
      */
     destroy(): void {
-
         // //递归销毁所有子节点
         // if (this.children.length > 0) {
         //     for (let child of this.children) {
@@ -448,7 +431,7 @@ export class NodeObject extends NodeSpace {
         // }
         //从entityManager中移除entity
         if (this.Entity) {
-            this.scene.entityManager.remove(this.Entity, this);//将entity从entityManager中移除
+            this.scene.entityManager.remove(this.Entity, this); //将entity从entityManager中移除
         }
 
         //注销动画
@@ -493,27 +476,29 @@ export class NodeObject extends NodeSpace {
 
     // }
 
-    get children() { return this._children; }
+    get children() {
+        return this._children;
+    }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // add 
+    // add
     /**
      * 附着entity到NodeObject上
      * 1. 如果NodeObject已经有entity，抛出错误
      * 2. 如果entity已经constructed,但没有init,则init entity
      * 3. 将entity添加到entityManager中
-     * 
-     * @param entity 
+     *
+     * @param entity
      */
     async attachEntity(entity: BaseEntity) {
         if (this.Entity) {
-            console.warn("NodeObject already has an entity, remove it first");
-        }
-        else {
+            console.warn('NodeObject already has an entity, remove it first');
+        } else {
             this.Entity = entity;
-            if (entity._state == E_lifeState.constructed) {//如果entity已经constructed,但没有init,则init entity
+            if (entity._state == E_lifeState.constructed) {
+                //如果entity已经constructed,但没有init,则init entity
                 await entity.init(this.scene);
             }
-            this.scene.entityManager.add(entity, this);//将entity添加到entityManager中
+            this.scene.entityManager.add(entity, this); //将entity添加到entityManager中
         }
     }
     // /** 从NodeObject上分离entity     */
@@ -532,51 +517,50 @@ export class NodeObject extends NodeSpace {
      *          model，particle
      * 2、entity
      *      A. 如果是BaseEntity，通过新建参数，
-     *          并将entity附着到新建Node Object上。         
+     *          并将entity附着到新建Node Object上。  
      *      B. 如果是IV_Node，根据参数创建对应的Node Object；
      *          如果存在entity，并将entity附着到NodeObject上。
      *      C、将entity和node添加到entityManager中
      * 3、如果不存在entity，将node添加到children中
-     * 
+     *
      * 4、如果是Model，根据modelAttachValue创建对应的Node Instance
-     * 
-     * @param child  NodeObject | BaseEntity | IV_Node 
-     * @returns  Promise<NodeObject> 
+     *
+     * @param child  NodeObject | BaseEntity | IV_Node
+     * @returns  Promise<NodeObject>
      */
-    async addChild(child: NodeObject | BaseEntity | IV_Node | BaseModel, modelAttachValue?: IV_NodeSpace): Promise<NodeObject> {
+    async addChild(
+        child: NodeObject | BaseEntity | IV_Node | BaseModel,
+        modelAttachValue?: IV_NodeSpace,
+    ): Promise<NodeObject> {
         let childNode: NodeObject;
         if (child instanceof NodeObject) {
             // child.parent = this;
-            if (child.type == "Model" && child instanceof NodeObject) {
-                await (child as BaseModel).init(this.scene, this);                                  //init
-                childNode = await (child as BaseModel).initInstance(this, modelAttachValue);        //initInstance,返回NodeInstanceModel
-            }
-            else if (child instanceof NodeObject) {
+            if (child.type == 'Model' && child instanceof NodeObject) {
+                await (child as BaseModel).init(this.scene, this); //init
+                childNode = await (child as BaseModel).initInstance(this, modelAttachValue); //initInstance,返回NodeInstanceModel
+            } else if (child instanceof NodeObject) {
                 await child.init(this.scene, this);
                 childNode = child;
+            } else {
+                throw new Error('child type not support');
             }
-            else {
-                throw new Error("child type not support");
-            }
-            if (child.type == "Camera") {
+            if (child.type == 'Camera') {
                 this.scene.cameraManager.add(child as unknown as BaseCamera);
                 childNode = child;
-            }
-            else if (child.type == "Light") {//这里不能使用 instanceof BaseLight，会遇到 “暂时性死区 Uncaught ReferenceError: Cannot access 'NodeOrigin' before initialization” 问题，应该是BaseLight的在NodeObject解析完成之前进行了初始化;可以使用type 导入，麻烦点
+            } else if (child.type == 'Light') {
+                //这里不能使用 instanceof BaseLight，会遇到 “暂时性死区 Uncaught ReferenceError: Cannot access 'NodeOrigin' before initialization” 问题，应该是BaseLight的在NodeObject解析完成之前进行了初始化;可以使用type 导入，麻烦点
                 this.scene.lightsManager.add(child as BaseLight);
-                this.scene.resourcesGPU.cleanSystemUniform();//shadowmap 数量会变化，清除system的map
+                this.scene.resourcesGPU.cleanSystemUniform(); //shadowmap 数量会变化，清除system的map
                 if ((child as BaseLight).Shadow)
                     this.scene.renderManager.RC[E_renderPassName.transparent][child.UUID] = [];
                 childNode = child;
-            }
-            else if (child.type == "ParticleSystem") {
+            } else if (child.type == 'ParticleSystem') {
                 // this.scene.particleManager.addParticleSystem(child as ParticleSystem);
-                throw new Error("ParticleSystem 未实现");
+                throw new Error('ParticleSystem 未实现');
             }
             // else if (child.type == "Model") {
             //     // this.scene.modelManager.addModel(child as Model);
             // }
-
         }
         //节点，根据参数创建
         else {
@@ -585,8 +569,7 @@ export class NodeObject extends NodeSpace {
                 initValue = {
                     entity: child,
                 };
-            }
-            else {
+            } else {
                 initValue = child;
             }
             childNode = await this.initNodeObject(initValue);
@@ -595,20 +578,25 @@ export class NodeObject extends NodeSpace {
         return childNode;
     }
     // add = this.addChild;
-    async add(child: NodeObject | BaseEntity | IV_Node | BaseModel, modelAttachValue?: IV_NodeSpace): Promise<NodeObject> {
+    async add(
+        child: NodeObject | BaseEntity | IV_Node | BaseModel,
+        modelAttachValue?: IV_NodeSpace,
+    ): Promise<NodeObject> {
         return await this.addChild(child, modelAttachValue);
     }
 
     async initNodeObject(value: IV_Node): Promise<NodeObject> {
         // let childNode: NodeObject = new NodeInstance(value);//创建node object
-        const childNode: NodeObject = new NodeObject(value);//创建node object
-        await childNode.init(this.scene, this);  //初始化node object
-        childNode.Parent = this;    //设置parent
-        if (value.entity) {//如果有entity
-            if (value.entity._state == E_lifeState.constructed) {//如果entity已经constructed,但没有init,则init entity
+        const childNode: NodeObject = new NodeObject(value); //创建node object
+        await childNode.init(this.scene, this); //初始化node object
+        childNode.Parent = this; //设置parent
+        if (value.entity) {
+            //如果有entity
+            if (value.entity._state == E_lifeState.constructed) {
+                //如果entity已经constructed,但没有init,则init entity
                 await value.entity.init(this.scene);
             }
-            this.scene.entityManager.add(value.entity, childNode);//将entity添加到entityManager中
+            this.scene.entityManager.add(value.entity, childNode); //将entity添加到entityManager中
         }
         // if (value.animation) {
         //     throw new Error("animation 未实现");
@@ -625,7 +613,7 @@ export class NodeObject extends NodeSpace {
      * @param onlyOne 是否只移除一个子节点，默认:true
      *   只删除单个节点，删除后，从children中移除
      *   删除所有子节点，不从children中移除（防止for失效），最后由removeChildren()移除
-     * 
+     *
      * @returns 是否移除成功
      */
     removeChild(child: NodeObject, onlyOne: boolean = true): boolean {
@@ -637,8 +625,7 @@ export class NodeObject extends NodeSpace {
                 this._children.splice(index, 1);
             }
             return true;
-        }
-        else console.log("未找到对应的子节点", child);
+        } else console.log('未找到对应的子节点', child);
         return false;
     }
     /**
@@ -674,8 +661,7 @@ export class NodeObject extends NodeSpace {
         for (const i of this.children) {
             if (i.ID == id) {
                 return i;
-            }
-            else if (i.children.length > 0) {
+            } else if (i.children.length > 0) {
                 for (const j of i.children) {
                     const isTarget = j.getNodeObjectByID(id);
                     if (isTarget != false) {
@@ -688,15 +674,14 @@ export class NodeObject extends NodeSpace {
     }
     /**
      * get child by UUID
-     * @param id 
-     * @returns 
+     * @param id
+     * @returns
      */
     getNodeObjectByUUID(id: string): NodeObject | boolean {
         for (const i of this.children) {
             if (i.UUID == id) {
                 return i;
-            }
-            else if (i.children.length > 0) {
+            } else if (i.children.length > 0) {
                 for (const j of i.children) {
                     const isTarget = j.getNodeObjectByUUID(id);
                     if (isTarget != false) {
@@ -710,15 +695,14 @@ export class NodeObject extends NodeSpace {
 
     /**
      * 返回第一个具有name的object
-     * @param name 
-     * @returns 
+     * @param name
+     * @returns
      */
     getNodeObjectByName(name: string): NodeObject | boolean {
         for (const i of this.children) {
             if (i.Name == name) {
                 return this;
-            }
-            else if (i instanceof NodeObject) {
+            } else if (i instanceof NodeObject) {
                 const isTarget = i.getNodeObjectByName(name);
                 if (isTarget != false) {
                     return isTarget;
@@ -727,9 +711,6 @@ export class NodeObject extends NodeSpace {
         }
         return false;
     }
-
-
-
 
     /**
      * 更新
@@ -742,18 +723,22 @@ export class NodeObject extends NodeSpace {
      * @param clock Clock 时钟
      * @param updateSelftFN 是否调用自身的updateSelf(),默认=true
      *         此参数可以方便子类重载时，决定调用的updateSelf()的时间顺序或是否调用updateSelft()
-     * @returns 
+     * @returns
      */
-    override update(clock: Clock, updateSelftFN: boolean = true, updateAtEndFN: boolean = true): boolean {
-        super.update(clock, false, false);                             //更新I_Update.update()，不更新updateSelf(),不更新updateAtEnd().都只执行一次
+    override update(
+        clock: Clock,
+        updateSelftFN: boolean = true,
+        updateAtEndFN: boolean = true,
+    ): boolean {
+        super.update(clock, false, false); //更新I_Update.update()，不更新updateSelf(),不更新updateAtEnd().都只执行一次
         //判断NodeObject的SpaceType是否不为physical,才需要更新世界矩阵．physic由this._PhysicBody及其ECS更新
         if (this.SpaceType !== E_BVHSpaceType.physical) {
             //使用树状层级结构(不是直接在世界空间坐标系中)，层级更新世界矩阵
             if (this.DirectInWorldSpace === false) {
-                this.needUpdateWorldMatrix = this.checkNeedUpdateWorldMatrix();//调用slef class 的checkNeedUpdateWorldMatrix()，确认parent的matrixWorld是否有变化
+                this.needUpdateWorldMatrix = this.checkNeedUpdateWorldMatrix(); //调用slef class 的checkNeedUpdateWorldMatrix()，确认parent的matrixWorld是否有变化
                 //用于减少无变化NodeObject的矩阵计算量。这里之哟NodeObject，包括了，Light，Camera
                 if (this.needUpdateWorldMatrix) {
-                    this.updateMatrixWorld();//更新 world matrix
+                    this.updateMatrixWorld(); //更新 world matrix
                     this.updateWorldPosition(); //更新 world position
                 }
                 //更新自身属性，AABB
@@ -770,11 +755,12 @@ export class NodeObject extends NodeSpace {
         //更新updateSelf()。只更新一次,在所有自身更新之后
         if (updateSelftFN) {
             this.updateSelf(clock);
-            this.lastUpdaeTime = clock.now;                     //更新最后一次更新时间
+            this.lastUpdaeTime = clock.now; //更新最后一次更新时间
         }
-        if (this.children.length > 0)                           //更新子节点
+        if (this.children.length > 0)
+            //更新子节点
             for (const i of this.children) {
-                i.update(clock);//更新子节点,包括：node object，light，camera
+                i.update(clock); //更新子节点,包括：node object，light，camera
             }
 
         //根据是否使用罗德里格斯旋转，以及在local还是world空间，来更新旋转矩阵
@@ -798,25 +784,25 @@ export class NodeObject extends NodeSpace {
             const max = vec3.transformMat4(box.max, this.matrixWorld);
             this.scene.Box3s.push({
                 min: [min[0], min[1], min[2]],
-                max: [max[0], max[1], max[2]]
-            });//更新scene的包围盒数组
+                max: [max[0], max[1], max[2]],
+            }); //更新scene的包围盒数组
         }
     }
     /**
-    * 自下而上的更新，一条线而上，不更新兄弟节点
-    * @param clock 
-    * @returns 
-    */
+     * 自下而上的更新，一条线而上，不更新兄弟节点
+     * @param clock
+     * @returns
+     */
     updateParentOnly(clock: Clock) {
-        if (this.Parent !== undefined && this.Parent.type == "root") {
-            this.Parent.updateParentOnly(clock);//递归
+        if (this.Parent !== undefined && this.Parent.type == 'root') {
+            this.Parent.updateParentOnly(clock); //递归
         }
-        if (this.lastUpdaeTime !== clock.now) {//更新自己
+        if (this.lastUpdaeTime !== clock.now) {
+            //更新自己
             this.updateSelfAttribute();
             this.updateSelf(clock);
         }
     }
-
 
     /**
      * 更新世界位置
@@ -827,33 +813,42 @@ export class NodeObject extends NodeSpace {
      */
     updateWorldPosition(_matrixWorld?: Mat4): Vec3 {
         if (_matrixWorld) {
-            this.worldPosition = vec3.fromValues(_matrixWorld[12], _matrixWorld[13], _matrixWorld[14]);
-        }
-        else {
+            this.worldPosition = vec3.fromValues(
+                _matrixWorld[12],
+                _matrixWorld[13],
+                _matrixWorld[14],
+            );
+        } else {
             if (this.DirectInWorldSpace === false)
-                this.worldPosition = vec3.fromValues(this.matrixWorld[12], this.matrixWorld[13], this.matrixWorld[14]);
+                this.worldPosition = vec3.fromValues(
+                    this.matrixWorld[12],
+                    this.matrixWorld[13],
+                    this.matrixWorld[14],
+                );
             else
-                this.worldPosition = vec3.fromValues(this.matrix[12], this.matrix[13], this.matrix[14]);
+                this.worldPosition = vec3.fromValues(
+                    this.matrix[12],
+                    this.matrix[13],
+                    this.matrix[14],
+                );
         }
         return this.worldPosition;
     }
 
-    /** 
+    /**
      * 更新世界矩阵，
      *          递归乘以父节点的矩阵
      */
     updateMatrixWorld(_parentMatrixWorld?: Mat4): Mat4 {
         if (this.DirectInWorldSpace === false) {
-            if (this.Parent !== undefined && this.Parent.type !== "root") {
+            if (this.Parent !== undefined && this.Parent.type !== 'root') {
                 // this.matrixWorld = mat4.multiply(this.Parent.matrixWorld, this.updateMatrix());
                 this.matrixWorld = mat4.multiply(this.Parent.matrixWorld, this.matrix);
-            }
-            else {
+            } else {
                 // this.matrixWorld = this.updateMatrix();
                 this.matrixWorld = this.matrix;
             }
-        }
-        else {
+        } else {
             mat4.copy(this.matrix, this.matrixWorld);
         }
 
@@ -871,7 +866,6 @@ export class NodeObject extends NodeSpace {
         this.updateMatrixWorld();
     }
 
-
     /** 父空间的矩阵世界  */
     _parentMatrixWorld: Mat4 | undefined;
     /** 检查是否需要更新矩阵 */
@@ -885,8 +879,10 @@ export class NodeObject extends NodeSpace {
                 flagParentMatrixWorld = true;
                 this._parentMatrixWorld = mat4.create();
                 mat4.copy(this.Parent.matrixWorld, this._parentMatrixWorld);
-            }
-            else if (this._parentMatrixWorld !== undefined && this.Parent.matrixWorld !== undefined) {
+            } else if (
+                this._parentMatrixWorld !== undefined &&
+                this.Parent.matrixWorld !== undefined
+            ) {
                 if (mat4.equals(this._parentMatrixWorld, this.Parent.matrixWorld) === false) {
                     flagParentMatrixWorld = true;
                     mat4.copy(this.Parent.matrixWorld, this._parentMatrixWorld);

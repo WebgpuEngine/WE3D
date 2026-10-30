@@ -1,9 +1,9 @@
-import { InputManager } from "../input/inputManager";
-import { ECSManager } from "../organization/manager";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { IV_Pickup, IV_PickupInitValue } from "./base";
-import { Pickup } from "./pickup";
+import { InputManager } from '../input/inputManager';
+import { ECSManager } from '../organization/manager';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { IV_Pickup, IV_PickupInitValue } from './base';
+import { Pickup } from './pickup';
 
 /**
  * 1、Pickup 类是在pickup manager 和 input manager 进行了双重注册的
@@ -12,7 +12,6 @@ import { Pickup } from "./pickup";
  * 3、input manager 管理功能流程
  */
 export class pickupManager extends ECSManager<Pickup> {
-
     inputManager: InputManager;
     constructor(scene: Scene) {
         super(scene);
@@ -28,11 +27,10 @@ export class pickupManager extends ECSManager<Pickup> {
     }
     //
     register(pickupIV: IV_Pickup | Pickup): Pickup {
-        let pickup: Pickup
+        let pickup: Pickup;
         if (pickupIV instanceof Pickup) {
             pickup = pickupIV;
-        }
-        else {
+        } else {
             const initValue: IV_PickupInitValue = {
                 scene: this.scene,
                 manager: this.inputManager,
@@ -55,5 +53,4 @@ export class pickupManager extends ECSManager<Pickup> {
             await perOne.update();
         }
     }
-
 }

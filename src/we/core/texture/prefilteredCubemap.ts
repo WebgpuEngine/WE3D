@@ -1,6 +1,6 @@
-import { Scene } from "../scene/scene";
-import { I_BaseTexture } from "./base";
-import { BaseTexture } from "./baseTexture";
+import { Scene } from '../scene/scene';
+import { I_BaseTexture } from './base';
+import { BaseTexture } from './baseTexture';
 
 export interface I_PrefilteredCubmap extends I_BaseTexture {
     source: string;
@@ -11,20 +11,19 @@ export interface I_PrefilteredCubmap extends I_BaseTexture {
  * 1、目前只支持KTX1格式的(RGB_10_11_11_REV data)
  * 2、所有图片的尺寸必须相同
  * 3、目标格式为rgba16float
- * 
+ *
  *          +Y 2
  *  -X 1    +Z 4    +X 0    -Z 5
  *          -Y 3
- * 
+ *
  */
 export class PrefilteredCubemap extends BaseTexture {
     mipmapLevel = 1;
-    updateSelf(): void {
-    }
+    updateSelf(): void {}
     constructor(input: I_BaseTexture, device: GPUDevice, scene?: Scene) {
         super(input, device, scene);
         this.inputValues = input;
-        this.textureFormat = "rg11b10ufloat";
+        this.textureFormat = 'rg11b10ufloat';
     }
 
     async initTextureAndLayout(): Promise<any> {
@@ -33,9 +32,8 @@ export class PrefilteredCubemap extends BaseTexture {
         let height = 256;
         if (this.scene.resourcesGPU.textureOfString.has(source)) {
             this.texture = this.scene.resourcesGPU.textureOfString.get(source);
-        }
-        else {
-            if (typeof source == "string") {
+        } else {
+            if (typeof source == 'string') {
                 // 1. 读取文件二进制
                 const response = await fetch(source);
                 const bufffer = await response.arrayBuffer();
@@ -47,7 +45,6 @@ export class PrefilteredCubemap extends BaseTexture {
                 this.mipmapLevel = result.mipLevelCount;
                 console.log(result);
 
-
                 // // 2. 解析 KTX1 文件
                 // const imageInfo = parseKTXHeader(u8buffer);
                 // if (imageInfo) {
@@ -58,17 +55,14 @@ export class PrefilteredCubemap extends BaseTexture {
                 //     console.log("KTX1文件解析失败");
                 // }
 
-
                 this.texture = this.device.createTexture({
-                    dimension: "2d",
+                    dimension: '2d',
                     textureBindingViewDimension: 'cube',
                     // Create a 2d array texture.
                     // Assume each image has the same size.
                     size: [width, height, 6],
                     format: this.textureFormat,
-                    usage:
-                        GPUTextureUsage.TEXTURE_BINDING |
-                        GPUTextureUsage.COPY_DST,
+                    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
                     mipLevelCount: result.mipLevelCount,
                 });
 
@@ -82,7 +76,7 @@ export class PrefilteredCubemap extends BaseTexture {
                             {
                                 texture: this.texture,
                                 mipLevel: mipLevel,
-                                origin: { x: 0, y: 0, z: i }
+                                origin: { x: 0, y: 0, z: i },
                             },
                             mipLevelData.data,
                             {
@@ -96,12 +90,10 @@ export class PrefilteredCubemap extends BaseTexture {
                             },
                         );
                     }
-
                 }
             }
 
             this.scene.resourcesGPU.textureOfString.set(source, this.texture);
-
         }
 
         return this._state;
@@ -109,14 +101,14 @@ export class PrefilteredCubemap extends BaseTexture {
     override async initSamplerAndLayout(_input: I_BaseTexture) {
         this.sampler = this.device.createSampler({
             // 立方图强制 clamp，杜绝接缝
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge",
-            addressModeW: "clamp-to-edge",
+            addressModeU: 'clamp-to-edge',
+            addressModeV: 'clamp-to-edge',
+            addressModeW: 'clamp-to-edge',
 
             // 三线性过滤（预滤波 IBL 核心）
-            magFilter: "linear",
-            minFilter: "linear",
-            mipmapFilter: "linear",
+            magFilter: 'linear',
+            minFilter: 'linear',
+            mipmapFilter: 'linear',
 
             // 各向异性：仅配置 maxAnisotropy 即可，无需额外开关
             maxAnisotropy: 16,
@@ -156,14 +148,14 @@ export class PrefilteredCubemap extends BaseTexture {
         const magicStr = String.fromCharCode(...magic);
         // KTX1 标准魔数: "KTX 11  " (末尾两个空格)
         if (magicStr !== '«KTX 11»\r\n\x1A\n') {
-            throw new Error("无效文件: 不是标准 KTX1 格式");
+            throw new Error('无效文件: 不是标准 KTX1 格式');
         }
 
         // ====================== 2. 读取 KTX1 头部 (共 64 byte，小端序) ======================
         /**
-        * 头部总大小：64 字节
-        * 0 ~ 63：完整 KTX1 头部（含 bytesOfKeyValueData，偏移 60~63）
-        */
+         * 头部总大小：64 字节
+         * 0 ~ 63：完整 KTX1 头部（含 bytesOfKeyValueData，偏移 60~63）
+         */
         // 只读取关键字段，其余跳过
         const _glTypeSize = view.getUint32(16, true);
         const _glType = view.getUint32(20, true);
@@ -179,13 +171,12 @@ export class PrefilteredCubemap extends BaseTexture {
         const faceCount = view.getUint32(52, true); //标准 6 面 Cubemap
         const mipLevelCount = view.getUint32(56, true); //Mip层数
 
-
         // ====================== 3. 合法性校验 (cmgen 固定规则) ======================
         // RGB_10_11_11_REV 对应 GL 内部格式码: 0x8C3A
-        const EXPECTED_FORMAT = 0x8C3A;
+        const EXPECTED_FORMAT = 0x8c3a;
         if (glInternalFormat !== EXPECTED_FORMAT) {
             throw new Error(
-                `格式不匹配: 仅支持 RGB_10_11_11_REV(0x8C3A)，当前: 0x${glInternalFormat.toString(16)}`
+                `格式不匹配: 仅支持 RGB_10_11_11_REV(0x8C3A)，当前: 0x${glInternalFormat.toString(16)}`,
             );
         }
         // 立方图必须是 6 个面
@@ -193,7 +184,7 @@ export class PrefilteredCubemap extends BaseTexture {
             throw new Error(`不是立方贴图，面数: ${faceCount} (要求 6)`);
         }
         if (pixelWidth === 0 || pixelHeight === 0 || mipLevelCount === 0) {
-            throw new Error("贴图尺寸/Mip层数非法");
+            throw new Error('贴图尺寸/Mip层数非法');
         }
 
         // ====================== 4. 跳过 KV 元数据段 ======================
@@ -214,7 +205,7 @@ export class PrefilteredCubemap extends BaseTexture {
         // 外层: 遍历 Mip 层级 (KTX1 规则: 先 Mip)
         for (let mipIdx = 0; mipIdx < mipLevelCount; mipIdx++) {
             // 跳过当前 Mip 头部 (4 字节)或mipPadding
-            offset+=4;//跳过4字节,没有的话，会产生图像偏移；原因：待分析KTX1格式解析规则，但未找到相关字段
+            offset += 4; //跳过4字节,没有的话，会产生图像偏移；原因：待分析KTX1格式解析规则，但未找到相关字段
 
             // 计算当前 Mip 尺寸
             const currW = Math.max(1, pixelWidth >> mipIdx);
@@ -229,7 +220,7 @@ export class PrefilteredCubemap extends BaseTexture {
             // 内层: 遍历当前 Mip 下 6 个立方体面
             for (let faceIdx = 0; faceIdx < faceCount; faceIdx++) {
                 // 截取当前面 + 当前 Mip 数据
-                const data = new Uint8Array(buffer, offset , faceDataBytes);
+                const data = new Uint8Array(buffer, offset, faceDataBytes);
                 offset += faceTotalBytes;
                 if (faces[faceIdx] == undefined) {
                     faces[faceIdx] = [];

@@ -7,10 +7,19 @@ beforeAll(() => {
     const num = 1;
     const flags: Record<string, number> = {};
     for (const k of [
-        'COPY_SRC', 'COPY_DST', 'TEXTURE_BINDING', 'STORAGE_BINDING',
-        'RENDER_ATTACHMENT', 'TRANSIENT_ATTACHMENT',
-        'VERTEX', 'INDEX', 'UNIFORM', 'INDIRECT', 'QUERY_RESOLVE',
-        'MAP_READ', 'MAP_WRITE',
+        'COPY_SRC',
+        'COPY_DST',
+        'TEXTURE_BINDING',
+        'STORAGE_BINDING',
+        'RENDER_ATTACHMENT',
+        'TRANSIENT_ATTACHMENT',
+        'VERTEX',
+        'INDEX',
+        'UNIFORM',
+        'INDIRECT',
+        'QUERY_RESOLVE',
+        'MAP_READ',
+        'MAP_WRITE',
     ]) {
         flags[k] = num;
     }
@@ -46,10 +55,16 @@ describe('InputManager — P0-2 intercept 优先级', () => {
         const calls: string[] = [];
 
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.intercept].push({
-            receiveInput: () => { calls.push('intercept'); return true; },
+            receiveInput: () => {
+                calls.push('intercept');
+                return true;
+            },
         });
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.broadcastEnd].push({
-            receiveInput: () => { calls.push('broadcastEnd'); return false; },
+            receiveInput: () => {
+                calls.push('broadcastEnd');
+                return false;
+            },
         });
 
         manager.keyDown({} as KeyboardEvent);
@@ -62,10 +77,16 @@ describe('InputManager — P0-2 intercept 优先级', () => {
         const calls: string[] = [];
 
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.intercept].push({
-            receiveInput: () => { calls.push('intercept'); return false; },
+            receiveInput: () => {
+                calls.push('intercept');
+                return false;
+            },
         });
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.broadcastEnd].push({
-            receiveInput: () => { calls.push('broadcastEnd'); return false; },
+            receiveInput: () => {
+                calls.push('broadcastEnd');
+                return false;
+            },
         });
 
         manager.keyDown({} as KeyboardEvent);
@@ -78,13 +99,22 @@ describe('InputManager — P0-2 intercept 优先级', () => {
         const calls: string[] = [];
 
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.broadcastStart].push({
-            receiveInput: () => { calls.push('broadcastStart'); return false; },
+            receiveInput: () => {
+                calls.push('broadcastStart');
+                return false;
+            },
         });
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.intercept].push({
-            receiveInput: () => { calls.push('intercept'); return false; },
+            receiveInput: () => {
+                calls.push('intercept');
+                return false;
+            },
         });
         manager.registerEventList[E_InputEvent.keydown][E_InputPriority.broadcastEnd].push({
-            receiveInput: () => { calls.push('broadcastEnd'); return false; },
+            receiveInput: () => {
+                calls.push('broadcastEnd');
+                return false;
+            },
         });
 
         manager.keyDown({} as KeyboardEvent);

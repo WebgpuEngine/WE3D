@@ -1,10 +1,9 @@
-import { AtmosphereHillaire } from "./atmosphereHillaire";
-import { HillaireLutBase } from "./lutBase";
+import { AtmosphereHillaire } from './atmosphereHillaire';
+import { HillaireLutBase } from './lutBase';
 
 export abstract class LutUseShadowMap extends HillaireLutBase {
     constructor(parent: AtmosphereHillaire) {
         super(parent);
-
     }
 
     abstract generateBindGroup0(): void;
@@ -21,43 +20,42 @@ export abstract class LutUseShadowMap extends HillaireLutBase {
     generateBindGroup1() {
         if (this.bindGroupLayout[1] === undefined) {
             const layout_1: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
-                label: "renderSkyWithLut_1",
+                label: 'renderSkyWithLut_1',
                 entries: [
                     {
                         binding: 0,
                         visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
                         buffer: {
-                            type: "uniform",
+                            type: 'uniform',
                         },
                     },
                     {
                         binding: 1,
                         visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
                         sampler: {
-                            type: "comparison"
+                            type: 'comparison',
                         },
                     },
                     {
                         binding: 2,
                         visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
                         texture: {
-                            sampleType: "depth",
+                            sampleType: 'depth',
                         },
                     },
                     {
                         binding: 3,
                         visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
                         texture: {
-                            sampleType: "depth",
+                            sampleType: 'depth',
                         },
                     },
-
-                ]
+                ],
             });
             this.bindGroupLayout[1] = layout_1;
         }
         const bindGroupDescriptor_1: GPUBindGroupDescriptor = {
-            label: "renderSkyWithLut_1",
+            label: 'renderSkyWithLut_1',
             layout: this.bindGroupLayout[1],
             entries: [
                 {
@@ -78,7 +76,7 @@ export abstract class LutUseShadowMap extends HillaireLutBase {
                     // resource: this.parent.depthShadowMapTexture,
                     resource: this.parent.shadowMap.getShowShadowMap(1),
                 },
-            ]
+            ],
         };
         const bindGroup_1 = this.scene.device.createBindGroup(bindGroupDescriptor_1);
         this.bindGroups[1] = bindGroup_1;

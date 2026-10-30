@@ -1,18 +1,15 @@
-
-import { getSampler } from "../../sampler/baseFunction";
-import {   IV_BaseStandardMaterial } from "../base";
-import { BaseMaterial } from "../baseMaterial";
+import { getSampler } from '../../sampler/baseFunction';
+import { IV_BaseStandardMaterial } from '../base';
+import { BaseMaterial } from '../baseMaterial';
 
 export abstract class BaseStandardMaterial extends BaseMaterial {
     declare inputValues: IV_BaseStandardMaterial;
     constructor(input?: IV_BaseStandardMaterial) {
         super(input);
 
-
         if (input?.samplerDescriptor != undefined && input.samplerBindingType == undefined) {
-            throw new Error("samplerDescriptor 必须指定samplerBindingType")
+            throw new Error('samplerDescriptor 必须指定samplerBindingType');
         }
-
     }
 
     /**
@@ -27,5 +24,4 @@ export abstract class BaseStandardMaterial extends BaseMaterial {
         this.defaultSampler = sampler;
         return sampler;
     }
-
 }

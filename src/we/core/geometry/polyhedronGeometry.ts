@@ -1,36 +1,33 @@
-import { vec3 } from "wgpu-matrix";
-import { BaseGeometry, IV_Gemetry, xyz } from "./baseGeometry";
-
+import { vec3 } from 'wgpu-matrix';
+import { BaseGeometry, IV_Gemetry, xyz } from './baseGeometry';
 
 export interface optionPolyhedronGeometry extends IV_Gemetry {
     /**一个顶点Array（数组）：[1,1,1, -1,-1,-1, ... ] */
-    vertices: number[],
+    vertices: number[];
     /**一个构成面的索引Array（数组）， [0,1,2, 2,3,0, ... ]*/
-    indices: number[],
+    indices: number[];
     /**最终形状的半径*/
-    radius: number,
+    radius: number;
     /**将对这个几何体细分多少个级别。细节越多，形状就越平滑。*/
-    detail?: number,
-
+    detail?: number;
 }
 
 export class PolyhedronGeometry extends BaseGeometry {
     /**box的参数 */
     parameters!: optionPolyhedronGeometry;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    numberOfVertices !: number;
+    numberOfVertices!: number;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    groupStart !: number;
+    groupStart!: number;
 
     declare input: optionPolyhedronGeometry;
     _already: boolean = false;
     constructor(input: optionPolyhedronGeometry) {
-
         super(input);
         this.input = input;
         this.type = 'PolyhedronGeometry';
 
-        this.init(input)
+        this.init(input);
     }
     init(input: optionPolyhedronGeometry) {
         // let indices = this.buffer.indeices;
@@ -56,13 +53,9 @@ export class PolyhedronGeometry extends BaseGeometry {
 
         this.generateUVs();
         if (detail === 0) {
-
             this.computeVertexNormals(); // flat normals
-
         } else {
-
             this.normalizeNormals(); // smooth normals
-
         }
         _normals = vertices.slice();
 
@@ -75,23 +68,22 @@ export class PolyhedronGeometry extends BaseGeometry {
         let a: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         let b: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         let c: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         // iterate over all faces and apply a subdivision with the given detail value
 
         for (let i = 0; i < indices.length; i += 3) {
-
             // get the vertices of the face
 
             a = this.getVertexByIndex(indices[i + 0]);
@@ -101,12 +93,9 @@ export class PolyhedronGeometry extends BaseGeometry {
             // perform subdivision
 
             this.subdivideFace(a, b, c, detail);
-
         }
-
     }
     subdivideFace(a: xyz, b: xyz, c: xyz, detail: number) {
-
         const cols = detail + 1;
 
         // we use this multidimensional array as a data structure for creating the subdivision
@@ -116,70 +105,68 @@ export class PolyhedronGeometry extends BaseGeometry {
         // construct all of the vertices for this subdivision
 
         for (let i = 0; i <= cols; i++) {
-
             v[i] = [];
 
-            const aj = vec3.lerp(vec3.fromValues(a.x, a.y, a.z), vec3.fromValues(c.x, c.y, c.z), i / cols);
+            const aj = vec3.lerp(
+                vec3.fromValues(a.x, a.y, a.z),
+                vec3.fromValues(c.x, c.y, c.z),
+                i / cols,
+            );
             // const aj = a.clone().lerp( c, i / cols );
-            const bj = vec3.lerp(vec3.fromValues(b.x, b.y, b.z), vec3.fromValues(c.x, c.y, c.z), i / cols);
+            const bj = vec3.lerp(
+                vec3.fromValues(b.x, b.y, b.z),
+                vec3.fromValues(c.x, c.y, c.z),
+                i / cols,
+            );
             // const bj = b.clone().lerp( c, i / cols );
 
             const rows = cols - i;
 
             for (let j = 0; j <= rows; j++) {
-
                 if (j === 0 && i === cols) {
                     //v[ i ][ j ] = aj;
                     v[i][j] = { x: aj[0], y: aj[1], z: aj[2] };
                 } else {
-                    const cj = vec3.lerp(vec3.fromValues(aj[0], aj[1], aj[2]), vec3.fromValues(bj[0], bj[1], bj[2]), j / rows);
+                    const cj = vec3.lerp(
+                        vec3.fromValues(aj[0], aj[1], aj[2]),
+                        vec3.fromValues(bj[0], bj[1], bj[2]),
+                        j / rows,
+                    );
                     v[i][j] = { x: cj[0], y: cj[1], z: cj[2] };
                     //v[ i ][ j ] = aj.clone().lerp( bj, j / rows );
                 }
-
             }
-
         }
 
         // construct all of the faces
 
         for (let i = 0; i < cols; i++) {
-
             for (let j = 0; j < 2 * (cols - i) - 1; j++) {
-
                 const k = Math.floor(j / 2);
 
                 if (j % 2 === 0) {
-
                     this.pushVertex(v[i][k + 1]);
                     this.pushVertex(v[i + 1][k]);
                     this.pushVertex(v[i][k]);
-
                 } else {
-
                     this.pushVertex(v[i][k + 1]);
                     this.pushVertex(v[i + 1][k + 1]);
                     this.pushVertex(v[i + 1][k]);
-
                 }
-
             }
-
         }
-
     }
     applyRadius(radius: number) {
         const vertexBuffer = this.buffer.position;
         const vertex: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         // iterate over the entire buffer and apply the radius to each vertex
 
         for (let i = 0; i < vertexBuffer.length; i += 3) {
-
             vertex.x = vertexBuffer[i + 0];
             vertex.y = vertexBuffer[i + 1];
             vertex.z = vertexBuffer[i + 2];
@@ -192,9 +179,7 @@ export class PolyhedronGeometry extends BaseGeometry {
             vertexBuffer[i + 0] = vertex.x;
             vertexBuffer[i + 1] = vertex.y;
             vertexBuffer[i + 2] = vertex.z;
-
         }
-
     }
     generateUVs() {
         const vertexBuffer = this.buffer.position;
@@ -202,11 +187,10 @@ export class PolyhedronGeometry extends BaseGeometry {
         const vertex: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         for (let i = 0; i < vertexBuffer.length; i += 3) {
-
             vertex.x = vertexBuffer[i + 0];
             vertex.y = vertexBuffer[i + 1];
             vertex.z = vertexBuffer[i + 2];
@@ -214,20 +198,17 @@ export class PolyhedronGeometry extends BaseGeometry {
             const u = this.azimuth(vertex) / 2 / Math.PI + 0.5;
             const v = this.inclination(vertex) / Math.PI + 0.5;
             uvBuffer.push(u, 1 - v);
-
         }
 
         this.correctUVs();
 
         this.correctSeam();
-
     }
     correctSeam() {
-        const uvBuffer = this.buffer.uv
+        const uvBuffer = this.buffer.uv;
         // handle case when face straddles the seam, see #3269
 
         for (let i = 0; i < uvBuffer.length; i += 6) {
-
             // uv data of a single face
 
             const x0 = uvBuffer[i + 0];
@@ -240,15 +221,11 @@ export class PolyhedronGeometry extends BaseGeometry {
             // 0.9 is somewhat arbitrary
 
             if (max > 0.9 && min < 0.1) {
-
                 if (x0 < 0.2) uvBuffer[i + 0] += 1;
                 if (x1 < 0.2) uvBuffer[i + 2] += 1;
                 if (x2 < 0.2) uvBuffer[i + 4] += 1;
-
             }
-
         }
-
     }
 
     pushVertex(vertex: xyz) {
@@ -261,7 +238,7 @@ export class PolyhedronGeometry extends BaseGeometry {
         const vertex: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         vertex.x = vertices[stride + 0];
         vertex.y = vertices[stride + 1];
@@ -274,39 +251,39 @@ export class PolyhedronGeometry extends BaseGeometry {
         const a: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         const b: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         const c: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         const centroid: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         const uvA: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         const uvB: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         const uvC: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         for (let i = 0, j = 0; i < vertexBuffer.length; i += 9, j += 6) {
@@ -335,26 +312,13 @@ export class PolyhedronGeometry extends BaseGeometry {
 
             const centroid_1 = vec3.divScalar(
                 vec3.add(
-                    vec3.add(
-                        vec3.fromValues(
-                            a.x,
-                            a.y,
-                            a.z
-                        ),
-                        vec3.fromValues(
-                            b.x,
-                            b.y,
-                            b.z
-                        ),
-                    ),
-                    vec3.fromValues(
-                        c.x,
-                        c.y,
-                        c.z
-                    ),
-                ), 3);
+                    vec3.add(vec3.fromValues(a.x, a.y, a.z), vec3.fromValues(b.x, b.y, b.z)),
+                    vec3.fromValues(c.x, c.y, c.z),
+                ),
+                3,
+            );
 
-            centroid.x, centroid.y, centroid.z = centroid_1[0], centroid_1[1], centroid_1[2];
+            (centroid.x, centroid.y, (centroid.z = centroid_1[0]), centroid_1[1], centroid_1[2]);
             // centroid.copy(a).add(b).add(c).divideScalar(3);
 
             const azi = this.azimuth(centroid);
@@ -362,33 +326,28 @@ export class PolyhedronGeometry extends BaseGeometry {
             this.correctUV(uvBuffer, uvA, j + 0, a, azi);
             this.correctUV(uvBuffer, uvB, j + 2, b, azi);
             this.correctUV(uvBuffer, uvC, j + 4, c, azi);
-
         }
-
     }
 
     correctUV(uvBuffer: number[], uv: xyz, stride: number, vector: xyz, azimuth: number) {
-        if ((azimuth < 0) && (uv.x === 1)) {
+        if (azimuth < 0 && uv.x === 1) {
             uvBuffer[stride] = uv.x - 1;
         }
-        if ((vector.x === 0) && (vector.z === 0)) {
+        if (vector.x === 0 && vector.z === 0) {
             uvBuffer[stride] = azimuth / 2 / Math.PI + 0.5;
         }
     }
 
-
     // Angle around the Y axis, counter-clockwise when looking from above.
     azimuth(vector: xyz) {
-        return Math.atan2(vector.z, - vector.x);
+        return Math.atan2(vector.z, -vector.x);
     }
-
 
     // Angle above the XZ plane.
     inclination(vector: xyz) {
-        return Math.atan2(- vector.y, Math.sqrt((vector.x * vector.x) + (vector.z * vector.z)));
+        return Math.atan2(-vector.y, Math.sqrt(vector.x * vector.x + vector.z * vector.z));
     }
     computeVertexNormals() {
-
         const index = this.buffer.indeices;
         const positionAttribute = this.buffer.position;
         const normalAttribute = this.buffer.normal;
@@ -398,7 +357,6 @@ export class PolyhedronGeometry extends BaseGeometry {
         }
 
         if (positionAttribute !== undefined) {
-
             // const pA = new Vector3(), pB = new Vector3(), pC = new Vector3();
             // const nA = new Vector3(), nB = new Vector3(), nC = new Vector3();
             // const cb = new Vector3(), ab = new Vector3();
@@ -406,75 +364,129 @@ export class PolyhedronGeometry extends BaseGeometry {
             // indexed elements
 
             if (index) {
-
                 for (let i = 0, il = index.length; i < il; i += 3) {
-
-                    const vA = vec3.fromValues(positionAttribute[index[i + 0] * 3 + 0], positionAttribute[index[i + 0] * 3 + 1], positionAttribute[index[i + 0] * 3 + 2]);
-                    const vB = vec3.fromValues(positionAttribute[index[i + 1] * 3 + 0], positionAttribute[index[i + 1] * 3 + 1], positionAttribute[index[i + 1] * 3 + 2]);
-                    const vC = vec3.fromValues(positionAttribute[index[i + 2] * 3 + 0], positionAttribute[index[i + 2] * 3 + 1], positionAttribute[index[i + 2] * 3 + 2]);
-
-
-
+                    const vA = vec3.fromValues(
+                        positionAttribute[index[i + 0] * 3 + 0],
+                        positionAttribute[index[i + 0] * 3 + 1],
+                        positionAttribute[index[i + 0] * 3 + 2],
+                    );
+                    const vB = vec3.fromValues(
+                        positionAttribute[index[i + 1] * 3 + 0],
+                        positionAttribute[index[i + 1] * 3 + 1],
+                        positionAttribute[index[i + 1] * 3 + 2],
+                    );
+                    const vC = vec3.fromValues(
+                        positionAttribute[index[i + 2] * 3 + 0],
+                        positionAttribute[index[i + 2] * 3 + 1],
+                        positionAttribute[index[i + 2] * 3 + 2],
+                    );
 
                     let cb = vec3.sub(vC, vB);
                     const ab = vec3.sub(vA, vB);
                     cb = vec3.cross(cb, ab);
                     // cb = vec3.cross(cb, ab);
 
-
-
-                    let nA = vec3.fromValues(normalAttribute[index[i + 0] * 3 + 0], normalAttribute[index[i + 0] * 3 + 1], normalAttribute[index[i + 0] * 3 + 2]);
-                    let nB = vec3.fromValues(normalAttribute[index[i + 1] * 3 + 0], normalAttribute[index[i + 1] * 3 + 1], normalAttribute[index[i + 1] * 3 + 2]);
-                    let nC = vec3.fromValues(normalAttribute[index[i + 2] * 3 + 0], normalAttribute[index[i + 2] * 3 + 1], normalAttribute[index[i + 2] * 3 + 2]);
+                    let nA = vec3.fromValues(
+                        normalAttribute[index[i + 0] * 3 + 0],
+                        normalAttribute[index[i + 0] * 3 + 1],
+                        normalAttribute[index[i + 0] * 3 + 2],
+                    );
+                    let nB = vec3.fromValues(
+                        normalAttribute[index[i + 1] * 3 + 0],
+                        normalAttribute[index[i + 1] * 3 + 1],
+                        normalAttribute[index[i + 1] * 3 + 2],
+                    );
+                    let nC = vec3.fromValues(
+                        normalAttribute[index[i + 2] * 3 + 0],
+                        normalAttribute[index[i + 2] * 3 + 1],
+                        normalAttribute[index[i + 2] * 3 + 2],
+                    );
 
                     nA = vec3.add(nA, cb);
                     nB = vec3.add(nB, cb);
                     nC = vec3.add(nC, cb);
 
-                    normalAttribute[index[i + 0] * 3 + 0], normalAttribute[index[i + 0] * 3 + 1], normalAttribute[index[i + 0] * 3 + 2] = nA[0], nA[1], nA[2];
-                    normalAttribute[index[i + 1] * 3 + 0], normalAttribute[index[i + 1] * 3 + 1], normalAttribute[index[i + 1] * 3 + 2] = nB[0], nB[1], nB[2];
-                    normalAttribute[index[i + 2] * 3 + 0], normalAttribute[index[i + 2] * 3 + 1], normalAttribute[index[i + 2] * 3 + 2] = nC[0], nC[1], nC[2];
-
+                    (normalAttribute[index[i + 0] * 3 + 0],
+                        normalAttribute[index[i + 0] * 3 + 1],
+                        (normalAttribute[index[i + 0] * 3 + 2] = nA[0]),
+                        nA[1],
+                        nA[2]);
+                    (normalAttribute[index[i + 1] * 3 + 0],
+                        normalAttribute[index[i + 1] * 3 + 1],
+                        (normalAttribute[index[i + 1] * 3 + 2] = nB[0]),
+                        nB[1],
+                        nB[2]);
+                    (normalAttribute[index[i + 2] * 3 + 0],
+                        normalAttribute[index[i + 2] * 3 + 1],
+                        (normalAttribute[index[i + 2] * 3 + 2] = nC[0]),
+                        nC[1],
+                        nC[2]);
                 }
-
             } else {
-
                 // non-indexed elements (unconnected triangle soup)
 
                 for (let i = 0, il = positionAttribute.length; i < il; i += 3 * 3) {
-                    const pA = vec3.fromValues(positionAttribute[i + 0], positionAttribute[i + 1], positionAttribute[i + 2]);
-                    const pB = vec3.fromValues(positionAttribute[i + 3], positionAttribute[i + 4], positionAttribute[i + 5]);
-                    const pC = vec3.fromValues(positionAttribute[i + 6], positionAttribute[i + 7], positionAttribute[i + 8]);
+                    const pA = vec3.fromValues(
+                        positionAttribute[i + 0],
+                        positionAttribute[i + 1],
+                        positionAttribute[i + 2],
+                    );
+                    const pB = vec3.fromValues(
+                        positionAttribute[i + 3],
+                        positionAttribute[i + 4],
+                        positionAttribute[i + 5],
+                    );
+                    const pC = vec3.fromValues(
+                        positionAttribute[i + 6],
+                        positionAttribute[i + 7],
+                        positionAttribute[i + 8],
+                    );
 
                     let cb = vec3.sub(pC, pB);
                     const ab = vec3.sub(pA, pB);
                     cb = vec3.cross(cb, ab);
 
-                    normalAttribute[i + 0] = cb[0], normalAttribute[i + 1] = cb[1], normalAttribute[i + 2] = cb[2];
-                    normalAttribute[i + 3] = cb[0], normalAttribute[i + 4] = cb[1], normalAttribute[i + 5] = cb[2];
-                    normalAttribute[i + 6] = cb[0], normalAttribute[i + 7] = cb[1], normalAttribute[i + 8] = cb[2];
-
+                    ((normalAttribute[i + 0] = cb[0]),
+                        (normalAttribute[i + 1] = cb[1]),
+                        (normalAttribute[i + 2] = cb[2]));
+                    ((normalAttribute[i + 3] = cb[0]),
+                        (normalAttribute[i + 4] = cb[1]),
+                        (normalAttribute[i + 5] = cb[2]));
+                    ((normalAttribute[i + 6] = cb[0]),
+                        (normalAttribute[i + 7] = cb[1]),
+                        (normalAttribute[i + 8] = cb[2]));
                 }
-
             }
 
             for (let i = 0, il = normalAttribute.length; i < il; i += 3) {
-                const _vector = vec3.normalize(vec3.fromValues(normalAttribute[i + 0], normalAttribute[i + 1], normalAttribute[i + 2]));
-                normalAttribute[i + 0] = _vector[0], normalAttribute[i + 1] = _vector[1], normalAttribute[i + 2] = _vector[2];
+                const _vector = vec3.normalize(
+                    vec3.fromValues(
+                        normalAttribute[i + 0],
+                        normalAttribute[i + 1],
+                        normalAttribute[i + 2],
+                    ),
+                );
+                ((normalAttribute[i + 0] = _vector[0]),
+                    (normalAttribute[i + 1] = _vector[1]),
+                    (normalAttribute[i + 2] = _vector[2]));
             }
-
         }
-
     }
 
     normalizeNormals() {
-
         const normalAttribute = this.buffer.normal;
 
         for (let i = 0, il = normalAttribute.length; i < il; i += 3) {
-            const _vector = vec3.normalize(vec3.fromValues(normalAttribute[i + 0], normalAttribute[i + 1], normalAttribute[i + 2]));
-            normalAttribute[i + 0] = _vector[0], normalAttribute[i + 1] = _vector[1], normalAttribute[i + 2] = _vector[2];
+            const _vector = vec3.normalize(
+                vec3.fromValues(
+                    normalAttribute[i + 0],
+                    normalAttribute[i + 1],
+                    normalAttribute[i + 2],
+                ),
+            );
+            ((normalAttribute[i + 0] = _vector[0]),
+                (normalAttribute[i + 1] = _vector[1]),
+                (normalAttribute[i + 2] = _vector[2]));
         }
-
     }
 }

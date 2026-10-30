@@ -1,7 +1,7 @@
-import { WeGenerateID } from "../math/baseFunction";
-import { I_FeatureModule } from "../organization/featureManager";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
+import { WeGenerateID } from '../math/baseFunction';
+import { I_FeatureModule } from '../organization/featureManager';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
 
 export abstract class Atmosphere implements I_FeatureModule {
     abstract onResize(): Promise<void>;
@@ -21,5 +21,4 @@ export abstract class Atmosphere implements I_FeatureModule {
         this._isDestroy = false;
         this.scene.otherManager.add(this);
     }
-
 }

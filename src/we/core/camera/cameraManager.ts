@@ -1,21 +1,19 @@
-
-import { E_GBufferNames } from "../gbuffers/base";
-import { GBuffers, IV_GBuffer } from "../gbuffers/GBuffers";
-import { ECSManager } from "../organization/manager";
-import { Clock } from "../scene/clock";
-import { E_renderPassName } from "../scene/renderManager";
-import { Scene } from "../scene/scene";
-import { BaseCamera } from "./baseCamera";
-import { CameraPositionAndInvertVP } from "./cameraPositionAndinvertVP";
-import { DeferDrawCommandGenerator } from "./DeferDrawCommandGenerator";
-import { OrthographicCamera } from "./orthographicCamera";
-import { PerspectiveCamera } from "./perspectiveCamera";
-import { ToneMappingCommandGenerator } from "./toneMappingCommand";
+import { E_GBufferNames } from '../gbuffers/base';
+import { GBuffers, IV_GBuffer } from '../gbuffers/GBuffers';
+import { ECSManager } from '../organization/manager';
+import { Clock } from '../scene/clock';
+import { E_renderPassName } from '../scene/renderManager';
+import { Scene } from '../scene/scene';
+import { BaseCamera } from './baseCamera';
+import { CameraPositionAndInvertVP } from './cameraPositionAndinvertVP';
+import { DeferDrawCommandGenerator } from './DeferDrawCommandGenerator';
+import { OrthographicCamera } from './orthographicCamera';
+import { PerspectiveCamera } from './perspectiveCamera';
+import { ToneMappingCommandGenerator } from './toneMappingCommand';
 
 export interface IV_CameraManager {
-    scene: Scene
+    scene: Scene;
 }
-
 
 export class CameraManager extends ECSManager<BaseCamera> {
     defaultCamera!: BaseCamera;
@@ -36,13 +34,13 @@ export class CameraManager extends ECSManager<BaseCamera> {
 
     constructor(input: IV_CameraManager) {
         super(input.scene);
-        this.deferRender = this.scene.renderMode == "deferRender" ? true : false;
+        this.deferRender = this.scene.renderMode == 'deferRender' ? true : false;
         this.MSAA = this.scene.MSAA;
         this.cameraPositionAndinvertVP = new CameraPositionAndInvertVP(this, this.scene.device);
         this.GBufferManager = new GBuffers(this, this.scene.device);
         // this.DCG = new DrawCommandGenerator({ scene: this.scene, parent: this, });
-        this.deferDCG = new DeferDrawCommandGenerator({ scene: this.scene, parent: this, });
-        this.toneMappingDCG = new ToneMappingCommandGenerator({ scene: this.scene, parent: this, });
+        this.deferDCG = new DeferDrawCommandGenerator({ scene: this.scene, parent: this });
+        this.toneMappingDCG = new ToneMappingCommandGenerator({ scene: this.scene, parent: this });
     }
     /**
      * 增加摄像机
@@ -76,11 +74,11 @@ export class CameraManager extends ECSManager<BaseCamera> {
             MSAA: this.MSAA,
             surfaceSize: {
                 width: width,
-                height: height
+                height: height,
             },
             premultipliedAlpha: camera.premultipliedAlpha,
             backGroudColor: camera.backGroundColor,
-            depthClearValue: this.scene.reversedZ.cleanValue
+            depthClearValue: this.scene.reversedZ.cleanValue,
         };
         if (camera.Name) {
             gbuffersOption.name = camera.Name;
@@ -102,7 +100,6 @@ export class CameraManager extends ECSManager<BaseCamera> {
 
         //7、初始化toneMapping DrawCommand
         this.toneMappingDCG.add(camera.UUID);
-        ;
     }
     /**
      * 移除相机
@@ -110,7 +107,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * 2、删除GBuffer
      * 3、如果时默认相机， 则设置为第一个相机
      * 4、zindexList删除UUID
-     * @param camera 
+     * @param camera
      */
     remove(camera: BaseCamera) {
         this.cameraPositionAndinvertVP.remove(camera);
@@ -135,8 +132,8 @@ export class CameraManager extends ECSManager<BaseCamera> {
     /**
      * 更新相机数据
      * 1、push forward
-     * 2、push defer 
-     * 
+     * 2、push defer
+     *
      * 数据队列都是规定的DC，onResize是会全部重建，所以还是每帧push
      */
     async update(_clock: Clock) {
@@ -182,17 +179,16 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 MSAA: this.MSAA,
                 surfaceSize: {
                     width: width,
-                    height: height
+                    height: height,
                 },
                 premultipliedAlpha: camera.premultipliedAlpha,
                 backGroudColor: camera.backGroundColor,
-                depthClearValue: this.scene.reversedZ.cleanValue
+                depthClearValue: this.scene.reversedZ.cleanValue,
             };
             if (camera.Name) {
                 gbuffersOption.name = camera.Name;
             }
             await this.GBufferManager.reInitGBuffer(camera.UUID, gbuffersOption);
-
 
             //初始化toneMapping DrawCommand
             this.toneMappingDCG.add(camera.UUID);
@@ -216,8 +212,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
                 camera.aspect = this.scene.aspect;
                 camera.updateProjectionMatrix();
                 camera.updateByPositionDirection(camera.worldPosition, camera.LookAt, false);
-            }
-            else if (camera instanceof OrthographicCamera) {
+            } else if (camera instanceof OrthographicCamera) {
                 camera.updateProjectionMatrix();
             }
         }
@@ -239,7 +234,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @returns 相机
      */
     getCameraByID(id: number) {
-        return this.list.find(camera => camera.ID == id);
+        return this.list.find((camera) => camera.ID == id);
     }
 
     get DefaultCamera() {
@@ -254,7 +249,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @returns 相机
      */
     getCameraByName(name: string) {
-        return this.list.find(camera => camera.Name == name);
+        return this.list.find((camera) => camera.Name == name);
     }
 
     /**
@@ -263,16 +258,13 @@ export class CameraManager extends ECSManager<BaseCamera> {
      * @returns 相机
      */
     getCameraByUUID(uuid: string): BaseCamera {
-        const camera = this.list.find(camera => camera.UUID == uuid);
+        const camera = this.list.find((camera) => camera.UUID == uuid);
         if (camera) {
             return camera;
-        }
-        else {
-            throw new Error("相机不存在：" + uuid);
+        } else {
+            throw new Error('相机不存在：' + uuid);
         }
     }
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // finally output the result to the screen
@@ -302,11 +294,14 @@ export class CameraManager extends ECSManager<BaseCamera> {
     /////////////////////////////////////////////////////////////////////////
     //需要重构的RPD 和CATs 部分
     //get RPD ,CATs  部分
-    getCamearRenderAttributeByUUID(UUID: string): { CATs: GPUColorTargetState[], RPD: GPURenderPassDescriptor } {
+    getCamearRenderAttributeByUUID(UUID: string): {
+        CATs: GPUColorTargetState[];
+        RPD: GPURenderPassDescriptor;
+    } {
         // let camera = this.getCameraByUUID(UUID);
         return {
             CATs: this.GBufferManager.GBuffer[UUID].forward.colorAttachmentTargets,
-            RPD: this.GBufferManager.GBuffer[UUID].forward.RPD
+            RPD: this.GBufferManager.GBuffer[UUID].forward.RPD,
         };
     }
     //////////////////////////////////get CATs  部分
@@ -322,16 +317,12 @@ export class CameraManager extends ECSManager<BaseCamera> {
     getColorAttachmentTargetsMSAA(UUID: string): GPUColorTargetState[] {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
             return this.GBufferManager.GBuffer[UUID].MSAA.colorAttachmentTargetsMSAA;
-        }
-        else
-            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
+        } else throw new Error('MSAA 未定义或MSAA GBuffer不存在');
     }
     getColorAttachmentTargetsMSAAinfo(UUID: string): GPUColorTargetState[] {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
             return this.GBufferManager.GBuffer[UUID].MSAA.colorAttachmentTargetsMSAAinfo;
-        }
-        else
-            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
+        } else throw new Error('MSAA 未定义或MSAA GBuffer不存在');
     }
     //////////////////////////////////get RPD  部分
 
@@ -343,9 +334,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
     getRPD_MSAAInfo_ByUUID(UUID: string): GPURenderPassDescriptor {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
             return this.GBufferManager.GBuffer[UUID].MSAA!.RPD_MSAAinfo;
-        }
-        else
-            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
+        } else throw new Error('MSAA 未定义或MSAA GBuffer不存在');
     }
     /**
      * 获取MSAA的渲染Pass描述符
@@ -355,9 +344,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
     getRPD_MSAA_ByUUID(UUID: string): GPURenderPassDescriptor {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
             return this.GBufferManager.GBuffer[UUID].MSAA!.RPD_MSAA;
-        }
-        else
-            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
+        } else throw new Error('MSAA 未定义或MSAA GBuffer不存在');
     }
     /**
      * 获取forward的渲染Pass描述符
@@ -382,9 +369,7 @@ export class CameraManager extends ECSManager<BaseCamera> {
     getMsaaGBufferTextureByUUID(UUID: string, GBufferName: E_GBufferNames): GPUTexture {
         if (this.MSAA && this.GBufferManager.GBuffer[UUID].MSAA) {
             return this.GBufferManager.GBuffer[UUID].MSAA!.GBuffer[GBufferName];
-        }
-        else
-            throw new Error("MSAA 未定义或MSAA GBuffer不存在");
+        } else throw new Error('MSAA 未定义或MSAA GBuffer不存在');
     }
     /**
      * 获取GBuffer纹理
@@ -408,10 +393,9 @@ export class CameraManager extends ECSManager<BaseCamera> {
     }
     //////////////////////////////////get TTP   部分
     getTTUniformTexture(_name: string): GPUTexture {
-        throw new Error("getTTUniformTexture 未实现");
+        throw new Error('getTTUniformTexture 未实现');
     }
     getTTRenderTexture(_name: string): GPUTexture {
-        throw new Error("getTTRenderTexture 未实现");
+        throw new Error('getTTRenderTexture 未实现');
     }
-
 }

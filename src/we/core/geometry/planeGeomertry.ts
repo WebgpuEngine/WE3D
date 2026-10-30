@@ -1,37 +1,27 @@
-
-import {
-    BaseGeometry,
-    IV_Gemetry,
-} from "./baseGeometry";
-
-
+import { BaseGeometry, IV_Gemetry } from './baseGeometry';
 
 export interface optionPlaneGeometry extends IV_Gemetry {
-    width?: number,
-    height?: number,
-    widthSegments?: number,
-    heightSegments?: number,
-
+    width?: number;
+    height?: number;
+    widthSegments?: number;
+    heightSegments?: number;
 }
 
 export class PlaneGeometry extends BaseGeometry {
-
-
-
     /**box的参数 */
     parameters!: optionPlaneGeometry;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    numberOfVertices !: number;
+    numberOfVertices!: number;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    groupStart !: number;
+    groupStart!: number;
 
     constructor(input?: optionPlaneGeometry) {
-        const defaultValues:optionPlaneGeometry = {
-            width:1,
-            height:1,
-            widthSegments:1,
-            heightSegments:1
-        }
+        const defaultValues: optionPlaneGeometry = {
+            width: 1,
+            height: 1,
+            widthSegments: 1,
+            heightSegments: 1,
+        };
         if (input == undefined) {
             input = defaultValues;
         }
@@ -42,15 +32,13 @@ export class PlaneGeometry extends BaseGeometry {
             height: input.height || defaultValues.height,
             heightSegments: input.heightSegments || defaultValues.heightSegments,
         };
-        this.parameters.widthSegments =  Math.floor(this.parameters.widthSegments as number);
-        this.parameters.heightSegments =  Math.floor(this.parameters.heightSegments as number);
-        this.init(this.parameters)
+        this.parameters.widthSegments = Math.floor(this.parameters.widthSegments as number);
+        this.parameters.heightSegments = Math.floor(this.parameters.heightSegments as number);
+        this.init(this.parameters);
     }
 
     /** copy code from threejs */
     init(input: optionPlaneGeometry) {
-
-      
         const indices = this.buffer.indeices;
         const vertices = this.buffer.position;
         const normals = this.buffer.normal;
@@ -60,57 +48,45 @@ export class PlaneGeometry extends BaseGeometry {
         const widthSegments = input.widthSegments!;
 
         const width_half = input.width! / 2;
-		const height_half = input.height! / 2;
+        const height_half = input.height! / 2;
 
-		const gridX = Math.floor( widthSegments );
-		const gridY = Math.floor( heightSegments );
+        const gridX = Math.floor(widthSegments);
+        const gridY = Math.floor(heightSegments);
 
-		const gridX1 = gridX + 1;
-		const gridY1 = gridY + 1;
+        const gridX1 = gridX + 1;
+        const gridY1 = gridY + 1;
 
-		const segment_width = input.width! / gridX;
-		const segment_height = input.height! / gridY;
+        const segment_width = input.width! / gridX;
+        const segment_height = input.height! / gridY;
 
+        for (let iy = 0; iy < gridY1; iy++) {
+            const y = iy * segment_height - height_half;
 
-        for ( let iy = 0; iy < gridY1; iy ++ ) {
+            for (let ix = 0; ix < gridX1; ix++) {
+                const x = ix * segment_width - width_half;
 
-			const y = iy * segment_height - height_half;
+                vertices.push(x, -y, 0);
 
-			for ( let ix = 0; ix < gridX1; ix ++ ) {
+                normals.push(0, 0, 1);
 
-				const x = ix * segment_width - width_half;
+                uvs.push(ix / gridX);
+                uvs.push(1 - iy / gridY);
+            }
+        }
 
-				vertices.push( x, - y, 0 );
+        for (let iy = 0; iy < gridY; iy++) {
+            for (let ix = 0; ix < gridX; ix++) {
+                const a = ix + gridX1 * iy;
+                const b = ix + gridX1 * (iy + 1);
+                const c = ix + 1 + gridX1 * (iy + 1);
+                const d = ix + 1 + gridX1 * iy;
 
-				normals.push( 0, 0, 1 );
-
-				uvs.push( ix / gridX );
-				uvs.push( 1 - ( iy / gridY ) );
-
-			}
-
-		}
-
-		for ( let iy = 0; iy < gridY; iy ++ ) {
-
-			for ( let ix = 0; ix < gridX; ix ++ ) {
-
-				const a = ix + gridX1 * iy;
-				const b = ix + gridX1 * ( iy + 1 );
-				const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
-				const d = ( ix + 1 ) + gridX1 * iy;
-
-				indices.push( a, b, d );
-				indices.push( b, c, d );
-
-			}
-
-		}
+                indices.push(a, b, d);
+                indices.push(b, c, d);
+            }
+        }
 
         this.createWrieFrame();
         this._already = true;
     }
-
-
-
 }

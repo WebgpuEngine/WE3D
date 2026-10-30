@@ -1,53 +1,44 @@
-import { I_BaseTexture } from "./base";
-import { Texture } from "./texture";
+import { I_BaseTexture } from './base';
+import { Texture } from './texture';
 
 export class DefaultCubeTexture extends Texture {
-
     constructor(device: GPUDevice) {
         const input: I_BaseTexture = {
-            source: "",
+            source: '',
             format: 'rgba8unorm',
-        }
+        };
         super(input, device);
         this.texture = device.createTexture({
             label: 'defaultCubeTexture-1x1x6',
             size: [1, 1, 6],
             format: 'rgba8unorm',
-            usage:
-                GPUTextureUsage.TEXTURE_BINDING |
-                GPUTextureUsage.COPY_DST,
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
         });
         const textureDate = new Uint8Array([
-            255, 255, 255, 255,
-            255, 255, 255, 255,
-            255, 255, 255, 255,
-            255, 255, 255, 255,
-            255, 255, 255, 255,
-            255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255,
         ]);
         this.device.queue.writeTexture(
             {
                 texture: this.texture,
                 origin: { x: 0, y: 0, z: 0 }, // z=0 表示从第一个面（+X）开始
-                aspect: "all"
+                aspect: 'all',
             },
             textureDate,
             {
                 bytesPerRow: 1 * 4,
                 rowsPerImage: 1,
             },
-            { width: 1, height: 1 ,depthOrArrayLayers: 6},
+            { width: 1, height: 1, depthOrArrayLayers: 6 },
         );
     }
-    updateSelf(): void {
-    }
-    async readyForGPU(): Promise<any> {
-    }
+    updateSelf(): void {}
+    async readyForGPU(): Promise<any> {}
     saveJSON() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     loadJSON(_json: any): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     _destroy(): void {
         this.texture.destroy();

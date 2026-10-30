@@ -1,12 +1,12 @@
-import { commmandType } from "../command/base";
-import { BaseDrawCommand, IV_BaseDrawCommand } from "../command/BaseDrawCommand";
-import { CopyCommandT2T } from "../command/copyCommandT2T";
-import { DrawCommand } from "../command/DrawCommand";
-import { E_GBufferNames } from "../gbuffers/base";
-import { E_ToneMappingType } from "../scene/base";
-import { Scene } from "../scene/scene";
-import { E_shaderRegisterAlianName } from "../SHR/include";
-import { CameraManager } from "./cameraManager";
+import { commmandType } from '../command/base';
+import { BaseDrawCommand, IV_BaseDrawCommand } from '../command/BaseDrawCommand';
+import { CopyCommandT2T } from '../command/copyCommandT2T';
+import { DrawCommand } from '../command/DrawCommand';
+import { E_GBufferNames } from '../gbuffers/base';
+import { E_ToneMappingType } from '../scene/base';
+import { Scene } from '../scene/scene';
+import { E_shaderRegisterAlianName } from '../SHR/include';
+import { CameraManager } from './cameraManager';
 
 export class ToneMappingCommandGenerator {
     parent: CameraManager;
@@ -16,18 +16,15 @@ export class ToneMappingCommandGenerator {
     dcArray: {
         [UUID: string]: {
             // MSAA?: DrawCommand,
-            toneMapping: commmandType[],
+            toneMapping: commmandType[];
             // defer?: DrawCommand,
-        }
+        };
     } = {};
     shaderModule: GPUShaderModule;
 
     uniformGPUBuffer: GPUBuffer;
     uniformCPUBuffer: ArrayBuffer = new ArrayBuffer(4);
-    constructor(input: {
-        scene: Scene,
-        parent: CameraManager,
-    }) {
+    constructor(input: { scene: Scene; parent: CameraManager }) {
         this.parent = input.parent;
         this.scene = input.scene;
         this.device = input.scene.device;
@@ -39,12 +36,10 @@ export class ToneMappingCommandGenerator {
         if (this.scene.toneMappingType == E_ToneMappingType.ACES) {
             if (this.scene.colorSpaceAndLinearSpace.hdr == true) {
                 this.setToneMappingExposure(1.0);
-            }
-            else {
+            } else {
                 this.setToneMappingExposure(0.6);
             }
-        }
-        else {
+        } else {
             this.setToneMappingExposure(1.0);
         }
     }
@@ -71,8 +66,7 @@ export class ToneMappingCommandGenerator {
                 toneMapping: [],
                 // defer?: DrawCommand,
             };
-        }
-        else {
+        } else {
             for (const perCommand of this.dcArray[UUID].toneMapping) {
                 if (perCommand instanceof DrawCommand && perCommand.IsDestroy != false) {
                     perCommand.destroy();
@@ -89,16 +83,16 @@ export class ToneMappingCommandGenerator {
         // };
 
         //bindgroup layout 0 的描述
-        const bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor =
-        {
-            label: "ToneMapping BindGroupLayout" + UUID,
+        const bindGroupLayoutDescriptor0: GPUBindGroupLayoutDescriptor = {
+            label: 'ToneMapping BindGroupLayout' + UUID,
             entries: [
-                {//00
+                {
+                    //00
                     binding: 0,
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: {
-                        sampleType: "float",
-                        viewDimension: "2d",
+                        sampleType: 'float',
+                        viewDimension: '2d',
                         // multisampled: false,
                     },
                 },
@@ -106,21 +100,26 @@ export class ToneMappingCommandGenerator {
                     binding: 1,
                     visibility: GPUShaderStage.FRAGMENT,
                     buffer: {
-                        type: "uniform",
+                        type: 'uniform',
                     },
-                }
-            ]
+                },
+            ],
         };
-        //bindgroup layout 0 
-        const bindGroupLayout0: GPUBindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor0);
+        //bindgroup layout 0
+        const bindGroupLayout0: GPUBindGroupLayout = this.device.createBindGroupLayout(
+            bindGroupLayoutDescriptor0,
+        );
 
         const bindGroupDesc0: GPUBindGroupDescriptor = {
-            label: "ToneMapping BindGroup" + UUID,
+            label: 'ToneMapping BindGroup' + UUID,
             layout: bindGroupLayout0,
             entries: [
                 {
                     binding: 0,
-                    resource: this.parent.GBufferManager.GBuffer[UUID].forward.GBuffer[E_GBufferNames.color].createView(),
+                    resource:
+                        this.parent.GBufferManager.GBuffer[UUID].forward.GBuffer[
+                            E_GBufferNames.color
+                        ].createView(),
                 },
                 {
                     binding: 1,
@@ -132,67 +131,64 @@ export class ToneMappingCommandGenerator {
 
         //pipeline layout 描述
         const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: "ToneMapping PipelineLayout" + UUID,
+            label: 'ToneMapping PipelineLayout' + UUID,
             bindGroupLayouts: [bindGroupLayout0],
         };
-        //pipeline layout 
+        //pipeline layout
         const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //pipeline 描述
         const descriptor: GPURenderPipelineDescriptor = {
-            label: "RenderFinal ToneMapping Pipeline: " + UUID,
+            label: 'RenderFinal ToneMapping Pipeline: ' + UUID,
             vertex: {
                 module: this.shaderModule,
-                entryPoint: "vs",
+                entryPoint: 'vs',
             },
             fragment: {
                 module: this.shaderModule,
-                entryPoint: "fs",
+                entryPoint: 'fs',
                 targets: this.parent.getCATsForFinalTarget(UUID),
-
             },
             layout: pipelineLayout,
             primitive: {
-                topology: "triangle-strip",
+                topology: 'triangle-strip',
             },
-        }
-        //pipeline 
+        };
+        //pipeline
         const pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
         const renderPassDescriptor = () => {
             // console.log("=======================", UUID);
-            return this.parent.getRpdForFinalTarget(UUID)
+            return this.parent.getRpdForFinalTarget(UUID);
         };
         const valuesDC: IV_BaseDrawCommand = {
             device: this.device,
-            label: "RenderFinal ToneMapping: " + UUID,
+            label: 'RenderFinal ToneMapping: ' + UUID,
             drawInfo: {
                 pipeline: pipeline,
                 bindGroups: [bindGroup0],
                 renderPassDescriptor,
                 drawMode: {
-                    vertexCount: 4
+                    vertexCount: 4,
                 },
-            }
-        }
+            },
+        };
         this.dcArray[UUID].toneMapping.push(new BaseDrawCommand(valuesDC));
         if (UUID === this.parent.defaultCamera.UUID) {
             const size = this.scene.surface.size;
-            const copyToColorTexture = new CopyCommandT2T(
-                {
-                    A: this.parent.GBufferManager.GBuffer[UUID].finalRender.color,
-                    B: this.scene.finalTarget.color!,
-                    size: { width: size.width, height: size.height },
-                    device: this.device
-                }
-            );
+            const copyToColorTexture = new CopyCommandT2T({
+                A: this.parent.GBufferManager.GBuffer[UUID].finalRender.color,
+                B: this.scene.finalTarget.color!,
+                size: { width: size.width, height: size.height },
+                device: this.device,
+            });
             this.dcArray[UUID].toneMapping.push(copyToColorTexture);
         }
     }
     createShaderModule() {
-        let returnColor = "return vec4f( ACESToSRGB(color.rgb), color.a);";
+        let returnColor = 'return vec4f( ACESToSRGB(color.rgb), color.a);';
         switch (this.scene.toneMappingType) {
             case E_ToneMappingType.ACES:
-                returnColor = "let color_tonemapping :vec3f = ACESFilmicToneMapping(color.rgb);\n";
+                returnColor = 'let color_tonemapping :vec3f = ACESFilmicToneMapping(color.rgb);\n';
                 break;
             // case E_ToneMappingType.linearToSRGB:
             //     returnColor = "let color_tonemapping :vec3f = linearToSRGB(color.rgb);\n";
@@ -201,33 +197,37 @@ export class ToneMappingCommandGenerator {
             //     returnColor = "let color_tonemapping :vec3f = linearToDisplayP3(color.rgb);\n";
             //     break;
             case E_ToneMappingType.linear:
-                returnColor = "let color_tonemapping :vec3f = LinearToneMapping(color.rgb);\n";
+                returnColor = 'let color_tonemapping :vec3f = LinearToneMapping(color.rgb);\n';
                 break;
             case E_ToneMappingType.Reinhard:
-                returnColor = "let color_tonemapping :vec3f = linearToSRGB(ReinhardToneMapping(color.rgb));\n";
+                returnColor =
+                    'let color_tonemapping :vec3f = linearToSRGB(ReinhardToneMapping(color.rgb));\n';
                 break;
             case E_ToneMappingType.Cineon:
-                returnColor = "let color_tonemapping :vec3f = linearToSRGB(CineonToneMapping(color.rgb));\n";
+                returnColor =
+                    'let color_tonemapping :vec3f = linearToSRGB(CineonToneMapping(color.rgb));\n';
                 break;
             case E_ToneMappingType.AgX:
-                returnColor = "let color_tonemapping :vec3f = linearToSRGB(AgXToneMapping(color.rgb));\n";
+                returnColor =
+                    'let color_tonemapping :vec3f = linearToSRGB(AgXToneMapping(color.rgb));\n';
                 break;
             default:
-                throw new Error("toneMappingType not support");
+                throw new Error('toneMappingType not support');
         }
         // 如果颜色空间是srgb，那么就不需要转换
-        if (this.scene.colorSpaceAndLinearSpace.colorSpace == "display-p3") {
-            returnColor += "return vec4f( linearToDisplayP3(color_tonemapping), color.a);\n";
+        if (this.scene.colorSpaceAndLinearSpace.colorSpace == 'display-p3') {
+            returnColor += 'return vec4f( linearToDisplayP3(color_tonemapping), color.a);\n';
+        } else {
+            returnColor += 'return vec4f(linearToSRGB(color_tonemapping), color.a);\n';
         }
-        else {
-            returnColor += "return vec4f(linearToSRGB(color_tonemapping), color.a);\n";
-        }
-        let toneMappingShaderCode = this.scene.shaderRegister.getAliasShaderName(E_shaderRegisterAlianName.toneMapping);
-        toneMappingShaderCode = toneMappingShaderCode.replace("$returnColor", returnColor);
+        let toneMappingShaderCode = this.scene.shaderRegister.getAliasShaderName(
+            E_shaderRegisterAlianName.toneMapping,
+        );
+        toneMappingShaderCode = toneMappingShaderCode.replace('$returnColor', returnColor);
 
         //WGSL_colorSpaceFunction  WGSL_toneMappingFunction
-        // let shader = `   
-        //     ${WGSL_toneMappingFunction}            
+        // let shader = `
+        //     ${WGSL_toneMappingFunction}
         //     @group(0) @binding(0) var u_ColorTexture : texture_2d<f32>;
         //     @group(0) @binding(1) var<uniform> u_Exposure : f32;
         //     @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position)  vec4f {
@@ -245,11 +245,10 @@ export class ToneMappingCommandGenerator {
         //         ${returnColor}
         //     }`;
         const moduleVS = this.device.createShaderModule({
-            label: "ToneMapping",
+            label: 'ToneMapping',
             code: toneMappingShaderCode,
         });
         return moduleVS;
     }
-    createPipeline() {
-    }
+    createPipeline() {}
 }

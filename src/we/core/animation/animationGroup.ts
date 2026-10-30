@@ -8,30 +8,29 @@
  * 3、骨骼动画
  *  A、皮肤骨骼动画使用listSkins数组管理。
  *  B、皮肤骨骼动画组与动画组，无对应关系
- * 
+ *
  * 4、播放状态
  *    A、动画组的播放状态，检查其下的list的播放状态，并根据list的播放状态，更新动画组的播放状态。
- * 
+ *
  * 动画组权重，由WeightMixAnimationGroup负责。
  *      A、会根据权重，生成WeightMixAnimation,并添加到animationManager中。
  *      B、之后的操作与状态，由WeightMixAnimation负责。
  */
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
-import { NodeObject } from "../organization/nodeObject";
-import { I_UUID } from "../organization/root";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { AnimationGroupManager } from "./animationGroupManager";
-import { E_PlayState, I_AnimationPlayParams } from "./base";
-import { BaseAnimation } from "./BaseAnimation";
-import { SkinAnimation } from "./skin";
-
+import { WeGenerateID, WeGenerateUUID } from '../math/baseFunction';
+import { NodeObject } from '../organization/nodeObject';
+import { I_UUID } from '../organization/root';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { AnimationGroupManager } from './animationGroupManager';
+import { E_PlayState, I_AnimationPlayParams } from './base';
+import { BaseAnimation } from './BaseAnimation';
+import { SkinAnimation } from './skin';
 
 export interface IV_AnimationGroupValue {
-    animations: (BaseAnimation | SkinAnimation)[],
-    scene: Scene,
-    parent?: NodeObject,
-    name?: string,
+    animations: (BaseAnimation | SkinAnimation)[];
+    scene: Scene;
+    parent?: NodeObject;
+    name?: string;
 }
 export class AnimationGroup implements I_UUID {
     UUID: string;
@@ -39,7 +38,7 @@ export class AnimationGroup implements I_UUID {
     _id: number;
     list: BaseAnimation[] = [];
 
-    _name: string = "";
+    _name: string = '';
     get Name(): string {
         return this._name;
     }
@@ -102,13 +101,10 @@ export class AnimationGroup implements I_UUID {
         }
     }
     // checkParent
-    play(playAnimation?: I_AnimationPlayParams | "loop" | number): void {
-
+    play(playAnimation?: I_AnimationPlayParams | 'loop' | number): void {
         for (const perOne of this.list) {
-            if (perOne)
-                perOne.play(playAnimation);
-            else
-                console.warn("动画组中存在空动画");
+            if (perOne) perOne.play(playAnimation);
+            else console.warn('动画组中存在空动画');
         }
         if (this.listSkins != undefined) {
             for (const perSkin of this.listSkins) {
@@ -150,15 +146,14 @@ export class AnimationGroup implements I_UUID {
         }
     }
 
-    /** 更新动画组 
+    /** 更新动画组
      * 1、gltf的动画组，如果有skin动画，则skin动画在所有的动画组。
      *  A、需要注意，单一播放动画组，同时只能有一个在播放
      *  B、如果是动画组权重，todo
-    */
+     */
     update(clock: Clock): void {
-        if (this.playState == E_PlayState.playing) 
-        {
-            let state = 0;//记录停止的动画数量
+        if (this.playState == E_PlayState.playing) {
+            let state = 0; //记录停止的动画数量
             //更新所有动画,累计停止的动画数量
             for (const perOne of this.list) {
                 if (perOne.playState == E_PlayState.stoped) {
@@ -172,5 +167,4 @@ export class AnimationGroup implements I_UUID {
         }
         // console.log("动画组更新",this.Name, this.playState,state);
     }
-
 }

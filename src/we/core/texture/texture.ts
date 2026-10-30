@@ -1,15 +1,13 @@
-import { E_lifeState } from "../base/coreDefine";
-import { weGetImageByUrl } from "../base/file/getFile";
-import { E_resourceKind } from "../resources/resourcesGPU";
-import { Scene } from "../scene/scene";
-import { I_BaseSampler, I_BaseTexture, numMipLevels, T_textureSourceType } from "./base";
-import { BaseTexture } from "./baseTexture";
-
-
+import { E_lifeState } from '../base/coreDefine';
+import { weGetImageByUrl } from '../base/file/getFile';
+import { E_resourceKind } from '../resources/resourcesGPU';
+import { Scene } from '../scene/scene';
+import { I_BaseSampler, I_BaseTexture, numMipLevels, T_textureSourceType } from './base';
+import { BaseTexture } from './baseTexture';
 
 export interface IV_Texture extends I_BaseTexture {
     /**纹理来源 */
-    source: T_textureSourceType,
+    source: T_textureSourceType;
 }
 
 export class Texture extends BaseTexture {
@@ -20,10 +18,10 @@ export class Texture extends BaseTexture {
     }
 
     saveJSON() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     loadJSON(_json: any): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
 
     declare inputValues: IV_Texture;
@@ -43,14 +41,20 @@ export class Texture extends BaseTexture {
         else {
             if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
                 this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
-            }
-            else {
-                if (typeof source == "string") {
-                    const urlName = source.split("/");
+            } else {
+                if (typeof source == 'string') {
+                    const urlName = source.split('/');
                     this.Name = urlName[urlName.length - 1];
                     await this.generateTextureByString(source);
-                }
-                else if (source instanceof ImageBitmap || source instanceof ImageData || source instanceof HTMLImageElement || source instanceof HTMLVideoElement || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas || source instanceof VideoFrame) {
+                } else if (
+                    source instanceof ImageBitmap ||
+                    source instanceof ImageData ||
+                    source instanceof HTMLImageElement ||
+                    source instanceof HTMLVideoElement ||
+                    source instanceof HTMLCanvasElement ||
+                    source instanceof OffscreenCanvas ||
+                    source instanceof VideoFrame
+                ) {
                     await this.generateTextureByImageSource(source);
                 }
                 this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
@@ -64,7 +68,6 @@ export class Texture extends BaseTexture {
     }
 
     async generateTextureByString(res: string) {
-
         // let response = await fetch(res);
         // let imageBitmap = await createImageBitmap(await response.blob());
         const imageBitmap = await weGetImageByUrl(res);
@@ -86,29 +89,39 @@ export class Texture extends BaseTexture {
         //         this.generateTextureByImageSource(imageBitmap);
         //     }
         // )
-    };
+    }
     async generateTextureByImageSource(source: GPUCopyExternalImageSource) {
-        let width = 0, height = 0;
-        if (source instanceof ImageBitmap || source instanceof ImageData || source instanceof HTMLImageElement || source instanceof HTMLVideoElement || source instanceof HTMLCanvasElement || source instanceof OffscreenCanvas) {
+        let width = 0,
+            height = 0;
+        if (
+            source instanceof ImageBitmap ||
+            source instanceof ImageData ||
+            source instanceof HTMLImageElement ||
+            source instanceof HTMLVideoElement ||
+            source instanceof HTMLCanvasElement ||
+            source instanceof OffscreenCanvas
+        ) {
             width = source.width;
             height = source.height;
-        }
-        else if (source instanceof VideoFrame) {
+        } else if (source instanceof VideoFrame) {
             width = source.displayWidth;
             height = source.displayHeight;
         }
 
         let premultipliedAlpha = false;
-        if (this.inputValues.premultipliedAlpha != undefined)//有input.premultipliedAlpha
+        if (this.inputValues.premultipliedAlpha != undefined)
+            //有input.premultipliedAlpha
             premultipliedAlpha = this.inputValues.premultipliedAlpha;
         else {
             premultipliedAlpha = true;
         }
         let mipmap = false;
         let mipLevels = 1;
-        if (this.inputValues.sampler &&
+        if (
+            this.inputValues.sampler &&
             (this.inputValues.sampler as I_BaseSampler).mipmap != undefined &&
-            (this.inputValues.sampler as I_BaseSampler).mipmap?.enable) {
+            (this.inputValues.sampler as I_BaseSampler).mipmap?.enable
+        ) {
             mipmap = true;
             mipLevels = (this.inputValues.sampler as I_BaseSampler).mipmap?.level || 1;
         }
@@ -119,19 +132,21 @@ export class Texture extends BaseTexture {
             mipLevelCount: mipmap ? numMipLevels([width, height]) : mipLevels,
             // sampleCount: 1,
             // dimension: '2d',
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+            usage:
+                GPUTextureUsage.TEXTURE_BINDING |
+                GPUTextureUsage.COPY_SRC |
+                GPUTextureUsage.COPY_DST |
+                GPUTextureUsage.RENDER_ATTACHMENT,
         });
         this.device.queue.copyExternalImageToTexture(
             { source: source, flipY: this._upsideDownY }, //webGPU 的UV从左下角开始，所以需要翻转Y轴。
             { texture: this.texture, premultipliedAlpha: premultipliedAlpha },
-            [width, height]
+            [width, height],
         );
         if (this.texture.mipLevelCount > 1) {
             this.generateMips(this.texture);
         }
         this._state = E_lifeState.finished;
     }
-    updateSelf(): void {
-
-    }
+    updateSelf(): void {}
 }

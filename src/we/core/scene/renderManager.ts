@@ -1,38 +1,37 @@
-import { E_renderForDC } from "../base/coreDefine";
-import { commmandType, I_drawMode, I_drawModeIndexed } from "../command/base";
-import { BaseDrawCommand, I_drawCallOption } from "../command/BaseDrawCommand";
-import { ComputeCommand } from "../command/ComputeCommand";
-import { CopyCommand } from "../command/compyCommand";
-import { CopyCommandT2T } from "../command/copyCommandT2T";
-import { DrawCommand } from "../command/DrawCommand";
-import { SimpleDrawCommand } from "../command/SimpleDrawCommand";
-import { E_GBufferNames } from "../gbuffers/base";
-import { NodeObject } from "../organization/nodeObject";
-import { Scene } from "./scene";
-
+import { E_renderForDC } from '../base/coreDefine';
+import { commmandType, I_drawMode, I_drawModeIndexed } from '../command/base';
+import { BaseDrawCommand, I_drawCallOption } from '../command/BaseDrawCommand';
+import { ComputeCommand } from '../command/ComputeCommand';
+import { CopyCommand } from '../command/compyCommand';
+import { CopyCommandT2T } from '../command/copyCommandT2T';
+import { DrawCommand } from '../command/DrawCommand';
+import { SimpleDrawCommand } from '../command/SimpleDrawCommand';
+import { E_GBufferNames } from '../gbuffers/base';
+import { NodeObject } from '../organization/nodeObject';
+import { Scene } from './scene';
 
 /**
  * 渲染通道
  * 一顺序：
  * 1、具有内容线顺序
  * 2、具有时间线顺序
- * 
+ *
  * 二、stage
  * 1、depth,forwar,transparent,sprite,spriteTransparent,defer这些都是world stage的。world starge 隐式=stage0;
  * 2、world stage 是按照camera（一个或多个）进行渲染的。也可以理解为：每个camera都有一个world stage。
  */
 export enum E_renderPassName {
-    compute = "compute",
-    texture = "texture",
-    material = "material",
-    renderTarget = "renderTarget",
+    compute = 'compute',
+    texture = 'texture',
+    material = 'material',
+    renderTarget = 'renderTarget',
     /**操作等同于forward，只是没有FS */
-    shadowmapOpaque = "shadowmapOpaque",
+    shadowmapOpaque = 'shadowmapOpaque',
     /**
      * 等同于透明渲染，需要按照距离进行排序
      * 1、每个shadowMap的到实体的距离是不同的
      */
-    shadowmapTransparent = "shadowmapTransparent",
+    shadowmapTransparent = 'shadowmapTransparent',
 
     // /**
     //  * 延迟渲染的深度渲染通道
@@ -53,7 +52,7 @@ export enum E_renderPassName {
      *            A、需要调用cameraManager的resolveMSAA方法，进行resolve操作。
      *      5、综上所述，MSAA需要在透明渲染之前完成resolve的单样本的输出
      */
-    MSAA = "MSAA",
+    MSAA = 'MSAA',
     /**
      * 方式：FS
      * 用途：
@@ -74,7 +73,7 @@ export enum E_renderPassName {
      *              A、instance draw，按照最近距离原则
      *                B、pipeline 排序，就基本没有了，邻近距离形成pipeline集合的概率 是否有性能提升是其一，可以考虑（均衡over draw 和pipeline 切换的性能成本）。
      */
-    forward = "forward",
+    forward = 'forward',
     /**
      * 状态：todo
      * 时间：
@@ -98,7 +97,7 @@ export enum E_renderPassName {
     //  * 2、用途： 投影纹理，贴花纹理等，
     //  * 3、可以写入多个GBuffer，color,normal，albedo等。depth视情况而定，原则上不写入。
      */
-    beforeDeferRender = "beforeDeferRender",
+    beforeDeferRender = 'beforeDeferRender',
     /**
      * 状态：    todo
      * 时间：
@@ -108,15 +107,15 @@ export enum E_renderPassName {
      *          A、包括normal、albedo等内容的贴花（如：改变法线实现凹凸）等；
      *          B、其他（需要更改PBR参数）大量需要重复像素计算的；比如：下雨方案
      */
-    changePbrParamsBeforeDeferRender = "changePbrParamsBeforeDeferRender",
+    changePbrParamsBeforeDeferRender = 'changePbrParamsBeforeDeferRender',
     /**
      * 延迟通道，统一处理光照与阴影
      */
-    defer = "defer",
+    defer = 'defer',
     /**
      * 状态：
      *      todo：20260414，可以启用，未实现，需要增加一个renderPass的识别并分配到渲染通道
-     * 方式：FS或CS 
+     * 方式：FS或CS
      * 用途：
      *      1、延迟渲染之后quad渲染，用于提升渲染性能.
      *          A、只进行颜色覆盖，与alpha混合的FS shader。
@@ -128,7 +127,7 @@ export enum E_renderPassName {
      *      1、在defer之后进行绘制，是不需要更新PBR参数的。
      *      2、在afterDeferRender之前进行绘制，afterDeferRender可能会更高光影效果（比如：天光等）。
      */
-    quadAddDrawAfterDeferRender = "quadAddDrawAfterDeferRender",
+    quadAddDrawAfterDeferRender = 'quadAddDrawAfterDeferRender',
     /**
      * 方式：FS或CS 
      * 说明：
@@ -140,19 +139,19 @@ export enum E_renderPassName {
      * 问题：
      
      */
-    afterDeferRender = "afterDeferRender",
+    afterDeferRender = 'afterDeferRender',
 
     /**
      * 透明层，按距离绘制
      */
-    transparent = "transparent",
+    transparent = 'transparent',
     /**
      * 不参与world stage深度测试的，不透明2D精灵通道。（参与深度测试的sprite在正常的forward中）
      * 1、不透明sprite，只为在world其他实体之上的sprite
      * 2、这个通道内，sprite（不透明和透明一致处理），写入GBuffer，alpha！=0，即写入
      * 3、这个通道sprite不具有光照与阴影（至少目前）
      */
-    sprite = "sprite",
+    sprite = 'sprite',
     //20260414 取消spriteTransparent通道
     // /**
     //  * 不参与world stage深度测试的，透明2D精灵通道。（参与深度测试的sprite在正常的transparent通道中）
@@ -165,12 +164,12 @@ export enum E_renderPassName {
     /**
      * 色调映射通道，用于色调映射。
      */
-    toneMapping = "toneMapping",
+    toneMapping = 'toneMapping',
     /**
      * 后处理通道。
      * 后处理不包括在此之后的绘制的。
      */
-    postprocess = "postprocess",
+    postprocess = 'postprocess',
     /**
      * 其他stage通道,用于UI的绘制。
      * UI 与 stage 的关系
@@ -182,13 +181,13 @@ export enum E_renderPassName {
      * 2、UI的通道与其他工作一样
      * 3、合并UI与world，采用render模式；UI在前，world在后；UI覆盖world，透明的进行Blend
      */
-    stage1 = "stage2",
-    stage2 = "stage3",
+    stage1 = 'stage2',
+    stage2 = 'stage3',
     /**
      * UI(最后绘制，在NDC空间，直接绘制，不进行深度测试).
      * UI隐式=stage3
      */
-    ui = "ui",
+    ui = 'ui',
     // /**
     //  * output通道，
     //  * 考虑方向：
@@ -198,24 +197,25 @@ export enum E_renderPassName {
     //  */
     // output = "output",
 
-    ndc = "ndc",
+    ndc = 'ndc',
 }
-/**DrawCommand 通道 
+/**DrawCommand 通道
  * 1、pipelineOrder：按照pipeline结构进行分类的命令队列
  * 2、dynmaicOrder：动态命令队列，不进行分类与优化
-*/
+ */
 // interface I_renderDrawCommand {
 //     [name: string]: commmandType[],
 // }
 interface I_renderDrawCommand {
-    [name: string]:                                                             // camera|light,RPD层
+    [name: string]: // camera|light,RPD层
     Map<
-        GPURenderPipeline,                                                      // pipeline层
-        Map<                                                                    // DrawCommand层
-            BaseDrawCommand,// DrawCommand,
-            I_drawMode[] | I_drawModeIndexed[]                                   //instance 队列值
+        GPURenderPipeline, // pipeline层
+        Map<
+            // DrawCommand层
+            BaseDrawCommand, // DrawCommand,
+            I_drawMode[] | I_drawModeIndexed[] //instance 队列值
         >
-    >
+    >;
 }
 // type T_renderDrawByPipeline =
 //     Map<
@@ -229,30 +229,29 @@ interface I_renderDrawCommand {
 //         >
 //     >;
 
-
 interface I_transparentDrawCommand {
-    command: BaseDrawCommand,
-    pipeline: GPURenderPipeline,
-    drawData: I_drawMode[] | I_drawModeIndexed[],
-    distance: number,
+    command: BaseDrawCommand;
+    pipeline: GPURenderPipeline;
+    drawData: I_drawMode[] | I_drawModeIndexed[];
+    distance: number;
 }
 /**
  * 一、透明通道的距离绘制命令队列，
  * 1、按照距离进行排序，每个camera与entity的距离是不同的；
  * 2、所以只能camera进行RPD切换，再按照距离进行pipeline的绘制；无法进行合并pipeline的操作；
- * 
+ *
  * 二、透明通道的命令 type 类型，
  * 1、透明通道的命令是一个数组，每个命令都有一个distance属性
  * 2、TT需要： 按照距离从远到近进行排序
- * 
- * 
+ *
+ *
  * todo：三、像素级别绘制
  * 1、需要按照距离排序，并判断包围盒是否相交（相交的包围盒，建立一个新的集合）；
  * 2、新建的集合参与TT的距离排序，并按照距离绘制；
  * 3、绘制包围盒集合的透明实体时，使用TTP和TTPF对应新的集合，进行绘制；
  */
 interface I_renderDrawOfDistancesLine {
-    [name: string]: I_transparentDrawCommand[]
+    [name: string]: I_transparentDrawCommand[];
     // [name: string]: (I_transparentDrawCommand[] | I_transparentDrawCommand)[]
 }
 
@@ -263,25 +262,25 @@ interface I_renderDrawOfDistancesLine {
  * 4、可能存在多种形式的command形式，需要使用commmandType
  */
 interface I_renderDrawOfQuad {
-    [name: string]: commmandType[]
+    [name: string]: commmandType[];
 }
 /**
  * renderManage渲染通道接受的入参选项
  */
 export interface I_renderPassOptions {
-    command: commmandType | DrawCommand,
-    kind: E_renderPassName,
+    command: commmandType | DrawCommand;
+    kind: E_renderPassName;
     /**camera uuid or light mergeID */
-    uuid?: string
+    uuid?: string;
     /**pipeline */
-    pipeline?: GPURenderPipeline,
+    pipeline?: GPURenderPipeline;
     /**draw 的数据 */
-    drawData?: I_drawMode[] | I_drawModeIndexed[],
+    drawData?: I_drawMode[] | I_drawModeIndexed[];
     //透明通道的使用
     /**entity的instance 与camera|light的距离 。透明通道的使用。*/
-    distance?: number,
+    distance?: number;
     /**entity的nodeObject 。透明通道的使用。*/
-    nodeObject?: NodeObject,
+    nodeObject?: NodeObject;
 }
 /**
  * 渲染管理器
@@ -298,51 +297,51 @@ export class RenderManager {
      * 3、目前明确只有内容线的：depth、forward、transparency、shadowmapOpaque,shadowmapTransparent，即都是和渲染相关的命令；
      */
     RC: {
-        [E_renderPassName.compute]: commmandType[],
-        [E_renderPassName.texture]: commmandType[],
-        [E_renderPassName.material]: commmandType[],
-        [E_renderPassName.renderTarget]: commmandType[],
-        [E_renderPassName.shadowmapOpaque]: I_renderDrawCommand,
-        [E_renderPassName.shadowmapTransparent]: I_renderDrawOfDistancesLine,
+        [E_renderPassName.compute]: commmandType[];
+        [E_renderPassName.texture]: commmandType[];
+        [E_renderPassName.material]: commmandType[];
+        [E_renderPassName.renderTarget]: commmandType[];
+        [E_renderPassName.shadowmapOpaque]: I_renderDrawCommand;
+        [E_renderPassName.shadowmapTransparent]: I_renderDrawOfDistancesLine;
         // [E_renderPassName.depth]: I_renderDrawCommand,
         /**
          * 前向渲染通道：forward,TO,MSAA info
          */
-        [E_renderPassName.forward]: I_renderDrawCommand,
-        [E_renderPassName.MSAA]: I_renderDrawCommand,
-        [E_renderPassName.sprite]: I_renderDrawCommand,
-        [E_renderPassName.defer]: I_renderDrawOfQuad,
-        [E_renderPassName.afterDeferRender]: commmandType[],
-        [E_renderPassName.transparent]: I_renderDrawOfDistancesLine,
-        [E_renderPassName.sprite]: I_renderDrawCommand,
+        [E_renderPassName.forward]: I_renderDrawCommand;
+        [E_renderPassName.MSAA]: I_renderDrawCommand;
+        [E_renderPassName.sprite]: I_renderDrawCommand;
+        [E_renderPassName.defer]: I_renderDrawOfQuad;
+        [E_renderPassName.afterDeferRender]: commmandType[];
+        [E_renderPassName.transparent]: I_renderDrawOfDistancesLine;
+        [E_renderPassName.sprite]: I_renderDrawCommand;
         // [E_renderPassName.spriteTransparent]: I_renderDrawOfDistancesLine,
-        [E_renderPassName.toneMapping]: I_renderDrawOfQuad,
-        [E_renderPassName.postprocess]: commmandType[],
-        [E_renderPassName.stage1]: commmandType[],
-        [E_renderPassName.stage2]: commmandType[],
-        [E_renderPassName.ui]: commmandType[],
-        [E_renderPassName.ndc]: commmandType[],
+        [E_renderPassName.toneMapping]: I_renderDrawOfQuad;
+        [E_renderPassName.postprocess]: commmandType[];
+        [E_renderPassName.stage1]: commmandType[];
+        [E_renderPassName.stage2]: commmandType[];
+        [E_renderPassName.ui]: commmandType[];
+        [E_renderPassName.ndc]: commmandType[];
     } = {
-            [E_renderPassName.compute]: [],
-            [E_renderPassName.texture]: [],
-            [E_renderPassName.material]: [],
-            [E_renderPassName.renderTarget]: [],
-            [E_renderPassName.shadowmapOpaque]: {},
-            [E_renderPassName.shadowmapTransparent]: {},
-            [E_renderPassName.MSAA]: {},
-            [E_renderPassName.forward]: {},
-            [E_renderPassName.defer]: {},
-            [E_renderPassName.afterDeferRender]: [],
-            [E_renderPassName.transparent]: {},
-            [E_renderPassName.sprite]: {},
-            // [E_renderPassName.spriteTransparent]: {},
-            [E_renderPassName.toneMapping]: {},
-            [E_renderPassName.postprocess]: [],
-            [E_renderPassName.stage1]: [],
-            [E_renderPassName.stage2]: [],
-            [E_renderPassName.ui]: [],
-            [E_renderPassName.ndc]: [],
-        };
+        [E_renderPassName.compute]: [],
+        [E_renderPassName.texture]: [],
+        [E_renderPassName.material]: [],
+        [E_renderPassName.renderTarget]: [],
+        [E_renderPassName.shadowmapOpaque]: {},
+        [E_renderPassName.shadowmapTransparent]: {},
+        [E_renderPassName.MSAA]: {},
+        [E_renderPassName.forward]: {},
+        [E_renderPassName.defer]: {},
+        [E_renderPassName.afterDeferRender]: [],
+        [E_renderPassName.transparent]: {},
+        [E_renderPassName.sprite]: {},
+        // [E_renderPassName.spriteTransparent]: {},
+        [E_renderPassName.toneMapping]: {},
+        [E_renderPassName.postprocess]: [],
+        [E_renderPassName.stage1]: [],
+        [E_renderPassName.stage2]: [],
+        [E_renderPassName.ui]: [],
+        [E_renderPassName.ndc]: [],
+    };
     /**
      * 前四个连续的渲染通道，为了render时，省些代码
      */
@@ -351,7 +350,7 @@ export class RenderManager {
         this.RC[E_renderPassName.texture],
         this.RC[E_renderPassName.material],
         this.RC[E_renderPassName.renderTarget],
-    ]
+    ];
     // /**
     //  * TTP早期测试使用
     //  */
@@ -369,7 +368,7 @@ export class RenderManager {
      * RPD的loadOp计数器
      */
     cameraRendered: {
-        [name: string]: number
+        [name: string]: number;
     } = {};
 
     constructor(scene: Scene) {
@@ -379,10 +378,9 @@ export class RenderManager {
     /**
      * 初始化相机的渲染通道(通道内不是单一commmandType[]情况的)
      * 初始化包括：depth,forward,transparent,
-     * @param UUID 
+     * @param UUID
      */
     initRenderCommandForCamera(UUID: string) {
-
         if (!this.RC[E_renderPassName.MSAA][UUID]) {
             this.RC[E_renderPassName.MSAA][UUID] = new Map();
         }
@@ -452,15 +450,15 @@ export class RenderManager {
      * @param command 绘制命令
      * @param kind 渲染通道
      */
-    push(option: I_renderPassOptions)
-    // command: commmandType | DrawCommand,
-    // kind: E_renderPassName,
-    // _UUID?: string,
-    // pipeline?: GPURenderPipeline,
-    // drawData?: I_drawMode[] | I_drawModeIndexed[],
-    {
+    push(option: I_renderPassOptions) {
+        // command: commmandType | DrawCommand,
+        // kind: E_renderPassName,
+        // _UUID?: string,
+        // pipeline?: GPURenderPipeline,
+        // drawData?: I_drawMode[] | I_drawModeIndexed[],
         if (!option.uuid) {
-            if (option.kind == E_renderPassName.forward ||
+            if (
+                option.kind == E_renderPassName.forward ||
                 option.kind == E_renderPassName.transparent ||
                 option.kind == E_renderPassName.MSAA ||
                 option.kind == E_renderPassName.defer ||
@@ -468,18 +466,20 @@ export class RenderManager {
                 // kind == E_renderPassName.spriteTransparent
             ) {
                 throw new Error(`渲染通道为${option.kind}时，必须有camera ID`);
-            }
-            else if (option.kind == E_renderPassName.shadowmapOpaque || option.kind == E_renderPassName.shadowmapTransparent) {
+            } else if (
+                option.kind == E_renderPassName.shadowmapOpaque ||
+                option.kind == E_renderPassName.shadowmapTransparent
+            ) {
                 throw new Error(`渲染通道为${option.kind}时，必须有light mergeID`);
-            }
-            else if (option.kind == E_renderPassName.toneMapping //|| option.kind == E_renderPassName.postprocess
-
+            } else if (
+                option.kind == E_renderPassName.toneMapping //|| option.kind == E_renderPassName.postprocess
             ) {
                 throw new Error(`渲染通道为${option.kind}时，必须有camera ID`);
             }
         }
         if (!option.pipeline || !option.drawData) {
-            if (option.kind == E_renderPassName.forward ||
+            if (
+                option.kind == E_renderPassName.forward ||
                 option.kind == E_renderPassName.transparent ||
                 option.kind == E_renderPassName.MSAA ||
                 // kind == E_renderPassName.defer ||
@@ -487,8 +487,10 @@ export class RenderManager {
                 // kind == E_renderPassName.spriteTransparent
             ) {
                 throw new Error(`渲染通道为${option.kind}时，必须有pipeline和drawData`);
-            }
-            else if (option.kind == E_renderPassName.shadowmapOpaque || option.kind == E_renderPassName.shadowmapTransparent) {
+            } else if (
+                option.kind == E_renderPassName.shadowmapOpaque ||
+                option.kind == E_renderPassName.shadowmapTransparent
+            ) {
                 throw new Error(`渲染通道为${option.kind}时，必须有pipeline和drawData`);
             }
         }
@@ -517,7 +519,9 @@ export class RenderManager {
                 if (!this.RC[option.kind][option.uuid!].has(option.pipeline!)) {
                     this.RC[option.kind][option.uuid!].set(option.pipeline!, new Map());
                 }
-                this.RC[option.kind][option.uuid!].get(option.pipeline!)!.set(option.command as DrawCommand, option.drawData!);
+                this.RC[option.kind][option.uuid!]
+                    .get(option.pipeline!)!
+                    .set(option.command as DrawCommand, option.drawData!);
                 break;
 
             case E_renderPassName.defer:
@@ -557,19 +561,17 @@ export class RenderManager {
      *      C、timeLineDC按照其内部的规则进行。(目前无合批，20251016)
      *      D、阴影通道之间具有时间线（先不透明，再透明）
      * 3、其他渲染通道直接提交commandBuffer数组
-     * 
+     *
      */
     render() {
-
         if (this.scene.finalTarget.NDC === true) {
             for (const oneDC of this.RC[E_renderPassName.ndc]) {
-                this.autoChangeRPDloadOP(this.scene.getRenderPassDescriptorForNDC(), "ndc");
+                this.autoChangeRPDloadOP(this.scene.getRenderPassDescriptorForNDC(), 'ndc');
                 oneDC.submit();
                 // console.log(oneDC);
             }
-        }
-        else {
-            this.commandEncoder = this.device.createCommandEncoder({ label: "RenderManager" });
+        } else {
+            this.commandEncoder = this.device.createCommandEncoder({ label: 'RenderManager' });
 
             //compute ,texture ,material ,renderTarget
             for (const onePass of this.listCommandType) {
@@ -577,7 +579,10 @@ export class RenderManager {
             }
 
             //不透明shadowmap
-            this.renderForwaredDC(this.RC[E_renderPassName.shadowmapOpaque], E_renderPassName.shadowmapOpaque);
+            this.renderForwaredDC(
+                this.RC[E_renderPassName.shadowmapOpaque],
+                E_renderPassName.shadowmapOpaque,
+            );
 
             //透明shadowmap
             // this.renderTimelineDC(this.RC[E_renderPassName.shadowmapTransparent]);
@@ -592,16 +597,25 @@ export class RenderManager {
             this.renderComplexQuad(this.RC[E_renderPassName.defer], E_renderPassName.defer);
 
             //afterDeferRender
-            this.doCommand(this.RC[E_renderPassName.afterDeferRender], E_renderPassName.afterDeferRender);
+            this.doCommand(
+                this.RC[E_renderPassName.afterDeferRender],
+                E_renderPassName.afterDeferRender,
+            );
 
             //透明enity
-            this.renderTransParentDC(this.RC[E_renderPassName.transparent], E_renderPassName.transparent);
+            this.renderTransParentDC(
+                this.RC[E_renderPassName.transparent],
+                E_renderPassName.transparent,
+            );
 
             // //sprite
             // await this.renderForwaredDC(this.RC[E_renderPassName.sprite]);
 
             //toneMapping
-            this.renderComplexQuad(this.RC[E_renderPassName.toneMapping], E_renderPassName.toneMapping);
+            this.renderComplexQuad(
+                this.RC[E_renderPassName.toneMapping],
+                E_renderPassName.toneMapping,
+            );
             //pp
             this.doCommand(this.RC[E_renderPassName.postprocess], E_renderPassName.postprocess);
 
@@ -618,8 +632,8 @@ export class RenderManager {
     /**
      * 前向渲染:forward，TO，MSAA info，shadowmapOpaque
      * 1、不使用异步模式；
-     * 2、每个camera的在第一个绘制增加一个透明像素绘制，防止场景清空后，没有submit命令，GBuffer的texture保持上一帧的问题；     
-     * @param commands 
+     * 2、每个camera的在第一个绘制增加一个透明像素绘制，防止场景清空后，没有submit命令，GBuffer的texture保持上一帧的问题；  
+     * @param commands
      */
     renderForwaredDC(commands: I_renderDrawCommand, renderPassName: E_renderPassName) {
         /**
@@ -635,31 +649,35 @@ export class RenderManager {
          *                 cameraID（bindgroup0使用，或传入BG0），
          *                 drawMode的实例化数据(draw 使用)，
          *                 E_renderPassName类型（materialType使用获取bindgroup 2）
-         * 
+         *
          *  5、设置loadOp为“load”，后续绘制时，不再需要更改loadOp；
-         * 
+         *
          */
         for (const mergeID in commands) {
             const perMapOfPipelineOfCamera = commands[mergeID];
-            if (perMapOfPipelineOfCamera.size == 0)
-                continue;
+            if (perMapOfPipelineOfCamera.size == 0) continue;
             //1 获取RPD
             let rpd: GPURenderPassDescriptor;
             const uuid: string = mergeID;
-            if (uuid.indexOf("__") != -1 && renderPassName == E_renderPassName.shadowmapOpaque) {
+            if (uuid.indexOf('__') != -1 && renderPassName == E_renderPassName.shadowmapOpaque) {
                 rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.light);
-            }
-            else {
+            } else {
                 if (this.scene.MSAA) {
                     if (renderPassName == E_renderPassName.MSAA)
-                        rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.camera, "MSAA");
+                        rpd = this.scene.getRenderPassDescriptor(
+                            mergeID,
+                            E_renderForDC.camera,
+                            'MSAA',
+                        );
                     else
-                        rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.camera, "MSAAinfo");
-                }
-                else
-                    rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.camera);
+                        rpd = this.scene.getRenderPassDescriptor(
+                            mergeID,
+                            E_renderForDC.camera,
+                            'MSAAinfo',
+                        );
+                } else rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.camera);
             }
-            this.autoChangeRPDloadOP(rpd, mergeID + "_" + renderPassName);//每个renderPassName的rpd是不同的,但camera或light的mergeID（uuid）是相同的，所有增加renderPassName的后缀
+            this.autoChangeRPDloadOP(rpd, mergeID + '_' + renderPassName); //每个renderPassName的rpd是不同的,但camera或light的mergeID（uuid）是相同的，所有增加renderPassName的后缀
             // console.warn(`${renderPassName}: ${mergeID},loadOp: ${rpd.colorAttachments[0]!.loadOp},${rpd.depthStencilAttachment!.depthLoadOp}`);
             // debugger;
 
@@ -693,12 +711,20 @@ export class RenderManager {
                     // 启动 resolve 渲染通道：仅配置附件，不绑定管线、不绘制
                     const resolvePass = this.commandEncoder.beginRenderPass({
                         // 颜色 resolve：输入 MSAA 颜色，输出到单样本颜色
-                        colorAttachments: [{
-                            view: this.scene.cameraManager.getMsaaGBufferTextureByUUID(mergeID, E_GBufferNames.color), // 输入：MSAA 颜色纹理视图
-                            resolveTarget: this.scene.cameraManager.getGBufferTextureByUUID(mergeID, E_GBufferNames.color), // 输出：resolve 目标（单样本）
-                            loadOp: "load", // 读取已有的 MSAA 样本数据
-                            storeOp: "discard" // 解析后可丢弃 MSAA 样本（若后续不再使用）
-                        }],
+                        colorAttachments: [
+                            {
+                                view: this.scene.cameraManager.getMsaaGBufferTextureByUUID(
+                                    mergeID,
+                                    E_GBufferNames.color,
+                                ), // 输入：MSAA 颜色纹理视图
+                                resolveTarget: this.scene.cameraManager.getGBufferTextureByUUID(
+                                    mergeID,
+                                    E_GBufferNames.color,
+                                ), // 输出：resolve 目标（单样本）
+                                loadOp: 'load', // 读取已有的 MSAA 样本数据
+                                storeOp: 'discard', // 解析后可丢弃 MSAA 样本（若后续不再使用）
+                            },
+                        ],
                     });
                     // 无需调用 draw()！GPU 自动执行 resolve 操作
                     resolvePass.end(); // 结束通道，触发 resolve 数据写入
@@ -707,8 +733,7 @@ export class RenderManager {
 
             //5 设置loadOp为“load”，后续绘制时，不再需要更改loadOp；
             for (const perColorAttachment of rpd.colorAttachments) {
-                if (perColorAttachment)
-                    perColorAttachment.loadOp = "load";
+                if (perColorAttachment) perColorAttachment.loadOp = 'load';
             }
         }
     }
@@ -720,38 +745,43 @@ export class RenderManager {
     renderTransParentDC(commands: I_renderDrawOfDistancesLine, renderPassName: E_renderPassName) {
         for (const mergeID in commands) {
             const list = commands[mergeID];
-            if (list.length == 0)
-                continue;
+            if (list.length == 0) continue;
             //1 获取RPD
             let rpd: GPURenderPassDescriptor;
             const uuid: string = mergeID;
-            if (uuid.indexOf("__") != -1 && renderPassName == E_renderPassName.shadowmapTransparent) {
+            if (
+                uuid.indexOf('__') != -1 &&
+                renderPassName == E_renderPassName.shadowmapTransparent
+            ) {
                 rpd = this.scene.getRenderPassDescriptor(mergeID, E_renderForDC.light);
                 this.autoChangeRPDloadOP(rpd, mergeID);
-            }
-            else {
-                rpd = this.scene.getRenderPassDescriptorOfTransparent(mergeID, E_renderForDC.camera);
-                this.autoChangeRPDloadOP(rpd, mergeID + "_" + E_renderPassName.forward);
+            } else {
+                rpd = this.scene.getRenderPassDescriptorOfTransparent(
+                    mergeID,
+                    E_renderForDC.camera,
+                );
+                this.autoChangeRPDloadOP(rpd, mergeID + '_' + E_renderPassName.forward);
             }
             //2 生成 passEncoder
             const passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
             //3 排序，按距离从远到近
             list.sort((a, b) => b.distance - a.distance);
             //4 遍历每个drawCommand
-            for (const perDrawCommand of list) {//camera UUID
+            for (const perDrawCommand of list) {
+                //camera UUID
                 let pipeline: GPURenderPipeline | undefined = undefined;
 
-                if (Array.isArray(perDrawCommand)) {//如果是数组（BVH相交的透明物体集合），说明是TTP，执行TTP渲染
+                if (Array.isArray(perDrawCommand)) {
+                    //如果是数组（BVH相交的透明物体集合），说明是TTP，执行TTP渲染
                     pipeline = undefined;
                     // this.renderTTP(uuid, perDrawCommand);
-                    console.warn("透明组渲染TTP关闭，A-Buffer待实现");
-                }
-                else {//否则，是单个透明物体，直接渲染
+                    console.warn('透明组渲染TTP关闭，A-Buffer待实现');
+                } else {
+                    //否则，是单个透明物体，直接渲染
                     if (pipeline == undefined) {
                         pipeline = perDrawCommand.pipeline;
                         passEncoder.setPipeline(pipeline);
-                    }
-                    else if (pipeline != perDrawCommand.pipeline) {
+                    } else if (pipeline != perDrawCommand.pipeline) {
                         pipeline = perDrawCommand.pipeline;
                         passEncoder.setPipeline(pipeline);
                     }
@@ -764,12 +794,10 @@ export class RenderManager {
                     };
                     //4.2.1执行DC.doDraw(),
                     perDrawCommand.command.doDraw(optionOfDraw);
-
                 }
                 //模拟的TTP渲染
                 // await this.renderTTP(UUID, perOne as commmandType[]);//这里是透明渲染DC的渲染TTP的单纯渲染TTP的测试，相对于上面的for中的array直接传入
-
-            }// end for of camera UUID
+            } // end for of camera UUID
             passEncoder.end();
         }
     }
@@ -778,7 +806,7 @@ export class RenderManager {
      * 1、包括：绘制，计算，复制命令
      * 2、基本上每个命令（都是没有共性的），都需要设置RPD，或者设置ComputePass，或者设置CopyCommand。
      * 3、不管理RPD的loadOp状态，由command类自行管理；
-     * 
+     *
      * @param list I_renderDrawOfQuad  有camera聚合的命令的列表
      * @param renderPassName E_renderPassName
      */
@@ -787,13 +815,14 @@ export class RenderManager {
             const perSetOfCommand = list[id];
             // let rpd: GPURenderPassDescriptor = this.scene.getRenderPassDescriptor(id, E_renderForDC.camera);
             for (const perCommand of perSetOfCommand) {
-                if (perCommand instanceof SimpleDrawCommand || perCommand instanceof BaseDrawCommand) {
+                if (
+                    perCommand instanceof SimpleDrawCommand ||
+                    perCommand instanceof BaseDrawCommand
+                ) {
                     perCommand.doWithRPD(this.commandEncoder);
-                }
-                else if (perCommand instanceof ComputeCommand) {
+                } else if (perCommand instanceof ComputeCommand) {
                     perCommand.doWithComputePass(this.commandEncoder);
-                }
-                else if (perCommand instanceof CopyCommand) {
+                } else if (perCommand instanceof CopyCommand) {
                     perCommand.copy(this.commandEncoder);
                 }
             }
@@ -822,8 +851,7 @@ export class RenderManager {
         for (const perCommand of list) {
             if (perCommand instanceof SimpleDrawCommand) {
                 perCommand.doWithRPD(this.commandEncoder);
-            }
-            else if (perCommand instanceof BaseDrawCommand) {
+            } else if (perCommand instanceof BaseDrawCommand) {
                 perCommand.doWithRPD(this.commandEncoder);
             }
             // else if (perCommand instanceof DrawCommand) {
@@ -831,15 +859,12 @@ export class RenderManager {
             // }
             else if (perCommand instanceof ComputeCommand) {
                 perCommand.doWithComputePass(this.commandEncoder);
-            }
-            else if (perCommand instanceof CopyCommandT2T) {
+            } else if (perCommand instanceof CopyCommandT2T) {
                 perCommand.copy(this.commandEncoder);
-            }
-            else {
-                throw new Error("doCommand: not support command type");
+            } else {
+                throw new Error('doCommand: not support command type');
             }
         }
-
     }
     // /**
     //  * timelineDC,只有渲染DC
@@ -866,7 +891,6 @@ export class RenderManager {
     //     }
     // }
 
-
     // /**
     //  * TTP+TTPF
     //  * 透明渲染DC
@@ -887,21 +911,21 @@ export class RenderManager {
     //      *          D、 color纹理
     //      *              如果是alpha，color可以复用在TB
     //      *              如果是物理透明，color无用，因为物理透明是计算折射的背景
-    //      * 
+    //      *
     //      *    2.2 渲染到GBuffer
-    //      * 
+    //      *
     //      *  3A、方案A：TTPF(通过resourcesGPU获取)
     //      *          A、渲染层数通过uniform传递
-    //      *          B、RGBA共四层（最多，相交的BVH的包围盒保留的透明度数量） 
+    //      *          B、RGBA共四层（最多，相交的BVH的包围盒保留的透明度数量）
     //      *          C、渲染次数 4*N个（N是相交的BVH的包围盒数量 ）
-    //      * 
+    //      *
     //      *  3B、方案B：TTPF的层数适用computer shader计算优化，得到实际每层的渲染次数（ID）的集合
-    //      * 
+    //      *
     //      *  4、渲染总数量
     //      *          A、TTP：N个
     //      *          B、TTPF：4*N个
     //      *          C、总计：5*N
-    //      * 
+    //      *
     //     */
     //     //1 清空纹理
     //     this.scene.cameraManager.cleanValueOfTT(UUID);
@@ -960,7 +984,7 @@ export class RenderManager {
     //     //     this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
     //     //     this.cameraRendered[UUID]++;//更改 TT loadOP计数器
     //     //     perEntity.setUniformLayerOfTTPF(3);//设置uniform ：layer ，ID
-    //     //     perTTPF.submit();            
+    //     //     perTTPF.submit();
     //     //     this.cameraRendered[UUID] = this.autoChangeTTPF_RPD_loadOP(UUID, this.cameraRendered[UUID]);
     //     //     this.cameraRendered[UUID]++;//更改 TT loadOP计数器
     //     //     perEntity.setUniformLayerOfTTPF(2);//设置uniform ：layer ，ID
@@ -1015,20 +1039,18 @@ export class RenderManager {
         if (countOfUUID == 0) {
             // countOfUUID = 0;
             for (const perColorAttachment of rpd.colorAttachments) {
-                if (perColorAttachment)
-                    perColorAttachment.loadOp = "clear";
+                if (perColorAttachment) perColorAttachment.loadOp = 'clear';
             }
             if (rpd.depthStencilAttachment) {
-                rpd.depthStencilAttachment!.depthLoadOp = "clear";
+                rpd.depthStencilAttachment!.depthLoadOp = 'clear';
             }
-        }
-        else {// forward render
+        } else {
+            // forward render
             for (const perColorAttachment of rpd.colorAttachments) {
-                if (perColorAttachment)
-                    perColorAttachment.loadOp = "load";                 //forward render loadOp="load"   
+                if (perColorAttachment) perColorAttachment.loadOp = 'load'; //forward render loadOp="load"
             }
             if (rpd.depthStencilAttachment) {
-                rpd.depthStencilAttachment!.depthLoadOp = "load";
+                rpd.depthStencilAttachment!.depthLoadOp = 'load';
             }
         }
     }
@@ -1036,12 +1058,9 @@ export class RenderManager {
     checkChangeRPDloadOP(mergeID: string): number {
         if (this.cameraRendered[mergeID] == undefined) {
             this.cameraRendered[mergeID] = 0;
-        }
-        else {
+        } else {
             this.cameraRendered[mergeID]++;
         }
         return this.cameraRendered[mergeID];
     }
-
-
 }

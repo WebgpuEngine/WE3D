@@ -1,7 +1,6 @@
-import { BaseCamera } from "./baseCamera";
+import { BaseCamera } from './baseCamera';
 
 export class CameraPositionAndInvertVP {
-
     parent: any;
     device: GPUDevice;
 
@@ -33,7 +32,7 @@ export class CameraPositionAndInvertVP {
     }
     /** 添加相机
      * @param camera 相机
-    */
+     */
     add(camera: BaseCamera) {
         const cpubuffer = new ArrayBuffer(this.gpubufferSize);
         const cpuBufferView = {
@@ -49,14 +48,17 @@ export class CameraPositionAndInvertVP {
                 size: this.gpubufferSize,
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
             }),
-        }
+        };
         cpuBufferView.position.set(camera.Position);
         cpuBufferView.invertvp.set(camera.getInverseVP());
-        cpuBufferView.resolution.set([this.parent.scene.surface.size.width, this.parent.scene.surface.size.height]);
+        cpuBufferView.resolution.set([
+            this.parent.scene.surface.size.width,
+            this.parent.scene.surface.size.height,
+        ]);
     }
     /**删除摄像机
      * @param camera 相机
-    */
+     */
     remove(camera: BaseCamera) {
         this.camerasData[camera.UUID].gpuBuffer.destroy();
         delete this.camerasData[camera.UUID];
@@ -79,7 +81,7 @@ export class CameraPositionAndInvertVP {
     /** 获取相机的GPU缓冲区 （调用者负责判断有效性，即是否为undefined）
      * @param uuid 相机UUID
      * @returns GPU缓冲区或undefined
-    */
+     */
     getGPUBuffer(uuid: string): GPUBuffer | undefined {
         return this.camerasData[uuid]?.gpuBuffer;
     }

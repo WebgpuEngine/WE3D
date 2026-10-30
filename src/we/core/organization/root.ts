@@ -1,22 +1,19 @@
-import { WeGenerateID } from "../math/baseFunction";
-import type { Scene } from "../scene/scene";
-import { E_lifeState, I_Update } from "../base/coreDefine";
-import { Clock } from "../scene/clock";
-import { ResourceManagerOfGPU } from "../resources/resourcesGPU";
-import { ECSManager } from "./manager";
-
+import { WeGenerateID } from '../math/baseFunction';
+import type { Scene } from '../scene/scene';
+import { E_lifeState, I_Update } from '../base/coreDefine';
+import { Clock } from '../scene/clock';
+import { ResourceManagerOfGPU } from '../resources/resourcesGPU';
+import { ECSManager } from './manager';
 
 export interface I_UUID {
-    UUID: string,
+    UUID: string;
     _manager: any;
-    _id: number,
-    _isDestroy: boolean,
+    _id: number;
+    _isDestroy: boolean;
 }
 ////////////////////////////////////////////////////////////RootGPU//////////////////////////////////////////////////////////////////////////////////////////
 
-
 export abstract class RootGPU implements I_UUID {
-
     device!: GPUDevice;
     scene!: Scene;
     /**
@@ -24,7 +21,9 @@ export abstract class RootGPU implements I_UUID {
      * node name
      */
     _name: string;
-    get Name() { return this._name }
+    get Name() {
+        return this._name;
+    }
     set Name(value: string) {
         this._name = value;
     }
@@ -34,8 +33,12 @@ export abstract class RootGPU implements I_UUID {
      */
 
     _id!: number;
-    set ID(id) { this._id = id; }
-    get ID(): number { return this._id; }
+    set ID(id) {
+        this._id = id;
+    }
+    get ID(): number {
+        return this._id;
+    }
     /**
      * 节点UUID
      * node UUID
@@ -61,9 +64,9 @@ export abstract class RootGPU implements I_UUID {
     //  * destroy时需要删除映射关系
     //  */
     mapList: {
-        key: any,//key of map
-        type: string, //类型
-        map?: string,//明确的Map<>
+        key: any; //key of map
+        type: string; //类型
+        map?: string; //明确的Map<>
     }[] = [];
 
     resourcesGPU!: ResourceManagerOfGPU;
@@ -88,13 +91,20 @@ export abstract class RootGPU implements I_UUID {
         if (input) this.inputValues = input;
         if (input?.name) {
             this._name = input.name;
-        }
-        else this._name = this.ID.toString();
+        } else this._name = this.ID.toString();
         //是否需要用户自定义更新函数
-        if (this.inputValues && this.inputValues.update !== undefined && typeof this.inputValues.update === "function")
+        if (
+            this.inputValues &&
+            this.inputValues.update !== undefined &&
+            typeof this.inputValues.update === 'function'
+        )
             this.needUpdateuserDefine = true;
         //是否需要用户自定义更新函数，在update()函数最后调用
-        if (this.inputValues && this.inputValues.updateAtEnd !== undefined && typeof this.inputValues.updateAtEnd === "function")
+        if (
+            this.inputValues &&
+            this.inputValues.updateAtEnd !== undefined &&
+            typeof this.inputValues.updateAtEnd === 'function'
+        )
             this.needUpdateuserDefineAtEnd = true;
     }
 
@@ -103,11 +113,11 @@ export abstract class RootGPU implements I_UUID {
     }
     /**
      * 三段式初始化的第二步：init()
-     * 
-     * @param scene 
-     * @param parent 
-     * @param renderID 
-     * @returns 
+     *
+     * @param scene
+     * @param parent
+     * @param renderID
+     * @returns
      */
     async init(scene: Scene, _option?: any): Promise<any> {
         //如果已经初始化，直接返回
@@ -128,17 +138,17 @@ export abstract class RootGPU implements I_UUID {
      * 当前对象的GPU已经可以用时，执行此调用。
      * when GPU is ready, call this function
      */
-    abstract readyForGPU(): Promise<any>
+    abstract readyForGPU(): Promise<any>;
     destroy(): void {
         if (this._isDestroy) return;
         this._isDestroy = true;
         if (this.resourcesGPU) {
             for (const i of this.mapList) {
                 if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
-                    (this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>).delete(i.key);
-                }
-                else
-                    this.resourcesGPU.delete(i.key, i.type);
+                    (
+                        this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>
+                    ).delete(i.key);
+                } else this.resourcesGPU.delete(i.key, i.type);
             }
         }
         this._destroy();
@@ -151,11 +161,11 @@ export abstract class RootGPU implements I_UUID {
      * 正常更新
      * 1、更新I_Update的自定义function
      * 2、调用updateSelf()更新自身私有属性
-     * 
+     *
      * @param clock Clock 时钟
      * @param updateSelftFN 是否调用自身的updateSelf(),默认=true
      *         此参数可以方便子类重载时，决定调用的updateSelf()的时间顺序或是否调用updateSelft()
-     * @returns 
+     * @returns
      */
     update(clock: Clock, updateSelftFN: boolean = true, updateAtEndFN: boolean = true): boolean {
         //更新I_Update的自定义function,在开始执行update()
@@ -163,8 +173,8 @@ export abstract class RootGPU implements I_UUID {
             this.inputValues.update!(this);
         }
         if (updateSelftFN) {
-            this.updateSelf(clock);                         //更新自身
-            this.lastUpdaeTime = clock.now;                     //更新最后一次更新时间
+            this.updateSelf(clock); //更新自身
+            this.lastUpdaeTime = clock.now; //更新最后一次更新时间
         }
         //在最后执行调用
         if (updateAtEndFN)
@@ -176,4 +186,3 @@ export abstract class RootGPU implements I_UUID {
     }
     abstract updateSelf(clock: Clock): void;
 }
-

@@ -1,50 +1,48 @@
-import { AnimationGroup } from "../animation/animationGroup";
-import { I_Update } from "../base/coreDefine";
-import { NodeObject } from "../organization/nodeObject";
-import { IV_NodeSpace } from "../organization/nodeSpace";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { ModelDataLoader } from "./ModelDataLoader";
+import { AnimationGroup } from '../animation/animationGroup';
+import { I_Update } from '../base/coreDefine';
+import { NodeObject } from '../organization/nodeObject';
+import { IV_NodeSpace } from '../organization/nodeSpace';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { ModelDataLoader } from './ModelDataLoader';
 
 export interface I_Model extends I_Update {
-    scene: Scene,
-    url: string,
+    scene: Scene;
+    url: string;
     /**
      * 是否开启debug模式
      * 1、instanceRes是否注销
      */
-    debug?: boolean,
+    debug?: boolean;
     /**
      * 属性数据类型
      * 1、BOL：由BOL管理
      * 2、inModel：模型内部数据
      */
-    dataTypeOfAttribute?: "BOL" | "inModel";
+    dataTypeOfAttribute?: 'BOL' | 'inModel';
 }
 
-export interface I_ModelResMap {
-
-}
+export interface I_ModelResMap {}
 /**
  * 模型资源类型,getRes()使用
  * 1、与modelRes的key保持一致
  */
 export enum T_ModelResKind {
-    GPUBuffers = "GPUBuffers",
-    sampler = "sampler",
-    GPUSamplerBindingType = "GPUSamplerBindingType",
-    GPUTexture = "GPUTexture",
-    accessor = "accessor",
-    texture = "texture",
-    material = "material",
-    entity = "entity",
-    animation = "animation",
-    camera = "camera",
+    GPUBuffers = 'GPUBuffers',
+    sampler = 'sampler',
+    GPUSamplerBindingType = 'GPUSamplerBindingType',
+    GPUTexture = 'GPUTexture',
+    accessor = 'accessor',
+    texture = 'texture',
+    material = 'material',
+    entity = 'entity',
+    animation = 'animation',
+    camera = 'camera',
 }
 
 export abstract class BaseModel extends NodeObject {
     debug: boolean = false;
-    dataTypeOfAttribute: "BOL" | "inModel" = "inModel";
+    dataTypeOfAttribute: 'BOL' | 'inModel' = 'inModel';
 
     /** 动画组对象 animation group object      */
     // _animationGroup: AnimationGroup[] | undefined;
@@ -56,7 +54,7 @@ export abstract class BaseModel extends NodeObject {
     }
 
     // /**
-    //  * cameraDC 队列 
+    //  * cameraDC 队列
     //  * 1、由enity生成(每个摄像机)
     //  * 2、由entityManager调度给renderManager
     //  */
@@ -70,7 +68,7 @@ export abstract class BaseModel extends NodeObject {
     // } = {};
 
     // /**
-    //  * light的shadow map DC 队列 
+    //  * light的shadow map DC 队列
     //  * 1、由enity生成(每个摄像机)
     //  * 2、由entityManager调度给renderManager
     //  */
@@ -91,7 +89,7 @@ export abstract class BaseModel extends NodeObject {
     asWhole: boolean = true;
     /**模型原始数据
      * 20260226 ,逐步作废
-    */
+     */
     modelData: any;
 
     modelLoader!: ModelDataLoader;
@@ -99,7 +97,7 @@ export abstract class BaseModel extends NodeObject {
     /**模型资源*/
     modelRes!: {
         [key: string]: Map<any, any>;
-    }
+    };
     // = {
     //         "GPUBuffers": new Map<any, GPUBuffer>(),
     //         /**
@@ -108,7 +106,7 @@ export abstract class BaseModel extends NodeObject {
     //         "sampler": new Map<any, GPUSampler>(),
     //         /**
     //          * 采样器绑定类型
-    //          * 1、key 必须与sampler的key保持一致 
+    //          * 1、key 必须与sampler的key保持一致
     //          * 2、GPUSamplerBindingType": new Map<any, GPUSamplerBindingType>(),
     //         */
     //         "GPUSamplerBindingType": new Map<any, GPUSamplerBindingType>(),
@@ -125,7 +123,7 @@ export abstract class BaseModel extends NodeObject {
 
     constructor(input: I_Model) {
         super(input);
-        this.type = "Model";
+        this.type = 'Model';
     }
     /**
      * 初始化模型节点
@@ -135,7 +133,7 @@ export abstract class BaseModel extends NodeObject {
      * @param attachValue 节点空间属性
      * @returns 场景节点实例
      */
-    abstract initInstance(parent: NodeObject, attachValue?: IV_NodeSpace): Promise<NodeObject>
+    abstract initInstance(parent: NodeObject, attachValue?: IV_NodeSpace): Promise<NodeObject>;
 
     /**
      * 释放模型原始资源
@@ -148,5 +146,4 @@ export abstract class BaseModel extends NodeObject {
         }
         return true;
     }
-
 }

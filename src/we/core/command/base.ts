@@ -1,50 +1,55 @@
-import { BaseDrawCommand } from "./BaseDrawCommand";
-import { ComputeCommand } from "./ComputeCommand";
-import { CopyCommandT2T } from "./copyCommandT2T";
-import { DrawCommand } from "./DrawCommand";
-import { DynBindGroupDrawCommand } from "./dynBindGroupDrawCommand";
-import { SimpleDrawCommand } from "./SimpleDrawCommand";
+import { BaseDrawCommand } from './BaseDrawCommand';
+import { ComputeCommand } from './ComputeCommand';
+import { CopyCommandT2T } from './copyCommandT2T';
+import { DrawCommand } from './DrawCommand';
+import { DynBindGroupDrawCommand } from './dynBindGroupDrawCommand';
+import { SimpleDrawCommand } from './SimpleDrawCommand';
 /////////////////////////////////////////////////////////////////////////////////////////////////
-//base start 
-/** 
+//base start
+/**
  * 目前未使用，后期更改，20250909
- * BaseCommand 初始化参数 
+ * BaseCommand 初始化参数
  */
 export interface IV_BaseCommand {
-    device: GPUDevice,
+    device: GPUDevice;
     /** label */
-    label: string,
+    label: string;
     // /** 是否是owner，默认=true */
     // isOwner?: boolean,
 }
 /**
  * 目前未使用，后期更改，20250909
- * 
+ *
  */
 export interface I_PipelineStructure {
-    pipeline: GPURenderPipeline,
+    pipeline: GPURenderPipeline;
     // renderPassDescriptor:GPURenderPassDescriptor,//动态
-    groupCount: number,
-    attributeCount: number,
+    groupCount: number;
+    attributeCount: number;
 }
 /**
  * DCCC类型
  */
-export type commmandType = BaseDrawCommand | DrawCommand | ComputeCommand | CopyCommandT2T | SimpleDrawCommand | DynBindGroupDrawCommand;
+export type commmandType =
+    | BaseDrawCommand
+    | DrawCommand
+    | ComputeCommand
+    | CopyCommandT2T
+    | SimpleDrawCommand
+    | DynBindGroupDrawCommand;
 /**
  * https://www.w3.org/TR/webgpu/#ref-for-dom-gpurenderpassencoder-setviewport%E2%91%A1
  */
 export interface I_viewport {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    minDepth: number,
-    maxDepth: number
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    minDepth: number;
+    maxDepth: number;
 }
-//base end 
+//base end
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //draw mode start
@@ -55,20 +60,18 @@ export interface I_viewport {
  * @firstInstance 从第几个实例开始，默认=0
  */
 export interface I_drawMode {
-    vertexCount: number,
-    /**实例化数量，默认=1 
+    vertexCount: number;
+    /**实例化数量，默认=1
      * 1、intance 的其他参数可以通过unform 或 storage buffer 传递，
      *          A、比如scale，position ，color，matrix等
      *          B、这些参数在shader中操作
      *          C、也可以通过shader生成random,进行随机（上述）操作，比如花草的摇曳的matrix
      * 2、(20260106)entity的外部实例化过程会覆盖instaceCount和firstInstance
      */
-    instanceCount?: number,
-    firstVertex?: number
-    firstInstance?: number
+    instanceCount?: number;
+    firstVertex?: number;
+    firstInstance?: number;
 }
-
-
 
 /**索引模式的draw mode定义
  * @indexCount The number of indices to draw.
@@ -78,55 +81,53 @@ export interface I_drawMode {
  * @firstInstance 从第几个实例开始，默认=0
  */
 export interface I_drawModeIndexed {
-    indexCount: number,
-    instanceCount?: number,
-    firstIndex?: number,
-    baseVertex?: number,
-    firstInstance?: number,
+    indexCount: number;
+    instanceCount?: number;
+    firstIndex?: number;
+    baseVertex?: number;
+    firstInstance?: number;
 }
 export function isDrawModeIndexed(drawMode: any): drawMode is I_drawModeIndexed {
-    return "indexCount" in drawMode;
+    return 'indexCount' in drawMode;
 }
 
 export function isDrawModeVertex(drawMode: any): drawMode is I_drawMode {
-    return "vertexCount" in drawMode;
+    return 'vertexCount' in drawMode;
 }
 
-export type T_drawMode = I_drawMode | I_drawModeIndexed | I_drawMode[] | I_drawModeIndexed[] ;//| ((UUID: string, kind: E_renderForDC) => I_drawMode[] | I_drawModeIndexed[]);
+export type T_drawMode = I_drawMode | I_drawModeIndexed | I_drawMode[] | I_drawModeIndexed[]; //| ((UUID: string, kind: E_renderForDC) => I_drawMode[] | I_drawModeIndexed[]);
 //draw mode end
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //uniform start
 /**
  * 用于创建uniformBuffer的参数
- * 
+ *
  */
 export interface I_uniformArrayBufferEntry {
-    label: string,
-    binding: number,//从0开始
+    label: string;
+    binding: number; //从0开始
 
     /** buffer 类型,uniform|storage，默认：uniform */
-    type?: "uniform" | "storage",//|"sampler"|"textureView"|"ExternalTexture",
+    type?: 'uniform' | 'storage'; //|"sampler"|"textureView"|"ExternalTexture",
 
-    usage?: GPUBufferUsageFlags,//默认：GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    usage?: GPUBufferUsageFlags; //默认：GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
 
     /**TypedArray的大小，以byte计算 ;这个size是需要数据对齐的*/
-    size: number,//
+    size: number; //
 
     /**
-     * 这里只能说ArrayBuffer，因为shader中的uniform对应的结构是未知的（暴露出来不太可能，情况太多了）。     
+     * 这里只能说ArrayBuffer，因为shader中的uniform对应的结构是未知的（暴露出来不太可能，情况太多了）。  
      */
-    data: ArrayBuffer,
+    data: ArrayBuffer;
 
-    /** 
-     * 是否每帧更新，默认：true 
-     * 
+    /**
+     * 是否每帧更新，默认：true
+     *
      * 至少更新一次
-    */
-    update?: boolean,
+     */
+    update?: boolean;
 }
 export function isUniformBufferPart(obj: unknown): obj is I_uniformArrayBufferEntry {
     return (
@@ -141,16 +142,17 @@ export function isUniformBufferPart(obj: unknown): obj is I_uniformArrayBufferEn
     );
 }
 
-
 /**定义一个动态纹理的External 接口 */
 export interface I_dynamicTextureEntryForExternal {
-    label: string,
-    binding: number,
+    label: string;
+    binding: number;
     /**动态获取importExternalTexture的箭头函数 */
-    getResource: (scope: any) => GPUBindingResource,
-    scope: any,
+    getResource: (scope: any) => GPUBindingResource;
+    scope: any;
 }
-export function isDynamicTextureEntryForExternal(obj: unknown): obj is I_dynamicTextureEntryForExternal {
+export function isDynamicTextureEntryForExternal(
+    obj: unknown,
+): obj is I_dynamicTextureEntryForExternal {
     return (
         typeof obj === 'object' &&
         obj !== null &&
@@ -162,14 +164,12 @@ export function isDynamicTextureEntryForExternal(obj: unknown): obj is I_dynamic
     );
 }
 
-
-
 /**定义一个动态纹理的view 接口 */
 export interface I_dynamicTextureEntryForView {
-    label: string,
-    binding: number,
+    label: string;
+    binding: number;
     /**动态获取importExternalTexture的箭头函数 */
-    getResource: () => GPUBindingResource,
+    getResource: () => GPUBindingResource;
 }
 export function isDynamicTextureEntryForView(obj: unknown): obj is I_dynamicTextureEntryForView {
     return (
@@ -188,21 +188,22 @@ export function isDynamicTextureEntryForView(obj: unknown): obj is I_dynamicText
 //     getResource: () => GPUBufferBinding,
 // }
 
-
-/** 单个bind group的  unifrom 入口的数组格式 
+/** 单个bind group的  unifrom 入口的数组格式
  * I_uniformArrayBufferEntry 是自定义的uniformBuffer，用于创建GPUBuffer
  * GPUBindGroupEntry 是标准的
  */
-export type T_uniformEntries = GPUBindGroupEntry | I_uniformArrayBufferEntry | I_dynamicTextureEntryForView | I_dynamicTextureEntryForExternal;
-export type T_uniformOneGroup = T_uniformEntries[] | GPUBindGroup;    //entity 等内部使用的uniform group，每个group 是一个bind group，不能为空数组或undefined
+export type T_uniformEntries =
+    | GPUBindGroupEntry
+    | I_uniformArrayBufferEntry
+    | I_dynamicTextureEntryForView
+    | I_dynamicTextureEntryForExternal;
+export type T_uniformOneGroup = T_uniformEntries[] | GPUBindGroup; //entity 等内部使用的uniform group，每个group 是一个bind group，不能为空数组或undefined
 
-
-
-/**  bind group的数组  
+/**  bind group的数组
  * 1、undefined 表示没有uniform group
  * 2、[] 表示空的uniform group.未验证
-*/
-export type T_uniformGroups = T_uniformOneGroup | [] | undefined;  // DCG 使用，可以支持多个uniform group，包括空的uniform group和undefined，
+ */
+export type T_uniformGroups = T_uniformOneGroup | [] | undefined; // DCG 使用，可以支持多个uniform group，包括空的uniform group和undefined，
 export function isGPUBindGroupEntry(obj: unknown): obj is GPUBindGroupEntry {
     return (
         typeof obj === 'object' &&
@@ -214,39 +215,31 @@ export function isGPUBindGroupEntry(obj: unknown): obj is GPUBindGroupEntry {
     );
 }
 export function isUniformGroup(obj: unknown): obj is T_uniformGroups {
-    return (
-        Array.isArray(obj) &&
-        obj.every(isUniformBufferPart || isGPUBindGroupEntry)
-    );
+    return Array.isArray(obj) && obj.every(isUniformBufferPart || isGPUBindGroupEntry);
 }
 
-
-
-/** bind group layout的数组  
- * 1、undefined 表示没有uniform group layout 
+/** bind group layout的数组
+ * 1、undefined 表示没有uniform group layout
  * 2、[] 表示空的uniform group.未验证
-*/
-export type T_BindGroupLayout = GPUBindGroupLayoutEntry[] | undefined;      //DCG 使用，可以支持多个uniform group layout，包括空的uniform group layout和undefined，
+ */
+export type T_BindGroupLayout = GPUBindGroupLayoutEntry[] | undefined; //DCG 使用，可以支持多个uniform group layout，包括空的uniform group layout和undefined，
 
 /**bind group 和 bind group layout的组合接口 */
 export interface I_bindGroupAndGroupLayout {
-    bindGroup: GPUBindGroup,
-    bindGroupLayout: GPUBindGroupLayout
+    bindGroup: GPUBindGroup;
+    bindGroupLayout: GPUBindGroupLayout;
 }
 //uniform end
 ///////////////////////////////////////////////////////////////////////////////////////////
 export interface I_DrawCommandIDs {
-    UUID: string,
-    ID: number,
-    renderID: number,
+    UUID: string;
+    ID: number;
+    renderID: number;
 }
-
 
 ///////////////////////////////////////////////////////////////////
 //MSAA
-export type T_rpdInfomationOfMSAA = "MSAA" | "MSAAinfo"
-
-
+export type T_rpdInfomationOfMSAA = 'MSAA' | 'MSAAinfo';
 
 /////////////////////////////////////////////////////////////////////////
 // bind group type

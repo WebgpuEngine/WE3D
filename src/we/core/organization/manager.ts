@@ -1,6 +1,6 @@
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { I_UUID } from "./root";
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { I_UUID } from './root';
 
 export abstract class ECSManager<T extends I_UUID> {
     scene: Scene;
@@ -21,7 +21,7 @@ export abstract class ECSManager<T extends I_UUID> {
             return;
         }
         this.list.push(entity);
-        if(entity._manager == undefined){
+        if (entity._manager == undefined) {
             entity._manager = this;
         }
     }

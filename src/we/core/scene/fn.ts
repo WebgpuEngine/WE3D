@@ -1,6 +1,6 @@
-import { Points } from "../entity/mesh/points";
-import { initSceneConfig } from "./base";
-import { Scene } from "./scene";
+import { Points } from '../entity/mesh/points';
+import { initSceneConfig } from './base';
+import { Scene } from './scene';
 
 export async function initScene(config: initSceneConfig) {
     const initValues = config.initConfig;
@@ -14,7 +14,9 @@ export async function initScene(config: initSceneConfig) {
     // if (config.loadConfig) {
     //     scene.load(config.loadConfig);
     // }
-    if (config.runImmediately === false||config.runImmediately == undefined
+    if (
+        config.runImmediately === false ||
+        config.runImmediately == undefined
         //  || config.loadConfig == undefined
     ) {
         scene.run();
@@ -22,7 +24,7 @@ export async function initScene(config: initSceneConfig) {
     if (config.initConfig.modeNDC !== true) {
         // 全透明点
         const mesh = new Points({
-            name: "全透明点",
+            name: '全透明点',
             attributes: {
                 data: {
                     vertices: { position: [0, 0, 0] },
@@ -35,4 +37,3 @@ export async function initScene(config: initSceneConfig) {
 
     return scene;
 }
-

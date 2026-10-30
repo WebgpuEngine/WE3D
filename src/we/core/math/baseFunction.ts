@@ -1,7 +1,5 @@
 import { mat4, vec3, type Vec3 } from 'wgpu-matrix';
 
-
-
 // Returns `x` clamped between [`min` .. `max`]
 export function clamp(x: number, min: number, max: number): number {
     return Math.min(Math.max(x, min), max);
@@ -21,7 +19,6 @@ export function rotate(vec: Vec3, axis: Vec3, angle: number): Vec3 {
 export function lerp(a: Vec3, b: Vec3, s: number): Vec3 {
     return vec3.addScaled(a, vec3.sub(b, a), s);
 }
-
 
 export function WERandomInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min)) + min;
@@ -53,14 +50,20 @@ export function WeGenerateUUID() {
     let UUID: string;
     do {
         const sub = 7;
-        const len = 36
+        const len = 36;
         // UUID = Math.random().toString(len).substring(sub);
-        UUID = Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub) + '-' + Math.random().toString(len).substring(sub);
+        UUID =
+            Math.random().toString(len).substring(sub) +
+            '-' +
+            Math.random().toString(len).substring(sub) +
+            '-' +
+            Math.random().toString(len).substring(sub) +
+            '-' +
+            Math.random().toString(len).substring(sub);
     } while (weUUIDs.has(UUID));
     weUUIDs.add(UUID);
     return UUID;
 }
-
 
 /**
  * 从顶点位置和索引计算法线:索引模式
@@ -68,7 +71,10 @@ export function WeGenerateUUID() {
  * @param {number[]} indices - 三角面索引数组（格式：[i0,i1,i2, i3,i4,i5, ...]）
  * @returns {number[]} 顶点法线数组（格式与 positions 一致）
  */
-export function computeNormalsArrayFromPositionsAndIndices(positions: number[], indices: number[]): number[] {
+export function computeNormalsArrayFromPositionsAndIndices(
+    positions: number[],
+    indices: number[],
+): number[] {
     // 1. 初始化法线数组为 0
     const normals: number[] = new Array(positions.length).fill(0);
     const stride = 3; // 每个顶点 3 个分量（x,y,z）
@@ -81,21 +87,9 @@ export function computeNormalsArrayFromPositionsAndIndices(positions: number[], 
         const i2 = indices[i + 2];
 
         // 获取三个顶点的位置
-        const p0 = [
-            positions[i0 * stride],
-            positions[i0 * stride + 1],
-            positions[i0 * stride + 2]
-        ];
-        const p1 = [
-            positions[i1 * stride],
-            positions[i1 * stride + 1],
-            positions[i1 * stride + 2]
-        ];
-        const p2 = [
-            positions[i2 * stride],
-            positions[i2 * stride + 1],
-            positions[i2 * stride + 2]
-        ];
+        const p0 = [positions[i0 * stride], positions[i0 * stride + 1], positions[i0 * stride + 2]];
+        const p1 = [positions[i1 * stride], positions[i1 * stride + 1], positions[i1 * stride + 2]];
+        const p2 = [positions[i2 * stride], positions[i2 * stride + 1], positions[i2 * stride + 2]];
 
         // 计算边向量, v1: p1 -> p0, v2: p2 -> p0
         const v1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
@@ -105,21 +99,17 @@ export function computeNormalsArrayFromPositionsAndIndices(positions: number[], 
         const faceNormal = [
             v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
-            v1[0] * v2[1] - v1[1] * v2[0]
+            v1[0] * v2[1] - v1[1] * v2[0],
         ];
 
         // 归一化面法线（避免长度异常）
         const len = Math.sqrt(faceNormal[0] ** 2 + faceNormal[1] ** 2 + faceNormal[2] ** 2);
         if (len < 1e-6) continue; // 跳过退化的三角面
-        const n = [
-            faceNormal[0] / len,
-            faceNormal[1] / len,
-            faceNormal[2] / len
-        ];
+        const n = [faceNormal[0] / len, faceNormal[1] / len, faceNormal[2] / len];
         // const n = [
         //     faceNormal[0] ,
         //     faceNormal[1] ,
-        //     faceNormal[2] 
+        //     faceNormal[2]
         // ];
         // 将面法线累加到三个顶点的法线中
         normals[i0 * stride] += n[0];
@@ -161,7 +151,10 @@ export function computeNormalsArrayFromPositionsAndIndices(positions: number[], 
  * @param indices 三角面索引数组（格式：[i0,i1,i2, i3,i4,i5, ...]）
  * @returns 三角面法线数组（格式与 indices 一致）
  */
-export function computeFaceNormalsArrayFromPositionsAndIndices(positions: number[], indices: number[]): number[] {
+export function computeFaceNormalsArrayFromPositionsAndIndices(
+    positions: number[],
+    indices: number[],
+): number[] {
     const normals = new Array(indices.length).fill(0);
 
     for (let i = 0; i < indices.length; i += 3) {
@@ -210,13 +203,16 @@ export function computeFaceNormalsArrayFromPositionsAndIndices(positions: number
     }
     return normals;
 }
-export function convertPositionsWithIndicesToPositionNonIndex(positions: number[], indices: number[]): number[] {
+export function convertPositionsWithIndicesToPositionNonIndex(
+    positions: number[],
+    indices: number[],
+): number[] {
     const positionNonIndex = [];
     for (const i of indices) {
         positionNonIndex.push(positions[i * 3 + 0]);
         positionNonIndex.push(positions[i * 3 + 1]);
         positionNonIndex.push(positions[i * 3 + 2]);
-       const _abc=1;
+        const _abc = 1;
     }
     return positionNonIndex;
 }
@@ -234,21 +230,9 @@ export function computeNormalsArrayFromPositionsNoIndex(positions: number[]): nu
     // 2. 遍历所有三角面，计算面法线并累加到顶点
     for (let i = 0; i < positions.length; i += 3 * 3) {
         // 获取三个顶点的位置,逆时针顺序(0,1,2,一定，否则法线指向内部)，计算法线时需要注意，法线指向外部
-        const p0 = [
-            positions[i + 0],
-            positions[i + 1],
-            positions[i + 2]
-        ];
-        const p1 = [
-            positions[i + 3],
-            positions[i + 4],
-            positions[i + 5]
-        ];
-        const p2 = [
-            positions[i + 6],
-            positions[i + 7],
-            positions[i + 8]
-        ];
+        const p0 = [positions[i + 0], positions[i + 1], positions[i + 2]];
+        const p1 = [positions[i + 3], positions[i + 4], positions[i + 5]];
+        const p2 = [positions[i + 6], positions[i + 7], positions[i + 8]];
 
         // 计算边向量
         const v1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
@@ -258,21 +242,16 @@ export function computeNormalsArrayFromPositionsNoIndex(positions: number[]): nu
         const faceNormal = [
             v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
-            v1[0] * v2[1] - v1[1] * v2[0]
+            v1[0] * v2[1] - v1[1] * v2[0],
         ];
 
         // 归一化面法线（避免长度异常）
         const len = Math.sqrt(faceNormal[0] ** 2 + faceNormal[1] ** 2 + faceNormal[2] ** 2);
         let n = [0, 1, 0];
-        if (len < 1e-6) { // 跳过退化的三角面
-
-        }
-        else {
-            n = [
-                faceNormal[0] / len,
-                faceNormal[1] / len,
-                faceNormal[2] / len
-            ];
+        if (len < 1e-6) {
+            // 跳过退化的三角面
+        } else {
+            n = [faceNormal[0] / len, faceNormal[1] / len, faceNormal[2] / len];
         }
 
         // 将面法线累加到三个顶点的法线中

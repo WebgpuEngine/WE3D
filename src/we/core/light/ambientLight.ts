@@ -1,31 +1,29 @@
-import { Mat4 } from "wgpu-matrix";
-import { BaseLight, I_optionBaseLight, E_lightType, structBaselight } from "./baseLight";
-import { Scene } from "../scene/scene";
-import { weColor3 } from "../base/coreDefine";
+import { Mat4 } from 'wgpu-matrix';
+import { BaseLight, I_optionBaseLight, E_lightType, structBaselight } from './baseLight';
+import { Scene } from '../scene/scene';
+import { weColor3 } from '../base/coreDefine';
 
 export interface IV_AmbientLight extends I_optionBaseLight {
-    color: weColor3,
-    intensity: number
+    color: weColor3;
+    intensity: number;
 }
 
 export class AmbientLight extends BaseLight {
-    async readyForGPU(): Promise<any> {
-    }
+    async readyForGPU(): Promise<any> {}
     _destroy(): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     saveJSON() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     loadJSON(_json: any): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     updateMVP(_scene: Scene): Mat4[] {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
 
     structBuffer: structBaselight;
-
 
     constructor(input: IV_AmbientLight) {
         super(input, E_lightType.ambient);
@@ -35,5 +33,4 @@ export class AmbientLight extends BaseLight {
     getStructBuffer(): structBaselight {
         return this.structBuffer;
     }
-
 }

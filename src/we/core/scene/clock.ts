@@ -13,7 +13,7 @@ export class Clock {
         this._deltaTimeMS = 0;
     }
     getLastNowDelta() {
-        return [this.last, this.now, this.deltaTime]
+        return [this.last, this.now, this.deltaTime];
     }
     get deltaTime() {
         return this._deltaTime;

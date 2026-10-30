@@ -1,21 +1,18 @@
-import { E_entityType, IV_BaseEntity } from "../base";
-import { EntityBundleMaterial } from "../entityBundleMaterial";
-
+import { E_entityType, IV_BaseEntity } from '../base';
+import { EntityBundleMaterial } from '../entityBundleMaterial';
 
 /**mesh的顶点结构与材质，各有一个，一一对应 */
 export interface IV_LinesEntity extends IV_BaseEntity {
     /**
      * 代替GPUPrimitiveState.topology
      */
-    lineMode?: "line-list" | "line-strip",
+    lineMode?: 'line-list' | 'line-strip';
 }
 
 export class Lines extends EntityBundleMaterial {
-
     override inputValues: IV_LinesEntity;
 
-
-    lineMode: "line-list" | "line-strip" = "line-list";
+    lineMode: 'line-list' | 'line-strip' = 'line-list';
 
     constructor(input: IV_LinesEntity) {
         super(input);
@@ -26,22 +23,20 @@ export class Lines extends EntityBundleMaterial {
 
         if (input.primitive) {
             this._primitive = input.primitive;
-        }
-        else {
-            if (this.lineMode == "line-strip") {
+        } else {
+            if (this.lineMode == 'line-strip') {
                 this._primitive = {
-                    topology: "line-strip",
+                    topology: 'line-strip',
                 };
-            }
-            else {
+            } else {
                 this._primitive = {
-                    topology: "line-list",
+                    topology: 'line-list',
                 };
             }
         }
         // 如果是line-strip，需要设置stripIndexFormat为uint32|uint16
-        if (this._primitive.topology == "line-strip") {
-            this._primitive.stripIndexFormat = "uint32"
+        if (this._primitive.topology == 'line-strip') {
+            this._primitive.stripIndexFormat = 'uint32';
         }
         this._primitive = {
             topology: this.lineMode,
@@ -59,10 +54,9 @@ export class Lines extends EntityBundleMaterial {
     }
 
     saveJSON() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     loadJSON(_json: any): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
-
 }

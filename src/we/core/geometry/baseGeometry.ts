@@ -1,37 +1,36 @@
-
-import { weColor3 } from "../base/coreDefine";
+import { weColor3 } from '../base/coreDefine';
 
 type geometryMaterialStep = number[];
 export interface xyz {
-    x: number,
-    y: number,
-    z: number,
+    x: number;
+    y: number;
+    z: number;
 }
 /**
  * 片面的几何属性
  */
 export interface I_geometryAttribute {
-    position: number[],
-    normal: number[],
-    uv: number[],
-    color: number[],
-    indeices: number[],
-    materialStep: geometryMaterialStep[],
+    position: number[];
+    normal: number[];
+    uv: number[];
+    color: number[];
+    indeices: number[];
+    materialStep: geometryMaterialStep[];
 }
 export interface I_GeometryAttributeGroup {
-    [name: string]: number[]
+    [name: string]: number[];
 }
 /**
  * 线框的几何属性
  */
 export interface I_geometryWireFrameAttribute {
-    indeices: number[],
+    indeices: number[];
 }
 
 export interface IV_Gemetry {
     /**指定的shader code */
-    code?: string,
-    color?: weColor3,
+    code?: string;
+    color?: weColor3;
 }
 /**
  * 设计目标提供静态的基础几何体
@@ -45,13 +44,13 @@ export abstract class BaseGeometry {
         color: [],
         uv: [],
         indeices: [],
-        materialStep: []
+        materialStep: [],
     };
     wireFrame: {
-        indeices: number[]
+        indeices: number[];
     } = {
-            indeices: []
-        }
+        indeices: [],
+    };
     _destroy: boolean = false;
 
     _wireframeColor!: weColor3;
@@ -63,7 +62,7 @@ export abstract class BaseGeometry {
         this.input = input;
     }
 
-    abstract init(input: IV_Gemetry): any
+    abstract init(input: IV_Gemetry): any;
     // abstract destroy(): any
 
     //线框
@@ -71,7 +70,6 @@ export abstract class BaseGeometry {
     // abstract getWireFrameDrawCount(): number;
     // abstract getWireFrameIndeices(): indexBuffer | boolean
     // abstract getWireFrameShdaerCode(color: color3U): string;
-
 
     //片面
     /**
@@ -90,8 +88,8 @@ export abstract class BaseGeometry {
         return this._destroy;
     }
     /**
- * 创建线框数据结构
- */
+     * 创建线框数据结构
+     */
     createWrieFrame() {
         const list: { [name: string]: number[] } = {};
         if (this.buffer.indeices.length == 0) {
@@ -100,10 +98,8 @@ export abstract class BaseGeometry {
                 list[i_index++] = [i, i + 1];
                 list[i_index++] = [i + 1, i + 2];
                 list[i_index++] = [i + 2, i];
-
             }
-        }
-        else {
+        } else {
             for (let i = 0; i < this.buffer.indeices.length; i += 3) {
                 const A = this.buffer.indeices[i];
                 const B = this.buffer.indeices[i + 1];
@@ -121,7 +117,7 @@ export abstract class BaseGeometry {
             indeices.push(list[i][0], list[i][1]);
         }
         const output: I_geometryWireFrameAttribute = {
-            indeices: indeices
+            indeices: indeices,
         };
         this.wireFrame = output;
     }
@@ -172,10 +168,10 @@ export abstract class BaseGeometry {
     //  * todo：20241129，
     //  * 1、后期使用线材质，或线框材质，或shader线框，代替；
     //  * 2、这个目前这个目前没有输出entityID，输出的是0
-    //  * 
+    //  *
     //  * 线框的FS
-    //  * @param color 
-    //  * @returns 
+    //  * @param color
+    //  * @returns
     //  */
     // getWireFrameShdaerCodeFS(color: color4): string {
     //     let red = color[0];
@@ -197,9 +193,9 @@ export abstract class BaseGeometry {
 
     /** 输出顶点信息    */
     getAttribute(): I_GeometryAttributeGroup {
-        if(this.buffer.color.length==0){
+        if (this.buffer.color.length == 0) {
             // this.buffer.color = this.generateColorArray(this.buffer.position.length /3);
-            this.buffer.color=new Array(this.buffer.position.length).fill(0.6);
+            this.buffer.color = new Array(this.buffer.position.length).fill(0.6);
         }
         return {
             position: this.buffer.position,
@@ -210,7 +206,7 @@ export abstract class BaseGeometry {
             // materialStep: this.buffer.materialStep
         };
     }
-    generateColorArray(length: number, color : weColor3 = [1, 1, 1]) {
+    generateColorArray(length: number, color: weColor3 = [1, 1, 1]) {
         if (this.input.color) {
             color = this.input.color;
         }
@@ -228,14 +224,13 @@ export abstract class BaseGeometry {
             uv: [],
             color: [],
             indeices: [],
-            materialStep: []
-        }
+            materialStep: [],
+        };
     }
     getReady() {
         if (this._already) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }

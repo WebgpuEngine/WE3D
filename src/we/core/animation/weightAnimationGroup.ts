@@ -7,7 +7,4 @@
  */
 
 /**todo */
-export class WeightMixAnimationGroup  {
-
-
-}
+export class WeightMixAnimationGroup {}

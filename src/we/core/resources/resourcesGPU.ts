@@ -1,15 +1,18 @@
-import { I_pointerStruct } from "../bufferBlock/pointer";
-import { I_uniformArrayBufferEntry, isGPUBindGroupEntry, isUniformBufferPart, T_uniformEntries } from "../command/base";
-import { createEmptyGPUBuffer } from "../command/baseFunction";
-import { DrawCommand } from "../command/DrawCommand";
-import { BaseMaterial } from "../material/baseMaterial";
-import { Scene } from "../scene/scene";
-import { DefaultCubeTexture } from "../texture/defaultCubeTexture";
-import { DefaultTexture } from "../texture/defaultTexture";
-import { Texture } from "../texture/texture";
-import { IV_PBRMaterial, PBRMaterial } from "../material/PBR/PBRMaterial";
-
-
+import { I_pointerStruct } from '../bufferBlock/pointer';
+import {
+    I_uniformArrayBufferEntry,
+    isGPUBindGroupEntry,
+    isUniformBufferPart,
+    T_uniformEntries,
+} from '../command/base';
+import { createEmptyGPUBuffer } from '../command/baseFunction';
+import { DrawCommand } from '../command/DrawCommand';
+import { BaseMaterial } from '../material/baseMaterial';
+import { Scene } from '../scene/scene';
+import { DefaultCubeTexture } from '../texture/defaultCubeTexture';
+import { DefaultTexture } from '../texture/defaultTexture';
+import { Texture } from '../texture/texture';
+import { IV_PBRMaterial, PBRMaterial } from '../material/PBR/PBRMaterial';
 
 export class ResourceManagerOfGPU {
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -21,11 +24,10 @@ export class ResourceManagerOfGPU {
     //所有为分类的,未定义，未分类，分类失败
     resources: Map<any, any> = new Map();
 
-
     /////////////////////////////////////////////////////////////////////////////////////////
     // 单个（每个binding）uniform-->GPUBindGroupLayoutEntry
     /**一个bind group的entries对应的group layout */
-    entriesToEntriesLayout: Map<T_uniformEntries, GPUBindGroupLayoutEntry> = new Map();//需要人工释放资源
+    entriesToEntriesLayout: Map<T_uniformEntries, GPUBindGroupLayoutEntry> = new Map(); //需要人工释放资源
     getEntrieLayout(entries: T_uniformEntries) {
         return this.entriesToEntriesLayout.get(entries);
     }
@@ -50,7 +52,7 @@ export class ResourceManagerOfGPU {
     entryOfGroup: Map<string, GPUBindGroupEntry> = new Map();
 
     /** bindGroup 对应的layout */
-    bindGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map();//需要人工释放资源
+    bindGroupToGroupLayout: Map<GPUBindGroup, GPUBindGroupLayout> = new Map(); //需要人工释放资源
     getBindGroupLayout(bindGroup: GPUBindGroup) {
         return this.bindGroupToGroupLayout.get(bindGroup);
     }
@@ -91,23 +93,21 @@ export class ResourceManagerOfGPU {
     /**string 可以是buffer的名称等 */
     storageBuffer: Map<any, GPUBuffer> = new Map();
 
-
     constructor(scene: Scene) {
         this.scene = scene;
         this.device = scene.device;
         this.createSampler();
         this.createDefaultTexture();
-
     }
     //////////////////////////////////////////////////////////////////////////////////////////
-    //attribute and uniform 
+    //attribute and uniform
 
     //基础单位数据
     /**顶点资源管理器 */
     // vertices: Map<any, GPUBuffer> = new Map();
     vertices: Map<string, I_pointerStruct> = new Map();
     /**索引资源管理器 */
-    indices: Map<string, I_pointerStruct> = new Map();//GPUBuffer默认使用uint32的格式。
+    indices: Map<string, I_pointerStruct> = new Map(); //GPUBuffer默认使用uint32的格式。
     /**单个uniform的ArrayBuffer 对应的GPUBuffer 资源管理器 */
     uniformBuffer: Map<T_uniformEntries, I_pointerStruct> = new Map();
 
@@ -144,7 +144,7 @@ export class ResourceManagerOfGPU {
     indicesDynamic: Map<any, GPUBuffer> = new Map();
 
     //////////////////////////////////////////////////////////////////////////////////////////
-    //texture 
+    //texture
     /**string 可以是URL或texture的名称等 */
     textureOfString: Map<any, GPUTexture> = new Map();
     textureToBindGroupLayoutEntry: Map<GPUTexture, GPUTextureBindingLayout> = new Map();
@@ -152,81 +152,81 @@ export class ResourceManagerOfGPU {
     weMaterialOfString: Map<string, BaseMaterial> = new Map();
     createDefaultTexture() {
         const textureDefault = new DefaultTexture(this.device);
-        this.textureOfString.set("default", textureDefault.texture);
-        this.weTextureOfString.set("default", textureDefault);
+        this.textureOfString.set('default', textureDefault.texture);
+        this.weTextureOfString.set('default', textureDefault);
         const cubeTextureDefault = new DefaultCubeTexture(this.device);
-        this.textureOfString.set("defaultCube", cubeTextureDefault.texture);
-        this.weTextureOfString.set("defaultCube", cubeTextureDefault);
+        this.textureOfString.set('defaultCube', cubeTextureDefault.texture);
+        this.weTextureOfString.set('defaultCube', cubeTextureDefault);
         const baseInputPBR: IV_PBRMaterial = {
             textures: {
                 albedo: { value: [1, 1, 1, 1] },
                 metallic: { value: 1 },
                 roughness: { value: 1 },
-            }
-        }
-        const defaultMaterial = new PBRMaterial(baseInputPBR);//gltf 默认材质
-        this.weMaterialOfString.set("defaultPBR", defaultMaterial);
-        const oneMatrixStorageBuffer = createEmptyGPUBuffer(this.device, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, 16 * 4, "oneStorageMatrix");
-        this.storageBuffer.set("oneStorageMatrix", oneMatrixStorageBuffer);
+            },
+        };
+        const defaultMaterial = new PBRMaterial(baseInputPBR); //gltf 默认材质
+        this.weMaterialOfString.set('defaultPBR', defaultMaterial);
+        const oneMatrixStorageBuffer = createEmptyGPUBuffer(
+            this.device,
+            GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+            16 * 4,
+            'oneStorageMatrix',
+        );
+        this.storageBuffer.set('oneStorageMatrix', oneMatrixStorageBuffer);
     }
     /**string 可以是sampler的名称等，比如通用的 linear,nearest ,也可以是定制的，linear-mipmap*/
     samplerOfString: Map<string | GPUSamplerDescriptor, GPUSampler> = new Map();
     createSampler() {
         const linear = this.device.createSampler({
-            label: "linear",
-            magFilter: "linear",
-            minFilter: "linear",
-            mipmapFilter: "linear",
-            addressModeU: "repeat",
-            addressModeV: "repeat"
+            label: 'linear',
+            magFilter: 'linear',
+            minFilter: 'linear',
+            mipmapFilter: 'linear',
+            addressModeU: 'repeat',
+            addressModeV: 'repeat',
         });
-        this.samplerOfString.set("linear", linear);
+        this.samplerOfString.set('linear', linear);
         const nearest = this.device.createSampler({
-            label: "nearest",
-            magFilter: "nearest",
-            minFilter: "nearest",
-            mipmapFilter: "nearest",
-            addressModeU: "repeat",
-            addressModeV: "repeat"
+            label: 'nearest',
+            magFilter: 'nearest',
+            minFilter: 'nearest',
+            mipmapFilter: 'nearest',
+            addressModeU: 'repeat',
+            addressModeV: 'repeat',
         });
-        this.samplerOfString.set("nearest", nearest);
+        this.samplerOfString.set('nearest', nearest);
         const cube = this.device.createSampler({
-            label: "cube",
-            magFilter: "linear",
-            minFilter: "linear",
-            mipmapFilter: "linear", // 预滤波贴图需要 mipmap 线性过滤
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge",
-            addressModeW: "clamp-to-edge" // 立方体贴图的 W 轴
+            label: 'cube',
+            magFilter: 'linear',
+            minFilter: 'linear',
+            mipmapFilter: 'linear', // 预滤波贴图需要 mipmap 线性过滤
+            addressModeU: 'clamp-to-edge',
+            addressModeV: 'clamp-to-edge',
+            addressModeW: 'clamp-to-edge', // 立方体贴图的 W 轴
         });
-        this.samplerOfString.set("cube", cube);
+        this.samplerOfString.set('cube', cube);
     }
     getSampler(key: string): GPUSampler {
         let sampler: GPUSampler | undefined;
         if (this.samplerOfString.has(key)) {
             sampler = this.samplerOfString.get(key);
-        }
-        else {
-            if (key == "linear") {
+        } else {
+            if (key == 'linear') {
+                sampler = this.samplerOfString.get(key);
+            } else if (key == 'nearest') {
+                sampler = this.samplerOfString.get(key);
+            } else if (key == 'cube') {
                 sampler = this.samplerOfString.get(key);
             }
-            else if (key == "nearest") {
-                sampler = this.samplerOfString.get(key);
-            }
-            else if (key == "cube") {
-                sampler = this.samplerOfString.get(key);
-            }
-
         }
         if (sampler) {
             return sampler;
-        }
-        else {
+        } else {
             throw new Error(`sampler ${key} not found`);
         }
     }
     /////////////////////////////////////////////////////////////////////////////////////////
-    //sytem Group0 
+    //sytem Group0
     /**camera UUID -> GPUBindGroup */
     systemGroup0ByID: Map<string, GPUBindGroup> = new Map();
     /**systemGroup0 对应的 GPUBindGroupLayout */
@@ -244,8 +244,7 @@ export class ResourceManagerOfGPU {
             else if (_kind == E_resourceKind.uniformBuffer) return this.uniformBuffer.has(key);
             else if (_kind == E_resourceKind.textureOfString) return this.textureOfString.has(key);
             else if (_kind == E_resourceKind.samplerOfString) return this.samplerOfString.has(key);
-        }
-        else {
+        } else {
             if (key instanceof GPUBindGroup) {
                 return this.bindGroupToGroupLayout.has(key as GPUBindGroup);
             }
@@ -257,13 +256,10 @@ export class ResourceManagerOfGPU {
             // }
             else if (isGPUBindGroupEntry(key)) {
                 return this.entriesToEntriesLayout.has(key);
-            }
-            else if (isUniformBufferPart(key)) {
+            } else if (isUniformBufferPart(key)) {
                 return this.entriesToEntriesLayout.has(key);
-            }
-            else {
-                if (this.resources.has(key))
-                    return this.resources.has(key);
+            } else {
+                if (this.resources.has(key)) return this.resources.has(key);
             }
         }
         return false;
@@ -275,8 +271,7 @@ export class ResourceManagerOfGPU {
             else if (_kind == E_resourceKind.uniformBuffer) return this.uniformBuffer.get(key);
             else if (_kind == E_resourceKind.textureOfString) return this.textureOfString.get(key);
             else if (_kind == E_resourceKind.samplerOfString) return this.samplerOfString.get(key);
-        }
-        else {
+        } else {
             // if (key instanceof GPUBindGroup) {
             //     return this.bindGroupToGroupLayout.get(key as GPUBindGroup);
             // }
@@ -286,22 +281,17 @@ export class ResourceManagerOfGPU {
             // // else if (key instanceof GPUBindGroupEntryImpl || key instanceof I_uniformArrayBufferEntryImpl) {
             // //     return this.entriesToEntriesLayout.get(key);
             // // }
-            // else 
+            // else
             if (isGPUBindGroupEntry(key)) {
                 return this.entriesToEntriesLayout.get(key);
-            }
-            else if (isUniformBufferPart(key)) {
+            } else if (isUniformBufferPart(key)) {
                 return this.entriesToEntriesLayout.get(key);
-            }
-            else if (key instanceof GPUTexture) {
+            } else if (key instanceof GPUTexture) {
                 return this.textureToBindGroupLayoutEntry.get(key);
-            }
-            else if (key instanceof GPUSampler) {
+            } else if (key instanceof GPUSampler) {
                 return this.samplerToBindGroupLayoutEntry.get(key);
-            }
-            else {
-                if (this.resources.has(key))
-                    return this.resources.get(key);
+            } else {
+                if (this.resources.has(key)) return this.resources.get(key);
             }
         }
         return false;
@@ -313,12 +303,10 @@ export class ResourceManagerOfGPU {
             else if (_kind == E_resourceKind.uniformBuffer) this.uniformBuffer.set(key, value);
             else if (_kind == E_resourceKind.textureOfString) {
                 this.textureOfString.set(key, value);
-            }
-            else if (_kind == E_resourceKind.samplerOfString) {
+            } else if (_kind == E_resourceKind.samplerOfString) {
                 this.samplerOfString.set(key, value);
             }
-        }
-        else {
+        } else {
             // if (key instanceof GPUBindGroup) {
             //     this.bindGroupToGroupLayout.set(key as GPUBindGroup, value);
             // }
@@ -332,20 +320,16 @@ export class ResourceManagerOfGPU {
             // // else if (key instanceof I_uniformArrayBufferEntryImpl) {
             // //     this.entriesToEntriesLayout.set(key, value);
             // // }
-            // else 
+            // else
             if (isGPUBindGroupEntry(key)) {
                 this.entriesToEntriesLayout.set(key, value);
-            }
-            else if (isUniformBufferPart(key)) {
+            } else if (isUniformBufferPart(key)) {
                 this.entriesToEntriesLayout.set(key, value);
-            }
-            else if (key instanceof GPUTexture) {
+            } else if (key instanceof GPUTexture) {
                 this.textureToBindGroupLayoutEntry.set(key, value);
-            }
-            else if (key instanceof GPUSampler) {
+            } else if (key instanceof GPUSampler) {
                 this.samplerToBindGroupLayoutEntry.set(key, value);
-            }
-            else {
+            } else {
                 this.resources.set(key, value);
             }
         }
@@ -364,38 +348,32 @@ export class ResourceManagerOfGPU {
             //     this.samplerOfString.delete(key);
             // }
             const map = this.getProperty(_kind as keyof ResourceManagerOfGPU);
-            if (map instanceof Map)
-                map.delete(key);
-        }
-        else {
+            if (map instanceof Map) map.delete(key);
+        } else {
             // if (key instanceof GPUBindGroup) {
             //     this.bindGroupToGroupLayout.delete(key as GPUBindGroup);
             // }
             // else if (isUniformGroup(key)) {
             //     this.uniformGroupToBindGroup.delete(key);
             // }
-            // else 
+            // else
             if (isGPUBindGroupEntry(key)) {
                 this.entriesToEntriesLayout.delete(key);
-            }
-            else if (isUniformBufferPart(key)) {
+            } else if (isUniformBufferPart(key)) {
                 this.entriesToEntriesLayout.delete(key);
-            }
-            else if (key instanceof GPUTexture) {
+            } else if (key instanceof GPUTexture) {
                 this.textureToBindGroupLayoutEntry.delete(key);
-            }
-            else if (key instanceof GPUSampler) {
+            } else if (key instanceof GPUSampler) {
                 this.samplerToBindGroupLayoutEntry.delete(key);
-            }
-            else {
+            } else {
                 this.resources.delete(key);
             }
         }
     }
     /**
      * 获取属性(根据key获取属性/根据key获取资源的类型)
-     * @param key 
-     * @returns 
+     * @param key
+     * @returns
      */
     getProperty<K extends keyof ResourceManagerOfGPU>(key: K): ResourceManagerOfGPU[K] {
         // 此时 this[key] 不会报错，因为 key 被约束为 MyClass 的属性名
@@ -412,12 +390,10 @@ export class ResourceManagerOfGPU {
     /**
      * todo 资源计数器
      * GC 资源使用
-     * @param key 
-     * @param kind 
+     * @param key
+     * @param kind
      */
-    registerResource(_key: any, _kind: E_resourceKind) {
-
-    }
+    registerResource(_key: any, _kind: E_resourceKind) {}
     /**
      * 清理资源
      * 1、遍历所有资源，删除引用计数为0的资源
@@ -460,8 +436,7 @@ export class ResourceManagerOfGPU {
             const value = entry[1];
             if (key == undefined || value == undefined || key == null || value == null) {
                 res.delete(key);
-            }
-            else if ("_isDestroy" in value && value._isDestroy === true) {
+            } else if ('_isDestroy' in value && value._isDestroy === true) {
                 res.delete(key);
             }
         }
@@ -469,28 +444,28 @@ export class ResourceManagerOfGPU {
 }
 
 export enum E_resourceKind {
-    vertices = "vertices",
-    indices = "indices",
-    uniformBuffer = "uniformBuffer",
-    entriesToEntriesLayout = "entriesToEntriesLayout",
-    uniformGroupToBindGroup = "uniformGroupToBindGroup",
-    bindGroupToGroupLayout = "bindGroupToGroupLayout",
+    vertices = 'vertices',
+    indices = 'indices',
+    uniformBuffer = 'uniformBuffer',
+    entriesToEntriesLayout = 'entriesToEntriesLayout',
+    uniformGroupToBindGroup = 'uniformGroupToBindGroup',
+    bindGroupToGroupLayout = 'bindGroupToGroupLayout',
     // cameraToEntryOfDepthTT = "cameraToEntryOfDepthTT",
     // RenderPipeline = "RenderPipeline",
     // ComputePipeline = "ComputePipeline",
-    systemGroup0ByID = "systemGroup0ByID",
-    systemGroupToGroupLayout = "systemGroupToGroupLayout",
-    shadowmapOfID2BindGroup = "shadowmapOfID2BindGroup",
-    shadowmapOfBindGroup2Layout = "shadowmapOfBindGroup2Layout",
-    textureOfString = "textureOfString",
-    textureToBindGroupLayoutEntry = "textureToBindGroupLayoutEntry",
-    samplerOfString = "samplerOfString",
-    samplerToBindGroupLayoutEntry = "samplerToBindGroupLayoutEntry",
-    TT2TTP = "TT2TTP",
-    TT2TTPF = "TT2TTPF",
-    shaderModuleOfString = "shaderModuleOfString",
-    weTextureOfString = "weTextureOfString",
-    storageBuffer = "storageBuffer",
+    systemGroup0ByID = 'systemGroup0ByID',
+    systemGroupToGroupLayout = 'systemGroupToGroupLayout',
+    shadowmapOfID2BindGroup = 'shadowmapOfID2BindGroup',
+    shadowmapOfBindGroup2Layout = 'shadowmapOfBindGroup2Layout',
+    textureOfString = 'textureOfString',
+    textureToBindGroupLayoutEntry = 'textureToBindGroupLayoutEntry',
+    samplerOfString = 'samplerOfString',
+    samplerToBindGroupLayoutEntry = 'samplerToBindGroupLayoutEntry',
+    TT2TTP = 'TT2TTP',
+    TT2TTPF = 'TT2TTPF',
+    shaderModuleOfString = 'shaderModuleOfString',
+    weTextureOfString = 'weTextureOfString',
+    storageBuffer = 'storageBuffer',
 }
 
 class _GPUBindGroupEntryImpl implements GPUBindGroupEntry {
@@ -500,13 +475,9 @@ class _GPUBindGroupEntryImpl implements GPUBindGroupEntry {
 class _I_uniformArrayBufferEntryImpl implements I_uniformArrayBufferEntry {
     label!: string;
     binding!: number;
-    type?: "uniform" | "storage" | undefined;
+    type?: 'uniform' | 'storage' | undefined;
     usage?: number | undefined;
     size!: number;
     data!: ArrayBuffer;
     update?: boolean | undefined;
 }
-
-
-
-

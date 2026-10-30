@@ -1,12 +1,12 @@
-import { commmandType } from "../command/base";
-import { CopyCommandT2T } from "../command/copyCommandT2T";
-import { E_GBufferNames } from "../gbuffers/base";
-import { WeGenerateID } from "../math/baseFunction";
-import { I_FeatureModule } from "../organization/featureManager";
-import { Clock } from "../scene/clock";
-import { E_renderPassName } from "../scene/renderManager";
-import { Scene } from "../scene/scene";
-import { Atmosphere } from "./atmosphere";
+import { commmandType } from '../command/base';
+import { CopyCommandT2T } from '../command/copyCommandT2T';
+import { E_GBufferNames } from '../gbuffers/base';
+import { WeGenerateID } from '../math/baseFunction';
+import { I_FeatureModule } from '../organization/featureManager';
+import { Clock } from '../scene/clock';
+import { E_renderPassName } from '../scene/renderManager';
+import { Scene } from '../scene/scene';
+import { Atmosphere } from './atmosphere';
 
 export abstract class AtmosphereRenderBase implements I_FeatureModule {
     UUID: string;
@@ -64,36 +64,40 @@ export abstract class AtmosphereRenderBase implements I_FeatureModule {
      *映射纹理
      */
     initTexture() {
-        this.colorTexture = this.scene.cameraManager.getGBufferTextureByUUID(this.scene.defaultCamera.UUID, E_GBufferNames.color);
-        this.depthTexture = this.scene.cameraManager.getDepthTextureByUUID(this.scene.defaultCamera.UUID);
-        this.copyColorTexture = this.scene.cameraManager.GBufferManager.GBuffer[this.scene.defaultCamera.UUID].finalRender.color;
+        this.colorTexture = this.scene.cameraManager.getGBufferTextureByUUID(
+            this.scene.defaultCamera.UUID,
+            E_GBufferNames.color,
+        );
+        this.depthTexture = this.scene.cameraManager.getDepthTextureByUUID(
+            this.scene.defaultCamera.UUID,
+        );
+        this.copyColorTexture =
+            this.scene.cameraManager.GBufferManager.GBuffer[
+                this.scene.defaultCamera.UUID
+            ].finalRender.color;
     }
 
     getBindGroups(): GPUBindGroup[] {
         return this.bindGroups;
     }
 
-
-
     copyColorCommand() {
         const size = this.scene.surface.size;
-        const copyToColorTexture = new CopyCommandT2T(
-            {
-                A: this.colorTexture,
-                B: this.copyColorTexture,
-                size: { width: size.width, height: size.height },
-                device: this.device
-            }
-        );
+        const copyToColorTexture = new CopyCommandT2T({
+            A: this.colorTexture,
+            B: this.copyColorTexture,
+            size: { width: size.width, height: size.height },
+            device: this.device,
+        });
         return copyToColorTexture;
     }
     getRpd(): GPURenderPassDescriptor {
         this.rpd = {
-            label: "atmoshpere render rpd",
+            label: 'atmoshpere render rpd',
             colorAttachments: [
                 {
-                    loadOp: "clear",
-                    storeOp: "store",
+                    loadOp: 'clear',
+                    storeOp: 'store',
                     view: this.colorTexture,
                 },
             ],
@@ -102,12 +106,17 @@ export abstract class AtmosphereRenderBase implements I_FeatureModule {
     }
     update(_clock?: Clock): void {
         if (this.state == false) {
-            if ((this.colorTexture == undefined || this.depthTexture == undefined) &&
-                this.scene.cameraManager.getGBufferTextureByUUID(this.scene.defaultCamera.UUID, E_GBufferNames.color)) {
+            if (
+                (this.colorTexture == undefined || this.depthTexture == undefined) &&
+                this.scene.cameraManager.getGBufferTextureByUUID(
+                    this.scene.defaultCamera.UUID,
+                    E_GBufferNames.color,
+                )
+            ) {
                 this.onResize();
                 this.generateCommands();
                 this.state = true;
-            };
+            }
         }
         if (this.state == true)
             this.commands.forEach((DC) => {
@@ -115,14 +124,14 @@ export abstract class AtmosphereRenderBase implements I_FeatureModule {
                     this.scene.renderManager.push({
                         command: DC,
                         kind: E_renderPassName.ndc,
-                    })
+                    });
                 } else {
                     this.scene.renderManager.push({
                         command: DC,
                         kind: E_renderPassName.afterDeferRender,
-                    })
+                    });
                 }
-            })
+            });
     }
     async onResize(): Promise<void> {
         this.initTexture();
@@ -130,5 +139,4 @@ export abstract class AtmosphereRenderBase implements I_FeatureModule {
         this.generateBindGroup();
         this.commands[0] = this.copyColorCommand();
     }
-
 }

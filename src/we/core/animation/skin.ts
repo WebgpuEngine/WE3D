@@ -20,31 +20,31 @@
  *      C、update()
  *          a、判断状态：playing执行，
  *             获取骨骼的matrixWorld，并合成世界逆绑定矩阵；
- *             更新ArrayBuffer； 
+ *             更新ArrayBuffer；
  *             在skinsManager的ECS 更新this.parent._jointsMat;
  *               animationManger -> rootManger->skinManger->entityManager =  TRS->>matrixWorld->>InverseMat->>storage
  *          c、stop状态执行stop()，其他状态不执行。
- * 
+ *
  * 根据skeleton中的joints[]，计算出jointsMatricesWorld
  * 2、骨骼蒙皮动画，只负责管理动画。
  *      A、更改动画组list中的状态
  *      B、后续的播放等操作，由AnimationGroupManager和BaseAnimation负责。
- * 
+ *
  * 3、触发
  *  A、skinAnimation.play()由AnimationGroup.play()触发。
  *      animationGroup.play()检查其下的_skinAnimation.
  *  B、skinAnimation.stop()由AnimationGroup.stop()触发。
- * 
+ *
  */
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
-import { I_UUID } from "../organization/root";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { E_AnimationType, E_PlayState } from "./base";
-import { SkinsManager } from "./skinsManager";
-import { IV_Skeleton, Skeleton } from "./skeleton";
-import { NodeObject } from "../organization/nodeObject";
-import { SkinsEntity } from "../entity/animationEntity/skinsEntity";
+import { WeGenerateID, WeGenerateUUID } from '../math/baseFunction';
+import { I_UUID } from '../organization/root';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { E_AnimationType, E_PlayState } from './base';
+import { SkinsManager } from './skinsManager';
+import { IV_Skeleton, Skeleton } from './skeleton';
+import { NodeObject } from '../organization/nodeObject';
+import { SkinsEntity } from '../entity/animationEntity/skinsEntity';
 
 export interface IV_SkinAnimationValue {
     parent: NodeObject;
@@ -85,11 +85,11 @@ export class SkinAnimation implements I_UUID {
         this._id = WeGenerateID();
 
         if (values.parent == undefined) {
-            throw new Error("SkinAnimation: parent is undefined");
+            throw new Error('SkinAnimation: parent is undefined');
         }
 
         if (this.parent.Entity == undefined) {
-            throw new Error("SkinAnimation: parent entity is undefined");
+            throw new Error('SkinAnimation: parent entity is undefined');
         }
         this.entity = this.parent.Entity as SkinsEntity;
 
@@ -102,16 +102,16 @@ export class SkinAnimation implements I_UUID {
                 //设置JointsMatCount
                 this.entity.JointsMatCount = this.skeleton.joints.length;
             }
-        }
-        else if (values.skeleton.joints.length != this.entity.JointsMatCount) {
+        } else if (values.skeleton.joints.length != this.entity.JointsMatCount) {
             if (this.entity.JointsMatCount === 0) {
                 //设置JointsMatCount
                 this.entity.JointsMatCount = values.skeleton.joints.length;
             }
             this.skeleton = new Skeleton(values.skeleton);
-        }
-        else {
-            throw new Error("SkinAnimation: skeleton joints length is not equal to parent entity JointsMatCount");
+        } else {
+            throw new Error(
+                'SkinAnimation: skeleton joints length is not equal to parent entity JointsMatCount',
+            );
         }
         this.entity.WeightsCount = this.weightsCount;
         this.entity.JointsMatCount = this.skeleton.joints.length;
@@ -131,14 +131,14 @@ export class SkinAnimation implements I_UUID {
         this.skeleton = undefined;
         this._isDestroy = true;
     }
-    /** 播放蒙皮动画 
+    /** 播放蒙皮动画
      * 1、播放状态：
      *    A、只有playing和stop（更新，并设置stopped状态）、stoped（不更新）有意义，合成storage的世界矩阵*逆绑定矩阵
      *    B、暂停、reset状态下，等同playing处理或不处理（空置）
-    */
+     */
     play(): void {
         if (this._isDestroy) {
-            console.warn("SkinAnimation play: 蒙皮动画已销毁，无法播放");
+            console.warn('SkinAnimation play: 蒙皮动画已销毁，无法播放');
             return;
         }
         this.playState = E_PlayState.playing;
@@ -154,11 +154,9 @@ export class SkinAnimation implements I_UUID {
     pause(): void {
         if (this.playState == E_PlayState.stoped) {
             return;
-        }
-        else if (this.playState == E_PlayState.pause) {
+        } else if (this.playState == E_PlayState.pause) {
             this.playState = E_PlayState.playing;
-        }
-        else if (this.playState == E_PlayState.playing) {
+        } else if (this.playState == E_PlayState.playing) {
             this.playState = E_PlayState.pause;
         }
     }
@@ -167,7 +165,7 @@ export class SkinAnimation implements I_UUID {
     }
     update(clock: Clock): void {
         if (this._isDestroy) {
-            console.warn("SkinAnimation stop: 蒙皮动画已销毁，无法停止");
+            console.warn('SkinAnimation stop: 蒙皮动画已销毁，无法停止');
             return;
         }
         if (this.playOnce == false) {
@@ -178,13 +176,10 @@ export class SkinAnimation implements I_UUID {
         }
         if (this.playState == E_PlayState.playing) {
             if (this.skeleton == undefined) {
-                console.warn("SkinAnimation: skeleton is undefined");
-            }
-            else {
+                console.warn('SkinAnimation: skeleton is undefined');
+            } else {
                 this.skeleton.update(clock);
             }
         }
-
     }
 }
-

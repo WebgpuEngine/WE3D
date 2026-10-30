@@ -1,11 +1,14 @@
-
 // import { I_EntityBundleOutput } from "../entity/base";
-import { Scene } from "../scene/scene";
-import { I_drawMode, I_drawModeIndexed, I_uniformArrayBufferEntry, isUniformBufferPart } from "./base";
-import { BaseCommand } from "./BaseCommand";
-import { I_VertexBufferEntry } from "./BaseDrawCommand";
-import { createUniformBuffer, createVerticesBuffer } from "./baseFunction";
-
+import { Scene } from '../scene/scene';
+import {
+    I_drawMode,
+    I_drawModeIndexed,
+    I_uniformArrayBufferEntry,
+    isUniformBufferPart,
+} from './base';
+import { BaseCommand } from './BaseCommand';
+import { I_VertexBufferEntry } from './BaseDrawCommand';
+import { createUniformBuffer, createVerticesBuffer } from './baseFunction';
 
 /**
  * 简单绘制命令的uniform组条目类型,只由uniform data 和GPUBindGroupEntry
@@ -17,27 +20,27 @@ export type T_uniformGroupsEntryOfSimple = GPUBindGroupEntry | I_uniformArrayBuf
  * 2、不考虑dynamic的情况，如果有dynamic bind group 情况，使用DrawCommand
  */
 export interface IV_SimpleDrawCommand {
-    scene: Scene,
-    label: string,
-    parent: any,
-    primitive: GPUPrimitiveState,
+    scene: Scene;
+    label: string;
+    parent: any;
+    primitive: GPUPrimitiveState;
     /**
      * 深度测试和深度写入状态,非必须，配套RPD使用
      */
-    depthStencil?: GPUDepthStencilState,
-    drawMode: I_drawMode | I_drawModeIndexed,
+    depthStencil?: GPUDepthStencilState;
+    drawMode: I_drawMode | I_drawModeIndexed;
     /**
      * 1、VSFS都必须存在，默认入口 vs()，fs()
      * 2、必须有targets
      * 3、必须由RPD
      */
     shaderCode: {
-        code: string,
+        code: string;
         // SHT?: I_ShaderTemplate,
         // SHT_Final?: I_ShaderTemplate_Final,
-    },
-    renderPassDescriptor?: GPURenderPassDescriptor | (() => GPURenderPassDescriptor),
-    ColorTargetStat: GPUColorTargetState[],
+    };
+    renderPassDescriptor?: GPURenderPassDescriptor | (() => GPURenderPassDescriptor);
+    ColorTargetStat: GPUColorTargetState[];
     uniforms?: T_uniformGroupsEntryOfSimple[][];
     /**
      * 绘制数据，position,uv,normal,color,indices
@@ -49,20 +52,19 @@ export interface IV_SimpleDrawCommand {
      * 5、indices, 索引数组
      */
     data?: {
-        position?: number[],
-        uv?: number[],
-        normal?: number[],
-        color?: number[],
+        position?: number[];
+        uv?: number[];
+        normal?: number[];
+        color?: number[];
         // vertices?: Map<string, T_vsAttribute>,
-        indices?: number[],
-    },
-
+        indices?: number[];
+    };
 }
 /**
  * 简单绘制命令
- * 
+ *
  * 1、通过shader code 创建 shader module 和 pipeline;
- * 
+ *
  * 2、pipeline layout 为 auto 模式；
  */
 export class SimpleDrawCommand extends BaseCommand {
@@ -75,10 +77,9 @@ export class SimpleDrawCommand extends BaseCommand {
     pipeline!: GPURenderPipeline;
     vertexBuffers: I_VertexBufferEntry[] = [];
     indexBuffer: I_VertexBufferEntry | undefined;
-    indexFormat: GPUIndexFormat = "uint32";
+    indexFormat: GPUIndexFormat = 'uint32';
     bindGroups: (GPUBindGroup | undefined | null)[] = [];
     drawMode: I_drawMode | I_drawModeIndexed;
-
 
     shaderModule!: GPUShaderModule | undefined;
     declare inputValues: IV_SimpleDrawCommand;
@@ -100,8 +101,7 @@ export class SimpleDrawCommand extends BaseCommand {
         this.generateBindGroup();
     }
     destroy(): void {
-        if (this.indexBuffer)
-            this.indexBuffer.buffer.destroy();
+        if (this.indexBuffer) this.indexBuffer.buffer.destroy();
         for (let i = 0; i < this.vertexBuffers.length; i++) {
             this.vertexBuffers[i].buffer.destroy();
         }
@@ -111,68 +111,76 @@ export class SimpleDrawCommand extends BaseCommand {
         this._isDestroy = true;
     }
     createVertexBuffers() {
-        const DC_verticesBufferLayout: GPUVertexBufferLayout[] = [];//vertex.buffers[]
+        const DC_verticesBufferLayout: GPUVertexBufferLayout[] = []; //vertex.buffers[]
 
         let shaderLocation = 0;
         if (this.inputValues.data) {
             for (const i in this.inputValues.data) {
                 const perOne = this.inputValues.data[i as keyof typeof this.inputValues.data];
-                let _GPUVertexBufferLayout: GPUVertexBufferLayout;//当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
+                let _GPUVertexBufferLayout: GPUVertexBufferLayout; //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                 const data = new Float32Array(perOne! as number[]);
-                const gpuBuffer = createVerticesBuffer(this.device, this.label + " position vertex GPUBuffer", data.buffer);
+                const gpuBuffer = createVerticesBuffer(
+                    this.device,
+                    this.label + ' position vertex GPUBuffer',
+                    data.buffer,
+                );
 
-                if (i == "indices") {
+                if (i == 'indices') {
                     this.indexBuffer = {
                         buffer: gpuBuffer,
-                    }
-                }
-                else {
-                    if (i == "position") {
+                    };
+                } else {
+                    if (i == 'position') {
                         //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                         _GPUVertexBufferLayout = {
                             arrayStride: 4 * 3,
-                            attributes: [{
-                                shaderLocation: shaderLocation++,
-                                format: "float32x3",
-                                offset: 0,
-                            }],
-                        }
-                    }
-                    else if (i == "normal") {
+                            attributes: [
+                                {
+                                    shaderLocation: shaderLocation++,
+                                    format: 'float32x3',
+                                    offset: 0,
+                                },
+                            ],
+                        };
+                    } else if (i == 'normal') {
                         //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                         _GPUVertexBufferLayout = {
                             arrayStride: 4 * 3,
-                            attributes: [{
-                                shaderLocation: shaderLocation++,
-                                format: "float32x3",
-                                offset: 0,
-                            }],
-                        }
-                    }
-                    else if (i == "uv") {
+                            attributes: [
+                                {
+                                    shaderLocation: shaderLocation++,
+                                    format: 'float32x3',
+                                    offset: 0,
+                                },
+                            ],
+                        };
+                    } else if (i == 'uv') {
                         //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                         _GPUVertexBufferLayout = {
                             arrayStride: 4 * 2,
-                            attributes: [{
-                                shaderLocation: shaderLocation++,
-                                format: "float32x2",
-                                offset: 0,
-                            }],
-                        }
-                    }
-                    else if (i == "color") {
+                            attributes: [
+                                {
+                                    shaderLocation: shaderLocation++,
+                                    format: 'float32x2',
+                                    offset: 0,
+                                },
+                            ],
+                        };
+                    } else if (i == 'color') {
                         //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
                         _GPUVertexBufferLayout = {
                             arrayStride: 4 * 3,
-                            attributes: [{
-                                shaderLocation: shaderLocation++,
-                                format: "float32x4",
-                                offset: 0,
-                            }],
-                        }
+                            attributes: [
+                                {
+                                    shaderLocation: shaderLocation++,
+                                    format: 'float32x4',
+                                    offset: 0,
+                                },
+                            ],
+                        };
                     }
                     this.vertexBuffers.push({ buffer: gpuBuffer });
-                    DC_verticesBufferLayout.push(_GPUVertexBufferLayout!);      //顺序push顶点Buffer的layout
+                    DC_verticesBufferLayout.push(_GPUVertexBufferLayout!); //顺序push顶点Buffer的layout
                 }
             }
             this.verticesBufferLayout = DC_verticesBufferLayout;
@@ -182,15 +190,15 @@ export class SimpleDrawCommand extends BaseCommand {
         this.createShaderModule(this.inputValues.shaderCode);
         const descriptor: GPURenderPipelineDescriptor = {
             label: this.label,
-            layout: "auto",
+            layout: 'auto',
             vertex: {
                 module: this.shaderModule!,
                 buffers: this.verticesBufferLayout,
-                entryPoint: "vs",
+                entryPoint: 'vs',
             },
             fragment: {
                 module: this.shaderModule!,
-                entryPoint: "fs",
+                entryPoint: 'fs',
                 targets: this.inputValues.ColorTargetStat,
             },
             primitive: this.inputValues.primitive,
@@ -199,7 +207,7 @@ export class SimpleDrawCommand extends BaseCommand {
         this.pipeline = this.device.createRenderPipeline(descriptor);
     }
     createShaderModule(shaderCode: {
-        code: string,
+        code: string;
         // SHT?: I_ShaderTemplate,
         // SHT_Final?: I_ShaderTemplate_Final,
     }) {
@@ -298,17 +306,20 @@ export class SimpleDrawCommand extends BaseCommand {
 
             //创建BindGroup entry
             for (const perEntry of perGroup) {
-
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                 if (isUniformBufferPart(perEntry)) {
                     const label = (perEntry as I_uniformArrayBufferEntry).label;
-                    const buffer = createUniformBuffer(this.device, label, (perEntry as I_uniformArrayBufferEntry).data);
+                    const buffer = createUniformBuffer(
+                        this.device,
+                        label,
+                        (perEntry as I_uniformArrayBufferEntry).data,
+                    );
                     this.uniformGPUBuffers.push(buffer);
                     bindGroupEntry.push({
                         binding: perEntry.binding,
                         resource: {
-                            buffer
-                        }
+                            buffer,
+                        },
                     });
                 }
                 //其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
@@ -319,10 +330,10 @@ export class SimpleDrawCommand extends BaseCommand {
 
             //初始化BindGroup描述
             const bindGroupDesc: GPUBindGroupDescriptor = {
-                label: values.label + " BGD: " + layoutNumber,
+                label: values.label + ' BGD: ' + layoutNumber,
                 layout: this.pipeline.getBindGroupLayout(layoutNumber),
                 entries: bindGroupEntry,
-            }
+            };
             //创建BindGroup
             const bindGroup: GPUBindGroup = this.device.createBindGroup(bindGroupDesc);
             ///////////////////
@@ -332,7 +343,7 @@ export class SimpleDrawCommand extends BaseCommand {
         }
     }
     submit() {
-        const commandBuffer = this.update()
+        const commandBuffer = this.update();
         this.device.queue.submit([commandBuffer]);
     }
     update(): GPUCommandBuffer {
@@ -344,22 +355,20 @@ export class SimpleDrawCommand extends BaseCommand {
             const commandEncoder = device.createCommandEncoder({ label: this.label });
             this.doWithRPD(commandEncoder);
             const commandBuffer = commandEncoder.finish();
-            console.warn("CommandEncoder finish");
+            console.warn('CommandEncoder finish');
 
             return commandBuffer;
-        }
-        else {
-            throw new Error("BaseDrawCommand.update: renderPassDescriptor is undefined");
+        } else {
+            throw new Error('BaseDrawCommand.update: renderPassDescriptor is undefined');
         }
     }
 
     doWithRPD(commandEncoder: GPUCommandEncoder) {
         if (this.renderPassDescriptor !== undefined) {
             let passEncoder: GPURenderPassEncoder;
-            if (typeof this.renderPassDescriptor === "function")
+            if (typeof this.renderPassDescriptor === 'function')
                 passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor());
-            else
-                passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor);
+            else passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor);
             this.doWithPipeline(passEncoder);
             passEncoder.end();
         }
@@ -372,9 +381,13 @@ export class SimpleDrawCommand extends BaseCommand {
         for (const i in this.vertexBuffers) {
             const verticesBuffer = this.vertexBuffers[i];
             if (verticesBuffer.offset !== undefined && verticesBuffer.byteSize !== undefined)
-                passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer, verticesBuffer.offset, verticesBuffer.byteSize);//四个参数： slot, buffer, offset, size
-            else
-                passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer);//四个参数： slot, buffer, offset, size
+                passEncoder.setVertexBuffer(
+                    parseInt(i),
+                    verticesBuffer.buffer,
+                    verticesBuffer.offset,
+                    verticesBuffer.byteSize,
+                ); //四个参数： slot, buffer, offset, size
+            else passEncoder.setVertexBuffer(parseInt(i), verticesBuffer.buffer); //四个参数： slot, buffer, offset, size
         }
 
         for (const i in this.bindGroups) {
@@ -382,30 +395,27 @@ export class SimpleDrawCommand extends BaseCommand {
         }
 
         this.drawInstacnce(passEncoder, this.drawMode as I_drawMode | I_drawModeIndexed);
-
     }
     drawInstacnce(passEncoder: GPURenderPassEncoder, drawMode: I_drawMode | I_drawModeIndexed) {
-        if ("vertexCount" in drawMode) {
+        if ('vertexCount' in drawMode) {
             const count = drawMode.vertexCount;
             let instanceCount = 1;
             let firstIndex = 0;
             let firstInstance = 0;
-            if ("instanceCount" in drawMode) {
+            if ('instanceCount' in drawMode) {
                 instanceCount = drawMode.instanceCount as number;
             }
-            if ("firstIndex" in drawMode) {
+            if ('firstIndex' in drawMode) {
                 firstIndex = drawMode.firstIndex as number;
             }
-            if ("firstInstance" in drawMode) {
+            if ('firstInstance' in drawMode) {
                 firstInstance = drawMode.firstInstance as number;
             }
 
             passEncoder.draw(count, instanceCount, firstIndex, firstInstance);
-
-        }
-        else if ("indexCount" in drawMode) {
+        } else if ('indexCount' in drawMode) {
             if (this.indexBuffer === undefined) {
-                console.warn("indexBuffer is undefined");
+                console.warn('indexBuffer is undefined');
                 return;
             }
             const indexCount = drawMode.indexCount;
@@ -413,24 +423,34 @@ export class SimpleDrawCommand extends BaseCommand {
             let firstIndex = 0;
             let firstInstance = 0;
             let baseVertex = 0;
-            if ("instanceCount" in drawMode) {
+            if ('instanceCount' in drawMode) {
                 instanceCount = drawMode.instanceCount as number;
             }
-            if ("firstIndex" in drawMode) {
+            if ('firstIndex' in drawMode) {
                 firstIndex = drawMode.firstIndex as number;
             }
-            if ("firstInstance" in drawMode) {
+            if ('firstInstance' in drawMode) {
                 firstInstance = drawMode.firstInstance as number;
             }
-            if ("baseVertex" in drawMode) {
+            if ('baseVertex' in drawMode) {
                 baseVertex = drawMode.baseVertex as number;
             }
-            passEncoder.setIndexBuffer(this.indexBuffer.buffer, this.indexFormat, this.indexBuffer.offset, this.indexBuffer.byteSize);// 'uint32');
-            passEncoder.drawIndexed(indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
-        }
-        else {
+            passEncoder.setIndexBuffer(
+                this.indexBuffer.buffer,
+                this.indexFormat,
+                this.indexBuffer.offset,
+                this.indexBuffer.byteSize,
+            ); // 'uint32');
+            passEncoder.drawIndexed(
+                indexCount,
+                instanceCount,
+                firstIndex,
+                baseVertex,
+                firstInstance,
+            );
+        } else {
             // throw new Error("draw 模式设置错误");
-            console.error("draw 模式设置错误,label=", this.inputValues.label);
+            console.error('draw 模式设置错误,label=', this.inputValues.label);
         }
     }
 }

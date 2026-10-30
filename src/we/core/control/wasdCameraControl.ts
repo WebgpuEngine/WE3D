@@ -1,16 +1,14 @@
 import { Vec3, vec3 } from 'wgpu-matrix';
 
-import { CamreaControl, IV_CamreaControl } from "./cameracControl"
+import { CamreaControl, IV_CamreaControl } from './cameracControl';
 
-import * as MathFun from "../math/baseFunction"
+import * as MathFun from '../math/baseFunction';
 import { InputManager } from '../input/inputManager';
-
 
 /**
  * arcball 控制器
  */
 export class WASDCameraControl extends CamreaControl {
-
     // The camera absolute pitch angle
     pitch: number;
     // The camera absolute yaw angle
@@ -34,7 +32,7 @@ export class WASDCameraControl extends CamreaControl {
         super(option, manager);
         this.pitch = 0;
         this.yaw = 0;
-        this.type="wasd";
+        this.type = 'wasd';
     }
 
     // Returns velocity vector
@@ -55,7 +53,6 @@ export class WASDCameraControl extends CamreaControl {
     //     super(option)
     // }
     init() {
-
         this.recalculateAngles(this.camera.BackOfViewMatrix);
         // throw new Error('Method not implemented.');
     }
@@ -96,7 +93,7 @@ export class WASDCameraControl extends CamreaControl {
         this.velocity = MathFun.lerp(
             targetVelocity,
             this.velocity,
-            Math.pow(1 - this.frictionCoefficient, deltaTime)
+            Math.pow(1 - this.frictionCoefficient, deltaTime),
         );
         // Integrate velocity to calculate new position
         //新位置
@@ -105,6 +102,4 @@ export class WASDCameraControl extends CamreaControl {
 
         return true;
     }
-
-
 }

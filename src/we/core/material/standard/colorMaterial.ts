@@ -1,26 +1,25 @@
-import { weColor4, E_lifeState } from "../../base/coreDefine";
-import { isWeColor4 } from "../../base/coreFunction";
+import { weColor4, E_lifeState } from '../../base/coreDefine';
+import { isWeColor4 } from '../../base/coreFunction';
 
-import { T_uniformEntries } from "../../command/base";
-import { Clock } from "../../scene/clock";
+import { T_uniformEntries } from '../../command/base';
+import { Clock } from '../../scene/clock';
 
-import { E_shaderRegisterAlianName } from "../../SHR/include";
+import { E_shaderRegisterAlianName } from '../../SHR/include';
 import {
     E_MaterialType,
     E_materialTypeForBindGroup,
     materialAddGroupBindStringOfMSAA,
     materialAddBindGroupLayoutOfMSAA,
     materialAddBindGroupOfMSAA,
-    IV_BaseStandardMaterial
-} from "../base";
-import { BaseStandardMaterial } from "./baseStandard";
+    IV_BaseStandardMaterial,
+} from '../base';
+import { BaseStandardMaterial } from './baseStandard';
 
 export interface I_ColorMaterial extends IV_BaseStandardMaterial {
     color: weColor4;
 }
 
 export class ColorMaterial extends BaseStandardMaterial {
-
     override inputValues: I_ColorMaterial;
 
     _color: weColor4 = [1, 1, 1, 1];
@@ -40,38 +39,40 @@ export class ColorMaterial extends BaseStandardMaterial {
         this.kind = E_MaterialType.color;
         this.inputValues = input;
         if (isWeColor4(input.color)) {
-
             this._color = input.color;
             let blend: GPUBlendState = {
                 color: {
-                    operation: "add",//操作
-                    srcFactor: "src-alpha",//源
-                    dstFactor: "one-minus-src-alpha",//目标
+                    operation: 'add', //操作
+                    srcFactor: 'src-alpha', //源
+                    dstFactor: 'one-minus-src-alpha', //目标
                 },
                 alpha: {
-                    operation: "add",//操作  
-                    srcFactor: "one",//源
-                    dstFactor: "one-minus-src-alpha",//目标
-                }
+                    operation: 'add', //操作
+                    srcFactor: 'one', //源
+                    dstFactor: 'one-minus-src-alpha', //目标
+                },
             };
             let blendMode = false;
             //全透明，特殊处理，绘制透明像素，按照不透明处理
-            if(input.color[3] ==0.0){
-
+            if (input.color[3] == 0.0) {
             }
             //使用alpha值
             else if (input.color[3] < 1.0) {
                 blendMode = true;
             }
             //使用透明度值
-            else if (input.transparentMode == "blend" && input.alphaTransparent?.blendParams?.opacity !== undefined && input.alphaTransparent?.blendParams?.opacity !== 1.0) {
+            else if (
+                input.transparentMode == 'blend' &&
+                input.alphaTransparent?.blendParams?.opacity !== undefined &&
+                input.alphaTransparent?.blendParams?.opacity !== 1.0
+            ) {
                 blendMode = true;
                 const opacity = input.alphaTransparent.blendParams.opacity;
                 this._color = [
                     this._color[0] * opacity,
                     this._color[1] * opacity,
                     this._color[2] * opacity,
-                    opacity
+                    opacity,
                 ];
                 if (input.alphaTransparent.blendParams.blend !== undefined) {
                     blend = input.alphaTransparent.blendParams.blend;
@@ -83,19 +84,18 @@ export class ColorMaterial extends BaseStandardMaterial {
                 this._transparentMode.alphaParams = {
                     blendParams: {
                         blend: blend,
-                    }
-                }
+                    },
+                };
             }
-        }
-        else {
-            throw new Error("ColorMaterial color is undefined or not Color4");
+        } else {
+            throw new Error('ColorMaterial color is undefined or not Color4');
         }
         this.shtOfMaterialType = {
-            opacityForward: E_shaderRegisterAlianName["material.color.forward"],
-            opacityDefer: E_shaderRegisterAlianName["material.color.forward"],
-            opacityMSAA: E_shaderRegisterAlianName["material.color.Msaa"],
-            opacityMSAAInfo: E_shaderRegisterAlianName["material.color.MsaaInfo"],
-            TT: E_shaderRegisterAlianName["material.color.blend"],
+            opacityForward: E_shaderRegisterAlianName['material.color.forward'],
+            opacityDefer: E_shaderRegisterAlianName['material.color.forward'],
+            opacityMSAA: E_shaderRegisterAlianName['material.color.Msaa'],
+            opacityMSAAInfo: E_shaderRegisterAlianName['material.color.MsaaInfo'],
+            TT: E_shaderRegisterAlianName['material.color.blend'],
         };
     }
     async readyForGPU(): Promise<any> {
@@ -130,14 +130,16 @@ export class ColorMaterial extends BaseStandardMaterial {
     //     }
     // }
 
-    getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
+    getEntriesOfBindGroupLayout(
+        materialType: E_materialTypeForBindGroup,
+    ): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
         const layoutEntries: GPUBindGroupLayoutEntry[] = [];
         const uniformBufferLayout: GPUBindGroupLayoutEntry = {
             binding: binding++,
             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
             buffer: {
-                type: "uniform",
+                type: 'uniform',
             },
         };
         layoutEntries.push(uniformBufferLayout);
@@ -148,7 +150,10 @@ export class ColorMaterial extends BaseStandardMaterial {
         }
         return layoutEntries;
     }
-    getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
+    getEntriesOfBindGroup(
+        materialType: E_materialTypeForBindGroup,
+        uuid?: string,
+    ): T_uniformEntries[] {
         let binding: number = 0;
         const uniformEntries: T_uniformEntries[] = [];
         const uniformBuffer: GPUBindGroupEntry = {
@@ -167,9 +172,7 @@ export class ColorMaterial extends BaseStandardMaterial {
                 const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
-            }
-            else
-                throw new Error("uuid is undefined");
+            } else throw new Error('uuid is undefined');
         }
         return uniformEntries;
     }
@@ -185,9 +188,6 @@ export class ColorMaterial extends BaseStandardMaterial {
         }
         return groupAndBindingString;
     }
-
-
-
 
     /////////////////////////////////////三个透明TT、TTP、TTPF的模板输出/////////////////////////////////////
 
@@ -216,7 +216,7 @@ export class ColorMaterial extends BaseStandardMaterial {
     // /**
     //  * 格式化TP的shader代码，并返回
     //  * @param renderObject 渲染对象，相机或阴影映射
-    //  * @returns 
+    //  * @returns
     //  */
     // formatFS_TTP(renderObject: BaseCamera | I_ShadowMapValueOfDC): I_materialBundleOutput {
     //     let template: I_ShaderTemplate;
@@ -240,10 +240,9 @@ export class ColorMaterial extends BaseStandardMaterial {
         // throw new Error("Method not implemented.");
     }
     saveJSON() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
     loadJSON(_json: any): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
-
 }

@@ -1,13 +1,13 @@
-import { updataOneUniformBuffer } from "../command/baseFunction";
+import { updataOneUniformBuffer } from '../command/baseFunction';
 
 export class CommonResource {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //TTPF 相关部分
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * 透明材质的TTPF的uniform layer 
+     * 透明材质的TTPF的uniform layer
      */
-    uniformOfTTPFSize: number = 16;//需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
+    uniformOfTTPFSize: number = 16; //需要确保 uniform 缓冲区的大小至少等于管线要求的最小大小，且是 16 字节的倍数。
     /**
      * TTPF使用的uniform的ArrayBuffer
      */
@@ -20,8 +20,7 @@ export class CommonResource {
     seLayerOfTTPF(layer: number) {
         const view = new Uint32Array(this.cpuArrayBufferTTPF);
         view[0] = layer;
-        updataOneUniformBuffer(this.device, this.gpuBufferTTPF, this.cpuArrayBufferTTPF)
-
+        updataOneUniformBuffer(this.device, this.gpuBufferTTPF, this.cpuArrayBufferTTPF);
     }
     device: GPUDevice;
     constructor(device: GPUDevice) {

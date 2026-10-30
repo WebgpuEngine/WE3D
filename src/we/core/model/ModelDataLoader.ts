@@ -1,10 +1,8 @@
-import { TypedArray } from "webgpu-utils";
-import { I_indexGPUBufferBundle, I_vsGPUBufferBundle } from "../command/DrawCommandGenerator";
-import { E_accessorUseFor } from "../../model/gltf/base";
+import { TypedArray } from 'webgpu-utils';
+import { I_indexGPUBufferBundle, I_vsGPUBufferBundle } from '../command/DrawCommandGenerator';
+import { E_accessorUseFor } from '../../model/gltf/base';
 
 export abstract class ModelDataLoader {
-
-
     abstract gltfJSON(): any;
 
     /**获取accessor的原始数据
@@ -17,14 +15,17 @@ export abstract class ModelDataLoader {
      * @param useFor accessor的使用场景
      * @returns GPU buffer bundle 或 TypedArray
      */
-    abstract getAccessor(index: number, useFor: E_accessorUseFor): Promise<TypedArray | I_vsGPUBufferBundle | I_indexGPUBufferBundle>;
+    abstract getAccessor(
+        index: number,
+        useFor: E_accessorUseFor,
+    ): Promise<TypedArray | I_vsGPUBufferBundle | I_indexGPUBufferBundle>;
     /**gltf accessor的数组数据
      * @param index accessor的索引
      * @param useFor accessor的使用场景
      * @returns 数组数据
      */
     abstract getAccessorArray(index: number, useFor: E_accessorUseFor): Promise<number[]>;
-    
+
     abstract getImages(): any[] | undefined;
     abstract getImage(index: number): Promise<ImageBitmap | undefined>;
 

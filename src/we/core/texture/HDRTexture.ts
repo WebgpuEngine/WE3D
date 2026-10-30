@@ -1,11 +1,11 @@
-import { E_lifeState } from "../base/coreDefine";
-import { Scene } from "../scene/scene";
-import { I_BaseTexture } from "./base";
-import { BaseTexture } from "./baseTexture";
-import { HdrifyImage, readExr, readHdr, readJpegGainMap } from "hdrify";
+import { E_lifeState } from '../base/coreDefine';
+import { Scene } from '../scene/scene';
+import { I_BaseTexture } from './base';
+import { BaseTexture } from './baseTexture';
+import { HdrifyImage, readExr, readHdr, readJpegGainMap } from 'hdrify';
 
 /**
- * 
+ *
  */
 export interface I_HDRTexture extends I_BaseTexture {
     source: string;
@@ -40,10 +40,10 @@ export class HDRTexture extends BaseTexture {
     constructor(input: I_HDRTexture, device: GPUDevice, scene?: Scene) {
         super(input, device, scene);
         this.inputValues = input;
-        if (typeof input.source !== "string") {
-            throw new Error("HDRTexture source must be string(url)");
+        if (typeof input.source !== 'string') {
+            throw new Error('HDRTexture source must be string(url)');
         }
-        this.textureFormat = input.format || "rgba32float";
+        this.textureFormat = input.format || 'rgba32float';
         this.checkByteInfo(this.textureFormat);
         this.checkTargetFormat(this.textureFormat);
     }
@@ -90,30 +90,26 @@ export class HDRTexture extends BaseTexture {
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.textureOfString.has(source)) {
             this.texture = this.scene.resourcesGPU.textureOfString.get(source);
-        }
-        else {
-            if (typeof source == "string") {
+        } else {
+            if (typeof source == 'string') {
                 let image: HdrifyImage;
 
-                const urlName = source.split("/");
+                const urlName = source.split('/');
                 this.Name = urlName[urlName.length - 1];
-                const extFile = this.Name.split(".")[1];
+                const extFile = this.Name.split('.')[1];
 
                 const response = await fetch(source);
                 const buf = await response.arrayBuffer();
                 const u8buffer = new Uint8Array(buf);
 
-                if (extFile == "hdr") {
+                if (extFile == 'hdr') {
                     image = readHdr(u8buffer);
-                }
-                else if (extFile == "exr") {
+                } else if (extFile == 'exr') {
                     image = readExr(u8buffer);
-                }
-                else if (extFile == "jpg") {
+                } else if (extFile == 'jpg') {
                     image = readJpegGainMap(u8buffer);
-                }
-                else {
-                    throw new Error("HDRTexture source must be hdr, exr, jpg");
+                } else {
+                    throw new Error('HDRTexture source must be hdr, exr, jpg');
                 }
                 this.texture = this.device.createTexture({
                     label: this.Name,
@@ -121,7 +117,10 @@ export class HDRTexture extends BaseTexture {
                     format: this.textureFormat,
                     // mipLevelCount: mipmap ? numMipLevels([width, height]) : mipLevels,
                     // dimension: '2d',
-                    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+                    usage:
+                        GPUTextureUsage.TEXTURE_BINDING |
+                        GPUTextureUsage.COPY_SRC |
+                        GPUTextureUsage.COPY_DST,
                 });
                 // const imageGPUBuffer = this.device.createBuffer({
                 //     size: image.data.byteLength,
@@ -141,9 +140,8 @@ export class HDRTexture extends BaseTexture {
                     { texture: this.texture },
                     image.data.buffer,
                     { bytesPerRow: image.width * this.bytesPerBlock },
-                    { width: image.width, height: image.height }
-                )
-
+                    { width: image.width, height: image.height },
+                );
             }
 
             this.scene.resourcesGPU.textureOfString.set(source, this.texture);
@@ -156,13 +154,12 @@ export class HDRTexture extends BaseTexture {
         return this._state;
     }
     override async initSamplerAndLayout(_input: I_BaseTexture) {
-        if (this.scene.webGPUFeaturesSupported.includes("float32-filterable")) {
+        if (this.scene.webGPUFeaturesSupported.includes('float32-filterable')) {
             this.samplerLayout.type = 'filtering';
-            this.sampler = this.scene.resourcesGPU.getSampler("linear");
-        }
-        else {
+            this.sampler = this.scene.resourcesGPU.getSampler('linear');
+        } else {
             this.samplerLayout.type = 'non-filtering';
-            this.sampler = this.scene.resourcesGPU.getSampler("nearest");
+            this.sampler = this.scene.resourcesGPU.getSampler('nearest');
         }
         // if (input.sampler != undefined) {
         //     if (input.sampler instanceof GPUSampler) {

@@ -2,22 +2,33 @@ import { describe, it, expect } from 'vitest';
 import { RootGPU } from './root';
 
 class TestRoot extends RootGPU {
-    async readyForGPU(): Promise<any> { /* noop */ }
-    _destroy(): void { /* noop */ }
-    updateSelf(): void { /* noop */ }
+    async readyForGPU(): Promise<any> {
+        /* noop */
+    }
+    _destroy(): void {
+        /* noop */
+    }
+    updateSelf(): void {
+        /* noop */
+    }
 }
 
 describe('RootGPU.destroy — P0-1 显存回收', () => {
     it('带 map 字段的资源按 i.key 删除（而非 Map 名字符串）', () => {
         const deletedKeys: any[] = [];
         const fakeMap = {
-            delete: (k: any) => { deletedKeys.push(k); return true; },
+            delete: (k: any) => {
+                deletedKeys.push(k);
+                return true;
+            },
         };
         const resourcesGPU: any = {
             // map 字段指向的 Map 名（真实属性）
             textureOfString: fakeMap,
             getProperty: (k: string) => resourcesGPU[k],
-            delete: () => { /* else 分支，本用例不触发 */ },
+            delete: () => {
+                /* else 分支，本用例不触发 */
+            },
         };
 
         const root = new TestRoot();
@@ -36,7 +47,9 @@ describe('RootGPU.destroy — P0-1 显存回收', () => {
         let deleteArgs: any[] = [];
         const resourcesGPU: any = {
             getProperty: () => undefined,
-            delete: (key: any, type: any) => { deleteArgs = [key, type]; },
+            delete: (key: any, type: any) => {
+                deleteArgs = [key, type];
+            },
         };
 
         const root = new TestRoot();
@@ -51,7 +64,10 @@ describe('RootGPU.destroy — P0-1 显存回收', () => {
     it('destroy() 幂等：重复调用不二次删除', () => {
         const deletedKeys: any[] = [];
         const fakeMap = {
-            delete: (k: any) => { deletedKeys.push(k); return true; },
+            delete: (k: any) => {
+                deletedKeys.push(k);
+                return true;
+            },
         };
         const resourcesGPU: any = {
             textureOfString: fakeMap,
@@ -66,6 +82,6 @@ describe('RootGPU.destroy — P0-1 显存回收', () => {
         root.destroy();
         root.destroy();
 
-        expect(deletedKeys.filter(k => k === 'realResKey')).toHaveLength(1);
+        expect(deletedKeys.filter((k) => k === 'realResKey')).toHaveLength(1);
     });
 });

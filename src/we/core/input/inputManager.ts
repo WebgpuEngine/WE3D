@@ -1,15 +1,15 @@
-import { ECSManager } from "../organization/manager";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { E_InputEvent, E_InputPriority, I_InputRegisterPriorityLayer } from "./base";
-import { BaseInputControl } from "./baseInputControl";
+import { ECSManager } from '../organization/manager';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { E_InputEvent, E_InputPriority, I_InputRegisterPriorityLayer } from './base';
+import { BaseInputControl } from './baseInputControl';
 
 export class InputManager extends ECSManager<BaseInputControl> {
     canvas: HTMLCanvasElement;
     /**E_InputControlType
      * 事件存储
      */
-    event: Array<{ target: any, type: string, callback: (scope: any) => void, option: any }> = [];
+    event: Array<{ target: any; type: string; callback: (scope: any) => void; option: any }> = [];
 
     /**
      * 事件注册列表
@@ -18,75 +18,74 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * 3、event由DOM的EventTarget.addEventListener()触发，多个触发需要在控制器中组合
      */
     registerEventList: {
-        [E_InputEvent.keydown]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.keyup]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.pointerdown]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.pointerup]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.pointermove]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.wheel]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.touchstart]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.touchend]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.touchmove]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.click]: I_InputRegisterPriorityLayer,
-        [E_InputEvent.dblclick]: I_InputRegisterPriorityLayer,
+        [E_InputEvent.keydown]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.keyup]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.pointerdown]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.pointerup]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.pointermove]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.wheel]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.touchstart]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.touchend]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.touchmove]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.click]: I_InputRegisterPriorityLayer;
+        [E_InputEvent.dblclick]: I_InputRegisterPriorityLayer;
     } = {
-            [E_InputEvent.keydown]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.keyup]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.pointerdown]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.pointerup]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.pointermove]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.wheel]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.touchstart]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.touchend]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.touchmove]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.click]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-            [E_InputEvent.dblclick]: {
-                [E_InputPriority.broadcastStart]: [],
-                [E_InputPriority.intercept]: [],
-                [E_InputPriority.broadcastEnd]: [],
-            },
-        }
-
+        [E_InputEvent.keydown]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.keyup]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.pointerdown]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.pointerup]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.pointermove]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.wheel]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.touchstart]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.touchend]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.touchmove]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.click]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+        [E_InputEvent.dblclick]: {
+            [E_InputPriority.broadcastStart]: [],
+            [E_InputPriority.intercept]: [],
+            [E_InputPriority.broadcastEnd]: [],
+        },
+    };
 
     constructor(scene: Scene) {
         super(scene);
@@ -96,10 +95,9 @@ export class InputManager extends ECSManager<BaseInputControl> {
     destroy() {
         for (let i = 0; i < this.event.length; i++) {
             const item = this.event[i];
-            if (item.type == "pointerWheel") {
+            if (item.type == 'pointerWheel') {
                 item.target.removeEventListener(item.type, item.callback, item.option);
-            }
-            else {
+            } else {
                 item.target.removeEventListener(item.type, item.callback);
             }
         }
@@ -129,7 +127,6 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * 11、dblclick事件注册
      */
     init() {
-
         // this.canvas.addEventListener('contextmenu', (e) => {
         //     // 1. 阻止默认右键菜单（核心）
         //     e.preventDefault();
@@ -138,32 +135,62 @@ export class InputManager extends ECSManager<BaseInputControl> {
         //     // console.log('Canvas 右键被点击');
         // });
 
+        const keyDown = (event: KeyboardEvent) => {
+            this.keyDown(event);
+        }; //keydown事件
+        document.addEventListener('keydown', keyDown); //keydown事件注册
+        this.event.push({ target: window, type: 'keyDown', callback: keyDown, option: undefined }); //keydown事件注册
 
-        const keyDown = (event: KeyboardEvent) => { this.keyDown(event); }                    //keydown事件
-        document.addEventListener('keydown', keyDown);                                                //keydown事件注册
-        this.event.push({ target: window, type: "keyDown", callback: keyDown, option: undefined }); //keydown事件注册
-
-        const keyUp = (event: KeyboardEvent) => { this.keyUp(event); }
+        const keyUp = (event: KeyboardEvent) => {
+            this.keyUp(event);
+        };
         document.addEventListener('keyup', keyUp);
-        this.event.push({ target: window, type: "keyUp", callback: keyUp, option: undefined });
+        this.event.push({ target: window, type: 'keyUp', callback: keyUp, option: undefined });
 
-        const pointerDown = (event: PointerEvent) => { this.pointerDown(event); }
+        const pointerDown = (event: PointerEvent) => {
+            this.pointerDown(event);
+        };
         this.canvas.addEventListener('pointerdown', (event) => this.pointerDown(event));
-        this.event.push({ target: this.canvas, type: "pointerDown", callback: pointerDown, option: undefined });
+        this.event.push({
+            target: this.canvas,
+            type: 'pointerDown',
+            callback: pointerDown,
+            option: undefined,
+        });
 
-
-        const pointerUp = (event: PointerEvent) => { this.pointerUp(event); }
+        const pointerUp = (event: PointerEvent) => {
+            this.pointerUp(event);
+        };
         this.canvas.addEventListener('pointerup', pointerUp);
-        this.event.push({ target: this.canvas, type: "pointerUp", callback: pointerUp, option: undefined });
+        this.event.push({
+            target: this.canvas,
+            type: 'pointerUp',
+            callback: pointerUp,
+            option: undefined,
+        });
 
-        const pointerMove = (event: PointerEvent) => { this.pointerMove(event); }
+        const pointerMove = (event: PointerEvent) => {
+            this.pointerMove(event);
+        };
         this.canvas.addEventListener('pointermove', pointerMove);
-        this.event.push({ target: this.canvas, type: "pointerMove", callback: pointerMove, option: undefined });
+        this.event.push({
+            target: this.canvas,
+            type: 'pointerMove',
+            callback: pointerMove,
+            option: undefined,
+        });
         const whellOption = { passive: false };
 
-        const wheel = (event: WheelEvent) => { this.wheel(event); }
+        const wheel = (event: WheelEvent) => {
+            this.wheel(event);
+        };
         this.canvas.addEventListener('wheel', wheel, whellOption);
-        this.event.push({ target: this.canvas, type: "wheel", callback: wheel, option: whellOption });
+        this.event.push({
+            target: this.canvas,
+            type: 'wheel',
+            callback: wheel,
+            option: whellOption,
+        });
 
         // this.canvas.addEventListener('touchstart', this.touchStart);
         // this.canvas.addEventListener('touchend', this.touchEnd);
@@ -177,7 +204,12 @@ export class InputManager extends ECSManager<BaseInputControl> {
                 event.preventDefault();
             };
             this.canvas.addEventListener('contextmenu', stop);
-            this.event.push({ target: this.canvas, type: "contextmenu", callback: pointerDown, option: undefined });
+            this.event.push({
+                target: this.canvas,
+                type: 'contextmenu',
+                callback: pointerDown,
+                option: undefined,
+            });
         }
     }
     /**
@@ -187,16 +219,26 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * @param control 控制器
      * @returns 是否注册成功
      */
-    registerEvent(event: E_InputEvent, priority: E_InputPriority, control: BaseInputControl): boolean {
-        if (event == (E_InputEvent.touchstart || E_InputEvent.touchend || E_InputEvent.touchmove || E_InputEvent.click || E_InputEvent.dblclick)) {
-            throw new Error("目前未实现事件" + event);
+    registerEvent(
+        event: E_InputEvent,
+        priority: E_InputPriority,
+        control: BaseInputControl,
+    ): boolean {
+        if (
+            event ==
+            (E_InputEvent.touchstart ||
+                E_InputEvent.touchend ||
+                E_InputEvent.touchmove ||
+                E_InputEvent.click ||
+                E_InputEvent.dblclick)
+        ) {
+            throw new Error('目前未实现事件' + event);
         }
         if (this.registerEventList[event as E_InputEvent][priority]) {
             this.registerEventList[event as E_InputEvent][priority].push(control);
             return true;
-        }
-        else {
-            console.warn("registerEvent error: event or priority not found")
+        } else {
+            console.warn('registerEvent error: event or priority not found');
             return false;
         }
     }
@@ -206,8 +248,15 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * @param priority 优先级
      * @param entity 控制器
      */
-    removeRegisterEvent(event: E_InputEvent, priority: E_InputPriority, entity: BaseInputControl): void {
-        this.registerEventList[event as E_InputEvent][priority].splice(this.registerEventList[event as E_InputEvent][priority].indexOf(entity), 1);
+    removeRegisterEvent(
+        event: E_InputEvent,
+        priority: E_InputPriority,
+        entity: BaseInputControl,
+    ): void {
+        this.registerEventList[event as E_InputEvent][priority].splice(
+            this.registerEventList[event as E_InputEvent][priority].indexOf(entity),
+            1,
+        );
     }
     /**
      * 清理所有控制器的event注册
@@ -269,7 +318,7 @@ export class InputManager extends ECSManager<BaseInputControl> {
                 [E_InputPriority.intercept]: [],
                 [E_InputPriority.broadcastEnd]: [],
             },
-        }
+        };
     }
     /**
      * 按优先级顺序分发事件：broadcastStart → intercept → broadcastEnd。
@@ -285,7 +334,7 @@ export class InputManager extends ECSManager<BaseInputControl> {
             E_InputPriority.broadcastEnd,
         ];
         for (const layer of order) {
-            for (const item of (layers[layer] ?? [])) {
+            for (const item of layers[layer] ?? []) {
                 const flagStop = item.receiveInput(event, type);
                 if (layer === E_InputPriority.intercept && flagStop) {
                     return; // 独占消费：阻断后续所有层（含 broadcastEnd）
@@ -293,17 +342,16 @@ export class InputManager extends ECSManager<BaseInputControl> {
             }
         }
     }
-    pickupClick() { }
-    pickupMove() { }
+    pickupClick() {}
+    pickupMove() {}
     /**
-     * 
-     * @param clock 
+     *
+     * @param clock
      */
     update(_clock: Clock): void {
         this.checkDestroy();
         //最前面
-        // this.pickupClick();cleanRegisterEvent() 
-
+        // this.pickupClick();cleanRegisterEvent()
     }
     /**
      * 处理键盘事件keyDown
@@ -332,14 +380,14 @@ export class InputManager extends ECSManager<BaseInputControl> {
     pointerDown(this: InputManager, event: PointerEvent) {
         this.dispatch(event, E_InputEvent.pointerdown);
         // 主动夺取焦点
-        // // 主动夺取焦点     
-        this.canvas.focus()
+        // // 主动夺取焦点
+        this.canvas.focus();
         event.preventDefault();
         event.stopPropagation();
     }
     pointerUp(this: InputManager, event: PointerEvent) {
         this.dispatch(event, E_InputEvent.pointerup);
-        document.body.focus()
+        document.body.focus();
         event.preventDefault();
         event.stopPropagation();
     }
@@ -351,7 +399,4 @@ export class InputManager extends ECSManager<BaseInputControl> {
         event.preventDefault();
         event.stopPropagation();
     }
-
-
-
 }

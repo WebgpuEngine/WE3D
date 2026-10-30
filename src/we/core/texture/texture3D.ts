@@ -3,10 +3,10 @@
  * 1、只接受ArrayBuffer类型的数据
  * 2、必须手动指定纹理格式和大小
  */
-import { E_lifeState } from "../base/coreDefine";
-import { Scene } from "../scene/scene";
-import { I_BaseTexture, isGPUSamplerDescriptor } from "./base";
-import { BaseTexture } from "./baseTexture";
+import { E_lifeState } from '../base/coreDefine';
+import { Scene } from '../scene/scene';
+import { I_BaseTexture, isGPUSamplerDescriptor } from './base';
+import { BaseTexture } from './baseTexture';
 
 /**
  * 体积纹理
@@ -23,13 +23,12 @@ import { BaseTexture } from "./baseTexture";
 export interface I_Texture3D extends I_BaseTexture {
     source: ArrayBuffer;
     format: GPUTextureFormat;
-    size: { width: number, height: number, depth: number };
+    size: { width: number; height: number; depth: number };
     // bytesPerBlock: number;
     // blockLength: number;
 }
 
 export class Texture3D extends BaseTexture {
-
     updateSelf(): void {
         // throw new Error("Method not implemented.");
     }
@@ -41,13 +40,18 @@ export class Texture3D extends BaseTexture {
         super(input, device, scene);
         this.inputValues = input;
         if (!(input.source instanceof ArrayBuffer)) {
-            throw new Error("VolumeTexture source must be ArrayBuffer");
+            throw new Error('VolumeTexture source must be ArrayBuffer');
         }
-        if (input.size == undefined || input.size.width <= 0 || input.size.height <= 0 || input.size.depth <= 0) {
-            throw new Error("VolumeTexture size must be greater than 0");
+        if (
+            input.size == undefined ||
+            input.size.width <= 0 ||
+            input.size.height <= 0 ||
+            input.size.depth <= 0
+        ) {
+            throw new Error('VolumeTexture size must be greater than 0');
         }
         if (input.format == undefined) {
-            throw new Error("VolumeTexture format must be defined");
+            throw new Error('VolumeTexture format must be defined');
         }
         this.width = input.size.width;
         this.height = input.size.height;
@@ -60,16 +64,16 @@ export class Texture3D extends BaseTexture {
         console.log(this);
     }
     override checkTargetFormat(format: GPUTextureFormat): {
-        samplerLayout: GPUSamplerBindingLayout,
-        textureLayout: GPUTextureBindingLayout
+        samplerLayout: GPUSamplerBindingLayout;
+        textureLayout: GPUTextureBindingLayout;
     } {
         super.checkTargetFormat(format);
 
-        this.textureLayout.viewDimension = "3d";
+        this.textureLayout.viewDimension = '3d';
         return {
             samplerLayout: this.samplerLayout,
-            textureLayout: this.textureLayout
-        }
+            textureLayout: this.textureLayout,
+        };
     }
     async initTextureAndLayout(): Promise<any> {
         const source = this.inputValues.source;
@@ -85,7 +89,7 @@ export class Texture3D extends BaseTexture {
             { texture: this.texture },
             source,
             { bytesPerRow: this.bytesPerRow, rowsPerImage: this.blocksHigh },
-            [this.width, this.height, this.depth]
+            [this.width, this.height, this.depth],
         );
         return this._state;
     }
@@ -93,15 +97,15 @@ export class Texture3D extends BaseTexture {
         if (input.sampler != undefined) {
             if (input.sampler instanceof GPUSampler) {
                 this.sampler = input.sampler;
-            }
-            else if (typeof input.sampler == "string" && (input.sampler == "linear" || input.sampler == "nearest")) {
+            } else if (
+                typeof input.sampler == 'string' &&
+                (input.sampler == 'linear' || input.sampler == 'nearest')
+            ) {
                 this.sampler = this.scene.resourcesGPU.getSampler(input.sampler);
-            }
-            else if (isGPUSamplerDescriptor(input.sampler)) {
+            } else if (isGPUSamplerDescriptor(input.sampler)) {
                 this.sampler = this.device.createSampler(input.sampler);
             }
-        }
-        else {
+        } else {
             this.sampler = this.device.createSampler({
                 magFilter: 'linear',
                 minFilter: 'linear',

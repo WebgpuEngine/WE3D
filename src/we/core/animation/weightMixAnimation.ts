@@ -29,36 +29,41 @@
  *              每个单体动画都需要进行一次world matrix的计算，然后根据权重混合。
  *      C、parent增加一个属性，_weightAnimation，用于存储权重动画的对象。
  */
-import { Mat4 } from "wgpu-matrix";
-import { Clock } from "../scene/clock";
-import { E_AnimationTargetType, E_InterpolationModes, I_AnimationPlayParams, I_AnimationSampler, I_AnimationWeightForMergePlay } from "./base";
-import { BaseAnimation, IV_AnimationValue } from "./BaseAnimation";
+import { Mat4 } from 'wgpu-matrix';
+import { Clock } from '../scene/clock';
+import {
+    E_AnimationTargetType,
+    E_InterpolationModes,
+    I_AnimationPlayParams,
+    I_AnimationSampler,
+    I_AnimationWeightForMergePlay,
+} from './base';
+import { BaseAnimation, IV_AnimationValue } from './BaseAnimation';
 
 /**todo 权重动画组 */
 export class WeightMixAnimation extends BaseAnimation {
     updateAttribute(): void {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
 
     loop: boolean = false;
 
     constructor(weightPlay: I_AnimationWeightForMergePlay) {
-
         const group = weightPlay.animation as BaseAnimation[];
         if (group.length == 0) {
-            console.error(" 权重动画为空");
+            console.error(' 权重动画为空');
             return;
         }
         if (!(group[0] instanceof BaseAnimation)) {
-            console.error(" 权重动画不能包含动画组");
+            console.error(' 权重动画不能包含动画组');
             return;
         }
         if (weightPlay.timer.length < 1) {
-            console.error(" 权重动画时间为空");
+            console.error(' 权重动画时间为空');
             return;
         }
         if (weightPlay.weight.length % weightPlay.timer.length != 0) {
-            console.error(" 权重动画权重数量必须是时间数量的整数倍");
+            console.error(' 权重动画权重数量必须是时间数量的整数倍');
             return;
         }
 
@@ -86,32 +91,28 @@ export class WeightMixAnimation extends BaseAnimation {
     play(playAnimation?: I_AnimationPlayParams): void {
         if (this.parent.WeightMixAnimation == undefined) {
             this.parent.WeightMixAnimation = this;
-        }
-        else if (this.parent.WeightMixAnimation != this) {
+        } else if (this.parent.WeightMixAnimation != this) {
             this.parent.WeightMixAnimation.stop();
             this.parent.WeightMixAnimation = this;
         }
         super.play(playAnimation);
     }
-    update(_clock: Clock): void {
-
-    }
+    update(_clock: Clock): void {}
     /**
      * 更新权重动画的output
-     * @param weghtsGroup 
-     * @returns 
+     * @param weghtsGroup
+     * @returns
      */
     weightsUpdate(weghtsGroup: I_AnimationWeightForMergePlay): void {
         const group = weghtsGroup.animation;
 
         const _weightList: number[][] = [];
         let targetStride: number = 0;
-        let _target: string = "";
+        let _target: string = '';
         if (group.length == 0) {
-            console.warn("AnimationManager: weightsUpdate: group is empty");
+            console.warn('AnimationManager: weightsUpdate: group is empty');
             return;
-        }
-        else {
+        } else {
             if (group[0] instanceof BaseAnimation) {
                 targetStride = group[0].interpolator.sampler.targetStride;
                 _target = group[0].interpolator.sampler.target;
@@ -123,9 +124,7 @@ export class WeightMixAnimation extends BaseAnimation {
                     }
                 }
             }
-
         }
-
     }
 
     /**
@@ -139,6 +138,6 @@ export class WeightMixAnimation extends BaseAnimation {
      */
     getWorldMatrix(): Mat4 | false {
         // return this.output;
-        throw new Error("WeightMixAnimation: getWorldMatrix: not implemented");
+        throw new Error('WeightMixAnimation: getWorldMatrix: not implemented');
     }
 }

@@ -1,42 +1,37 @@
-import { vec3 } from "wgpu-matrix";
+import { vec3 } from 'wgpu-matrix';
 import {
     BaseGeometry,
     // geometryWireFrameAttribute,
     IV_Gemetry,
     xyz,
-} from "./baseGeometry";
-
+} from './baseGeometry';
 
 export interface optionCylinderGeometry extends IV_Gemetry {
-
     /** 圆柱的顶部半径，默认值是1 */
-    radiusTop?: number,
+    radiusTop?: number;
     /** 圆柱的底部半径，默认值是1 */
-    radiusBottom?: number,
+    radiusBottom?: number;
     /** 圆柱的高度，默认值是1 */
-    height?: number,
+    height?: number;
     /** 圆柱侧面周围的分段数，默认值是32 */
-    radialSegments?: number,
+    radialSegments?: number;
     /** 圆柱侧面的分段数，默认值是1 */
-    heightSegments?: number,
+    heightSegments?: number;
     /**一个Boolean值，指明该圆锥的底面是开放的还是封顶的。默认值为false，即其底面默认是封顶的。 */
-    openEnded?: boolean,
+    openEnded?: boolean;
     /** 第一个分段的起始角度，默认为0 */
-    thetaStart?: number,
+    thetaStart?: number;
     /** 圆柱底面圆扇区的中心角，通常被称为“θ”（西塔）。默认值是2*Pi，这使其成为一个完整的圆柱。 */
-    thetaLength?: number,
+    thetaLength?: number;
 }
 
 export class CylinderGeometry extends BaseGeometry {
-
-
-
     /**box的参数 */
     parameters!: optionCylinderGeometry;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    numberOfVertices !: number;
+    numberOfVertices!: number;
     /** 计算过程中使用，应该改为私有模式，todo*/
-    groupStart !: number;
+    groupStart!: number;
     index = 0;
 
     constructor(input?: optionCylinderGeometry) {
@@ -49,12 +44,12 @@ export class CylinderGeometry extends BaseGeometry {
             openEnded: false,
             thetaStart: 0,
             thetaLength: Math.PI * 2,
-        }
+        };
         if (input == undefined) {
             input = defaultValues;
         }
         super(input);
-        this.type = "CylinderGeometry";
+        this.type = 'CylinderGeometry';
         this.parameters = {
             radiusTop: input.radiusTop ?? defaultValues.radiusTop,
             radiusBottom: input.radiusBottom ?? defaultValues.radiusBottom,
@@ -63,17 +58,18 @@ export class CylinderGeometry extends BaseGeometry {
             heightSegments: input.heightSegments ?? defaultValues.heightSegments,
             openEnded: input.openEnded ?? defaultValues.openEnded,
             thetaStart: input.thetaStart ?? defaultValues.thetaStart,
-            thetaLength: input.thetaLength ?? defaultValues.thetaLength
+            thetaLength: input.thetaLength ?? defaultValues.thetaLength,
         };
-        this.parameters.radialSegments = Math.max(3, Math.floor(this.parameters.radialSegments as number));
+        this.parameters.radialSegments = Math.max(
+            3,
+            Math.floor(this.parameters.radialSegments as number),
+        );
         this.parameters.heightSegments = Math.floor(this.parameters.heightSegments as number);
-        this.init(this.parameters)
+        this.init(this.parameters);
     }
-
 
     /** copy code from threejs */
     init(input: optionCylinderGeometry) {
-
         const _thetaEnd = Math.min(input.thetaStart! + input.thetaLength!, Math.PI);
 
         // buffers
@@ -82,23 +78,16 @@ export class CylinderGeometry extends BaseGeometry {
         const _normals = this.buffer.normal;
         const _uvs = this.buffer.uv;
 
-
         // generate vertices, normals and uvs
 
         this.generateTorso(input);
         if (input.openEnded === false) {
-
             if (input.radiusTop! > 0) this.generateCap(input, true);
             if (input.radiusBottom! > 0) this.generateCap(input, false);
-
         }
-
-
 
         this.createWrieFrame();
         this._already = true;
-
-
     }
 
     generateTorso(input: optionCylinderGeometry) {
@@ -111,12 +100,12 @@ export class CylinderGeometry extends BaseGeometry {
         const _normal: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         const vertex: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
 
         const indexArray = [];
@@ -129,7 +118,6 @@ export class CylinderGeometry extends BaseGeometry {
         // generate vertices, normals and uvs
 
         for (let y = 0; y <= input.heightSegments!; y++) {
-
             const indexRow = [];
 
             const v = y / input.heightSegments!;
@@ -139,7 +127,6 @@ export class CylinderGeometry extends BaseGeometry {
             const radius = v * (input.radiusBottom! - input.radiusTop!) + input.radiusTop!;
 
             for (let x = 0; x <= input.radialSegments!; x++) {
-
                 const u = x / input.radialSegments!;
 
                 const theta = u * input.thetaLength! + input.thetaStart!;
@@ -150,7 +137,7 @@ export class CylinderGeometry extends BaseGeometry {
                 // vertex
 
                 vertex.x = radius * sinTheta;
-                vertex.y = - v * input.height! + input.height! / 2;
+                vertex.y = -v * input.height! + input.height! / 2;
                 vertex.z = radius * cosTheta;
                 vertices.push(vertex.x, vertex.y, vertex.z);
 
@@ -167,21 +154,17 @@ export class CylinderGeometry extends BaseGeometry {
                 // save index of vertex in respective row
 
                 indexRow.push(this.index++);
-
             }
 
             // now save vertices of the row in our index array
 
             indexArray.push(indexRow);
-
         }
 
         // generate indices
 
         for (let x = 0; x < input.radialSegments!; x++) {
-
             for (let y = 0; y < input.heightSegments!; y++) {
-
                 // we use the index array to access the correct indices
 
                 const a = indexArray[y][x];
@@ -197,9 +180,7 @@ export class CylinderGeometry extends BaseGeometry {
                 // update group counter
 
                 groupCount += 6;
-
             }
-
         }
 
         // add a group to the geometry. this will ensure multi material support
@@ -209,7 +190,6 @@ export class CylinderGeometry extends BaseGeometry {
         // calculate new start value for groups
 
         this.groupStart += groupCount;
-
     }
 
     generateCap(input: optionCylinderGeometry, top: boolean) {
@@ -224,27 +204,26 @@ export class CylinderGeometry extends BaseGeometry {
         const uv: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         const vertex: xyz = {
             x: 0,
             y: 0,
-            z: 0
+            z: 0,
         };
         let groupCount = 0;
 
-        const radius = (top === true) ? input.radiusTop! : input.radiusBottom!;
-        const sign = (top === true) ? 1 : - 1;
+        const radius = top === true ? input.radiusTop! : input.radiusBottom!;
+        const sign = top === true ? 1 : -1;
 
         // first we generate the center vertex data of the cap.
         // because the geometry needs one set of uvs per face,
         // we must generate a center vertex per face/segment
 
         for (let x = 1; x <= input.radialSegments!; x++) {
-
             // vertex
 
-            vertices.push(0, input.height! / 2 * sign, 0);
+            vertices.push(0, (input.height! / 2) * sign, 0);
 
             // normal
 
@@ -257,7 +236,6 @@ export class CylinderGeometry extends BaseGeometry {
             // increase index
 
             this.index++;
-
         }
 
         // save the index of the last center vertex
@@ -266,7 +244,6 @@ export class CylinderGeometry extends BaseGeometry {
         // now we generate the surrounding vertices, normals and uvs
 
         for (let x = 0; x <= input.radialSegments!; x++) {
-
             const u = x / input.radialSegments!;
             const theta = u * input.thetaLength! + input.thetaStart!;
 
@@ -276,7 +253,7 @@ export class CylinderGeometry extends BaseGeometry {
             // vertex
 
             vertex.x = radius * sinTheta;
-            vertex.y = input.height! / 2 * sign;
+            vertex.y = (input.height! / 2) * sign;
             vertex.z = radius * cosTheta;
             vertices.push(vertex.x, vertex.y, vertex.z);
 
@@ -286,39 +263,32 @@ export class CylinderGeometry extends BaseGeometry {
 
             // uv
 
-            uv.x = (cosTheta * 0.5) + 0.5;
-            uv.y = (sinTheta * 0.5 * sign) + 0.5;
+            uv.x = cosTheta * 0.5 + 0.5;
+            uv.y = sinTheta * 0.5 * sign + 0.5;
             uvs.push(uv.x, uv.y);
 
             // increase index
 
             this.index++;
-
         }
 
         // generate indices
 
         for (let x = 0; x < input.radialSegments!; x++) {
-
             const c = centerIndexStart + x;
             const i = centerIndexEnd + x;
 
             if (top === true) {
-
                 // face top
 
                 indices.push(i, i + 1, c);
-
             } else {
-
                 // face bottom
 
                 indices.push(i + 1, i, c);
-
             }
 
             groupCount += 3;
-
         }
 
         // add a group to the geometry. this will ensure multi material support
@@ -328,8 +298,5 @@ export class CylinderGeometry extends BaseGeometry {
         // calculate new start value for groups
 
         this.groupStart += groupCount;
-
     }
-
-
 }

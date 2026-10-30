@@ -1,7 +1,7 @@
-import { Clock } from "../../scene/clock";
-import { Scene } from "../../scene/scene";
-import { Atmosphere } from "../atmosphere";
-import { RenderIntegrateAtmoSphere } from "./renderIntegrateAtmoSphere";
+import { Clock } from '../../scene/clock';
+import { Scene } from '../../scene/scene';
+import { Atmosphere } from '../atmosphere';
+import { RenderIntegrateAtmoSphere } from './renderIntegrateAtmoSphere';
 
 export class AtmosphereIntegrate extends Atmosphere {
     renderIntegrate!: RenderIntegrateAtmoSphere;

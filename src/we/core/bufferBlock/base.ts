@@ -18,13 +18,12 @@ export enum E_BOLState {
  * 5、storage：存储变量。
  */
 export enum E_BOLBufferType {
-    static = "static",
-    VS = "VS",
-    dynamicVS = "dynamicVS",
-    uniform = "uniform",
-    storage = "storage",
+    static = 'static',
+    VS = 'VS',
+    dynamicVS = 'dynamicVS',
+    uniform = 'uniform',
+    storage = 'storage',
 }
-
 
 /** BOL Buffer 大小定义接口 */
 export interface I_BolSize {
@@ -39,53 +38,50 @@ export interface I_BolSize {
  * 2、可以通过scene的初始化参数进行调整
  */
 export const V_BolBufferSize: I_BolSize = {
-    [E_BOLBufferType.static]: 1024 * 1024 * 20,//20MB
-    [E_BOLBufferType.VS]: 1024 * 1024 * 10,//10MB
-    [E_BOLBufferType.dynamicVS]: 1024 * 1024 * 10,//10MB
+    [E_BOLBufferType.static]: 1024 * 1024 * 20, //20MB
+    [E_BOLBufferType.VS]: 1024 * 1024 * 10, //10MB
+    [E_BOLBufferType.dynamicVS]: 1024 * 1024 * 10, //10MB
     /**必须是256Byte的倍数*/
-    [E_BOLBufferType.uniform]: 1024 * 1024 * 1,//1MB
-    [E_BOLBufferType.storage]: 1024 * 1024 * 10,//10MB
+    [E_BOLBufferType.uniform]: 1024 * 1024 * 1, //1MB
+    [E_BOLBufferType.storage]: 1024 * 1024 * 10, //10MB
 };
-
 
 /** BOL 重建百分比定义接口 */
 export interface I_BolRebulidPercent {
     /** 静态VS，阈值：10M */
     // static: number,
     /** 运行时静态VS，阈值：0.30 */
-    VS?: number,
+    VS?: number;
     /** 动态VS重建百分比，阈值：0.30 */
-    dynamicVS?: number,
+    dynamicVS?: number;
     /** 统一重建百分比，阈值：0.3 */
-    uniform?: number,
+    uniform?: number;
     /** 存储重建百分比，阈值：0.3 */
-    storage?: number,
+    storage?: number;
 }
-/** BOL 重建百分比默认值 
+/** BOL 重建百分比默认值
  * 1、这里时默认值
  * 2、可以通过scene的初始化参数进行调整
-*/
+ */
 export const V_BolRebulidPercent: I_BolRebulidPercent = {
     VS: 0.3,
     dynamicVS: 0.3,
     uniform: 0.2,
     storage: 0.1,
-}
-
-
+};
 
 /** BOL合并更新间距阈值定义接口 */
 export interface I_BolStrideSizeOfUpdate {
     /** 静态VS，阈值：10M */
     // static?: number,
     /** 运行时静态VS，阈值：64K*4 */
-    VS?: number,
+    VS?: number;
     /** 动态VS，阈值：64K*4 */
-    dynamicVS?: number,
+    dynamicVS?: number;
     /** 统一变量，阈值：1K */
-    uniform?: number,
+    uniform?: number;
     /** 存储变量，阈值：64K */
-    storage?: number,
+    storage?: number;
 }
 
 /** BOL 合并更新间距阈值
@@ -99,11 +95,11 @@ export const V_BolStrideSizeOfUpdate: I_BolStrideSizeOfUpdate = {
     VS: 4 * 64 * 1024,
     /** 动态VS，阈值：64K*4 */
     dynamicVS: 1 * 64 * 1024,
-    /** 统一变量，阈值：1K 
+    /** 统一变量，阈值：1K
      * 最小：256Byte
-    */
+     */
     uniform: 1 * 1024,
     /** 存储变量，阈值：64K */
     storage: 1 * 64 * 1024,
     // storage: 256,
-}
+};

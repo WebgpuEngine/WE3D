@@ -1,17 +1,24 @@
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
-import { NodeObject } from "../organization/nodeObject";
-import { I_UUID } from "../organization/root";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { AnimationManager } from "./animationManager";
-import { E_AnimationPlayType, E_AnimationTargetType, E_AnimationType, E_PlayState, I_AnimationPlayParams, I_AnimationSampler, isI_AnimationPlayParams } from "./base";
-import { Interpolator } from "./interpolator";
-
+import { WeGenerateID, WeGenerateUUID } from '../math/baseFunction';
+import { NodeObject } from '../organization/nodeObject';
+import { I_UUID } from '../organization/root';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { AnimationManager } from './animationManager';
+import {
+    E_AnimationPlayType,
+    E_AnimationTargetType,
+    E_AnimationType,
+    E_PlayState,
+    I_AnimationPlayParams,
+    I_AnimationSampler,
+    isI_AnimationPlayParams,
+} from './base';
+import { Interpolator } from './interpolator';
 
 export interface IV_AnimationValue {
-    parent: NodeObject,
-    sampler: I_AnimationSampler,
-    name?: string,
+    parent: NodeObject;
+    sampler: I_AnimationSampler;
+    name?: string;
 }
 
 export abstract class BaseAnimation implements I_UUID {
@@ -23,7 +30,7 @@ export abstract class BaseAnimation implements I_UUID {
     set Loop(loop: boolean) {
         this.playParams.mode = {
             type: E_AnimationPlayType.loop,
-        }
+        };
         this._loop = loop;
     }
     get Loop(): boolean {
@@ -38,7 +45,7 @@ export abstract class BaseAnimation implements I_UUID {
         return this._speed;
     }
     /** 类型 */
-    type: string = "animation";
+    type: string = 'animation';
 
     /** 动画类型 */
     kind!: E_AnimationType;
@@ -53,28 +60,27 @@ export abstract class BaseAnimation implements I_UUID {
 
     name: string | undefined;
 
-    /** 输出值 
+    /** 输出值
      * 说明：
      * 1、关键帧：position,scale,rotation,quaternion的输出值。
      *      A、如果存在
      * 2、骨骼动画：输出缓缓后的worldMatrix。
-    */
+     */
     output: number[] = [];
 
     /** 播放状态 */
     playState: E_PlayState = E_PlayState.stoped;
 
-    /** todo 20260204 
-     * 是否有权重 
-     * 
+    /** todo 20260204
+     * 是否有权重
+     *
      * 说明：
-     * 
+     *
      *   1、如果为true，存在动画间的权重，会根据权重混合播放。在update()中不更新NodeObject的属性,有NodeOject负责矩阵的混合。
-     *  
+     *
      *  2、如果为false，不存在动画间的权重，会根据时间直接播放。
-    */
+     */
     hasWeight: boolean = false;
-
 
     /** 播放参数 */
     playParams: I_AnimationPlayParams = {
@@ -123,7 +129,7 @@ export abstract class BaseAnimation implements I_UUID {
     }
     check(): boolean {
         if (this._isDestroy) {
-            console.warn("BaseAnimation play: 动画已销毁，无法播放");
+            console.warn('BaseAnimation play: 动画已销毁，无法播放');
             return false;
         }
         return true;
@@ -138,7 +144,7 @@ export abstract class BaseAnimation implements I_UUID {
      * 2、stopToFirst为true时，播放完成后，会停在第一帧（需要根据情况实现，以及在stop()中调用）
      */
     abstract updateAttribute(): void;
-    play(playAnimation?: I_AnimationPlayParams | "loop" | number): void {
+    play(playAnimation?: I_AnimationPlayParams | 'loop' | number): void {
         if (!this.check()) {
             return;
         }
@@ -155,20 +161,17 @@ export abstract class BaseAnimation implements I_UUID {
         let count = 1;
 
         if (playAnimation != undefined) {
-
-            if (typeof playAnimation == "number") {
+            if (typeof playAnimation == 'number') {
                 count = playAnimation;
                 this.playParams.mode = {
                     type: E_AnimationPlayType.count,
                     count: count,
-                }
-            }
-            else if (playAnimation == "loop") {
+                };
+            } else if (playAnimation == 'loop') {
                 this.playParams.mode = {
                     type: E_AnimationPlayType.loop,
-                }
-            }
-            else if (isI_AnimationPlayParams(playAnimation)) {
+                };
+            } else if (isI_AnimationPlayParams(playAnimation)) {
                 this.playParams = {
                     mode: playAnimation.mode ?? this.playParams.mode,
                     speed: playAnimation.speed ?? this.playParams.speed,
@@ -181,19 +184,17 @@ export abstract class BaseAnimation implements I_UUID {
                     this.playParams.stopToFirst = playAnimation.stopToFirst;
                 }
                 if (this.playParams.mode.type == E_AnimationPlayType.loop) {
-                    this.Loop = true
-                }
-                else if (this.playParams.mode.type == E_AnimationPlayType.count) {
+                    this.Loop = true;
+                } else if (this.playParams.mode.type == E_AnimationPlayType.count) {
                     count = this.playParams.mode.count ?? 1;
-                }
-                else if (this.playParams.mode.type == E_AnimationPlayType.time) {
+                } else if (this.playParams.mode.type == E_AnimationPlayType.time) {
                     if (this.playParams.mode.time == undefined) {
-                        console.warn("播放时长未设置，按照一次播放");
+                        console.warn('播放时长未设置，按照一次播放');
                         //按照一次播放
                         this.playParams.mode = {
                             type: E_AnimationPlayType.count,
                             count: 1,
-                        }
+                        };
                     }
                 }
             }
@@ -207,9 +208,9 @@ export abstract class BaseAnimation implements I_UUID {
         //1. 停止interpolator
         // this.interpolator.finished = true;
         if (this.playParams.stopToFirst) {
-            this.interpolator.setTimerToStart();//设置定时器到开始
-            this.interpolator.updateOutput();//回到第一帧
-            this.updateAttribute();//更新属性到第一帧
+            this.interpolator.setTimerToStart(); //设置定时器到开始
+            this.interpolator.updateOutput(); //回到第一帧
+            this.updateAttribute(); //更新属性到第一帧
         }
         //2. 改变状态
         this.playState = E_PlayState.stoped;
@@ -217,23 +218,21 @@ export abstract class BaseAnimation implements I_UUID {
     /**
      * 暂停播放
      * 1、interpolator是通过this.update()更新的，所以暂停播放就是在update中判断状态为pause时，不更新interpolator
-     * @param clock 
+     * @param clock
      */
     pause(): void {
         if (this.playState == E_PlayState.stoped) {
             return;
-        }
-        else if (this.playState == E_PlayState.pause) {
+        } else if (this.playState == E_PlayState.pause) {
             this.playState = E_PlayState.playing;
-        }
-        else if (this.playState == E_PlayState.playing) {
+        } else if (this.playState == E_PlayState.playing) {
             this.playState = E_PlayState.pause;
         }
     }
     /**
      * 重置播放
      * 1、interpolator是通过this.update()更新的，所以重置播放就是在update中判断状态为reset时，重置interpolator
-     * @param clock 
+     * @param clock
      */
     reset(): void {
         //1. 重置
@@ -249,5 +248,4 @@ export abstract class BaseAnimation implements I_UUID {
     getSampler(): I_AnimationSampler {
         return this.interpolator.sampler;
     }
-
 }
