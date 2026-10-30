@@ -37,7 +37,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ✅ 已完成 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ✅ 已完成 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
 | 7 | CI | GitHub Actions 门禁 + 发布 | ✅ 已完成 | [engineering-plan §Phase7](./engineering-plan.md#phase-7--cigithub-actions) |
-| 8 | 错误修复落位 | 依托 Phase3/4 保护分批修 P0 | ⬜ 未开始 | [engineering-plan §Phase8](./engineering-plan.md#phase-8--错误修复落位依托-phase34-保护分批) |
+| 8 | 错误修复落位 | 依托 Phase3/4 保护分批修 P0 | ✅ 全部完成 | [engineering-plan §Phase8](./engineering-plan.md#phase-8--错误修复落位依托-phase34-保护分批) |
 
 ## 三、各阶段实施记录
 
