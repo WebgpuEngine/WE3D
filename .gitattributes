@@ -1,0 +1,23 @@
+# 统一换行符为 LF，与 Prettier 的 endOfLine:lf 对齐，消除 Windows 下 CRLF 警告
+* text=auto eol=lf
+
+# 显式标记二进制资产，避免被当作文本规范化（内容改动换行无意义且易损坏）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.bmp binary
+*.hdr binary
+*.ktx2 binary
+*.glb binary
+*.basis binary
+*.bin binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.7z binary
+*.gz binary
