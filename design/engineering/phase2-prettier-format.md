@@ -3,7 +3,7 @@
 > 关联总方案：`./engineering-plan.md` §Phase2
 > 跟踪记录：`./implementation-log.md` §Phase 2
 > 先行文档：`./phase2-eslint-prettier.md`（Phase 2 ESLint + Prettier 现状分析与方案，状态 ✅ 已完成）
-> 状态：🔵 方案已定（2026-10-30 审核：3.2 扩大 .prettierignore 定为默认长期方式，待执行 format）
+> 状态：✅ 已执行（2026-10-30；实际格式化 290 文件，lint/typecheck 通过，commit 0a1468d）
 > 背景：`phase2-eslint-prettier.md` 步骤 6 把 Prettier `format` 延后到「所有 lint 步骤完成、项目可运行正确之后」；当前 Phase 8 已全部完成、项目稳定，时机已到。
 
 ## 一、现状（`format:check` 实测，2026-10-30）
@@ -89,3 +89,13 @@ AGENTS.md
 - `public/` 含运行时资产（含非文本），格式化无意义且有风险，已排除。
 - 若采用 3.2，注意 `.prettierignore` 排除项需随项目结构调整复查。
 - `scripts/` `tests/` `根配置` 等虽属工程文件，但不在本次选定的范围内；如后续需统一，可再扩范围。
+
+## 五、执行记录（2026-10-30）
+
+- 配置落地：`.prettierignore` 已扩大排除 `design/` `public/` `.claude/` `tests/` `scripts/` `.github/` 及根配置（commit `fc53968`）。
+- 实际格式化：`npm run format`（`prettier --write .`）改动 **290 个文件**（+35705 / -15981）：
+  - `src/we/` 199、`e2e-cases/` 90、`src/` 根 3（`counter.ts` / `main.ts` / `style.css`，dev 入口与样式，非排除项，顺带格式化）。
+  - `design/` `public/` `.claude/` `tests/` `scripts/` `.github/` 及根配置**未被触碰**（已排除）。
+- 验证：`npm run lint` 0 error、`npm run typecheck` 0 错误（format 仅改排版，未引入逻辑 / lint 问题）。
+- 提交：**commit `0a1468d`**（格式改动单独提交，与业务隔离）。
+- 备注：commit 时报大量 `LF will be replaced by CRLF` 警告——根因是 Git `core.autocrlf`（Windows 默认）与 Prettier `endOfLine:lf` 冲突（Prettier 写 LF，Git checkout 会转 CRLF，下次 `format:check` 可能误报）。建议后续加 `.gitattributes`（`* text=auto eol=lf` 或针对 `*.ts` 等设 `eol=lf`）统一换行符并消除警告；本次未处理（非阻塞）。
