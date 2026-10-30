@@ -271,6 +271,28 @@ export class InputManager extends ECSManager<BaseInputControl> {
             },
         }
     }
+    /**
+     * 按优先级顺序分发事件：broadcastStart → intercept → broadcastEnd。
+     * 仅 intercept 层的控制器返回 true 时独占消费并提前返回，阻断后续所有层（含 broadcastEnd）。
+     * @param event DOM 事件对象
+     * @param type 事件类型
+     */
+    private dispatch(event: Event, type: E_InputEvent): void {
+        const layers = this.registerEventList[type];
+        const order: E_InputPriority[] = [
+            E_InputPriority.broadcastStart,
+            E_InputPriority.intercept,
+            E_InputPriority.broadcastEnd,
+        ];
+        for (const layer of order) {
+            for (const item of (layers[layer] ?? [])) {
+                const flagStop = item.receiveInput(event, type);
+                if (layer === E_InputPriority.intercept && flagStop) {
+                    return; // 独占消费：阻断后续所有层（含 broadcastEnd）
+                }
+            }
+        }
+    }
     pickupClick() { }
     pickupMove() { }
     /**
@@ -292,30 +314,12 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * @param event 键盘事件
      */
     keyDown(this: InputManager, event: KeyboardEvent) {
-        for (const i in this.registerEventList[E_InputEvent.keydown]) {  //遍历keydown的"优先级"层,三层：优先广播，独占，最后广播
-            for (const j in this.registerEventList[E_InputEvent.keydown][i as E_InputPriority]) {//遍历当前优先级内的所有注册的"控制器"。例如：arcball，wasd
-                const item = this.registerEventList[E_InputEvent.keydown][i as E_InputPriority][j];//input 控制器
-                const flagStop = item.receiveInput(event, E_InputEvent.keydown);  //调用控制器的keyDown方法，返回是否停止后续处理
-                if (j == E_InputPriority.intercept) //独占优先级
-                    if (flagStop) { //如果独占优先级的控制器返回true，停止后续处理
-                        break;
-                    }
-            }
-        }
+        this.dispatch(event, E_InputEvent.keydown);
         // event.preventDefault();
         // event.stopPropagation();
     }
     keyUp(this: InputManager, event: KeyboardEvent) {
-        for (const i in this.registerEventList[E_InputEvent.keyup]) {
-            for (const j in this.registerEventList[E_InputEvent.keyup][i as E_InputPriority]) {
-                const item = this.registerEventList[E_InputEvent.keyup][i as E_InputPriority][j];
-                const flagStop = item.receiveInput(event, E_InputEvent.keyup);
-                if (j == E_InputPriority.intercept)
-                    if (flagStop) {
-                        break;
-                    }
-            }
-        }
+        this.dispatch(event, E_InputEvent.keyup);
         // event.preventDefault();
         // event.stopPropagation();
     }
@@ -326,16 +330,7 @@ export class InputManager extends ECSManager<BaseInputControl> {
      * @param event 鼠标事件
      */
     pointerDown(this: InputManager, event: PointerEvent) {
-        for (const i in this.registerEventList[E_InputEvent.pointerdown]) {
-            for (const j in this.registerEventList[E_InputEvent.pointerdown][i as E_InputPriority]) {
-                const item = this.registerEventList[E_InputEvent.pointerdown][i as E_InputPriority][j];
-                const flagStop = item.receiveInput(event, E_InputEvent.pointerdown);
-                if (j == E_InputPriority.intercept)
-                    if (flagStop) {
-                        break;
-                    }
-            }
-        }
+        this.dispatch(event, E_InputEvent.pointerdown);
         // 主动夺取焦点
         // // 主动夺取焦点     
         this.canvas.focus()
@@ -343,43 +338,16 @@ export class InputManager extends ECSManager<BaseInputControl> {
         event.stopPropagation();
     }
     pointerUp(this: InputManager, event: PointerEvent) {
-        for (const i in this.registerEventList[E_InputEvent.pointerup]) {
-            for (const j in this.registerEventList[E_InputEvent.pointerup][i as E_InputPriority]) {
-                const item = this.registerEventList[E_InputEvent.pointerup][i as E_InputPriority][j];
-                const flagStop = item.receiveInput(event, E_InputEvent.pointerup);
-                if (j == E_InputPriority.intercept)
-                    if (flagStop) {
-                        break;
-                    }
-            }
-        }
+        this.dispatch(event, E_InputEvent.pointerup);
         document.body.focus()
         event.preventDefault();
         event.stopPropagation();
     }
     pointerMove(this: InputManager, event: PointerEvent) {
-        for (const i in this.registerEventList[E_InputEvent.pointermove]) {
-            for (const j in this.registerEventList[E_InputEvent.pointermove][i as E_InputPriority]) {
-                const item = this.registerEventList[E_InputEvent.pointermove][i as E_InputPriority][j];
-                const flagStop = item.receiveInput(event, E_InputEvent.pointermove);
-                if (j == E_InputPriority.intercept)
-                    if (flagStop) {
-                        break;
-                    }
-            }
-        }
+        this.dispatch(event, E_InputEvent.pointermove);
     }
     wheel(this: InputManager, event: WheelEvent) {
-        for (const i in this.registerEventList[E_InputEvent.wheel]) {
-            for (const j in this.registerEventList[E_InputEvent.wheel][i as E_InputPriority]) {
-                const item = this.registerEventList[E_InputEvent.wheel][i as E_InputPriority][j];
-                const flagStop = item.receiveInput(event, E_InputEvent.wheel);
-                if (j == E_InputPriority.intercept)
-                    if (flagStop) {
-                        break;
-                    }
-            }
-        }
+        this.dispatch(event, E_InputEvent.wheel);
         event.preventDefault();
         event.stopPropagation();
     }

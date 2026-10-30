@@ -142,17 +142,17 @@ multisampleFlag = descriptor.multisample ? stableStringify(descriptor.multisampl
 
 ---
 
-### P0-2　input `intercept` 优先级完全失效（行为变更，放最后）　[Batch C]
+### P0-2　input `intercept` 优先级完全失效（行为变更）　[Batch C] ✅ 已完成
 
-**位置**：`src/we/core/input/inputManager.ts:295-380`（11 个事件各一段近似代码）
+**位置**：`src/we/core/input/inputManager.ts`（6 个已实现事件 `keyDown/keyUp/pointerDown/pointerUp/pointerMove/wheel` 各一段近似代码；touch/click/dblclick 5 个事件已注释未实现）
 
 **问题**：`for (const j in registerEventList[type][i])` 中 `j` 是**控制器下标**（`"0"/"1"...`），而 `if (j == E_InputPriority.intercept)` 拿下标去比**字符串枚举值** `"intercept"`，永不等 → `intercept` 层「独占消费、阻断后续广播」的设计从未生效（表现为拖拽 UI 时相机仍跟着转）。
 
-**修复（推荐重构，顺带去重 11 段）**：抽一个 `dispatch(event, type)`：
+**修复**：抽 `dispatch(event, type)`，6 处事件入口统一走它：
 ```ts
-private dispatch(event: Event, type: E_InputEvent) {
+private dispatch(event: Event, type: E_InputEvent): void {
     const layers = this.registerEventList[type];
-    const order = [E_InputPriority.broadcastStart, E_InputPriority.intercept, E_InputPriority.broadcastEnd];
+    const order: E_InputPriority[] = [E_InputPriority.broadcastStart, E_InputPriority.intercept, E_InputPriority.broadcastEnd];
     for (const layer of order) {
         for (const item of (layers[layer] ?? [])) {
             const flagStop = item.receiveInput(event, type);
@@ -161,11 +161,11 @@ private dispatch(event: Event, type: E_InputEvent) {
     }
 }
 ```
-11 处 `for...for...if` 块替换为 `this.dispatch(event, E_InputEvent.keydown);` 等单行调用。语义：仅 `intercept` 层可消费并提前返回；其余层正常广播。
+6 处 `for...for...if` 块替换为 `this.dispatch(event, E_InputEvent.xxx)` 单行调用。语义：仅 `intercept` 层可消费并提前返回；其余层正常广播。
 
-**验证**：Vitest 单测——注册一个 `intercept` 层 handler 返回 `true`，断言 `broadcastEnd` 层 handler 不被调用；反向（返回 `false`）断言 `broadcastEnd` 仍被调用。**回归**：Playwright 跑所有用到 UI 交互的示例（UI 面板 + Orbit 相机共存场景），确认「UI 独占时相机不再被拖动」符合预期——这是唯一会暴露行为变更的地方。
+**验证**：Vitest 单测（`src/we/core/input/inputManager.test.ts`，TDD：先红后绿）——(a) `intercept` 返回 `true` → `broadcastEnd` 不被调用（修复前失败：`['intercept','broadcastEnd']`）；(b) 返回 `false` → `broadcastEnd` 仍被调用；(c) 广播顺序 `broadcastStart → intercept → broadcastEnd`。
 
-**风险**：高（首次真正启用 intercept 语义）。务必最后做，且配齐 UI 示例 e2e 基线。
+**风险说明（实测核对后由「高」下调）**：初版标「高」是担心行为变更，但实测 `src/we` 当前**没有任何控制器注册到 `intercept` 层**（`cameracControl.ts` 全部在 `broadcastEnd`、`pickup.ts` 全部在 `broadcastStart`），且 `e2e-cases/` 里**没有 UI 交互用例**（均为纯渲染）。因此本次启用 intercept 语义对现有功能零影响，Playwright UI 专项回归**无需执行**（无对应用例）。「拖拽 UI 时相机不再跟转」将在未来 UI 控制器注册 `intercept` 层时自然生效。
 
 ---
 
@@ -192,9 +192,12 @@ private dispatch(event: Event, type: E_InputEvent) {
         - 代码：`nodeObject.ts` else 分支补 `this.updateSelfAttribute()`（`false` 分支本已每帧调用，无需改）；修正初版「只在 matrix 变化时调用」的错误描述。
         - 单测：`src/we/core/organization/nodeObject.test.ts`（`DirectInWorldSpace=true`：原点 → `Box3s.length===1`；z=5 → AABB 平移 min.z=4/max.z=6）。
   - [ ] 跑 `ci:no-e2e` + Playwright 基线；commit + push
-- [ ] **Batch C**
-  - [ ] P0-2：`inputManager` 抽 `dispatch` 重构 11 段；补单测
-  - [ ] Playwright UI 交互示例专项回归；commit + push
+- [x] **Batch C**
+  - [x] P0-2：`inputManager` 抽 `dispatch` 重构 6 段（其余 5 个事件已注释未实现）；补单测
+        - 代码：`inputManager.ts` 新增 `private dispatch(event, type)`，6 处入口（keyDown/keyUp/pointerDown/pointerUp/pointerMove/wheel）替换为单行 `this.dispatch(event, E_InputEvent.xxx)`。
+        - 单测：`src/we/core/input/inputManager.test.ts`（TDD 先红后绿）：intercept true→阻断 broadcastEnd / false→不阻断 / 顺序 broadcastStart→intercept→broadcastEnd。
+        - 回归：实测无控制器注册 intercept 层、e2e-cases 无 UI 用例 → Playwright UI 专项回归无需执行（见章节风险说明）。
+  - [x] 跑 `ci:no-e2e`（19 node 单测 + 4 浏览器 device 全绿）；commit + push
 
 ## 四、不在本次范围（记录备查）
 
