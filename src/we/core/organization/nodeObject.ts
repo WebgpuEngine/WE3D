@@ -763,6 +763,7 @@ export class NodeObject extends NodeSpace {
             else {
                 mat4.copy(this.matrix, this.matrixWorld);
                 this.updateWorldPosition(); //更新 world position
+                this.updateSelfAttribute(); //更新自身属性，AABB（P0-7：直接世界坐标节点此前未进 scene.Box3s）
             }
         }
 

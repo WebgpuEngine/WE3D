@@ -115,34 +115,30 @@ multisampleFlag = descriptor.multisample ? stableStringify(descriptor.multisampl
 
 ---
 
-### P0-7　`Box3s` 每帧重置却只在 matrix 变化时累加 → 包围盒不完整　[Batch B]
+### P0-7　`DirectInWorldSpace` 节点永不进 `scene.Box3s` → 包围盒不完整　[Batch B] ✅ 已完成
 
-**位置**：`src/we/core/organization/nodeObject.ts:747-766`（`update`）；`scene.ts:764`（`onBeforeUpdate` 每帧 `this.Box3s = []`）
+**位置**：`src/we/core/organization/nodeObject.ts:747-767`（`update`）；`scene.ts:764`（`onBeforeUpdate` 每帧 `this.Box3s = []`）
 
-**问题**：`scene.Box3s` **每帧被清空重建**（scene.ts:764），因此 `updateSelfAttribute()`（nodeObject:792-801，向 `scene.Box3s.push` 当前节点 AABB）必须**每帧每个节点都调用**。但当前：
-- `:760` 的 `updateSelfAttribute()` 只在 `needUpdateWorldMatrix` 为真时调用 → matrix 未变的帧该节点 AABB 不进 `Box3s` → 当帧 `Box3s` 缺失。
-- `:763-765` `DirectInWorldSpace` 分支完全没调用 `updateSelfAttribute()` → 世界坐标节点（物理驱动等）永不进 `Box3s`。
-依赖 `Box3s` 的 BVH / 包围盒剔除会出错。
+**问题（2026-10-30 实测核对，修正初版描述）**：`scene.Box3s` **每帧清空重建**（scene.ts:764），因此 `updateSelfAttribute()`（nodeObject:792-803，把 `Entity.boundingBox` 变换到 world 后 push 进 `scene.Box3s`）必须**每帧每个节点都调用**。实际代码：
+- `DirectInWorldSpace === false`（树状层级）分支：`updateSelfAttribute()` 已在 `needUpdateWorldMatrix` 守卫**之外**（`:760`），每帧无条件调用——初版文档「只在 matrix 变化时调用」的描述有误，此分支无需改。
+- `DirectInWorldSpace === true`（直接世界坐标，`else` 分支 `:763-766`）：**完全没有调用** `updateSelfAttribute()` → 这类节点的 AABB 永不进 `scene.Box3s`。
 
-**修复**：把 `updateSelfAttribute()` 移出「仅 matrix 变化」守卫，在**两个分支都无条件调用**（matrixWorld 在调用前已是最新）：
+**数据流澄清**：nodeObject 自身没有 box3 字段，box3 挂在 `Entity.boundingBox`（局部空间原始 AABB，持久、几何固有、不随 matrix 变化、不每帧清空）。每帧做的是把它变换到 world 后 push 进 `scene.Box3s`（场景级收集数组，每帧清空）。`DirectInWorldSpace=true` 时 `matrixWorld = matrix`（`wgpu-matrix` 的 `mat4.copy(src, dst)` 语义，`:856` 实为 `matrixWorld = matrix`），故 AABB 用 `matrixWorld` 变换等价于用 `matrix`。
+
+**修复**：仅在 `else` 分支补 `updateSelfAttribute()`（`false` 分支已每帧调用，无需改）：
 ```ts
-if (this.DirectInWorldSpace === false) {
-    this.needUpdateWorldMatrix = this.checkNeedUpdateWorldMatrix();
-    if (this.needUpdateWorldMatrix) {
-        this.updateMatrixWorld();
-        this.updateWorldPosition();
-    }
-    this.updateSelfAttribute();          // ✅ 每帧都累加（Box3s 每帧重置）
 } else {
     mat4.copy(this.matrix, this.matrixWorld);
     this.updateWorldPosition();
-    this.updateSelfAttribute();          // ✅ 补上世界坐标分支
+    this.updateSelfAttribute();   // ✅ 补上：直接世界坐标节点进 Box3s
 }
 ```
 
-**验证**：Vitest 单测——构造带 `Entity.boundingBox` 的 `NodeObject` + 假 `scene`（`Box3s=[]`），分别测 (a) `needUpdateWorldMatrix=false` 帧、(b) `DirectInWorldSpace=true` 帧，断言 `scene.Box3s` 含该节点 AABB。
+**验证**：Vitest 单测（`nodeObject.test.ts`，沿用 `scene.test.ts` 打桩 + 动态 import 模式）——`DirectInWorldSpace=true`：(a) 世界坐标原点 → `Box3s.length === 1` 且 AABB 不变（修复前 length===0）；(b) 世界坐标 z=5 → AABB 平移（min.z=4 / max.z=6）。
 
-**风险**：中偏低。逻辑修正后每帧多一次矩阵变换+push（性能可忽略）；务必确认 `updateSelfAttribute` 前置条件（`Entity.boundingBox`、`scene`、matrixWorld 已更新）在两个分支都满足。
+**风险**：低。仅补一处每帧调用；`DirectInWorldSpace=true` 的节点（物理驱动等）此前完全缺失于包围盒，补上后 BVH/剔除更完整。
+
+**后续项（不在本次范围）**：`SpaceType === E_BVHSpaceType.physical` 的节点被 `nodeObject.ts:750` 整体跳过 `updateSelfAttribute`（物理引擎尚未实现，`PhysicBody`/`RigidBody` 为空壳占位），其 matrixWorld 更新时序未定，待物理引擎落地时在物理 ECS 更新后一并处理。
 
 ---
 
@@ -192,7 +188,9 @@ private dispatch(event: Event, type: E_InputEvent) {
   - [x] P0-3：`initPipeLine` 用真实 descriptor 序列化生成 key；补单测（size===2）
         - 代码：`DrawCommandGenerator.ts` 新增模块级 `stableStringify`（键排序 JSON 序列化）；删除 6 处 `depthStencilFlag = "..."` 字面量赋值与 1 处 `multisampleFlag = "4"`；在 `cacheFlag` 组装前改用 `descriptor.depthStencil / descriptor.multisample` 序列化（无则 `"none"`），顺带修正 MSAA 分支「无 depthStencil 却标 MSAA」的状态/键不一致。
         - 单测：`src/we/core/command/DrawCommandGenerator.test.ts`（mock device + 空 pipeline，沿用 `scene.test.ts` 的「顶层 beforeAll 打桩 WebGPU 全局 + 动态 import」模式）：仅 `depthWriteEnabled` 不同 → `pipeline.size === 2`（修复前为 1）；`depthStencil` 完全相同 → `size === 1`（缓存仍正确合并）。
-  - [ ] P0-7：`nodeObject.update` 两分支无条件调 `updateSelfAttribute`；补单测
+  - [x] P0-7：`nodeObject.update` 的 `DirectInWorldSpace=true`（else）分支补 `updateSelfAttribute`；补单测
+        - 代码：`nodeObject.ts` else 分支补 `this.updateSelfAttribute()`（`false` 分支本已每帧调用，无需改）；修正初版「只在 matrix 变化时调用」的错误描述。
+        - 单测：`src/we/core/organization/nodeObject.test.ts`（`DirectInWorldSpace=true`：原点 → `Box3s.length===1`；z=5 → AABB 平移 min.z=4/max.z=6）。
   - [ ] 跑 `ci:no-e2e` + Playwright 基线；commit + push
 - [ ] **Batch C**
   - [ ] P0-2：`inputManager` 抽 `dispatch` 重构 11 段；补单测
