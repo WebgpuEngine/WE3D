@@ -33,7 +33,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 | 1 | 让构建变绿 | `src` tsc 收敛到 0 错误 | ✅ 已完成 | [engineering-plan §Phase1](./engineering-plan.md#phase-1--让构建变绿p0-0) |
 | 2 | ESLint + Prettier | 门禁仅 `src/we`，可自动修复 | ✅ 已完成 | [engineering-plan §Phase2](./engineering-plan.md#phase-2--eslint--prettier) |
 | 3 | Vitest 单测 | 数学/修复回归用例（无 GPU 依赖） | ✅ 已完成 | [engineering-plan §Phase3](./engineering-plan.md#phase-3--vitest-单元测试) |
-| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | 🔵 进行中（工程化已完成，e2e 验证待补） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
+| 4 | Playwright 回归 | 示例截图基线，提交前必跑 | ✅ 已完成（e2e 示例验证按需补充，非阻塞） | [engineering-plan §Phase4](./engineering-plan.md#phase-4--playwright-示例回归) |
 | 5 | typedoc 整合 | 文档入口统一为唯一真相源 | ✅ 已完成 | [engineering-plan §Phase5](./engineering-plan.md#phase-5--typedoc-文档整合) |
 | 6 | Lib 打包与发布 | Vite `build.lib` + dts，npm `we3d` | ✅ 已完成 | [engineering-plan §Phase6](./engineering-plan.md#phase-6--lib-打包与-npm-发布方案-a) |
 | 7 | CI | GitHub Actions 门禁 + 发布 | ✅ 已完成 | [engineering-plan §Phase7](./engineering-plan.md#phase-7--cigithub-actions) |
@@ -126,9 +126,9 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 ---
 
-### Phase 4 — Playwright 示例回归　🔵 进行中（工程化已完成，e2e 验证待补）
+### Phase 4 — Playwright 示例回归　✅ 已完成（e2e 示例验证按需补充，非阻塞）
 
-- **状态拆分（2026-10-27）**：工程化（Playwright 环境 / 配置 / 脚本 / 截图基线 / env WebGPU 三角形与 box 样例）✅ 已完成；**大量 WE3D 引擎示例的 e2e 验证（`e2e-cases/` 逐例加载渲染 + 截图基线比对）⬜ 未完成**，按需逐个新增。
+- **状态拆分（2026-10-30 更新）**：工程化（Playwright 环境 / 配置 / 脚本 / 截图基线 / env WebGPU 三角形与 box 样例）✅ 已完成；**大量 WE3D 引擎示例的 e2e 验证（`e2e-cases/` 逐例加载渲染 + 截图基线比对）作为持续按需任务**，不阻塞 Phase 4 完成判定（env 三角形 + box 基线已生成比对通过）。
 - **计划要点**（详细方案见 `./phase4-playwright-e2e.md`）
   - 安装 `@playwright/test` + `playwright` + chromium 浏览器（**已完成**，v1.64.1 / Chromium 156）。
   - `playwright.config.ts`：`webServer` 启动 vite；env 自检用**原生 WebGPU 三角形 fixture**（不依赖 WE3D），**批量示例读取独立的 `tests/e2e/examples-e2e.ts`**（不复用 `examples/files.json`），加载→等 canvas 挂载→截图 + console 断言。
