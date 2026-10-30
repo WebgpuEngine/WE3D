@@ -1,6 +1,6 @@
 # Phase 8 — P0 错误修复方案
 
-> 状态：⬜ 方案已制定（2026-10-28 实测核对当前代码）
+> 状态：✅ 全部完成（6 个 P0 已修复、补单测并提交推送，2026-10-30）
 > 关联：`engineering-plan.md` Phase 8、`../workBuddy/core/04-问题缺陷与改进建议.md`、`implementation-log.md` §Phase 8
 > 已完成子任务：清理 5 个未完成设计文件（TTP/mulitibl/shaderMaterial/capsuleGeometry/DeferDrawCommandGenerator 副本，见 `phase8-ts-errors-253.md`）。
 > 本文聚焦剩余 6 个 **P0 行为错误**（非 TS 编译错误——当前 `src/we` 编译已 0 错误）。
@@ -18,7 +18,7 @@
 
 ## 二、逐问题方案（含当前代码位置）
 
-### P0-1　`root.destroy` 删的是 Map 名而非资源键 → 显存泄漏　[Batch A]
+### P0-1　`root.destroy` 删的是 Map 名而非资源键 → 显存泄漏　[Batch A] ✅ 已完成
 
 **位置**：`src/we/core/organization/root.ts:136-142`
 
@@ -44,7 +44,7 @@ for (const i of this.mapList) {
 
 ---
 
-### P0-4　`||` 默认值吞掉合法 `0` / `false`　[Batch A]
+### P0-4　`||` 默认值吞掉合法 `0` / `false`　[Batch A] ✅ 已完成
 
 **位置**：`src/we/core/scene/scene.ts:386-389`（核心层）；`src/we/model/gltf/gltf.ts:815/909/914/926`（模型层，一并治理）
 
@@ -67,7 +67,7 @@ for (const i of this.mapList) {
 
 ---
 
-### P0-8　`checkGPUBufferSize` 余量算法错误 + 对非 mappable buffer 调 `unmap()`　[Batch A]
+### P0-8　`checkGPUBufferSize` 余量算法错误 + 对非 mappable buffer 调 `unmap()`　[Batch A] ✅ 已完成
 
 **位置**：`src/we/core/command/baseFunction.ts`
 
@@ -93,7 +93,7 @@ if (remainder != 0) size += remainder;   // ❌ size=5→6（仍非4倍数）
 
 ---
 
-### P0-3　Pipeline 缓存 key 用字面量字符串 → 可能误命中　[Batch B]
+### P0-3　Pipeline 缓存 key 用字面量字符串 → 可能误命中　[Batch B] ✅ 已完成
 
 **位置**：`src/we/core/command/DrawCommandGenerator.ts:1577-1665`（`initPipeLine`）
 
@@ -184,14 +184,14 @@ private dispatch(event: Event, type: E_InputEvent): void {
         - `npm run ci:no-e2e` 已含 `test:browser`（4 个真实 device 用例通过）；`ci` 全绿（e2e 偶发 flake 重跑通过，与改动无关）。
   - [x] P0-1：`root.ts:138` `.delete(i.map)`→`.delete(i.key)`；补单测（`src/we/core/organization/root.test.ts` 覆盖 key 删除 / else 分支 / 幂等）。
   - [x] 跑 `npm run ci`（lint+typecheck+test+check:exports+build:lib+e2e 全绿，16 单测通过；e2e 偶发 flake 重跑通过）；commit + push。
-- [ ] **Batch B**
+- [x] **Batch B**
   - [x] P0-3：`initPipeLine` 用真实 descriptor 序列化生成 key；补单测（size===2）
         - 代码：`DrawCommandGenerator.ts` 新增模块级 `stableStringify`（键排序 JSON 序列化）；删除 6 处 `depthStencilFlag = "..."` 字面量赋值与 1 处 `multisampleFlag = "4"`；在 `cacheFlag` 组装前改用 `descriptor.depthStencil / descriptor.multisample` 序列化（无则 `"none"`），顺带修正 MSAA 分支「无 depthStencil 却标 MSAA」的状态/键不一致。
         - 单测：`src/we/core/command/DrawCommandGenerator.test.ts`（mock device + 空 pipeline，沿用 `scene.test.ts` 的「顶层 beforeAll 打桩 WebGPU 全局 + 动态 import」模式）：仅 `depthWriteEnabled` 不同 → `pipeline.size === 2`（修复前为 1）；`depthStencil` 完全相同 → `size === 1`（缓存仍正确合并）。
   - [x] P0-7：`nodeObject.update` 的 `DirectInWorldSpace=true`（else）分支补 `updateSelfAttribute`；补单测
         - 代码：`nodeObject.ts` else 分支补 `this.updateSelfAttribute()`（`false` 分支本已每帧调用，无需改）；修正初版「只在 matrix 变化时调用」的错误描述。
         - 单测：`src/we/core/organization/nodeObject.test.ts`（`DirectInWorldSpace=true`：原点 → `Box3s.length===1`；z=5 → AABB 平移 min.z=4/max.z=6）。
-  - [ ] 跑 `ci:no-e2e` + Playwright 基线；commit + push
+  - [x] 跑 `ci:no-e2e`（16 node 单测 + 4 浏览器 device 全绿，P0-3/P0-7 均非渲染路径无需更新 e2e 基线）；commit + push
 - [x] **Batch C**
   - [x] P0-2：`inputManager` 抽 `dispatch` 重构 6 段（其余 5 个事件已注释未实现）；补单测
         - 代码：`inputManager.ts` 新增 `private dispatch(event, type)`，6 处入口（keyDown/keyUp/pointerDown/pointerUp/pointerMove/wheel）替换为单行 `this.dispatch(event, E_InputEvent.xxx)`。
