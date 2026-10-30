@@ -2,6 +2,21 @@
 
 # WE 3D Rendering Engine (WebGPU engine 3D)
 
+[![npm version](https://img.shields.io/npm/v/we3d)](https://www.npmjs.com/package/we3d)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6)
+![WebGPU](https://img.shields.io/badge/WebGPU-API-00A6A6)
+
+## ✨ Key Highlights
+
+- **Pure WebGPU native engine**: Built from the ground up with TypeScript + the WebGPU API, without any WebGL compatibility layer — oriented toward the next-generation Web graphics standard.
+- **Command-set rendering architecture**: Shader submission is unified through a Draw / Compute / Copy Command set, with a clean low-level abstraction close to native WebGPU (architecture references Babylon / three.js / Cesium / UE).
+- **ECS throughout the stack**: Entities, materials, light/shadow, cameras, input, animation, and textures are uniformly managed via ECS — flexible to compose and easy to extend.
+- **Advanced atmosphere & clouds**: Three built-in atmosphere schemes (real-time integration / Bruneton / Hillaire) with volumetric clouds, Tyndall effects, and cloud shadows.
+- **Dual volume-rendering approaches**: 3D texture sampling and real-time ray marching, covering simulation and volumetric scenarios.
+- **Complete rendering features**: Forward + deferred dual pipelines, multi-channel GBuffer (56 bits per pixel), IBL + SH, PCSS soft shadows, reversed Z, MSAA / FXAA, sRGB and Display P3 color spaces.
+- **GPU picking + BVH acceleration**: GPU picking by default; CPU-side ray combined with BVH and the physics engine for high-performance picking.
+- **Rigorous engineering**: Vitest (Node + real-device browser) unit tests, Playwright screenshot-baseline e2e, ESLint / Prettier / Typedoc / CI gating, published to npm as ESM + `.d.ts`.
+
 WE3D consists of two major parts: the base engine and the editor. (WE3D is currently in its early development stage, so features, modules, and structure will be adjusted frequently.)
 
 1. The base engine includes five modules: core functionality, graphics functionality, model functionality, physics engine integration, and animation management.
@@ -57,6 +72,79 @@ Current development version docs: https://WebgpuEngine.github.io/WE3D
 * Overlaid on the atmosphere are also volumetric clouds, Tyndall light effects, cloud shadows, etc.
 * todo: particle system, SSGI, SSR, SSAO, TAA.
 
+## Quick Start
+
+Install:
+
+```bash
+npm i we3d
+```
+
+Prepare a canvas in HTML and import the engine via an ES Module:
+
+```html
+<canvas id="render"></canvas>
+<script type="module" src="./main.ts"></script>
+```
+
+`main.ts` — initialize the scene, camera, and your first mesh:
+
+```ts
+import {
+    initScene,
+    PerspectiveCamera,
+    BoxGeometry,
+    ColorMaterial,
+    Mesh,
+} from 'we3d';
+
+// 1. Initialize the scene (binds to <canvas id="render">)
+const scene = await initScene({
+    initConfig: {
+        canvas: 'render',
+        backgroudColor: [0, 0, 0, 1],
+    },
+});
+
+// 2. Create a perspective camera (arcball controller)
+const camera = new PerspectiveCamera({
+    fov: (2 * Math.PI) / 5,
+    aspect: scene.aspect,
+    near: 0.01,
+    far: 100,
+    position: [0, 0, 3],
+    lookAt: [0, 0, 0],
+    controlType: 'arcball',
+});
+await scene.add(camera);
+
+// 3. Geometry + material + mesh entity
+const boxGeometry = new BoxGeometry();
+const colorMaterial = new ColorMaterial({ color: [0, 0.1, 0.2, 1] });
+const mesh = new Mesh({
+    attributes: { geometry: boxGeometry },
+    material: colorMaterial,
+});
+await scene.add(mesh);
+```
+
+> More runnable examples are in the "Simple Examples" section below and the [`e2e-cases/`](./e2e-cases) directory; the full API reference is in [`design/workBuddy/core/03-API速查手册.md`](./design/workBuddy/core/03-API速查手册.md).
+
+## Feature Overview
+
+> Status legend: ✅ implemented · 🔄 in progress · 🕓 planned (to avoid misreading planned items as delivered capabilities)
+
+| ✅ Implemented | 🔄 In Progress | 🕓 Planned |
+| --- | --- | --- |
+| sRGB / Display P3, linear workflow, multi-mode toneMapping | Physics engine (Rapier) | TAA |
+| Ambient / directional / point / spot light + PCSS soft shadows | gltf / obj / fbx models | SSGI / SSR / SSAO |
+| Forward + deferred pipelines, multi-channel GBuffer (56 bits/pixel) | Area light | Particle system |
+| IBL + SH, volume rendering (3D texture / ray march) | Physical transparency / A-Buffer | Fluid system |
+| Three atmosphere schemes + volumetric clouds + Tyndall + cloud shadows | Simulation data / geospatial | Editor (material/animation/scene/build manager) |
+| MSAA / FXAA, reversed Z (default) |  | Server-side live links / USD / NeRF / 3D reconstruction / AI adaptation |
+| Skeletal / morph-target / keyframe / physics-driven animation |  |  |
+| GPU picking + BVH, 1024 lights, full-stack ECS |  |  |
+
 # Simple Examples
 
 | ReversedZ                                         | material alpha blend                             | pixel level alpha transparent material           |
@@ -98,6 +186,34 @@ Current development version docs: https://WebgpuEngine.github.io/WE3D
 |                                                   |                                                   |                                                   |
 | particle system                                   | fluid system                                      |                                                   |
 |                                                   |                                                   |                                                   |
+
+## Project Structure & Development Environment
+
+**Source organization** (core engine under [`src/we/core`](./src/we/core)):
+
+| Module | Responsibility |
+| --- | --- |
+| `scene` / `organization` / `entity` | Scene, node space (ECS), entities (Mesh/Lines/Points/Sprite) |
+| `command` / `commandInfo` | Draw / Compute / Copy Command set and generator (low-level rendering abstraction) |
+| `material` / `texture` / `geometry` / `shaders` | Materials (PBR/BlinnPhong/Color…), textures/cube maps/HDR, geometry, WGSL |
+| `camera` / `control` / `light` / `shadow` | Cameras, controllers, lights, and shadows |
+| `ibl` / `gbuffers` / `postprocess` / `pickup` | IBL, deferred-render GBuffer, post-processing, GPU/CPU picking |
+| `animation` / `particle` / `physics` | Keyframe/skeletal/morph-target, particles, Rapier physics |
+| `atmosphere` / `SHR` | Three atmosphere schemes, spherical harmonics |
+| `math` / `base` / `resources` | Math library, base types, resource/buffer management |
+
+**Runtime requirements**:
+- A WebGPU-capable browser is required (e.g. Chrome / Edge 113+, or Firefox / Safari Technology Preview with WebGPU enabled).
+- Local development runs via `npm run dev` (Vite); WebGPU works under `http://localhost`. Deploying to the public internet requires **HTTPS** or `localhost`.
+- Node.js is required for building / testing / documentation (see `package.json` `devDependencies` for versions).
+
+**Roadmap**:
+- Physics engine integration (Rapier), and completing gltf/obj/fbx model loading;
+- Area light, physical transparency, A-Buffer;
+- Global illumination (SSGI / SSR / SSAO), TAA, particle and fluid systems;
+- Simulation data / geospatial data support;
+- Visual editor (material / animation / scene / build manager);
+- Server-side live links, USD / NeRF workflows, 3D reconstruction, AI adaptation.
 
 # Engineering and Development Conventions
 
