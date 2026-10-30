@@ -10,7 +10,7 @@
 - **依托 Phase3（Vitest 冒烟）+ Phase4（Playwright 截图基线）做保护**：每个 P0 先写/补单测（纯逻辑尽量在 Node 跑），再跑现有 e2e 基线确认无回归，最后提交。
 - **分批（按风险升序）**，每批独立 commit + 云端 CI 验证，避免一次引入多个回归难以定位：
   - **Batch A（纯逻辑、低风险、易单测）**：P0-4（`||`→`??`）、P0-8（`checkGPUBufferSize` 余量 + `unmap`）、P0-1（`root.destroy` 删错 key）。
-  - **Batch B（正确性、需 WebGPU e2e + mock 单测）**：P0-3（pipeline 缓存 key）、P0-7（`Box3s` 每帧累加）。
+  - **Batch B（正确性、需 WebGPU 真实 device 单测 + e2e）**：P0-3（pipeline 缓存 key）、P0-7（`Box3s` 每帧累加）。
   - **Batch C（行为变更、回归风险高、放最后）**：P0-2（input `intercept` 优先级重构）。
 - 所有改动保持「最小且可验证」；不趁机重构无关代码。
 
@@ -181,8 +181,11 @@ private dispatch(event: Event, type: E_InputEvent) {
         - 单测：`src/we/core/scene/scene.test.ts`（rightHand=false / scaleFactorToKm=0 / lengthUnit="" 均保留）。`gltf.ts` 解析在浏览器/WebGPU 异步加载器内，node 不可实例化，metallic=0 等由模型 e2e 验证（见 `ci:no-e2e` 已全绿，e2e 待下一步 GPU 基线比对）。
   - [x] P0-8：`checkGPUBufferSize` 余量修正（`size += (4 - remainder)`）；删 `unmap()`；补单测
         - 代码：`src/we/core/command/baseFunction.ts`：`checkGPUBufferSize` 余量改为补足到 4 倍数；`createGPUBufferByType` 删除对未映射 buffer 的 `buffer.unmap()`（无 `mappedAtCreation`，调用即违反 WebGPU 规范）。
-        - 单测：`src/we/core/command/baseFunction.test.ts`（对齐 1→4/4→4/5→8/7→8/11→12；createEmptyGPUBuffer/createUniformBuffer 的 buffer size 必为 4 倍数；写入后不调用 `unmap`）。
-        - node 无真实 WebGPU 运行时（仅 `@webgpu/types`/`webgpu-utils`），真 headless 设备测试不可行；按方案以「代码审查 + mock 回归 + e2e 出图」验证。`npm run ci` 全绿（偶发失败 `video_1_videoElement`/`inside_outside` 为 headless 基础设施 flake，重跑均通过，与改动无关）。
+        - 测试（真实 device，不再手写 mock）：
+          - 纯逻辑：`src/we/core/command/baseFunction.test.ts`（对齐 1→4/4→4/5→8/7→8/11→12）。
+          - 真实 device：`src/we/core/command/baseFunction.browser.test.ts`（`vitest --browser` + Playwright `channel:'chromium'`，用真实 `GPUDevice` 断言 size 4 对齐、`createUniformBuffer` 在真实 device 上不抛错、写入数据可被读回）。
+        - **测试架构决策（20261030）**：项目中手写 `GPUDevice` mock 成本高且未落地，改为 **vitest browser 模式跑真实 Chromium device**。关键坑：`vitest@2.1.9` 的 playwright provider 启动参数须放在 `browser.providerOptions.launch`（而非 `browser.launch`），否则 `channel:'chromium'` 不生效、退化成默认 headless shell 导致 `requestAdapter()` 返回 null；且必须 `--enable-unsafe-webgpu`（真实 GPU）或 SwiftShader 参数。纯逻辑测试仍在 node 跑（`vitest.config.ts` 已 `exclude: ['src/**/*.browser.test.ts']`）。
+        - `npm run ci:no-e2e` 已含 `test:browser`（4 个真实 device 用例通过）；`ci` 全绿（e2e 偶发 flake 重跑通过，与改动无关）。
   - [x] P0-1：`root.ts:138` `.delete(i.map)`→`.delete(i.key)`；补单测（`src/we/core/organization/root.test.ts` 覆盖 key 删除 / else 分支 / 幂等）。
   - [x] 跑 `npm run ci`（lint+typecheck+test+check:exports+build:lib+e2e 全绿，16 单测通过；e2e 偶发 flake 重跑通过）；commit + push。
 - [ ] **Batch B**

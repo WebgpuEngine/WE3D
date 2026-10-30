@@ -21,6 +21,9 @@ test-results/
 playwright-report/
 blob-report/
 
+# Vitest browser 模式自动生成的截图产物（非基线，不提交）
+__screenshots__/
+
 
 public/models/gltf/model
 !src/@loaders.gl/*
