@@ -16,12 +16,14 @@
 
 ## 一、零散待办 / 延后清单
 
-### 1. `format` 执行（Phase 2 步骤 6，已延后）
-- 状态：⏸ 已延后
-- 关联：`implementation-log.md` §Phase 2 备注·偏差2
-- 说明：`npm run format` / `format:check` 脚本已于 `df28473` 补齐，但按约定**延后至「Phase 4 — Playwright 示例回归完成」后单独执行**（`prettier --write .` 改动面大，避免与 lint/bug 修复叠加排错）。属 Phase 2 收尾遗留的边角项。
-- 触发条件：完成 **Phase 4 — Playwright 示例回归**（`test:baseline` 建立并跑通）之后，单独跑 `npm run format` + `npm run format:check`，并单独提交。
-- 进度（2026-10-26）：Phase 4 的 e2e 环境已搭好、`test:baseline` 已生成且 env 用例跑通，触发条件**现已满足**；是否执行仍按你的节奏单独提交（不随本次改动自动跑）。
+### 1. `format` 执行（Phase 2 步骤 6）　✅ 已完成（2026-10-30）
+- 状态：✅ 已完成（2026-10-30）
+- 关联：`implementation-log.md` §Phase 2 备注·偏差2；`phase2-prettier-format.md`（执行方案，状态 ✅ 已执行）
+- 说明：`npm run format` / `format:check` 脚本已于 `df28473` 补齐，原按约定延后至 Phase 4 完成后执行。2026-10-30 已执行完毕：
+  - **范围收窄**：扩大 `.prettierignore` 排除 `design/` `public/` `.claude/` `tests/` `scripts/` `.github/` 及根工程配置，使 `format`/`format:check` 长期仅覆盖 `src/we` + `e2e-cases`（commit `fc53968`）。
+  - **实际格式化**：`npm run format`（`prettier --write .`）改动 **290 文件**（+35705 / -15981），`lint` / `typecheck` 均通过（commit `0a1468d`）。
+  - **统一换行**：新增 `.gitattributes`（`* text=auto eol=lf`，与 Prettier `endOfLine:lf` 对齐），消除 Windows CRLF 警告（commit `940d142`）。
+- 触发条件（原）：完成 **Phase 4 — Playwright 示例回归** 后执行 —— 现已满足并执行完毕。
 
 ### 2. examples 冒烟验证（❌ 已取消，由 e2e-cases 指定目录代替）
 - 状态：❌ 已取消
@@ -68,3 +70,4 @@
 | --- | --- | --- |
 | 2026-10-26 | 建立本文件 | 汇总统本次工程化改造的零散 / 延迟 / todo 事项 |
 | 2026-10-26 | 范围收窄 | 明确本文件只记**零散非主线**事项；移除原 Phase 3/5 条目及 Phase 4/6/7/8 主线索引（主线统一在 `implementation-log.md` 跟踪） |
+| 2026-10-30 | format 执行完成 | §1 `format` 已执行：扩大 `.prettierignore` 长期仅覆盖 `src/we`+`e2e-cases`（fc53968）、`npm run format` 改 290 文件且 lint/typecheck 通过（0a1468d）、加 `.gitattributes` 统一 LF 消除 CRLF 警告（940d142）；详见 `phase2-prettier-format.md` |
