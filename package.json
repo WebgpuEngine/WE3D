@@ -1,6 +1,6 @@
 {
   "name": "we3d",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "main": "./dist/we3d.js",
   "module": "./dist/we3d.js",

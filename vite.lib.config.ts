@@ -18,7 +18,7 @@ export default defineConfig({
     {
       name: 'force-minify-esbuild',
       async renderChunk(code) {
-        const { code: minified, map } = await esbuildTransform(code, {
+        const { code: minified } = await esbuildTransform(code, {
           loader: 'js',
           minify: true,
           legalComments: 'none',
