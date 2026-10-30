@@ -77,11 +77,13 @@
 
 依据 `../workBuddy/core/04`（详细方案与当前代码位置见 **`phase8-p0-fixes.md`**）：
 
+**进度（2026-10-30）**：✅ 全部完成——6 个 P0 行为错误已修复、补单测、`ci:no-e2e` 全绿并提交推送（详见 `phase8-p0-fixes.md`，其状态已同步标「✅ 全部完成」）。
+
 **已完成的子任务**：清理 5 个未完成设计文件（TTP/mulitibl/shaderMaterial/capsuleGeometry/DeferDrawCommandGenerator 副本，见 `phase8-ts-errors-253.md`）。
 
-**剩余 6 个 P0 行为错误，按风险分批（依托 Phase3 Vitest + Phase4 Playwright 基线保护）**：
-- **Batch A（纯逻辑/低风险）**：P0-4 `||`→`??`（scene.ts:386-389 + gltf.ts:815/909/914/926）、P0-8 `checkGPUBufferSize` 余量(`baseFunction.ts:19-25`)+删 `unmap()`(`:123`)、P0-1 `root.ts:138` `.delete(i.map)`→`.delete(i.key)`。
-- **Batch B（正确性/需 e2e）**：P0-3 `DrawCommandGenerator.ts:1646` 用真实 `descriptor.depthStencil/multisample` 序列化生成缓存 key（替换字面量）、P0-7 `nodeObject.ts:747-766` 两分支每帧无条件调 `updateSelfAttribute`（因 `scene.ts:764` 每帧重置 `Box3s`）。
-- **Batch C（行为变更/高回归风险，放最后）**：P0-2 `inputManager.ts:295-380` 抽 `dispatch()` 重构 11 段，`intercept` 层可真正独占消费并阻断 `broadcastEnd`，需 UI 交互示例专项 e2e 回归。
+**6 个 P0 行为错误，按风险分批（依托 Phase3 Vitest + Phase4 Playwright 基线保护），均已修复 ✅**：
+- **Batch A（纯逻辑/低风险）✅**：P0-4 `||`→`??`（scene.ts:386-389 + gltf.ts:815/909/914/926）、P0-8 `checkGPUBufferSize` 余量(`baseFunction.ts:19-25`)+删 `unmap()`(`:123`)、P0-1 `root.ts:138` `.delete(i.map)`→`.delete(i.key)`。
+- **Batch B（正确性/缓存与包围盒）✅**：P0-3 `DrawCommandGenerator.ts:1646` 用真实 `descriptor.depthStencil/multisample` 序列化生成缓存 key（替换字面量）、P0-7 `nodeObject.ts` `DirectInWorldSpace=true`（else）分支补 `updateSelfAttribute`（因 `scene.ts:764` 每帧重置 `Box3s`）。
+- **Batch C（行为变更/input）✅**：P0-2 `inputManager.ts` 抽 `dispatch()` 重构 6 段（touch/click/dblclick 5 个事件已注释未实现），`intercept` 层可真正独占消费并阻断 `broadcastEnd`；实测无控制器注册 intercept 层、e2e-cases 无 UI 用例，UI 专项 e2e 回归无需执行。
 
 > 注意：Phase 8 的「TS 错误清零」实为历史快照（见 `phase8-ts-errors-253.md`），当前 `src/we` 编译 0 错误；本阶段只修上述 P0 行为错误。
