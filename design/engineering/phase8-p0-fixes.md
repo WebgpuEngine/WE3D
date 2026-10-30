@@ -189,7 +189,9 @@ private dispatch(event: Event, type: E_InputEvent) {
   - [x] P0-1：`root.ts:138` `.delete(i.map)`→`.delete(i.key)`；补单测（`src/we/core/organization/root.test.ts` 覆盖 key 删除 / else 分支 / 幂等）。
   - [x] 跑 `npm run ci`（lint+typecheck+test+check:exports+build:lib+e2e 全绿，16 单测通过；e2e 偶发 flake 重跑通过）；commit + push。
 - [ ] **Batch B**
-  - [ ] P0-3：`initPipeLine` 用真实 descriptor 序列化生成 key；补单测（size===2）
+  - [x] P0-3：`initPipeLine` 用真实 descriptor 序列化生成 key；补单测（size===2）
+        - 代码：`DrawCommandGenerator.ts` 新增模块级 `stableStringify`（键排序 JSON 序列化）；删除 6 处 `depthStencilFlag = "..."` 字面量赋值与 1 处 `multisampleFlag = "4"`；在 `cacheFlag` 组装前改用 `descriptor.depthStencil / descriptor.multisample` 序列化（无则 `"none"`），顺带修正 MSAA 分支「无 depthStencil 却标 MSAA」的状态/键不一致。
+        - 单测：`src/we/core/command/DrawCommandGenerator.test.ts`（mock device + 空 pipeline，沿用 `scene.test.ts` 的「顶层 beforeAll 打桩 WebGPU 全局 + 动态 import」模式）：仅 `depthWriteEnabled` 不同 → `pipeline.size === 2`（修复前为 1）；`depthStencil` 完全相同 → `size === 1`（缓存仍正确合并）。
   - [ ] P0-7：`nodeObject.update` 两分支无条件调 `updateSelfAttribute`；补单测
   - [ ] 跑 `ci:no-e2e` + Playwright 基线；commit + push
 - [ ] **Batch C**

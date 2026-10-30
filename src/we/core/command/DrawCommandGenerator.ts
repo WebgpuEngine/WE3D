@@ -21,6 +21,25 @@ import { getColorAttachmentTargetsOfBlend, getColorAttachmentTargetsOfForward, g
 import { MD5 } from "../../reExport/md5";
 import { PBRMaterial } from "../material/PBR/PBRMaterial";
 
+/**
+ * 稳定序列化：键排序的 JSON 序列化，保证「内容相同 → key 相同，内容不同 → key 不同」。
+ * 用于 pipeline 缓存 key 中 depthStencil / multisample 等纯数据对象（无函数/循环引用）。
+ */
+function stableStringify(value: unknown): string {
+    if (value === undefined) return "undefined";
+    if (value === null || typeof value !== "object") {
+        return JSON.stringify(value);
+    }
+    if (Array.isArray(value)) {
+        return `[${value.map(stableStringify).join(",")}]`;
+    }
+    const obj = value as Record<string, unknown>;
+    const entries = Object.keys(obj)
+        .sort()
+        .map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`);
+    return `{${entries.join(",")}}`;
+}
+
 export interface IV_DrawCommandGenerator {
     scene: Scene,
     parent: any,//BaseEntity,
@@ -1575,8 +1594,6 @@ export class DrawCommandGenerator {
         DC_bindGroupLayouts: GPUBindGroupLayout[]): GPURenderPipeline {
 
         //0、创建cacheFlag
-        let multisampleFlag = "";
-        let depthStencilFlag = "";
         let cacheFlag: string[] = [];
         //1、创建GPURenderPipelineDescriptor
         const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
@@ -1598,19 +1615,16 @@ export class DrawCommandGenerator {
             descriptor.multisample = {
                 count: 4,
             }
-            multisampleFlag = "4";
         }
         //4、TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
         if (values.render.depthStencil !== false) {
             //如果有depthStencil输入，就使用它
             if (values.render.depthStencil) {
                 descriptor.depthStencil = values.render.depthStencil;
-                depthStencilFlag = "values.render.depthStencil";        //这里可能会有问题，如果depthStencil传入的是不同的depthStencil，会导致缓存错误
             }
             else {
                 if (values.transparent) {//透明渲染，使用透明模板
                     descriptor.depthStencil = this.scene.depthMode.depthStencilTT;
-                    depthStencilFlag = "this.scene.depthMode.depthStencilTT";
                 }
                 else {
                     //MSAA渲染，分成两种情况
@@ -1618,31 +1632,31 @@ export class DrawCommandGenerator {
                         //MSAAinfo 渲染，使用深度模板(开启测试，不写入) 
                         if (values.system && values.system.MSAA == "MSAAinfo") {
                             descriptor.depthStencil = this.scene.depthMode.depthStencilMSAAinfo;
-                            depthStencilFlag = "this.scene.depthMode.depthStencilMSAAinfo";
                         }
                         //MSAA 渲染，使用深度模板(开启测试，写入) 
                         else if (values.system && values.system.MSAA == "MSAA") {
                             // descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;//20260419 MSAA可以不需要depth，关闭
-                            depthStencilFlag = "this.scene.depthMode.depthStencilMSAA";
                         }
                         //shadowmap 等渲染，使用深度模板(开启测试，写入) 
                         else {
                             descriptor.depthStencil = this.scene.depthMode.depthStencil;
-                            depthStencilFlag = "this.scene.depthMode.depthStencil";
                         }
                     }
                     //非MSAA渲染，使用深度模板(开启测试，写入) 
                     else {
                         descriptor.depthStencil = this.scene.depthMode.depthStencil;
-                        depthStencilFlag = "this.scene.depthMode.depthStencil";
                     }
                 }
             }
         }
 
         /**
-         * 缓存标志,将descriptor: GPURenderPipelineDescriptor的内容，转化为string，使其与当前创建的描述松耦（与对象无关化）
+         * 缓存标志：将 descriptor 的真实 depthStencil / multisample 状态序列化为稳定 key，
+         * 避免字面量字符串导致「不同状态误命中同一缓存」。
+         * stableStringify 为键排序 JSON 序列化，保证内容相同则 key 相同、内容不同则 key 不同。
          */
+        const depthStencilFlag = descriptor.depthStencil ? stableStringify(descriptor.depthStencil) : "none";
+        const multisampleFlag = descriptor.multisample ? stableStringify(descriptor.multisample) : "none";
         cacheFlag = [
             vertex.name,
             fragment.name,
