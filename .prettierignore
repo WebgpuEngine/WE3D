@@ -22,3 +22,28 @@ playwright-report/
 
 # 锁文件
 package-lock.json
+
+# 非门禁范围（Phase 2 format 长期仅覆盖 src/we + e2e-cases，2026-10-30）
+# 设计文档与本地配置
+design/
+.claude/
+# 运行时静态资产（含非文本，格式化无意义且有风险）
+public/
+# 测试 spec（与 e2e-cases 区分，本次范围不含）
+tests/
+# 构建脚本
+scripts/
+# CI workflow
+.github/
+# 根工程配置（非 src/we 门禁范围）
+*.config.ts
+tsconfig*.json
+typedoc*.json
+typedoc-home.md
+eslint.config.js
+package.json
+index.html
+playwright*.config.ts
+README*.md
+AGENTS.md
+.prettierrc.json

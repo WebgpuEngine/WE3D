@@ -3,7 +3,7 @@
 > 关联总方案：`./engineering-plan.md` §Phase2
 > 跟踪记录：`./implementation-log.md` §Phase 2
 > 先行文档：`./phase2-eslint-prettier.md`（Phase 2 ESLint + Prettier 现状分析与方案，状态 ✅ 已完成）
-> 状态：⬜ 方案中（2026-10-30 制定，待审核后执行）
+> 状态：🔵 方案已定（2026-10-30 审核：3.2 扩大 .prettierignore 定为默认长期方式，待执行 format）
 > 背景：`phase2-eslint-prettier.md` 步骤 6 把 Prettier `format` 延后到「所有 lint 步骤完成、项目可运行正确之后」；当前 Phase 8 已全部完成、项目稳定，时机已到。
 
 ## 一、现状（`format:check` 实测，2026-10-30）
@@ -32,9 +32,9 @@
 
 ## 三、执行方案
 
-### 3.1 目录限定（推荐，不污染 `.prettierignore`）
+### 3.1 目录限定（备选，临时/局部格式化）
 
-不改动长期 `.prettierignore`，仅本次用目录限定执行：
+不改动长期 `.prettierignore`，仅临时用目录限定执行（适合对未纳入默认范围的目录做一次性局部格式化）：
 
 ```bash
 npx prettier --write "src/we/**/*.{ts,tsx,js,json,html}" "e2e-cases/**/*.{ts,tsx,js,html,json}"
@@ -42,7 +42,7 @@ npx prettier --write "src/we/**/*.{ts,tsx,js,json,html}" "e2e-cases/**/*.{ts,tsx
 
 （或直接 `npx prettier --write src/we e2e-cases`，Prettier 会按扩展名自动解析。）
 
-### 3.2 扩大 `.prettierignore`（备选，长期保护）
+### 3.2 扩大 `.prettierignore`（默认，长期保护）　✅ 已落地
 
 若希望 `format:check` 后续长期只覆盖 `src/we` + `e2e-cases`，在 `.prettierignore` 追加：
 
@@ -68,9 +68,9 @@ AGENTS.md
 .prettierrc.json
 ```
 
-然后 `npm run format`（=`prettier --write .`）即仅格式化 `src/we` + `e2e-cases`。
+`.prettierignore` 已追加上述排除项，故 `npm run format`（=`prettier --write .`）即仅格式化 `src/we` + `e2e-cases`，非门禁目录/配置不再被触碰，且 `format:check` 长期干净。
 
-> 取舍：3.1 不改长期配置、影响最小；3.2 让 `format:check` 长期干净，但永久改变其覆盖范围（根配置等不再被检查）。**默认采用 3.1**。
+> 取舍：**默认采用 3.2**（长期保护，format/check 仅覆盖 src/we + e2e-cases，避免误伤设计文档与运行时资产）；3.1 仅作为对未纳入范围目录做一次性局部格式化的备选手段。
 
 ### 3.3 验证
 
