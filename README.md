@@ -14,7 +14,7 @@
 - **高级大气与云渲染**：内置实时积分 / Bruneton / Hillaire 三种大气方案，叠加体积云、丁达尔光效与云阴影。
 - **体渲染双方案**：三维纹理采样与 ray march 实时计算，覆盖仿真与体渲染场景。
 - **完整渲染特性**：前向 + 延迟双管线、多通道 GBuffer（单点 56bit）、IBL + SH、PCSS 软阴影、reversedZ、MSAA / FXAA、sRGB 与 Display P3 色彩空间。
-- **GPU 拾取 + BVH 加速**：默认 GPU 拾取，CPU 侧 ray 配合 BVH 与物理引擎实现高性能拾取。
+- **GPU 拾取 + BVH 加速**：默认 GPU 拾取，CPU 侧 ray 配合 BVH 与物理引擎实现高性能拾取（todo）。
 - **严谨工程化**：Vitest（Node + 浏览器真实 device）单测、Playwright 截图基线 e2e、ESLint / Prettier / Typedoc / CI 门禁，以 ESM + `.d.ts` 发布 npm。
 
 WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发阶段，功能、模块与结构会频繁调整。）
@@ -23,13 +23,20 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
 本项目：https://github.com/WebgpuEngine/WE3D
 当前开发版本文档：https://WebgpuEngine.github.io/WE3D
 2. npm 包
+
     npm 安装： 
+
          npm i we3d
          npm i webgpu-we3d
+
     npm发布地址：
+
         https://www.npmjs.com/package/we3d
         https://www.npmjs.com/package/webgpu-we3d
-    npm发布版本文档 https://webgpuengine.github.io/doc
+
+    npm发布版本文档 ：     
+        https://webgpuengine.github.io/doc
+
 3. doing ,示例代码  https://github.com/WebgpuEngine/example
 4. doing ,演示Demo  https://github.com/WebgpuEngine/demo
 5. todo,编辑器部分包括：材质编辑器、动画编辑器、场景编辑器，构建管理器四个模块，以实现可视化工作。在[https://github.com/WebgpuEngine/editor](https://)
@@ -53,7 +60,7 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
 * 光源支持环境光、方向光、点光源、聚光灯、面积光；
 * 阴影实现以shadow map基础，支持PCSS;
 * 在深度上支持正向Z和reveredZ，默认开启reversedZ;
-* 支持MSAA，FXAA，并预计实现TAA。目前MSAA与延迟渲染不能同时使用（后期可能改进边缘检测后，支持同时使用）；
+* 支持MSAA，FXAA，并预计实现TAA(todo)。目前MSAA与延迟渲染不能同时使用（后期可能改进边缘检测后，支持同时使用）；
 * 渲染模式支持前向渲染和延迟渲，透明物体渲染支持alpha透明和物理透明；
 * 在渲染的GBuffer使用了多通道（单点56bit），数据覆盖color、depth、position、normal、albedo、roughness、metallic、ao、emissive、material、id等；
 * 实体上支持mesh、lines、points，sprite，并支持实例化，在数据属性多种形式的属性组合的数组形式和ArrayBuffer形式数据；
@@ -128,7 +135,7 @@ const mesh = new Mesh({
 await scene.add(mesh);
 ```
 
-> 更多可运行示例见下方「简单示例」及 [`e2e-cases/`](./e2e-cases) 目录；完整 API 速查见 [`design/workBuddy/core/03-API速查手册.md`](./design/workBuddy/core/03-API速查手册.md)。
+> 更多可运行示例见下方「简单示例」及 [`e2e-cases/`](./e2e-cases) 目录；完整 API 速查见 [https://WebgpuEngine.github.io/WE3D]。
 
 ## 特性一览
 
