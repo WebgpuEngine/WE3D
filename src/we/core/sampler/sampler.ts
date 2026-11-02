@@ -1,5 +1,3 @@
-
 export class Sampler {
-  constructor() {
-  }
+    constructor() {}
 }

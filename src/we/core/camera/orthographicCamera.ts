@@ -1,20 +1,14 @@
-import {
-    mat4,
-    vec4,
-    Vec4,
-} from 'wgpu-matrix';
+import { mat4, vec4, Vec4 } from 'wgpu-matrix';
 
-
-import { BaseCamera, I_BaseCameraValue } from "./baseCamera";
+import { BaseCamera, I_BaseCameraValue } from './baseCamera';
 import { computeAABB } from '../math/Box';
 import { generateSphereFromBox3 } from '../math/sphere';
 
 export interface IV_OrthographicCamera extends I_BaseCameraValue {
-    left: number,
-    right: number,
-    top: number,
-    bottom: number,
-
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
 }
 
 export class OrthographicCamera extends BaseCamera {
@@ -24,7 +18,7 @@ export class OrthographicCamera extends BaseCamera {
     saveJSON() {
         throw new Error('Method not implemented.');
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error('Method not implemented.');
     }
 
@@ -37,42 +31,60 @@ export class OrthographicCamera extends BaseCamera {
     updateProjectionMatrix() {
         this.aspect = this.scene.aspect;
         // let baseViewW = this.inpuValues.right - this.inpuValues.left;
-        let baseViewH = this.inpuValues.top - this.inpuValues.bottom;
+        const baseViewH = this.inpuValues.top - this.inpuValues.bottom;
         // let centerX = (this.inpuValues.right + this.inpuValues.left) / 2;
-        let centerY = (this.inpuValues.top + this.inpuValues.bottom) / 2;
+        const centerY = (this.inpuValues.top + this.inpuValues.bottom) / 2;
 
-        let top = centerY + baseViewH / this.aspect / 2;
-        let bottom = centerY - baseViewH / this.aspect / 2;
+        const top = centerY + baseViewH / this.aspect / 2;
+        const bottom = centerY - baseViewH / this.aspect / 2;
         // let right = centerX + baseViewW / 2;
         // let left = centerX - baseViewW / 2;
         // let near = this.inpuValues.near;
         // let far = this.inpuValues.far;
-        this.projectionMatrix = mat4.ortho(this.inpuValues.left, this.inpuValues.right, bottom, top, this.inpuValues.near, this.inpuValues.far);
+        this.projectionMatrix = mat4.ortho(
+            this.inpuValues.left,
+            this.inpuValues.right,
+            bottom,
+            top,
+            this.inpuValues.near,
+            this.inpuValues.far,
+        );
         if (this.scene.reversedZ.isReversedZ) {
-            let reversedZ = mat4.create(
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, -1.0, 0.0,
-                0.0, 0.0, 1.0, 1.0
-            )
+            const reversedZ = mat4.create(
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+            );
             this.projectionMatrix = mat4.multiply(reversedZ, this.projectionMatrix);
         }
         // console.log(this.projectionMatrix)
         this.updateBoundingBox();
-
     }
     updateBoundingBox(): void {
-        let baseViewH = this.inpuValues.top - this.inpuValues.bottom;
-        let baseViewW = this.inpuValues.right - this.inpuValues.left;
+        const baseViewH = this.inpuValues.top - this.inpuValues.bottom;
+        const baseViewW = this.inpuValues.right - this.inpuValues.left;
 
-        let centerX = (this.inpuValues.right + this.inpuValues.left) / 2;
-        let centerY = (this.inpuValues.top + this.inpuValues.bottom) / 2;
+        const centerX = (this.inpuValues.right + this.inpuValues.left) / 2;
+        const centerY = (this.inpuValues.top + this.inpuValues.bottom) / 2;
 
-        let top = centerY + baseViewH / this.aspect / 2;
-        let bottom = centerY - baseViewH / this.aspect / 2;
-        let right = centerX + baseViewW / 2;
-        let left = centerX - baseViewW / 2;
-        let positions: Vec4[] = [
+        const top = centerY + baseViewH / this.aspect / 2;
+        const bottom = centerY - baseViewH / this.aspect / 2;
+        const right = centerX + baseViewW / 2;
+        const left = centerX - baseViewW / 2;
+        const positions: Vec4[] = [
             vec4.fromValues(left, bottom, this.inpuValues.near, 1),
             vec4.fromValues(right, bottom, this.inpuValues.near, 1),
             vec4.fromValues(right, top, this.inpuValues.near, 1),
@@ -88,13 +100,12 @@ export class OrthographicCamera extends BaseCamera {
             i = vec4.transformMat4(i, this.modelMatrix);
             i = vec4.transformMat4(i, this.viewMatrix);
         }
-        let positionsForAABB: [number, number, number][] = []
-        for (let i of positions) {
+        const positionsForAABB: [number, number, number][] = [];
+        for (const i of positions) {
             positionsForAABB.push([i[0], i[1], i[2]]);
         }
         this.boundingBox = computeAABB(positionsForAABB);
         // this.boundingSphere = computeBoundingSphere(positionsForAABB);
         this.boundingSphere = generateSphereFromBox3(this.boundingBox);
     }
-
 }

@@ -1,6 +1,3 @@
-
 export class ColliderBody {
-    constructor() {
-       
-    }
+    constructor() {}
 }

@@ -1,6 +1,6 @@
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { I_UUID } from "./root";
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { I_UUID } from './root';
 
 export abstract class ECSManager<T extends I_UUID> {
     scene: Scene;
@@ -15,24 +15,24 @@ export abstract class ECSManager<T extends I_UUID> {
     }
     // abstract add(entity: T): void;
     // abstract remove(entity: T): void;
-    add(entity: T, scendValue?: any) {
-        let index = this.list.indexOf(entity);
+    add(entity: T, _scendValue?: any) {
+        const index = this.list.indexOf(entity);
         if (index != -1) {
             return;
         }
         this.list.push(entity);
-        if(entity._manager == undefined){
+        if (entity._manager == undefined) {
             entity._manager = this;
         }
     }
-    remove(entity: T, scendValue?: any) {
-        let index = this.list.indexOf(entity);
+    remove(entity: T, _scendValue?: any) {
+        const index = this.list.indexOf(entity);
         if (index != -1) {
             this.list.splice(index, 1);
         }
     }
     checkDestroy() {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             if (perOne == undefined || perOne == null || perOne._isDestroy) {
                 this.remove(perOne);
             }
@@ -43,7 +43,7 @@ export abstract class ECSManager<T extends I_UUID> {
         return this.list.length;
     }
     getOneByUUID(UUID: string) {
-        for (let perOne of this.list) {
+        for (const perOne of this.list) {
             if (perOne.UUID! == UUID) {
                 return perOne;
             }

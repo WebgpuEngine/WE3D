@@ -1,14 +1,14 @@
-import { Vec3 } from "wgpu-matrix";
+import { Vec3 } from 'wgpu-matrix';
 
 export interface Rotation {
     /**
      * 旋转轴
      */
-    axis: Vec3,
-    /** 
+    axis: Vec3;
+    /**
      * 旋转角度 ：弧度制
      */
-    angleInRadians: number,
+    angleInRadians: number;
 }
 /**
  * 旋转数组

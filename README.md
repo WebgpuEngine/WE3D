@@ -2,19 +2,41 @@
 
 # WE 3D 渲染引擎 webGPU engine 3D
 
+[![npm version](https://img.shields.io/npm/v/we3d)](https://www.npmjs.com/package/we3d)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6)
+![WebGPU](https://img.shields.io/badge/WebGPU-API-00A6A6)
+
+## ✨ 核心亮点
+
+- **纯 WebGPU 原生引擎**：基于 TypeScript + WebGPU API 从底层独立设计与实现，无 WebGL 兼容层包袱，面向下一代 Web 图形标准。
+- **Command 集合渲染架构**：以 Draw / Compute / Copy Command 集合统一提交 shader，底层抽象清晰、贴近 WebGPU 原生（架构参考 Babylon / three.js / Cesium / UE）。
+- **ECS 贯穿全栈**：实体、材质、光影、摄像机、输入、动画、纹理统一以 ECS 管理，组合灵活、易扩展。
+- **高级大气与云渲染**：内置实时积分 / Bruneton / Hillaire 三种大气方案，叠加体积云、丁达尔光效与云阴影。
+- **体渲染双方案**：三维纹理采样与 ray march 实时计算，覆盖仿真与体渲染场景。
+- **完整渲染特性**：前向 + 延迟双管线、多通道 GBuffer（单点 56bit）、IBL + SH、PCSS 软阴影、reversedZ、MSAA / FXAA、sRGB 与 Display P3 色彩空间。
+- **GPU 拾取 + BVH 加速**：默认 GPU 拾取，CPU 侧 ray 配合 BVH 与物理引擎实现高性能拾取（todo）。
+- **严谨工程化**：Vitest（Node + 浏览器真实 device）单测、Playwright 截图基线 e2e、ESLint / Prettier / Typedoc / CI 门禁，以 ESM + `.d.ts` 发布 npm。
+
 WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发阶段，功能、模块与结构会频繁调整。）
 
 1. 基础引擎部分包括：核心功能、图形学功能、模型功能、物理引擎整合、动画管理五个模块。
 本项目：https://github.com/WebgpuEngine/WE3D
 当前开发版本文档：https://WebgpuEngine.github.io/WE3D
 2. npm 包
+
     npm 安装： 
+
          npm i we3d
          npm i webgpu-we3d
+
     npm发布地址：
+
         https://www.npmjs.com/package/we3d
         https://www.npmjs.com/package/webgpu-we3d
-    npm发布版本文档 https://webgpuengine.github.io/doc
+
+    npm发布版本文档 ：     
+        https://webgpuengine.github.io/doc
+
 3. doing ,示例代码  https://github.com/WebgpuEngine/example
 4. doing ,演示Demo  https://github.com/WebgpuEngine/demo
 5. todo,编辑器部分包括：材质编辑器、动画编辑器、场景编辑器，构建管理器四个模块，以实现可视化工作。在[https://github.com/WebgpuEngine/editor](https://)
@@ -38,7 +60,7 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
 * 光源支持环境光、方向光、点光源、聚光灯、面积光；
 * 阴影实现以shadow map基础，支持PCSS;
 * 在深度上支持正向Z和reveredZ，默认开启reversedZ;
-* 支持MSAA，FXAA，并预计实现TAA。目前MSAA与延迟渲染不能同时使用（后期可能改进边缘检测后，支持同时使用）；
+* 支持MSAA，FXAA，并预计实现TAA(todo)。目前MSAA与延迟渲染不能同时使用（后期可能改进边缘检测后，支持同时使用）；
 * 渲染模式支持前向渲染和延迟渲，透明物体渲染支持alpha透明和物理透明；
 * 在渲染的GBuffer使用了多通道（单点56bit），数据覆盖color、depth、position、normal、albedo、roughness、metallic、ao、emissive、material、id等；
 * 实体上支持mesh、lines、points，sprite，并支持实例化，在数据属性多种形式的属性组合的数组形式和ArrayBuffer形式数据；
@@ -56,6 +78,79 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
 * 大气层方案，有实时积分方案，Bruneton方案，Hillaire方案；
 * 在大气层上叠加的还有体积云，丁达尔光效，云阴影等；
 * todo：粒子系统、SSGI、SSR、SSAO、TAA、
+
+## 快速开始
+
+安装：
+
+```bash
+npm i we3d
+```
+
+在 HTML 中准备一个 canvas，并通过 ES Module 引入引擎：
+
+```html
+<canvas id="render"></canvas>
+<script type="module" src="./main.ts"></script>
+```
+
+`main.ts` —— 初始化场景、相机与第一个网格：
+
+```ts
+import {
+    initScene,
+    PerspectiveCamera,
+    BoxGeometry,
+    ColorMaterial,
+    Mesh,
+} from 'we3d';
+
+// 1. 初始化场景（绑定 <canvas id="render">）
+const scene = await initScene({
+    initConfig: {
+        canvas: 'render',
+        backgroudColor: [0, 0, 0, 1],
+    },
+});
+
+// 2. 创建透视相机（arcball 控制器）
+const camera = new PerspectiveCamera({
+    fov: (2 * Math.PI) / 5,
+    aspect: scene.aspect,
+    near: 0.01,
+    far: 100,
+    position: [0, 0, 3],
+    lookAt: [0, 0, 0],
+    controlType: 'arcball',
+});
+await scene.add(camera);
+
+// 3. 几何体 + 材质 + 网格实体
+const boxGeometry = new BoxGeometry();
+const colorMaterial = new ColorMaterial({ color: [0, 0.1, 0.2, 1] });
+const mesh = new Mesh({
+    attributes: { geometry: boxGeometry },
+    material: colorMaterial,
+});
+await scene.add(mesh);
+```
+
+> 更多可运行示例见下方「简单示例」及 [`e2e-cases/`](./e2e-cases) 目录；完整 API 速查见 [https://WebgpuEngine.github.io/WE3D]。
+
+## 特性一览
+
+> 状态说明：✅ 已实现 · 🔄 进行中 · 🕓 规划中（避免将规划项误读为已落地能力）
+
+| ✅ 已实现 | 🔄 进行中 | 🕓 规划中 |
+| --- | --- | --- |
+| sRGB / Display P3、linear 工作流、多模式 toneMapping | 物理引擎（rapier） | TAA |
+| 环境光 / 方向光 / 点光 / 聚光 + PCSS 软阴影 | gltf / obj / fbx 模型 | SSGI / SSR / SSAO |
+| 前向 + 延迟双管线、多通道 GBuffer（单点 56bit） | 面积光 | 粒子系统 |
+| IBL + SH、体渲染（3D 纹理 / ray march） | 物理透明 / A-Buffer | 流体系统 |
+| 大气三方案 + 体积云 + 丁达尔 + 云阴影 | 仿真数据 / 地理空间 | 编辑器（材质/动画/场景/构建管理器） |
+| MSAA / FXAA、reversedZ（默认） |  | 服务端活链接 / USD / Nerf / 三维重构 / AI 适配 |
+| 骨骼动画 / 变形目标 / 关键帧 / 物理驱动动画 |  |  |
+| GPU 拾取 + BVH、1024 光源、ECS 全栈管理 |  |  |
 
 # 简单示例
 
@@ -98,6 +193,42 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
 |                                                   |                                                   |                                                   |
 | 粒子系统                                          | 流体系统                                          |                                                   |
 |                                                   |                                                   |                                                   |
+
+## 项目结构与开发环境
+
+**源码组织**（核心引擎位于 [`src/we/core`](./src/we/core)）：
+
+| 模块 | 职责 |
+| --- | --- |
+| `scene` / `organization` / `entity` | 场景、节点空间（ECS）、实体（Mesh/Lines/Points/Sprite） |
+| `command` / `commandInfo` | Draw / Compute / Copy Command 集合与生成器（底层渲染抽象） |
+| `material` / `texture` / `geometry` / `shaders` | 材质（PBR/BlinnPhong/Color…）、纹理/立方体贴图/HDR、几何体、WGSL |
+| `camera` / `control` / `light` / `shadow` | 相机、控制器、光源与阴影 |
+| `ibl` / `gbuffers` / `postprocess` / `pickup` | IBL、延迟渲染 GBuffer、后处理、GPU/CPU 拾取 |
+| `animation` / `particle` / `physics` | 关键帧/骨骼/变形目标、粒子、rapier 物理 |
+| `atmosphere` / `SHR` | 大气三方案、球谐 |
+| `math` / `base` / `resources` | 数学库、基础类型、资源/缓冲管理 |
+
+**运行环境要求**：
+- 需要支持 **WebGPU** 的浏览器（如 Chrome / Edge 113+，或开启 WebGPU 的 Firefox / Safari 技术预览）。
+- 本地开发通过 `npm run dev`（Vite）启动；WebGPU 在 `http://localhost` 下可用，部署到公网需 **HTTPS** 或 `localhost`。
+- 需 Node.js 用于构建 / 测试 / 文档生成（依赖版本见 `package.json` `devDependencies`）。
+
+**规划路线（Roadmap）**：
+- 物理引擎整合（rapier）、gltf/obj/fbx 模型加载完善；
+- 面积光、物理透明、A-Buffer；
+- 全局光照（SSGI / SSR / SSAO）、TAA、粒子与流体系统；
+- 仿真数据 / 地理空间数据支持；
+- 可视化编辑器（材质 / 动画 / 场景 / 构建管理器）；
+- 服务端活链接、USD / Nerf 工作流、三维重构、AI 适配。
+
+# 工程化与开发约定
+
+* 目录结构约定、AI 工作约定、开发流程与发布约定见 [AGENTS.md](./AGENTS.md)。
+* 工程化方案（vitest / ESLint / Prettier / Playwright / CI / lib 打包）见 [design/engineering-plan.md](./design/engineering-plan.md)。
+* 已知缺陷与修复路线见 [design/workbuddy/core/04-问题缺陷与改进建议.md](./design/workbuddy/core/04-问题缺陷与改进建议.md)。
+* 提交 git 前必须跑 e2e 验证（或 Playwright 关键示例），防止源码改动破坏正常功能。
+* 包名 `we3d`，以 lib 形式（ESM + `.d.ts`）发布到 npm，不做 web app 打包。
 
 # 资料参考与推荐
 

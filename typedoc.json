@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "we3d",
+  "entryPoints": ["src/we/**/*.ts"],
+  "out": "docs",
+  "tsconfig": "./tsconfig.json",
+  "skipErrorChecking": true,
+  "exclude": ["**/* copy.ts", "**/*.test.ts"],
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "readme": "./typedoc-home.md"
+}

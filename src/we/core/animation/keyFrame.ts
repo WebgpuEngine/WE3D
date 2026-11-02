@@ -1,8 +1,8 @@
-import { Clock } from "../scene/clock";
-import { E_AnimationTargetType, E_AnimationType, E_PlayState } from "./base";
-import { BaseAnimation, IV_AnimationValue } from "./BaseAnimation";
-import { weVec3, weVec4 } from "../base/coreDefine";
-import { AnimationManager } from "./animationManager";
+import { Clock } from '../scene/clock';
+import { E_AnimationTargetType, E_AnimationType, E_PlayState } from './base';
+import { BaseAnimation, IV_AnimationValue } from './BaseAnimation';
+import { weVec3, weVec4 } from '../base/coreDefine';
+import { AnimationManager } from './animationManager';
 
 export class KeyFrameAnimation extends BaseAnimation {
     declare manager: AnimationManager;
@@ -15,11 +15,14 @@ export class KeyFrameAnimation extends BaseAnimation {
 
     update(clock: Clock): void {
         super.update(clock);
-        /** 
+        /**
          * 1、playing，更新属性。
          * 2、 stop：插值器中符合了[预定规则]进行了stop操作，但还需要更新attribute，另外，还需要调用stop()方法。
          */
-        if ((this.playState === E_PlayState.playing || this.playState == E_PlayState.stop) && this.parent != undefined) {
+        if (
+            (this.playState === E_PlayState.playing || this.playState == E_PlayState.stop) &&
+            this.parent != undefined
+        ) {
             this.updateAttribute();
         }
         // 停止动作stop，不是已经停止stopped状态。调用stop()方法（状态变化到已经停止状态，stop-->stopped）。
@@ -59,6 +62,4 @@ export class KeyFrameAnimation extends BaseAnimation {
                 break;
         }
     }
-
-
 }

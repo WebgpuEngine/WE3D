@@ -1,61 +1,54 @@
-import { mat4 } from "wgpu-matrix";
-import { IV_ComputeCommand, ComputeCommand } from "../../command/ComputeCommand";
-import { AtmosphereHillaire } from "./atmosphereHillaire";
-import { shaderLutSkyview } from "./baseHillaire";
-import { HillaireLutBase } from "./lutBase";
-import { LutUseShadowMap } from "./lutUseShadowMap";
+import { IV_ComputeCommand, ComputeCommand } from '../../command/ComputeCommand';
+import { shaderLutSkyview } from './baseHillaire';
+import { LutUseShadowMap } from './lutUseShadowMap';
 
 export class HillaireLutSkyView extends LutUseShadowMap {
-
-
-
     generateBindGroup0() {
-        //bindgroup  and layout 
-        let layout0: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
-            label: "lutSkyView",
+        //bindgroup  and layout
+        const layout0: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
+            label: 'lutSkyView',
             entries: [
                 {
                     binding: 0,
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
-                        type: "uniform",
+                        type: 'uniform',
                     },
                 },
                 {
                     binding: 1,
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
-                        type: "uniform",
+                        type: 'uniform',
                     },
                 },
                 {
                     binding: 2,
                     visibility: GPUShaderStage.COMPUTE,
                     sampler: {
-                        type: "filtering"
+                        type: 'filtering',
                     },
                 },
                 {
                     binding: 3,
                     visibility: GPUShaderStage.COMPUTE,
                     texture: {
-                        sampleType: "float",
+                        sampleType: 'float',
                     },
                 },
                 {
                     binding: 4,
                     visibility: GPUShaderStage.COMPUTE,
                     texture: {
-                        sampleType: "float",
+                        sampleType: 'float',
                     },
                 },
                 {
                     binding: 5,
                     visibility: GPUShaderStage.COMPUTE,
-                    storageTexture:
-                    {
-                        access: "write-only", // 和 WGSL 的 read_write 对应
-                        format: "rgba16float" // 必须和纹理创建时的格式完全一致
+                    storageTexture: {
+                        access: 'write-only', // 和 WGSL 的 read_write 对应
+                        format: 'rgba16float', // 必须和纹理创建时的格式完全一致
                     },
                 },
             ],
@@ -63,7 +56,7 @@ export class HillaireLutSkyView extends LutUseShadowMap {
         this.bindGroupLayout[0] = layout0;
 
         const bindGroupDescriptor0: GPUBindGroupDescriptor = {
-            label: "lutSkyView",
+            label: 'lutSkyView',
             layout: layout0,
             entries: [
                 {
@@ -96,7 +89,7 @@ export class HillaireLutSkyView extends LutUseShadowMap {
         this.bindGroups[0] = bindGroup0;
     }
     generateCommands() {
-        // //bindgroup  and layout 
+        // //bindgroup  and layout
         // let layout0: GPUBindGroupLayout = this.scene.device.createBindGroupLayout({
         //     label: "lutSkyView",
         //     entries: [
@@ -185,17 +178,17 @@ export class HillaireLutSkyView extends LutUseShadowMap {
         this.generateBindGroup1();
 
         //1、创建GPURenderPipelineDescriptor
-        let pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: "lutSkyView",
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+            label: 'lutSkyView',
             // label: "PipelineLayout@" + this.clock.now + " " + values.label,
             bindGroupLayouts: this.bindGroupLayout,
-        }
+        };
         //2、创建GPUPipelineLayout
-        let pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const pipelineLayout = this.scene.device.createPipelineLayout(pipelineLayoutDescriptor);
 
         //3、创建ComputeCommand
-        let options: IV_ComputeCommand = {
-            label: "lutSkyView",
+        const options: IV_ComputeCommand = {
+            label: 'lutSkyView',
             device: this.scene.device,
             baseInfo: {
                 parent: this,
@@ -208,14 +201,14 @@ export class HillaireLutSkyView extends LutUseShadowMap {
                     pipelineLayout: pipelineLayout,
                     shader: {
                         shaderCode: shaderLutSkyview,
-                        entryPoint: "render_sky_view_lut",
+                        entryPoint: 'render_sky_view_lut',
                         constants: this.getConstants(),
-                    }
+                    },
                 },
             },
-        }
+        };
 
-        let DC = new ComputeCommand(options);
+        const DC = new ComputeCommand(options);
         this.commands.push(DC);
         // DC.submit()
     }

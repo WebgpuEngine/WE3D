@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2E 测试用例目录</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e; color: #c8d6e5;
+            min-height: 100vh; padding: 40px 24px 80px;
+        }
+        .wrap { max-width: 900px; margin: 0 auto; }
+        header { margin-bottom: 32px; }
+        header h1 { font-size: 28px; font-weight: 800; color: #0f9bf2; letter-spacing: -0.5px; }
+        header .sub { margin-top: 8px; font-size: 14px; color: #576574; }
+        header .sub code { color: #c8d6e5; background: #16213e; padding: 2px 6px; border-radius: 4px; }
+        .toolbar { margin-bottom: 24px; }
+        #filterInput {
+            width: 100%; padding: 10px 14px; font-size: 14px;
+            color: #c8d6e5; background: #16213e;
+            border: 1px solid #2c3e50; border-radius: 8px; outline: none;
+        }
+        #filterInput:focus { border-color: #0f9bf2; }
+        #filterInput::placeholder { color: #576574; }
+        .group { margin-bottom: 28px; }
+        .group-title {
+            font-size: 15px; font-weight: 600; color: #0f9bf2;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            padding-bottom: 8px; margin-bottom: 12px; border-bottom: 1px solid #2c3e50;
+        }
+        .group-title .count {
+            color: #576574; font-weight: 400; font-size: 12px;
+            background: #16213e; padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+        }
+        .case-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+        .case {
+            position: relative;
+            display: flex; flex-direction: column; gap: 2px;
+            background: #16213e; border: 1px solid #2c3e50; border-radius: 8px;
+            padding: 10px 14px; transition: border-color 0.15s;
+        }
+        .case:hover { border-color: #0f9bf2; }
+        .case-link { color: #c8d6e5; font-size: 14px; font-weight: 500; text-decoration: none; }
+        .case-link:hover { color: #0f9bf2; }
+        .case-link::after { content: ""; position: absolute; inset: 0; }
+        .case-url { font-size: 11px; color: #576574; word-break: break-all; }
+        .case.hidden, .group.hidden { display: none !important; }
+        .empty { color: #576574; font-size: 14px; padding: 24px 0; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>E2E 测试用例</h1>
+            <div class="sub">共 12 个目录，45 个用例 · 通过 <code>npm run dev</code> 启动后点击访问（localhost:5173）</div>
+        </header>
+        <div class="toolbar">
+            <input id="filterInput" type="search" placeholder="搜索用例 / 目录..." autocomplete="off">
+        </div>
+        <main id="list">
+<section class="group"><h2 class="group-title">camera <span class="count">2</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./camera/otrho_1.html">otrho_1</a><span class="case-url">/e2e-cases/camera/otrho_1.html</span></li>
+<li class="case"><a class="case-link" href="./camera/PerspectiveCamera_1.html">PerspectiveCamera_1</a><span class="case-url">/e2e-cases/camera/PerspectiveCamera_1.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">deferRender <span class="count">6</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./deferRender/box.html">box</a><span class="case-url">/e2e-cases/deferRender/box.html</span></li>
+<li class="case"><a class="case-link" href="./deferRender/pbr_1.html">pbr_1</a><span class="case-url">/e2e-cases/deferRender/pbr_1.html</span></li>
+<li class="case"><a class="case-link" href="./deferRender/PBR_dirlight_1.html">PBR_dirlight_1</a><span class="case-url">/e2e-cases/deferRender/PBR_dirlight_1.html</span></li>
+<li class="case"><a class="case-link" href="./deferRender/PBR_point_oneEntity_1.html">PBR_point_oneEntity_1</a><span class="case-url">/e2e-cases/deferRender/PBR_point_oneEntity_1.html</span></li>
+<li class="case"><a class="case-link" href="./deferRender/pbr_rust.html">pbr_rust</a><span class="case-url">/e2e-cases/deferRender/pbr_rust.html</span></li>
+<li class="case"><a class="case-link" href="./deferRender/pbr_spot_1.html">pbr_spot_1</a><span class="case-url">/e2e-cases/deferRender/pbr_spot_1.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">geometry <span class="count">2</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./geometry/box.html">box</a><span class="case-url">/e2e-cases/geometry/box.html</span></li>
+<li class="case"><a class="case-link" href="./geometry/sphere.html">sphere</a><span class="case-url">/e2e-cases/geometry/sphere.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">IBL <span class="count">1</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./IBL/sphere_sh_filament_2.html">sphere_sh_filament_2</a><span class="case-url">/e2e-cases/IBL/sphere_sh_filament_2.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">instance <span class="count">1</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./instance/inside_outside.html">inside_outside</a><span class="case-url">/e2e-cases/instance/inside_outside.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">lights <span class="count">4</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./lights/AmbientLight.html">AmbientLight</a><span class="case-url">/e2e-cases/lights/AmbientLight.html</span></li>
+<li class="case"><a class="case-link" href="./lights/DirectionalLight_1.html">DirectionalLight_1</a><span class="case-url">/e2e-cases/lights/DirectionalLight_1.html</span></li>
+<li class="case"><a class="case-link" href="./lights/pointLight.html">pointLight</a><span class="case-url">/e2e-cases/lights/pointLight.html</span></li>
+<li class="case"><a class="case-link" href="./lights/spotLight.html">spotLight</a><span class="case-url">/e2e-cases/lights/spotLight.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">material <span class="count">6</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./material/pbr_list_iron.html">pbr_list_iron</a><span class="case-url">/e2e-cases/material/pbr_list_iron.html</span></li>
+<li class="case"><a class="case-link" href="./material/pbr_rust.html">pbr_rust</a><span class="case-url">/e2e-cases/material/pbr_rust.html</span></li>
+<li class="case"><a class="case-link" href="./material/pbr_sphere.html">pbr_sphere</a><span class="case-url">/e2e-cases/material/pbr_sphere.html</span></li>
+<li class="case"><a class="case-link" href="./material/phong_normal.html">phong_normal</a><span class="case-url">/e2e-cases/material/phong_normal.html</span></li>
+<li class="case"><a class="case-link" href="./material/phong_sphere.html">phong_sphere</a><span class="case-url">/e2e-cases/material/phong_sphere.html</span></li>
+<li class="case"><a class="case-link" href="./material/vertexColor.html">vertexColor</a><span class="case-url">/e2e-cases/material/vertexColor.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">postprocess <span class="count">3</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./postprocess/blur3x3.html">blur3x3</a><span class="case-url">/e2e-cases/postprocess/blur3x3.html</span></li>
+<li class="case"><a class="case-link" href="./postprocess/FXAA.html">FXAA</a><span class="case-url">/e2e-cases/postprocess/FXAA.html</span></li>
+<li class="case"><a class="case-link" href="./postprocess/RedToOne.html">RedToOne</a><span class="case-url">/e2e-cases/postprocess/RedToOne.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">primitive <span class="count">4</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./primitive/line_list.html">line_list</a><span class="case-url">/e2e-cases/primitive/line_list.html</span></li>
+<li class="case"><a class="case-link" href="./primitive/line_strip.html">line_strip</a><span class="case-url">/e2e-cases/primitive/line_strip.html</span></li>
+<li class="case"><a class="case-link" href="./primitive/points.html">points</a><span class="case-url">/e2e-cases/primitive/points.html</span></li>
+<li class="case"><a class="case-link" href="./primitive/triangle.html">triangle</a><span class="case-url">/e2e-cases/primitive/triangle.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">shadow <span class="count">6</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./shadow/PBR_dirlight_1.html">PBR_dirlight_1</a><span class="case-url">/e2e-cases/shadow/PBR_dirlight_1.html</span></li>
+<li class="case"><a class="case-link" href="./shadow/PBR_point_oneEntity_1.html">PBR_point_oneEntity_1</a><span class="case-url">/e2e-cases/shadow/PBR_point_oneEntity_1.html</span></li>
+<li class="case"><a class="case-link" href="./shadow/PBR_spot_0.html">PBR_spot_0</a><span class="case-url">/e2e-cases/shadow/PBR_spot_0.html</span></li>
+<li class="case"><a class="case-link" href="./shadow/phong_dirlight_sphere.html">phong_dirlight_sphere</a><span class="case-url">/e2e-cases/shadow/phong_dirlight_sphere.html</span></li>
+<li class="case"><a class="case-link" href="./shadow/phong_pointLight_1.html">phong_pointLight_1</a><span class="case-url">/e2e-cases/shadow/phong_pointLight_1.html</span></li>
+<li class="case"><a class="case-link" href="./shadow/phong_spot_1.html">phong_spot_1</a><span class="case-url">/e2e-cases/shadow/phong_spot_1.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">texture <span class="count">7</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./texture/arraybuffer2d.html">arraybuffer2d</a><span class="case-url">/e2e-cases/texture/arraybuffer2d.html</span></li>
+<li class="case"><a class="case-link" href="./texture/cubeTexture_1.html">cubeTexture_1</a><span class="case-url">/e2e-cases/texture/cubeTexture_1.html</span></li>
+<li class="case"><a class="case-link" href="./texture/cubeTexture_sky.html">cubeTexture_sky</a><span class="case-url">/e2e-cases/texture/cubeTexture_sky.html</span></li>
+<li class="case"><a class="case-link" href="./texture/texture_1.html">texture_1</a><span class="case-url">/e2e-cases/texture/texture_1.html</span></li>
+<li class="case"><a class="case-link" href="./texture/texture_2_sphere.html">texture_2_sphere</a><span class="case-url">/e2e-cases/texture/texture_2_sphere.html</span></li>
+<li class="case"><a class="case-link" href="./texture/texture_hdr.html">texture_hdr</a><span class="case-url">/e2e-cases/texture/texture_hdr.html</span></li>
+<li class="case"><a class="case-link" href="./texture/video_2_url.html">video_2_url</a><span class="case-url">/e2e-cases/texture/video_2_url.html</span></li></ul></section>
+<section class="group"><h2 class="group-title">transparent <span class="count">3</span></h2><ul class="case-list"><li class="case"><a class="case-link" href="./transparent/alpha_distance_1.html">alpha_distance_1</a><span class="case-url">/e2e-cases/transparent/alpha_distance_1.html</span></li>
+<li class="case"><a class="case-link" href="./transparent/img_distance_test_1.html">img_distance_test_1</a><span class="case-url">/e2e-cases/transparent/img_distance_test_1.html</span></li>
+<li class="case"><a class="case-link" href="./transparent/img_pixcel_alpha_1.html">img_pixcel_alpha_1</a><span class="case-url">/e2e-cases/transparent/img_pixcel_alpha_1.html</span></li></ul></section>
+        </main>
+    </div>
+    <script>
+        (function () {
+            var input = document.getElementById('filterInput');
+            input.addEventListener('input', function () {
+                var q = input.value.trim().toLowerCase();
+                document.querySelectorAll('.group').forEach(function (group) {
+                    var matched = false;
+                    group.querySelectorAll('.case').forEach(function (item) {
+                        var hit = !q || item.textContent.toLowerCase().indexOf(q) !== -1;
+                        item.classList.toggle('hidden', !hit);
+                        if (hit) matched = true;
+                    });
+                    group.classList.toggle('hidden', !matched);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,20 +1,18 @@
 import { mat4, vec4, Vec4 } from 'wgpu-matrix';
 
-
-import { BaseCamera, I_BaseCameraValue } from "./baseCamera"
-import { Clock } from '../scene/clock';
+import { BaseCamera, I_BaseCameraValue } from './baseCamera';
 import { computeAABB } from '../math/Box';
-import { computeBoundingSphere, generateSphereFromBox3 } from '../math/sphere';
+import { generateSphereFromBox3 } from '../math/sphere';
 
 /** 透视相机 */
 export interface IV_PerspectiveCamera extends I_BaseCameraValue {
     /**The camera angle from top to bottom (in radians). */
-    fov: number,
-    aspect: number,
-    filmGauge?: number,
-    filmOffset?: number,
-    focus?: number,
-    zoom?: number
+    fov: number;
+    aspect: number;
+    filmGauge?: number;
+    filmOffset?: number;
+    focus?: number;
+    zoom?: number;
 }
 
 export class PerspectiveCamera extends BaseCamera {
@@ -24,13 +22,13 @@ export class PerspectiveCamera extends BaseCamera {
     saveJSON() {
         throw new Error('Method not implemented.');
     }
-    loadJSON(json: any): void {
+    loadJSON(_json: any): void {
         throw new Error('Method not implemented.');
     }
 
-    declare inpuValues: IV_PerspectiveCamera
+    declare inpuValues: IV_PerspectiveCamera;
     /**
-     * 
+     *
      * @param option:IV_PerspectiveCamera
      */
     constructor(option: IV_PerspectiveCamera) {
@@ -76,30 +74,45 @@ export class PerspectiveCamera extends BaseCamera {
      * @param option 透视相机的初始化参数
      */
     updateProjectionMatrix() {
-        let aspect = this.scene.aspect;
+        const aspect = this.scene.aspect;
         this.inpuValues.aspect = aspect;
 
-
-        this.projectionMatrix = mat4.perspective(this.inpuValues.fov, aspect, this.inpuValues.near, this.inpuValues.far);
+        this.projectionMatrix = mat4.perspective(
+            this.inpuValues.fov,
+            aspect,
+            this.inpuValues.near,
+            this.inpuValues.far,
+        );
         if (this.scene.reversedZ.isReversedZ) {
-            let reversedZ = mat4.create(
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, -1.0, 0.0,
-                0.0, 0.0, 1.0, 1.0
-            )
+            const reversedZ = mat4.create(
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.0,
+            );
             this.projectionMatrix = mat4.multiply(reversedZ, this.projectionMatrix);
-        }        // console.log(this.projectionMatrix)
+        } // console.log(this.projectionMatrix)
         this.updateBoundingBox();
     }
 
-
     updateBoundingBox(): void {
-        let nearHeight = 2 * this.inpuValues.near * Math.tan(this.inpuValues.fov / 2);
-        let nearWidth = nearHeight * this.inpuValues.aspect;
-        let farHeight = 2 * this.inpuValues.far * Math.tan(this.inpuValues.fov / 2);
-        let farWidth = farHeight * this.inpuValues.aspect;
-        let positions: Vec4[] = [
+        const nearHeight = 2 * this.inpuValues.near * Math.tan(this.inpuValues.fov / 2);
+        const nearWidth = nearHeight * this.inpuValues.aspect;
+        const farHeight = 2 * this.inpuValues.far * Math.tan(this.inpuValues.fov / 2);
+        const farWidth = farHeight * this.inpuValues.aspect;
+        const positions: Vec4[] = [
             vec4.fromValues(-nearWidth / 2, -nearHeight / 2, this.inpuValues.near, 1),
             vec4.fromValues(nearWidth / 2, -nearHeight / 2, this.inpuValues.near, 1),
             vec4.fromValues(nearWidth / 2, nearHeight / 2, this.inpuValues.near, 1),
@@ -115,8 +128,8 @@ export class PerspectiveCamera extends BaseCamera {
             i = vec4.transformMat4(i, this.modelMatrix);
             i = vec4.transformMat4(i, this.viewMatrix);
         }
-        let positionsForAABB: [number, number, number][] = []
-        for (let i of positions) {
+        const positionsForAABB: [number, number, number][] = [];
+        for (const i of positions) {
             positionsForAABB.push([i[0], i[1], i[2]]);
         }
         this.boundingBox = computeAABB(positionsForAABB);

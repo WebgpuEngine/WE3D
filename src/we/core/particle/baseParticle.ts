@@ -1,5 +1,3 @@
-import { RootGPU } from "../organization/root";
+import { RootGPU } from '../organization/root';
 
-export abstract class BaseParticle extends RootGPU{
-
-}
+export abstract class BaseParticle extends RootGPU {}

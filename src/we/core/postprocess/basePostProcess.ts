@@ -1,18 +1,18 @@
-import { I_Update } from "../base/coreDefine";
-import { commmandType } from "../command/base";
-import { ComputeCommand } from "../command/ComputeCommand";
-import { CopyCommandT2T } from "../command/copyCommandT2T";
-import { DrawCommand } from "../command/DrawCommand";
-import { SimpleDrawCommand } from "../command/SimpleDrawCommand";
-import { WeGenerateID, WeGenerateUUID } from "../math/baseFunction";
-import { I_UUID } from "../organization/root";
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { PostProcessManager } from "./postProcessManager";
+import { I_Update } from '../base/coreDefine';
+import { commmandType } from '../command/base';
+import { ComputeCommand } from '../command/ComputeCommand';
+import { CopyCommandT2T } from '../command/copyCommandT2T';
+import { DrawCommand } from '../command/DrawCommand';
+import { SimpleDrawCommand } from '../command/SimpleDrawCommand';
+import { WeGenerateID, WeGenerateUUID } from '../math/baseFunction';
+import { I_UUID } from '../organization/root';
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { PostProcessManager } from './postProcessManager';
 
 /**
  * PostProcess 建立参数
- * @param scene 
+ * @param scene
  * @param autoAddToECS 是否自动添加到ECS
  */
 export interface IV_PostProcess extends I_Update {
@@ -28,10 +28,9 @@ export abstract class BasePostProcess implements I_UUID {
     manager: PostProcessManager;
     commands: commmandType[] = [];
     device: GPUDevice;
-    size: { width: number, height: number };
+    size: { width: number; height: number };
     inputValues: IV_PostProcess;
     shaderModule!: GPUShaderModule | undefined;
-
 
     constructor(input: IV_PostProcess) {
         this.inputValues = input;
@@ -58,8 +57,12 @@ export abstract class BasePostProcess implements I_UUID {
     abstract updateSelf(clock: Clock): void;
     destroy(): void {
         this._destroy();
-        for (let perCommand of this.commands) {
-            if (perCommand instanceof SimpleDrawCommand || perCommand instanceof DrawCommand || perCommand instanceof ComputeCommand) {
+        for (const perCommand of this.commands) {
+            if (
+                perCommand instanceof SimpleDrawCommand ||
+                perCommand instanceof DrawCommand ||
+                perCommand instanceof ComputeCommand
+            ) {
                 perCommand.destroy();
             }
         }
@@ -69,7 +72,7 @@ export abstract class BasePostProcess implements I_UUID {
     /**
      * 1、更新自身
      * 2、如果有输入的callback update()，调用更新
-     * @param clock 
+     * @param clock
      */
     update(clock: Clock) {
         this.updateSelf(clock);
@@ -82,20 +85,22 @@ export abstract class BasePostProcess implements I_UUID {
         this.copy(this.scene.finalTarget.color!, this.scene.finalTarget.colorPostProcess!);
     }
     copy(source: GPUTexture, target: GPUTexture) {
-        let size = this.scene.surface.size;
-        let copyToColorTexture = new CopyCommandT2T(
-            {
-                A: source,
-                B: target,
-                size: { width: size.width, height: size.height },
-                device: this.device
-            }
-        );
+        const size = this.scene.surface.size;
+        const copyToColorTexture = new CopyCommandT2T({
+            A: source,
+            B: target,
+            size: { width: size.width, height: size.height },
+            device: this.device,
+        });
         this.commands.push(copyToColorTexture);
     }
     async onResize(): Promise<void> {
-        for (let perCommand of this.commands) {
-            if (perCommand instanceof SimpleDrawCommand || perCommand instanceof DrawCommand || perCommand instanceof ComputeCommand) {
+        for (const perCommand of this.commands) {
+            if (
+                perCommand instanceof SimpleDrawCommand ||
+                perCommand instanceof DrawCommand ||
+                perCommand instanceof ComputeCommand
+            ) {
                 perCommand.destroy();
             }
         }

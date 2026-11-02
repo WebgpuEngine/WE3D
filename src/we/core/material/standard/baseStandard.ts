@@ -1,18 +1,15 @@
-
-import { getSampler } from "../../sampler/baseFunction";
-import { E_TransparentType, I_AlphaTransparentOfMaterial, IV_BaseStandardMaterial } from "../base";
-import { BaseMaterial } from "../baseMaterial";
+import { getSampler } from '../../sampler/baseFunction';
+import { IV_BaseStandardMaterial } from '../base';
+import { BaseMaterial } from '../baseMaterial';
 
 export abstract class BaseStandardMaterial extends BaseMaterial {
     declare inputValues: IV_BaseStandardMaterial;
     constructor(input?: IV_BaseStandardMaterial) {
         super(input);
 
-
         if (input?.samplerDescriptor != undefined && input.samplerBindingType == undefined) {
-            throw new Error("samplerDescriptor 必须指定samplerBindingType")
+            throw new Error('samplerDescriptor 必须指定samplerBindingType');
         }
-
     }
 
     /**
@@ -22,10 +19,9 @@ export abstract class BaseStandardMaterial extends BaseMaterial {
      * @returns GPUSampler 材质的sampler
      */
     override checkSampler(input: IV_BaseStandardMaterial): GPUSampler {
-        let { sampler, bindingType } = getSampler(input, this.scene);
+        const { sampler, bindingType } = getSampler(input, this.scene);
         this.defaultSamplerBindingType = bindingType;
         this.defaultSampler = sampler;
         return sampler;
     }
-
 }

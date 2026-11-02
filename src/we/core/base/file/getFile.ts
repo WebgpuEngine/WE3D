@@ -1,41 +1,37 @@
-export async function weGetResource(param: string): Promise<any> {
-
-}
+export async function weGetResource(_param: string): Promise<any> {}
 export async function weGetImageByUrl(param: string): Promise<ImageBitmap> {
-    let response = await fetch(param);
-    let imageBitmap = await createImageBitmap(await response.blob());
+    const response = await fetch(param);
+    const imageBitmap = await createImageBitmap(await response.blob());
     return imageBitmap;
 }
 export async function weGetBinaryByUrl(param: string): Promise<ArrayBuffer> {
-    let response = await fetch(param);
-    let binary = (await response.blob()).arrayBuffer();
+    const response = await fetch(param);
+    const binary = (await response.blob()).arrayBuffer();
     return binary;
 }
 export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayBuffer> {
-    let response = await fetch(param);
+    const response = await fetch(param);
     // 在解压前判断是否存在传输压缩
-    if (response.headers.get('content-encoding') === 'gzip') {        // 浏览器已自动解压，直接拿原始gz二进制，不再走DecompressionStream
+    if (response.headers.get('content-encoding') === 'gzip') {
+        // 浏览器已自动解压，直接拿原始gz二进制，不再走DecompressionStream
         return await response.arrayBuffer();
-    } else {        // 无传输压缩，手动解压
+    } else {
+        // 无传输压缩，手动解压
         if (!response.ok) {
             throw new Error(`资源请求失败，状态码：${response.status} ${response.statusText}`);
         }
         if (!response.body) {
-            throw new Error("响应体为空，无二进制流可解压");
+            throw new Error('响应体为空，无二进制流可解压');
         }
-        let decompressionStream = new DecompressionStream('gzip');
-        let decompressedStream = response.body.pipeThrough(decompressionStream);
+        const decompressionStream = new DecompressionStream('gzip');
+        const decompressedStream = response.body.pipeThrough(decompressionStream);
         if (!decompressedStream) {
-            throw new Error("获取压缩流失败");
+            throw new Error('获取压缩流失败');
         }
-        let decompressedArrayBuffer = await new Response(
-            decompressedStream
-        ).arrayBuffer();
+        const decompressedArrayBuffer = await new Response(decompressedStream).arrayBuffer();
         return decompressedArrayBuffer;
     }
-
 }
-
 
 // /**
 //  * 拉取gzip二进制文件并流式解压，返回解压后的ArrayBuffer
@@ -94,7 +90,6 @@ export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayB
 //     }
 // }
 
-
 // export async function weGetImagesByUrl(param: string[]): Promise<ImageBitmap[]> {
 //     let all: any[] = [];
 //     let allImages: ImageBitmap[] = [];
@@ -121,27 +116,30 @@ export async function weGetBinaryResourceFromGzip(param: string): Promise<ArrayB
 //     return allImages;
 // }
 export async function weGetImagesByUrl(param: string[]): Promise<ImageBitmap[]> {
-    let allImages: ImageBitmap[] = [];
+    const allImages: ImageBitmap[] = [];
 
-    for (let perRes of param) {
-        let response = await fetch(perRes);
-        let imageBitmap = await createImageBitmap(await response.blob());
+    for (const perRes of param) {
+        const response = await fetch(perRes);
+        const imageBitmap = await createImageBitmap(await response.blob());
         allImages.push(imageBitmap);
     }
     return allImages;
 }
 
 export interface I_VideoOption {
-    loop?: boolean,
+    loop?: boolean;
     // autoplay?: boolean,//默认必须的
-    muted?: boolean,
-    controls?: boolean,
-    waitFor?: "canplaythrough" | "loadedmetadata",
-    model?: "copy" | "External",
+    muted?: boolean;
+    controls?: boolean;
+    waitFor?: 'canplaythrough' | 'loadedmetadata';
+    model?: 'copy' | 'External';
 }
-export async function weGetVidoeByUrl(param: string, options: I_VideoOption): Promise<HTMLVideoElement> {
-    const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
+export async function weGetVidoeByUrl(
+    param: string,
+    options: I_VideoOption,
+): Promise<HTMLVideoElement> {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
     video.src = param;
     video.muted = options.muted ?? true;
     video.loop = options.loop ?? true;

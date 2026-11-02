@@ -2,7 +2,7 @@
  * @author TomSong 2025-09-16
  * @description 基础纹理材质
  * @version 1.0.0
- * 
+ *
  * 基础纹理材质
  * 1、支持基础颜色
  * 2、支持纹理
@@ -11,45 +11,46 @@
  *    B、opacity,整体透明度
  */
 
-import { Texture } from "../../texture/texture";
-import { T_textureSourceType } from "../../texture/base";
+import { Texture } from '../../texture/texture';
+import { T_textureSourceType } from '../../texture/base';
 import {
-    E_MaterialType, E_materialTypeForBindGroup, E_TextureType,
+    E_MaterialType,
+    E_materialTypeForBindGroup,
+    E_TextureType,
     IV_BaseStandardMaterial,
-    materialAddBindGroupLayoutOfMSAA, materialAddBindGroupOfMSAA, materialAddGroupBindStringOfMSAA
-} from "../base";
-import { E_lifeState } from "../../base/coreDefine";
-import { T_uniformEntries } from "../../command/base";
-import { Clock } from "../../scene/clock";
-import { BaseStandardMaterial } from "./baseStandard";
-import { E_shaderRegisterAlianName } from "../../SHR/include";
-import { BaseTexture } from "../../texture/baseTexture";
-
-
+    materialAddBindGroupLayoutOfMSAA,
+    materialAddBindGroupOfMSAA,
+    materialAddGroupBindStringOfMSAA,
+} from '../base';
+import { E_lifeState } from '../../base/coreDefine';
+import { T_uniformEntries } from '../../command/base';
+import { Clock } from '../../scene/clock';
+import { BaseStandardMaterial } from './baseStandard';
+import { E_shaderRegisterAlianName } from '../../SHR/include';
+import { BaseTexture } from '../../texture/baseTexture';
 
 /**
  * 不透明图像中的alpha值小于1.0时的操作
  */
 // export type T_opacityAlphaOperations = "discard" | "opacity";
 /**
- * 纹理材质的初始化参数 * 
+ * 纹理材质的初始化参数 *
  */
 export interface IV_TextureMaterial extends IV_BaseStandardMaterial {
     // textures: {
     //     [name in E_TextureType]?: T_textureSourceType | Texture
     // },
-    texture: T_textureSourceType | BaseTexture
+    texture: T_textureSourceType | BaseTexture;
 }
 
 export class TextureMaterial extends BaseStandardMaterial {
-
     unifromCPUBuffer: ArrayBuffer = new ArrayBuffer(4 * 4);
 
     declare inputValues: IV_TextureMaterial;
 
     /**纹理收集器 */
     declare textures: {
-        [name: string]: BaseTexture
+        [name: string]: BaseTexture;
     };
 
     constructor(input: IV_TextureMaterial) {
@@ -57,15 +58,15 @@ export class TextureMaterial extends BaseStandardMaterial {
         this.kind = E_MaterialType.texture;
         this.textures = {};
         if (input.texture == undefined) {
-            throw new Error("TextureMaterial: texture is undefined");
+            throw new Error('TextureMaterial: texture is undefined');
         }
         this._state = E_lifeState.unstart;
         this.shtOfMaterialType = {
-            opacityForward: E_shaderRegisterAlianName["material.texture.forward"],
-            opacityDefer: E_shaderRegisterAlianName["material.texture.forward"],
-            opacityMSAA: E_shaderRegisterAlianName["material.texture.Msaa"],
-            opacityMSAAInfo: E_shaderRegisterAlianName["material.texture.MsaaInfo"],
-            TT: E_shaderRegisterAlianName["material.texture.blend"],
+            opacityForward: E_shaderRegisterAlianName['material.texture.forward'],
+            opacityDefer: E_shaderRegisterAlianName['material.texture.forward'],
+            opacityMSAA: E_shaderRegisterAlianName['material.texture.Msaa'],
+            opacityMSAAInfo: E_shaderRegisterAlianName['material.texture.MsaaInfo'],
+            TT: E_shaderRegisterAlianName['material.texture.blend'],
             // TO_Forward: SHT_materialTextureFS,
             // TO_Defer: SHT_materialTextureFS,
             // TO_MSAA: SHT_materialTextureFS_MSAA,
@@ -75,7 +76,7 @@ export class TextureMaterial extends BaseStandardMaterial {
         };
     }
     _destroy() {
-        for (let key in this.textures) {
+        for (const key in this.textures) {
             this.textures[key].destroy();
         }
         this.textures = {};
@@ -85,20 +86,17 @@ export class TextureMaterial extends BaseStandardMaterial {
     async readyForGPU(): Promise<any> {
         this.writeUniformCommon();
         this.defaultSampler = this.checkSampler(this.inputValues);
-        let texture = this.inputValues.texture;
+        const texture = this.inputValues.texture;
         if (texture instanceof BaseTexture) {
             this.textures[E_TextureType.color] = texture;
-        }
-        else {
-            let textureInstace = new Texture({ source: texture }, this.device, this.scene);
+        } else {
+            const textureInstace = new Texture({ source: texture }, this.device, this.scene);
             await textureInstace.init(this.scene);
             this.textures[E_TextureType.color] = textureInstace;
         }
         this._state = E_lifeState.finished;
     }
-    _writeUniformCommon(): void {
-
-    }
+    _writeUniformCommon(): void {}
     // writeUniformBuffer(update: boolean = false) {
     //     if (this.uniformPointer == undefined) {
     //         let pointerParams: I_pointerCreateParams = {
@@ -125,7 +123,7 @@ export class TextureMaterial extends BaseStandardMaterial {
     // }
     /**是否有alphaTest */
     getHasAlphaTest() {
-        if (this._transparentMode.mode == "alphaTest") {
+        if (this._transparentMode.mode == 'alphaTest') {
             return 1;
         }
         return 0;
@@ -139,12 +137,15 @@ export class TextureMaterial extends BaseStandardMaterial {
     set AlphaTest(value: number) {
         this._transparentMode.alphaParams = {
             alphaCutOff: value,
-        }
+        };
         this.writeUniformCommon();
     }
     get Opacity() {
         let opacity = 1.0;
-        if (this._transparentMode.alphaOfTransparent === true && this._transparentMode.alphaParams?.blendParams?.opacity)
+        if (
+            this._transparentMode.alphaOfTransparent === true &&
+            this._transparentMode.alphaParams?.blendParams?.opacity
+        )
             opacity = this._transparentMode.alphaParams.blendParams.opacity;
         return opacity;
     }
@@ -153,33 +154,37 @@ export class TextureMaterial extends BaseStandardMaterial {
         this._transparentMode.alphaParams = {
             blendParams: {
                 opacity: value,
-            }
-        }
+            },
+        };
         this.writeUniformCommon();
     }
     get HasOpacity() {
         let hasOpacity = 0;
-        if (this._transparentMode.alphaOfTransparent && this._transparentMode.alphaParams?.blendParams?.opacity) {
+        if (
+            this._transparentMode.alphaOfTransparent &&
+            this._transparentMode.alphaParams?.blendParams?.opacity
+        ) {
             hasOpacity = 1;
         }
         return hasOpacity;
     }
 
-    getEntriesOfBindGroupLayout(materialType: E_materialTypeForBindGroup): GPUBindGroupLayoutEntry[] {
+    getEntriesOfBindGroupLayout(
+        materialType: E_materialTypeForBindGroup,
+    ): GPUBindGroupLayoutEntry[] {
         let binding: number = 0;
-        let layoutEntries: GPUBindGroupLayoutEntry[] = [
+        const layoutEntries: GPUBindGroupLayoutEntry[] = [
             {
                 binding: binding++,
                 visibility: GPUShaderStage.FRAGMENT,
                 buffer: {
-                    type: "uniform",
+                    type: 'uniform',
                 },
             },
             {
                 binding: binding++,
                 visibility: GPUShaderStage.FRAGMENT,
-                texture:
-                    this.textures[E_TextureType.color].textureLayout,
+                texture: this.textures[E_TextureType.color].textureLayout,
                 // {
                 //     sampleType: "unfilterable-float",
                 //     // sampleType: "float",
@@ -189,24 +194,26 @@ export class TextureMaterial extends BaseStandardMaterial {
             {
                 binding: binding++,
                 visibility: GPUShaderStage.FRAGMENT,
-                sampler:
-                    this.textures[E_TextureType.color].samplerLayout,
+                sampler: this.textures[E_TextureType.color].samplerLayout,
                 // {
                 //     type: "non-filtering",
                 //     // type: this.defaultSamplerBindingType,
                 // },
-            }
+            },
         ];
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
+            const layoutMSAA = materialAddBindGroupLayoutOfMSAA(binding);
             layoutEntries.push(...layoutMSAA.layout);
             binding = layoutMSAA.binding;
         }
         return layoutEntries;
     }
-    getEntriesOfBindGroup(materialType: E_materialTypeForBindGroup, uuid?: string): T_uniformEntries[] {
+    getEntriesOfBindGroup(
+        materialType: E_materialTypeForBindGroup,
+        uuid?: string,
+    ): T_uniformEntries[] {
         let binding: number = 0;
-        let uniformEntries: T_uniformEntries[] = [
+        const uniformEntries: T_uniformEntries[] = [
             {
                 binding: binding++,
                 resource: this.uniformPointerCommon.gpuBufferView,
@@ -229,12 +236,10 @@ export class TextureMaterial extends BaseStandardMaterial {
 
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
             if (uuid) {
-                let groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
+                const groupMSAA = materialAddBindGroupOfMSAA(this, binding, uuid);
                 uniformEntries.push(...groupMSAA.group);
                 binding = groupMSAA.binding;
-            }
-            else
-                throw new Error("uuid is undefined");
+            } else throw new Error('uuid is undefined');
         }
         return uniformEntries;
     }
@@ -246,7 +251,7 @@ export class TextureMaterial extends BaseStandardMaterial {
             @group(${this.bindGroupNumber}) @binding(${binding++}) var u_Sampler : sampler;
             `;
         if (materialType == E_materialTypeForBindGroup.opacityMSAA) {
-            let codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
+            const codeAddOfMSAA = materialAddGroupBindStringOfMSAA(binding);
             groupAndBindingString += codeAddOfMSAA.code;
             binding = codeAddOfMSAA.binding;
         }
@@ -254,7 +259,6 @@ export class TextureMaterial extends BaseStandardMaterial {
     }
 
     /////////////////////////////////////三个不透明的模板输出/////////////////////////////////////
-
 
     /////////////////////////////////////三个透明TT、TTP、TTPF的模板输出/////////////////////////////////////
 
@@ -287,9 +291,8 @@ export class TextureMaterial extends BaseStandardMaterial {
     //     let template: I_ShaderTemplate;
     //     let code: string = "";
     //     if (renderObject instanceof BaseCamera) {
-    //         //format code 
+    //         //format code
     //         template = SHT_materialTexture_TTP_FS;
-
 
     //         let replaceList = new Map<string, string | (() => string)>();
     //         // replaceList.set("$materialColorRule", this.materialColorRule(this));
@@ -339,16 +342,11 @@ export class TextureMaterial extends BaseStandardMaterial {
     //     return replaceString;
     // };
 
-    updateSelf(clock: Clock): void {
-    }
+    updateSelf(_clock: Clock): void {}
     saveJSON() {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
-    loadJSON(json: any): void {
-        throw new Error("Method not implemented.");
+    loadJSON(_json: any): void {
+        throw new Error('Method not implemented.');
     }
-
-
-
-
 }

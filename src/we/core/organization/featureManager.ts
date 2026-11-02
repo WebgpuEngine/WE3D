@@ -1,7 +1,7 @@
-import { Clock } from "../scene/clock";
-import { Scene } from "../scene/scene";
-import { ECSManager } from "./manager";
-import { I_UUID } from "./root";
+import { Clock } from '../scene/clock';
+import { Scene } from '../scene/scene';
+import { ECSManager } from './manager';
+import { I_UUID } from './root';
 
 /**
  * 功能模块接口

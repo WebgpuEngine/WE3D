@@ -13,6 +13,17 @@ dist
 dist-ssr
 *.local
 
+# Vitest 覆盖率报告产物
+coverage
+
+# Playwright 瞬时产物（基线 e2e/baseline/ 需提交，不忽略）
+test-results/
+playwright-report/
+blob-report/
+
+# Vitest browser 模式自动生成的截图产物（非基线，不提交）
+__screenshots__/
+
 
 public/models/gltf/model
 !src/@loaders.gl/*

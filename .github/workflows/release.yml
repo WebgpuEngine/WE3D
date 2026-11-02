@@ -1,0 +1,33 @@
+name: Release
+
+# 文档「发布」动作从 PR CI 移出，放在 tag/release workflow：
+# 本地开发者用 `npm run docs:build`（版本门禁）提交 docs 更新；
+# 打 tag 发布时，云端重建 docs 并回写仓库，保证发布版本文档最新。
+# npm 发布仍走手工（2FA，CI 无法直发）。
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:lib
+      - run: npm run docs:build:force
+      - name: Commit regenerated docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "docs: regenerate for ${{ github.ref_name }}" || echo "no docs changes"
+          git push origin HEAD:${{ github.event.repository.default_branch }}
