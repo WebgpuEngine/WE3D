@@ -40,7 +40,7 @@
    - **批量适配 e2e 用例（新增 / 删除 / 改名）后必须跑 `npm run e2e-index` 刷新 `e2e-cases/index.html` 索引入口**，否则索引页与目录实际用例不一致（详见 `design/e2e-cases-convention.md` §三·适配收尾）。
    - 双配置：默认 `playwright.config.ts` = GPU 硬件版（真实 GPU、**headless:true**、8 workers，参考 testCI 无头真实 GPU）；`playwright.software.config.ts` = 软件 SwiftShader 版（headless:true、2 workers），二者共用快照目录 `tests/e2e/baseline/`。软件版需 `--enable-unsafe-webgpu` + SwiftShader；GPU 版需 `--enable-unsafe-webgpu` + 真实 GPU（headless 即可，无需显示环境）。
 4. **云端工作流（GitHub Actions，云端专有；本地无同名文件，用 npm 脚本镜像）**：
-   - `.github/workflows/ci.yml`：push/PR 到 `project20261022`/`main` 时跑 `ci:no-e2e`（无 e2e、无文档）。本地提交前用 `ci:no-e2e`（或 `ci`）自测即等价。
+   - `.github/workflows/ci.yml`：push/PR 到 `project`/`main` 时跑 `ci:no-e2e`（无 e2e、无文档）。本地提交前用 `ci:no-e2e`（或 `ci`）自测即等价。
    - `.github/workflows/release.yml`：打 `v*` tag 时跑 `build:lib` + `docs:build:force` 并回写 `docs/`（文档安全网）。
    - 注：workflow 里的 `run: npm ci` 是干净装依赖（clean install），**不是** `npm run ci`，不跑 e2e。
 
