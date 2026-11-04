@@ -402,7 +402,7 @@ export class ShaderRegister {
     }
     worldPosition = vec4f(world_matrix[attributes.instanceIndex] * vec4f(position_morph_target, 1.0));
     vsOutput.worldPosition = worldPosition.xyz / worldPosition.w;
-    vsOutput.position = matrix_z * MVP *  vec4f(worldPosition.xyz, 1.0);
+    vsOutput.position = VP *  vec4f(worldPosition.xyz, 1.0);
    }                
         `;
             vsCode = vsCode.replace('#reflection morphTarget', varPositions + morphTargetCode);
