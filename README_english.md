@@ -14,7 +14,7 @@
 - **Advanced atmosphere & clouds**: Three built-in atmosphere schemes (real-time integration / Bruneton / Hillaire) with volumetric clouds, Tyndall effects, and cloud shadows.
 - **Dual volume-rendering approaches**: 3D texture sampling and real-time ray marching, covering simulation and volumetric scenarios.
 - **Complete rendering features**: Forward + deferred dual pipelines, multi-channel GBuffer (56 bits per pixel), IBL + SH, PCSS soft shadows, reversed Z, MSAA / FXAA, sRGB and Display P3 color spaces.
-- **GPU picking + BVH acceleration**: GPU picking by default; CPU-side ray combined with BVH and the physics engine for high-performance picking.
+- **GPU picking + BVH acceleration**: GPU picking by default; CPU-side ray combined with BVH and the physics engine for high-performance picking (todo).
 - **Rigorous engineering**: Vitest (Node + real-device browser) unit tests, Playwright screenshot-baseline e2e, ESLint / Prettier / Typedoc / CI gating, published to npm as ESM + `.d.ts`.
 
 WE3D consists of two major parts: the base engine and the editor. (WE3D is currently in its early development stage, so features, modules, and structure will be adjusted frequently.)
@@ -128,7 +128,7 @@ const mesh = new Mesh({
 await scene.add(mesh);
 ```
 
-> More runnable examples are in the "Simple Examples" section below and the [`e2e-cases/`](./e2e-cases) directory; the full API reference is in [`design/workBuddy/core/03-API速查手册.md`](./design/workBuddy/core/03-API速查手册.md).
+> More runnable examples are in the "Simple Examples" section below and the [`e2e-cases/`](./e2e-cases) directory; the full API reference is at [https://WebgpuEngine.github.io/WE3D](https://WebgpuEngine.github.io/WE3D).
 
 ## Feature Overview
 
@@ -220,7 +220,7 @@ await scene.add(mesh);
 * For directory structure conventions, AI working conventions, development workflow, and release conventions, see [AGENTS.md](./AGENTS.md).
 * For the engineering improvement plan (vitest / ESLint / Prettier / Playwright / CI / lib bundling), see [design/engineering-plan.md](./design/engineering-plan.md).
 * For known defects and the fix roadmap, see [design/workbuddy/core/04-问题缺陷与改进建议.md](./design/workbuddy/core/04-问题缺陷与改进建议.md).
-* Before committing to git, you must run the `examples/` verification (or key Playwright examples) to prevent source changes from breaking normal functionality.
+* Before committing to git, you must run the e2e verification (or key Playwright examples) to prevent source changes from breaking normal functionality.
 * Package name `we3d`, published to npm as a lib (ESM + `.d.ts`); no web app bundling.
 
 # References and Recommendations
