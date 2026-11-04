@@ -74,6 +74,21 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 
 - 外部依赖（如 `wgpu-matrix`）不属于 `@we3d`，保持不变。
 
+### 动画用例播放时间固定（e2e）
+
+> 目的：Playwright 在页面 `load` 后固定等待 2000ms 才截图；动画若用 `loop` 或时长超过 2s 的 `count` 播放，截图时仍在运动中，帧位置随机器帧率漂移，基线不可复现。
+
+1. 所有动画用例的 `play()` 统一改为**按时长播放 1 秒**，`speed: 1`、`stopToFirst: false`（停在当前帧，不回到第一帧）：
+
+```ts
+// e2e 约定：固定播放 1 秒后停在当前帧，保证截图基线稳定
+keyFrame.play({ speed: 1, mode: { type: E_AnimationPlayType.time, time: 1 }, stopToFirst: false });
+```
+
+2. `MorphTargetAnimation` 与 `AnimationGroup` 传同一参数（动画组会透传给组内每个关键帧动画）；`SkinAnimation` 由动画组启停，无需单独传参。
+3. `speed` 必须为 1：`Interpolator` 的 `playTime` 按 `clock.deltaTime * speed` 累加，`speed: 1` 才等价于真实 1 秒；1 秒后停止，早于 e2e 的 2000ms 截图等待。
+4. 不使用 `loop`；`stopToFirst: false` 保证播放结束后保持最后一帧，而非回到首帧。
+
 ### 最小模板
 
 ```html
@@ -155,5 +170,16 @@ import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, 
 | 后处理 3x3 模糊 | `e2e-cases/postprocess/blur3x3.html` + `blur3x3.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 | 后处理 FXAA | `e2e-cases/postprocess/FXAA.html` + `FXAA.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0.2]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
 | 后处理 RedToOne | `e2e-cases/postprocess/RedToOne.html` + `RedToOne.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d` |
+| 位置关键帧（cubicSpline） | `e2e-cases/animations/box_position_cubeSpline.html` + `box_position_cubeSpline.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`play` → 固定播放 1 秒 |
+| 位置关键帧（linear） | `e2e-cases/animations/box_position_linear.html` + `box_position_linear.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`play` → 固定播放 1 秒 |
+| 位置关键帧（step） | `e2e-cases/animations/box_position_step.html` + `box_position_step.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`play` → 固定播放 1 秒 |
+| 旋转关键帧 | `e2e-cases/animations/box_rotation_linear.html` + `box_rotation_linear.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`loop` → 固定播放 1 秒 |
+| 缩放关键帧 | `e2e-cases/animations/box_scale_linear.html` + `box_scale_linear.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`play` → 固定播放 1 秒 |
+| 缩放关键帧（ArrayBuffer） | `e2e-cases/animations/box_scale_linear_arrayBuffer.html` + `box_scale_linear_arrayBuffer.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`play` → 固定播放 1 秒 |
+| 变形目标动画 | `e2e-cases/animations/morphTarget_base2_Animation.html` + `morphTarget_base2_Animation.ts` | 棋盘格背景 → 纯黑；`[0.1,0.1,0.1,1]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`loop` → 固定播放 1 秒 |
+| 骨骼蒙皮动画组 | `e2e-cases/animations/skin_base3_withSkins.html` + `skin_base3_withSkins.ts` | 棋盘格背景 → 纯黑；`[0.1,0.1,0.1,1]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`loop` → 固定播放 1 秒 |
+| 四元数关键帧 | `e2e-cases/animations/triangle_quaternion_linear.html` + `triangle_quaternion_linear.ts` | 棋盘格背景 → 纯黑；`[0,0,0,0]` → `[0,0,0,1]`；深层相对导入 → `@we3d`；`play` → 固定播放 1 秒 |
 
 > 注：背景色改动会影响截图基线，需重跑 `npm run test:baseline` 刷新对应基线（`geometry-box.png`、`geometry-sphere.png`、`primitive-triangle.png`、`primitive-line-list.png`、`primitive-line-strip.png`、`primitive-points.png`、`lights-AmbientLight.png`、`lights-DirectionalLight-1.png`、`lights-pointLight.png`、`lights-spotLight.png`、`material-pbr-list-iron.png`、`material-pbr-rust.png`、`material-pbr-sphere.png`、`material-phong-normal.png`、`material-phong-sphere.png`、`transparent-alpha-distance-1.png`、`transparent-img-distance-test-1.png`、`transparent-img-pixcel-alpha-1.png`、`shadow-PBR-dirlight-1.png`、`shadow-PBR-point-oneEntity-1.png`、`shadow-PBR-spot-0.png`、`shadow-phong-dirlight-sphere.png`、`shadow-phong-pointLight-1.png`、`shadow-phong-spot-1.png`、`camera-otrho-1.png`、`camera-PerspectiveCamera-1.png`、`deferRender-box.png`、`deferRender-pbr-1.png`、`deferRender-PBR-dirlight-1.png`、`deferRender-PBR-point-oneEntity-1.png`、`deferRender-pbr-rust.png`、`deferRender-pbr-spot-1.png`、`IBL-sphere-sh-filament-2.png`、`postprocess-blur3x3.png`、`postprocess-FXAA.png`、`postprocess-RedToOne.png`）。
+>
+> 动画用例新增基线（GPU 硬件版产出，提交 git）：`animations-box-position-cubeSpline.png`、`animations-box-position-linear.png`、`animations-box-position-step.png`、`animations-box-rotation-linear.png`、`animations-box-scale-linear.png`、`animations-box-scale-linear-arrayBuffer.png`、`animations-morphTarget-base2-Animation.png`、`animations-skin-base3-withSkins.png`、`animations-triangle-quaternion-linear.png`。

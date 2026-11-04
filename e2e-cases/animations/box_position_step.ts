@@ -1,0 +1,107 @@
+
+import {
+  PerspectiveCamera,
+  IV_Scene,
+  initScene,
+  BoxGeometry,
+  ColorMaterial,
+  IV_MeshEntity,
+  Mesh,
+  IV_AnimationValue,
+  E_AnimationPlayType,
+  E_AnimationTargetType,
+  E_InterpolationModes,
+  I_AnimationSampler,
+  KeyFrameAnimation,
+} from "@we3d";
+
+declare global {
+  interface Window {
+    scene: any
+    DC: any
+    keyFrame: any
+  }
+}
+let input: IV_Scene = {
+  canvas: "render",
+  backgroudColor: [0, 0, 0, 1],
+  // reversedZ:true,
+};
+let scene = await initScene({
+  initConfig: input,
+});
+window.scene = scene;
+
+let radius = 2;
+let Y = 0;
+let camera = new PerspectiveCamera({
+  fov: (2 * Math.PI) / 5,
+  aspect: scene.aspect,
+  near: 0.01,
+  far: 100,
+  position: [3, 0, 10],
+  lookAt: [3, 0, 0],
+  controlType: "arcball",
+});
+await scene.add(camera);
+
+
+
+
+
+let boxGeometry = new BoxGeometry();
+
+let colorMaterial = new ColorMaterial({
+  color: [0, 0.1, 0.2, 1]
+});
+
+let inputMesh: IV_MeshEntity = {
+  attributes: {
+    geometry: boxGeometry,
+  },
+  material: colorMaterial,
+  wireFrame: {
+    color: [1, 1, 1, 1],
+    enable: true,
+    // wireFrameOnly: true,
+  }
+}
+let mesh = new Mesh(inputMesh);
+console.log(mesh);
+let meshEntity = await scene.add(mesh);
+
+
+let sampler: I_AnimationSampler = {
+  interpolation: E_InterpolationModes.step,
+  frames: [0, 1, 2, 3, 4, 5],
+  values: [
+    0, 0, 0,
+    1, 0, 0,
+    2, 0, 0,
+    3, 0, 0,
+    4, 0, 0,
+    5, 0, 0,
+  ],
+  target: E_AnimationTargetType.position,
+  targetStride: 3
+}
+let aniValue: IV_AnimationValue = {
+  parent: meshEntity,
+  sampler: sampler,
+}
+
+let keyFrame: KeyFrameAnimation = new KeyFrameAnimation(aniValue);
+window.keyFrame = keyFrame;
+
+// e2e 约定：固定播放 1 秒后停在当前帧，保证截图基线稳定
+keyFrame.play({ speed: 1, mode: { type: E_AnimationPlayType.time, time: 1 }, stopToFirst: false })
+/**
+ * keyFrame.play({speed:10,mode:{type:"loop"}})
+ * 
+ * keyFrame.play({speed:10,mode:{type:"count",count:2}})  //播放2次，不回到第一帧
+ * keyFrame.play({speed:10,mode:{type:"count",count:2},stopToFirst:true}) //播放2次，回到第一帧
+ * keyFrame.play({speed:10,mode:{type:"count",count:2},stopToFirst:false}) //播放2次，不回到第一帧
+ * 
+ * keyFrame.play({speed:10,mode:{type:"time",time:7},stopToFirst:false})
+ * keyFrame.play({speed:10,mode:{type:"time",time:7},stopToFirst:true})
+ */
