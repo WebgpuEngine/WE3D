@@ -156,12 +156,17 @@ export class Scene {
     /**webgpu的特性是否支持的输出 */
     webGPUFeaturesSupported: GPUFeatureName[] = [];
     /**webgpu的限制配置
-     * https://gpuweb.github.io/gpuweb/#gpusupportedlimits     *
-     * 1、maxColorAttachmentBytesPerSample: 最大颜色附件的字节数，每个样本的字节数。默认64
+     * https://gpuweb.github.io/gpuweb/#gpusupportedlimits
+     * 1、maxColorAttachmentBytesPerSample: 每个样本的颜色附件字节上限，规范默认 32。
+     *    按当前实际最大用量申请 36 B，来自 forward/defer GBuffer pass 的 4 个 color attachments：
+     *      color rgba16float(8) + id r32uint(4) + normal rgba16float(8) + pbr rgba32uint(16) = 36。
+     *    其余 pass 更小：MSAAinfo = 28，MSAA / blend / toneMapping / resolve = 8（MSAA 为每样本）。
+     *    depth 属于 depthStencil，不计入本限制。
+     *    GBuffer 格式或附件数量变更时必须同步更新此值，并回归 forward / defer / MSAA 三种模式。
      * 2、有初始化参数可用申请限制，todo；
      */
     webGPULimits: Record<string, number> = {
-        maxColorAttachmentBytesPerSample: 128, //64,
+        maxColorAttachmentBytesPerSample: 36,
     };
     /**
      * depth: 配套finalTarget的深度纹理， 为了在DC中的RAW模式中可以使用深度而设置的
