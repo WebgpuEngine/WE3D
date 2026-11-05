@@ -71,20 +71,20 @@ export class ShaderRegister {
         let isMaterial = false;
         if (name.includes('material.')) {
             isMaterial = true;
-            if (this._aliasShaderCode.has(name + '.forword')) {
-                materialName.forward = name + '.forword';
+            if (this._aliasShaderCode.has(name + '.forward')) {
+                materialName.forward = name + '.forward';
                 hasShaderName = true;
             }
             if (this._aliasShaderCode.has(name + '.defer')) {
                 materialName.defer = name + '.defer';
                 hasShaderName = true;
             }
-            if (this._aliasShaderCode.has(name + '.msaa')) {
-                materialName.Msaa = name + '.msaa';
+            if (this._aliasShaderCode.has(name + '.Msaa')) {
+                materialName.Msaa = name + '.Msaa';
                 hasShaderName = true;
             }
-            if (this._aliasShaderCode.has(name + '.msaaInfo')) {
-                materialName.MsaaInfo = name + '.msaaInfo';
+            if (this._aliasShaderCode.has(name + '.MsaaInfo')) {
+                materialName.MsaaInfo = name + '.MsaaInfo';
                 hasShaderName = true;
             }
             if (this._aliasShaderCode.has(name + '.blend')) {

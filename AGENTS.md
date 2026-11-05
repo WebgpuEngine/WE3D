@@ -24,6 +24,9 @@
 3. **工程化门禁范围**：`ESLint` / `tsc` 门禁仅覆盖 `src/we`（不含 `examples/`、`docs/`、`src/@loaders.gl/`），避免大范围误伤。
 4. **公共 API 入口**：`src/we/index.ts` 是唯一公开边界（curated barrel），新增公共 API 时在此显式追加，并用 `npm run check:exports` 兜底防漂移。
 5. **别名约定**：`@we3d` → `src/we/index.ts`（`vite.config.ts` 的 `resolve.alias` + `tsconfig*.json` 的 `baseUrl`/`paths`）。examples/e2e 一律从 `@we3d` 导入，不写深层相对路径。
+6. **Shader 开发必读资料**：涉及 `src/we/core/shaders/`（WGSL 编写/修改）或 `src/we/core/SHR/`（shader 注册）时，必须先阅读以下两份文档（二者互补，缺一不可）：
+   - `design/shaders/shader-register-mechanism.md`：`#` 自定义指令的预处理机制（`#includeFile`/`#replace`/`#reflection`/`#weStart`/`#renderMode`/`#tag`）。
+   - `design/shaders/wgsl-authoring-guide.md`：WGSL 编写契约（bindgroup 编号、结构体命名、VS/FS 模板、渲染模式、注册 checklist、后处理/全屏 pass 约定）。
 
 ## 三、开发流程约定
 
