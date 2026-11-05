@@ -2,7 +2,7 @@
 
 > 定稿日期：2026-11-05
 > 代码现状：`5012a05` 之后，`maxColorAttachmentBytesPerSample` 已按实际用量收敛为 36（见 `scene.ts`）；normal 通道为 `rgba16float`
-> 关联：`design/gbuffer/normal-buffer-format.md`（normal 格式专项复盘）、`design/gbuffer/scene-configuration.md`（Scene 配置）、`design/shaders/wgsl-authoring-guide.md` §5.3/§5.4
+> 关联：`design/gbuffer/normal-buffer-format.md`（normal 格式专项复盘）、`design/scene/scene-configuration.md`（Scene 配置）、`design/shaders/wgsl-authoring-guide.md` §5.3/§5.4
 
 ---
 
