@@ -261,7 +261,7 @@ export class ShaderRegister {
      * 2、在vs、fs编译之前调用
      */
     replaceUserShaderCode(shaderCode: string, useShaderCode: string) {
-        const lines = shaderCode.split('\n');
+        const lines = shaderCode.split(/\r?\n/);
         for (const perLine_i in lines) {
             const perLine = lines[perLine_i];
             const lineTrimWithOutFirstSpace = perLine.trimStart(); //只删开头空格
@@ -275,7 +275,7 @@ export class ShaderRegister {
         return lines.join('\n');
     }
     replaceUserShaderCodeFunction(shaderCode: string, useShaderCode: string) {
-        const lines = shaderCode.split('\n');
+        const lines = shaderCode.split(/\r?\n/);
         for (const perLine_i in lines) {
             const perLine = lines[perLine_i];
             const lineTrimWithOutFirstSpace = perLine.trimStart(); //只删开头空格
@@ -330,7 +330,7 @@ export class ShaderRegister {
         return code.split(spriteString);
     }
     splitByLine(code: string) {
-        return code.split('\r\n');
+        return code.split(/\r?\n/);
     }
     splitBySpace(code: string) {
         return code.split(/\s+/).filter(Boolean);
