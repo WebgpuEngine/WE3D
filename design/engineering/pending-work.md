@@ -42,10 +42,10 @@
 - 注意：迁移前 `src/@loaders.gl/` 的本地依赖（`draco`/`gltf`）保持现状，勿动。
 
 ### 5. morphTarget WGSL shader 问题（历史遗留，人工后期修正）
-- 状态：⬜ 待人工修正（用户 2026-10-26 反馈）
-- 关联：人工测试发现
+- 状态：✅ 已完成（2026-11-04，`af20a24`）
+- 关联：人工测试发现；修复提交 `af20a24 1104 修正morphtarget的矩阵未适配的遗留问题`
 - 说明：morphTarget 相关 WGSL shader 存在问题，根源是更早之前 **MVP 变量设计变更** 留下的历史遗留（非本次工程化引入），不影响 ESLint/tsc 清理结果。
-- 待办：用户后期抽时间人工修正，不在本工程化阶段处理。
+- 结论：已由用户人工修正（矩阵未适配的遗留问题），本条目关闭。
 
 ### 6. WE3D 单元测试完整体系后期由人工补齐（本次仅搭脚手架）
 - 状态：✅ 脚手架已建（Phase 3 已关闭）；后续用例按需按 `math.test.ts` 模式新增，非阻塞
@@ -54,16 +54,17 @@
 - 备注：`coverage` 脚本已于 2026-10-26 补上（含 `@vitest/coverage-v8` 提供者）；测试置于 `src/**/*.test.ts`（非独立 `test/` 目录），与计划微调。
 
 ### 7. BlinnPhong 示例光方向反射异常（`examples/system/MSAA/BlinnPhong/phong_sphere_1.html`）
-- 状态：⬜ 待排查 / 待修复（用户 2026-10-29 反馈）
-- 关联：`examples/system/MSAA/BlinnPhong/phong_sphere_1.html`
-- 说明：该示例（MSAA + BlinnPhong 高光球体）的**光方向反射**存在问题，具体表现为光照高光 / 反射方向与预期不符（疑似光照向量、法线或 half-vector 计算方向错误）。属渲染效果异常，需后续排查 BlinnPhong 着色器或相关光照 uniforms 设置。
-- 待办：复现并定位根因后修复；若涉及渲染结果变更，须同步更新 GPU 基线（`npm run test:baseline`）并提交。
+- 状态：✅ 已修复（2026-11-05，改回 `rgba16float`，基线已更新、`npm run ci` 全绿）
+- 关联：`examples/system/MSAA/BlinnPhong/phong_sphere_1.html`；与 **#8** 同源
+- 根因：GBuffer 改造 `efafbd0`（20260812「GBuffer 改造完成，去除多余buffer」）将法线 GBuffer 格式由 `rgba16float` 切换为 `rgb10a2unorm`，但读写 shader 未同步加编解码。`rgb10a2unorm` 为 UNORM（仅存 [0,1]、10bit/通道），`replace_*_output.fs.wgsl` 仍直接写 `vec4f(normal,1)`（法线为 [-1,1]），负分量被截断为 0、正分量量化为 1024 级；`msaa.wgsl` / `deferRender.fs.wgsl` 直接 `textureLoad` 读回。Phong 高光 `pow(dot(N,H), shininess=32)` 对法线方向误差指数放大，叠加 PointLight 高光斑，故表现为光方向/反射方向异常。历史佐证：`4267c22` 曾因精度损失将 normal 由 `rgba8unorm` 改为 `rgba16float`。
+- 修复：`src/we/core/gbuffers/base.ts` normal 格式改回 `rgba16float`（与 `bb22aec`「验证通过」版一致）。
+- 待办：随代码一起提交（`base.ts` + GPU 基线快照），本地门禁已全绿。
 
-### 8. MSAA 法线异常（疑似与 #7 重叠，典型分层形象）
-- 状态：⬜ 待排查 / 待修复（用户 2026-10-29 反馈）
-- 关联：`examples/system/MSAA/PBR/pbr_1.html`；与 **#7** `phong_sphere_1.html` **极大概率重叠同一根因**
-- 说明：`examples/system/MSAA/` 下的**法线**目前看有问题，典型表现为**法线造成分层形象**（法线方向 / 法线重建 / 采样方式错误导致的分层 / banding 假象）。PBR 示例 `pbr_1.html` 可复现，BlinnPhong 示例（#7 光方向反射异常）很可能同源——二者均落在同一 MSAA 渲染 / 着色路径上。
-- 待办：优先将 #7 与 #8 **合并排查** MSAA 法线处理（法线插值、分辨率 / MSAA resolve、法线重建公式），定位根因后一并修复；若涉及渲染结果变更，须同步更新 GPU 基线（`npm run test:baseline`）并提交。
+### 8. MSAA 法线异常（与 #7 同源，典型分层形象）
+- 状态：✅ 已修复（2026-11-05，同 #7）
+- 关联：`examples/system/MSAA/PBR/pbr_1.html`；与 **#7** 同源
+- 根因：同 #7（normal GBuffer 被 `rgb10a2unorm` 截断负分量 + 10bit 量化）。PBR 的 GGX NDF（`roughness=0.31`）与 DirectionalLight 为平滑函数，法线误差被抹平，故不表现为方向骤变，而表现为球面法线分层 / banding；PBR 并非不受影响，只是症状较轻。
+- 修复 / 待办：已改回 `rgba16float` 并更新基线，随代码一起提交。
 
 ## 二、变更记录
 | 日期 | 动作 | 说明 |
@@ -71,3 +72,4 @@
 | 2026-10-26 | 建立本文件 | 汇总统本次工程化改造的零散 / 延迟 / todo 事项 |
 | 2026-10-26 | 范围收窄 | 明确本文件只记**零散非主线**事项；移除原 Phase 3/5 条目及 Phase 4/6/7/8 主线索引（主线统一在 `implementation-log.md` 跟踪） |
 | 2026-10-30 | format 执行完成 | §1 `format` 已执行：扩大 `.prettierignore` 长期仅覆盖 `src/we`+`e2e-cases`（fc53968）、`npm run format` 改 290 文件且 lint/typecheck 通过（0a1468d）、加 `.gitattributes` 统一 LF 消除 CRLF 警告（940d142）；详见 `phase2-prettier-format.md` |
+| 2026-11-05 | 关闭 #5、定位 #7/#8 | §5 已由 `af20a24` 修正并标记 ✅；§7/§8 定位根因为 GBuffer 改造 `efafbd0` 将 normal 格式切为 `rgb10a2unorm` 未加编解码，修复为改回 `rgba16float`（`base.ts`） |

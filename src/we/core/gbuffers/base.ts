@@ -89,7 +89,8 @@ export const V_ForwardGBufferNames: I_GBufferName = {
             GPUTextureUsage.TEXTURE_BINDING,
     },
     [E_GBufferNames.normal]: {
-        format: 'rgb10a2unorm',
+        // normal 为世界空间 [-1,1] 向量（写入端未做 [0,1] 编码），unorm 会 clamp 掉所有负分量，故用可表示负值的 float 格式
+        format: 'rgba16float',
         label: 'GBuffer normal',
         usage:
             GPUTextureUsage.RENDER_ATTACHMENT |
@@ -97,11 +98,6 @@ export const V_ForwardGBufferNames: I_GBufferName = {
             GPUTextureUsage.COPY_DST |
             GPUTextureUsage.TEXTURE_BINDING,
     },
-    // [E_GBufferNames.normal]: {
-    //     "format": "rgba16float",
-    //     "label": "GBuffer normal",
-    //     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
-    // },
     // [E_GBufferNames.RMAO]: {
     //     "format": "rgba8unorm",
     //     "label": "GBuffer RMAO",
