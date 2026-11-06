@@ -56,6 +56,7 @@
     "@vitest/browser": "^2.1.9",
     "@vitest/coverage-v8": "^2.1.9",
     "@webgpu/types": "^0.1.70",
+    "draco3dgltf": "^1.5.9",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "hash-wasm": "^4.12.0",
@@ -78,6 +79,8 @@
   },
   "dependencies": {
     "@dimforge/rapier3d": "^0.19.2",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
     "@loaders.gl/compression": "4.3.4",
     "@loaders.gl/core": "4.3.4",
     "@loaders.gl/json": "4.3.4",

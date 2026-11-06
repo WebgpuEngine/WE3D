@@ -1,7 +1,7 @@
 # pending-work #4 · `@loaders.gl` → npm `@gltf-transform` 迁移方案（新建 `gltfTransformLoaders.ts`，含 `gltfAtLoaders.ts` 逐函数替换）
 
-> 状态：🔵 进行中 / **设计草案（§八 8 项决策已于 2026-11-06 全部收敛；待 Gate 0 数据对齐测试全绿后确认方案）**（本轮只做分析与设计，未改动任何源码 / 依赖 / 基线）
-> 日期：2026-11-05（2026-11-06 补充 Gate 0、落地文件命名、验证分层、数据来源与全部决策记录）
+> 状态：✅ **方案已验证 / 确定**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A 已完成，下一步 Phase 0B 人工视觉验证
+> 日期：2026-11-05（2026-11-06 补充 Gate 0、落地文件命名、验证分层、数据来源、全部决策记录与 Gate 0 执行结果）
 > 关联：`design/engineering/pending-work.md` §1.4、`design/workBuddy/20260923项目与gltf分析/04-迁移到glTF-Transform方案.md`（下称「04 号文档」）、`03-gltf模块深度分析.md`、`AGENTS.md`
 > 本文是 04 号文档的**实施级细化与勘误**，两份互补：04 号负责选型与阶段划分，本文负责「文件关系 + 每个函数怎么改 + 落地门禁」。
 > **两项用户决策（2026-11-06）**：① 方案必须先通过「gltf-transform 数据对齐测试」才能确认（§3.6 Gate 0）；② 落地方式为**新建 `src/we/model/gltf/gltfTransformLoaders.ts` + 新 class `GltfDataAtTransform`**，整体取代 `gltfAtLoaders.ts` 及 `GltfDataAtLoaders`（§3.2 / §四 / §五）。
@@ -253,7 +253,7 @@ return this.document;                              // createGLTFModel 忽略返�
 | 7 | `getImage(i)` | `ImageBitmap.width/height` 相等 + 像素摘要（OffscreenCanvas 2D `getImageData` 或 GPUTexture 回读 hash）一致 |
 | 8 | `isDraco()` | 旧实现因 `EXT_` 笔误恒为 false，此项**只记录不判等**；修正为 `KHR_` 后单独断言 |
 
-**E. golden 快照（存放位置已由 §八 1b 定稿为 `tests/fixtures/gltf-parity/`，不与 Playwright 截图基线混放）**：首次运行由旧 loader 生成 `tests/fixtures/gltf-parity/*.json` 并**提交 git**（只存数值与规范化 JSON，不存 GPUBuffer / ImageBitmap 对象）；后续 Gate 0 / Phase 1~3 一律以该快照为准，避免「新旧一起错」。golden 生成走 `scripts/` 下脚本或测试内显式 `--update` 开关，普通 `npm run test:run` / `npm run test:browser` 只读不写。
+**E. golden 快照（存放位置已由 §八 1b 定稿为 `tests/fixtures/gltf-parity/`，不与 Playwright 截图基线混放）**：Gate 0 实测采用**同进程新旧 loader 实时 A/B**（`gltfTransformParity.browser.test.ts` 中同一 URL 同时实例化 `GltfDataAtLoaders` 与 `GltfDataAtTransform`），比预生成 golden 更强，且能避免「golden 与实现一起错」需两份代码的问题。但**Phase 3 删除旧 loader 之前**，必须先由旧 loader 把输出固化为 `tests/fixtures/gltf-parity/*.json` 并**提交 git**（只存数值与规范化 JSON，不存 GPUBuffer / ImageBitmap 对象），否则后续回归失去基准。golden 生成走 `scripts/` 下脚本或测试内显式 `--update` 开关，普通 `npm run test:run` / `npm run test:browser` 只读不写。
 
 **F. 判定标准（方案确认条件）**
 
@@ -556,6 +556,31 @@ async getImage(index: number) {
 - **Worker 化 Draco 解码**（§八 决策 3 明确的「后期优化」，本次迁移不做；注意 GPUBuffer 必须在主线程创建）。
 - **KTX2 / `KHR_texture_basisu` 支持**（§八 决策 5 排期）：需另接 Basis Universal transcoder，glTF-Transform 只透传 KTX2 容器、不做转码。
 - 接 `@gltf-transform/functions`（`weld/prune/dedup/quantize/textureCompress`）、`io.writeBinary` 导出、给 `ModelDataLoader` 补 `getAnimations()` 闭合 `gltf.ts:305` 的抽象泄漏；**D1–D8 缺陷修复本期不 commit**（§八 决策 4「同意，不 commit」），如后续立项再单独处理。
+
+### Gate 0 执行结果（2026-11-06，方案确认依据）
+
+**判定：通过，方案由「设计草案」升级为「已验证 / 确定」。**
+
+| 项 | 结果 |
+| --- | --- |
+| `gltfTransformParity.browser.test.ts` | **28/28 通过**：`gltf/base/**` 24 个示例逐个验证 + `gltf/model/Box/` 四种发布形态（glTF / GLB / Draco / Embedded）；含规范化 JSON 快照、8 类结构 getter、accessor 全量逐值、32 位拓宽、GPUVertexFormat 映射、图片宽高 + 像素摘要 |
+| `dracoDecoder.spike.browser.test.ts` | **1/1 通过**：本期 `public/draco/` 解码器注入后真正解开 `Box/glTF-Draco/Box.gltf`，解码结果写回原索引 accessor（indices 36 / NORMAL 72 / POSITION 72） |
+| `accessorFormat.test.ts` | **25/25 通过**：24 组 `type × componentType` 映射 + 2 组非法输入抛错 |
+| 全量门禁 | `lint` ✅ / `typecheck` ✅ / `test:run` 60 ✅ / `test:browser` 33 ✅ / `check:exports` ✅（仅既有的「未纳入 barrel」提示）/ `build:lib` ✅ |
+
+**实测发现与规范化记录（均为表示差异，数值在 D3 全量逐值严格判等）**：
+
+1. fork 运行时注入字段：`accessors[].value / size / byteOffset`、根级 `extensionsRemoved`、`buffers[].arrayBuffer`、`images[].uri`（data-URI 被重写）、`images[].imageData` —— 比对前剔除。
+2. data-URI 图片：loaders.gl fork 会把 `images[].bufferView` 替换成 `{data:...}` 运行时对象，新实现保留原 JSON —— 规范化时剔除对象形态的 `bufferView`（数字形态保留并判等）。
+3. `EXT_mesh_features`：fork 会把解码后的 `featureIds[].data` 注入 `meshes[].primitives[].extensions`，新实现为原始 JSON —— 结构 getter 统一走 `normalize()` 剔除 `extensions`。
+4. Draco：fork 解码后把 `extensionsUsed/Required` 清空、索引 `componentType` 由解码器定为 `5125`，新实现保留原始 JSON（占位 `5123`）；两者最终都拓宽为 `uint32` 索引，**数值逐值严格相等**。索引类型按「属于 5123/5125」显式判定并记录，不是放宽数值断言。
+
+**与方案的实施偏差（已记录）**：
+
+- **解码器文件来源**：GitHub / raw.githubusercontent 在执行时仍不可达，改由 **jsDelivr** 取同一份 google/draco 官方文件：`draco_decoder_gltf.js`（479,063 B）来自 `cdn.jsdelivr.net/gh/google/draco@main/javascript/`，`draco_decoder_gltf.wasm`（183,697 B，wasm 魔数已校验）来自 `cdn.jsdelivr.net/npm/draco3dgltf@1.5.9/`。SHA256：JS `920BFA41…0E9A`、wasm `39B78CEC…84BF`。
+- **模块形态**：该 JS 是 Emscripten **CJS/全局脚本**（`var DracoDecoderModule` + `module.exports`），无 ESM 导出；宿主实现 `tests/helpers/dracoDecoderBrowser.ts` 因此改用 `<script>` 标签加载取全局工厂 + `locateFile` 指向 wasm，而非方案里写的动态 `import()`。
+- **依赖位置**：`@gltf-transform/core|extensions@^4.5.1` 装入 **`dependencies`**（lib 运行时依赖，且在 `vite.lib.config.ts` external 化），`draco3dgltf@^1.5.9` 装入 `devDependencies`（仅补类型声明），比方案 §3.1 的 `npm i -D` 更贴合 `AGENTS.md` §四「依赖全部 external」。
+- **golden 形态**：Gate 0 用实时 A/B，未预生成 `tests/fixtures/gltf-parity/*.json`；**Phase 3 删除旧 loader 之前必须补齐并提交**（见 §3.6 E）。
 
 ### 验收（按两类验证分层）
 0. **第 1 类先行**：Gate 0 数据对齐测试 100% 通过（`npm run test:run` + `npm run test:browser`），覆盖 §3.7 的 `base/**` 24 个示例 + `public/models/gltf/model/Box/` 四种形态全部条目；**Draco Box 必须由本期 `public/draco/` 的 `draco_decoder_gltf.js` + `.wasm` 真正解码并通过逐值对比**（§八 决策 2 硬要求）；golden 快照已提交，方案状态升级为「已验证」；未达成不得进入 Phase 0B 之后。
