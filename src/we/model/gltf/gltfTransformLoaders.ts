@@ -39,6 +39,18 @@ import {
     type T_ExtensionDependencyProviders,
 } from './extensionDependencies';
 
+/**
+ * glTF 2.0 §3.6.2.2：normalized 整数 accessor 的缩放除数。
+ * 有符号类型用 2^(bits-1)-1，且 -128 / -32768 需 clamp 到 -1。
+ */
+const NORMALIZED_DIVISOR: Record<number, { divisor: number; signed: boolean }> = {
+    5120: { divisor: 127, signed: true }, // BYTE
+    5121: { divisor: 255, signed: false }, // UNSIGNED_BYTE
+    5122: { divisor: 32767, signed: true }, // SHORT
+    5123: { divisor: 65535, signed: false }, // UNSIGNED_SHORT
+    5125: { divisor: 4294967295, signed: false }, // UNSIGNED_INT
+};
+
 export class GltfDataAtTransform extends ModelDataLoader {
     url: string;
     device: GPUDevice;
@@ -230,6 +242,33 @@ export class GltfDataAtTransform extends ModelDataLoader {
     }
 
     /**
+     * 顶点属性数组：统一 float32（Phase 4 / P1-2 方案 A）。
+     * - `normalized: true` 的整数 accessor 按 glTF 规范缩放到 [0,1] / [-1,1]；
+     * - 非 normalized 整数按数值转 float（不缩放）；
+     * - 索引不调用本方法，仍走 `getAccessorForByte()` 的 uint32 拓宽。
+     *
+     * 与 `accessorFormat.ts` 的 `float32xN` / `vecNf` 顶点格式配套，避免 WGSL
+     * 模板把 `vec3i` / `vec4u` 当 f32 用而编译失败（meshopt 资产实测问题）。
+     */
+    getAccessorVertexArray(index: number): Float32Array {
+        const raw = this.getRawArray(index);
+        const componentType = this.getAccessorOfSource(index)?.componentType ?? 5126;
+        const normalized =
+            this.getAccessorOfSource(index)?.normalized === true && componentType !== 5126;
+        const scale = normalized ? NORMALIZED_DIVISOR[componentType] : undefined;
+        const out = new Float32Array(raw.length);
+        for (let i = 0; i < raw.length; i++) {
+            const v = raw[i];
+            out[i] = scale
+                ? scale.signed
+                    ? Math.max(v / scale.divisor, -1)
+                    : v / scale.divisor
+                : v;
+        }
+        return out;
+    }
+
+    /**
      * 获取 accessor 对应的 GPUBuffer
      */
     getGPUBuffer(accessorID: number): GPUBuffer | undefined {
@@ -334,8 +373,8 @@ export class GltfDataAtTransform extends ModelDataLoader {
                 byteSize: countsOfList * 4,
             } as I_indexGPUBufferBundle;
         } else if (useFor == E_accessorUseFor.vertex) {
-            // sparse 已由 Accessor.getArray() 合并，无需像旧 loader 那样手动写入
-            const accessorArray = this.getAccessorForByte(accessorID);
+            // sparse 已由 Accessor.getArray() 合并；顶点统一转成 float32（含 normalized 缩放）
+            const accessorArray = this.getAccessorVertexArray(accessorID);
             const { format, wgslFormat, byteSize, arrayStride } =
                 this.getAccessorTypeForGPUVertexFormat(accessorID);
             if (!gpuBuffer) {

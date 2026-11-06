@@ -193,6 +193,7 @@ export { createGLTFModel, GLTFModel } from './model/gltf/gltf';
 export type { I_gltfInstanceResource } from './model/gltf/gltf';
 export { createBrowserDracoDecoder } from './model/gltf/dracoDecoderBrowser';
 export type { T_DracoDecoderModule } from './model/gltf/dracoDecoderBrowser';
+export { createBrowserMeshoptDecoder } from './model/gltf/meshoptDecoderBrowser';
 export {
     registerExtensionDependencyProvider,
     unregisterExtensionDependencyProvider,

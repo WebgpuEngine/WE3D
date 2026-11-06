@@ -52,7 +52,7 @@ createGLTFModel(input)
 | `getExtensionDependencyKeys(json)` | 模块 / barrel | 由原始 JSON 推导依赖 key（去重），供诊断与单测 |
 | `resolveExtensionDependencies(io, json, overrides?)` | 模块 | 解析 + 懒加载 + 注册，返回实际注册的 key（内部由 `init()` 调用） |
 | `registerExtensionDependencyProvider(key, loader)` | 模块 / barrel | 宿主注册 / 覆盖某个 key 的加载器（后期扩展接入点），注册后缓存失效 |
-| `unregisterExtensionDependencyProvider(key)` | 模块 / barrel | 注销宿主 provider 并清缓存；有内置默认值时恢复默认 |
+| `unregisterExtensionDependencyProvider(key, restoreDefault?)` | 模块 / barrel | 注销宿主 provider 并清缓存；`restoreDefault` 默认 true（有内置默认值则恢复），传 false 彻底移除 |
 | `T_GltfExtensionDeclaration` | 模块 / barrel | `Pick<IGLTF, 'extensionsUsed' \| 'extensionsRequired'>`，解析器只需这两个字段 |
 | `I_Model.extensionDependencies` | `BaseModel.ts` | per-model 通用覆盖 |
 | `I_Model.dracoDecoder` | `BaseModel.ts` | **保留**为简写覆盖，等价于 `{'draco3d.decoder': fn}`；正常用法不再需要 |
@@ -72,7 +72,7 @@ registerExtensionDependencyProvider('meshopt.decoder', async () => {
 | 扩展 | 依赖 key | 内置 provider | 状态 |
 | --- | --- | --- | --- |
 | `KHR_draco_mesh_compression` | `draco3d.decoder` | `createBrowserDracoDecoder`（`<script>` 加载 `/draco/draco_decoder_gltf.js` + `locateFile` 指向 wasm） | **已实现、自动** |
-| `EXT_meshopt_compression` | `meshopt.decoder` | 无（宿主注册） | 后期；资产声明但未注册时明确抛错 |
+| `EXT_meshopt_compression` | `meshopt.decoder` | `createBrowserMeshoptDecoder`（动态 import `meshoptimizer` + `MeshoptDecoder.ready`） | **已实现、自动**（P2-1，2026-11-06） |
 | `KHR_texture_basisu` | ——（官方只透传 KTX2 字节，不做转码） | 需 Basis Universal transcoder 做像素解码，不属于 `registerDependencies` 范畴 | Phase 4 排期（§六 R6） |
 | 自定义 / 未来扩展 | 自定义 key | `registerExtensionDependencyProvider(key, loader)` | 支持 |
 

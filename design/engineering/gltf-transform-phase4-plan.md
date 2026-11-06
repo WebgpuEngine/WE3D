@@ -322,8 +322,10 @@ P4-1 D1–D8（需先解除口径，另立任务）
 
 | 小步 | 状态 | 门禁 |
 | --- | --- | --- |
-| 1 · P1-1 | ✅ 完成（未提交） | `ci:no-e2e` 全绿（71 单测 / 42 browser / exports 206 / build:lib）；全量 e2e 2 workers **76/76**；8 workers `ci` 偶发波动见 §10.6 |
-| 2 ~ 8 | 未开始 | — |
+| 1 · P1-1 | ✅ 完成（已提交 `74a44b5`） | `ci:no-e2e` 全绿（71 单测 / 42 browser / exports 206 / build:lib）；全量 e2e 2 workers **76/76**；8 workers `ci` 偶发波动见 §10.6 |
+| 2 · P2-1 | ✅ 完成（未提交） | `ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿（官方样本入库与 e2e 重写后）；视觉基线已由方案 A 打通，见 §10.10 |
+| 3 · P1-2（方案 A） | ✅ 完成（未提交） | `ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；全量 `test:baseline` 78/78；`npm run ci` **78/78** 全绿。两个 meshopt 页面 shader warning 252 → **0**，截图由纯黑变为正常渲染，见 §10.10 |
+| 4 ~ 8 | 未开始 | — |
 
 ### 10.6 小步 1 执行记录（2026-11-06，未提交）
 
@@ -331,4 +333,69 @@ P4-1 D1–D8（需先解除口径，另立任务）
 - **返工与发现（体现「不确定因素先最小验证」）**：首次同时收窄时 `typecheck` 报 4 处 TS2345 / TS2322。先回退 `gltfJSON()` 收窄验证根因，确认**不是** `gltfJSON()`，而是 `getAnimations()` 的强类型 `IAnimation[]` 暴露了动画段落既有类型契约（`interpolation` / `path` 为 `string` 却传给引擎枚举、`target.node` 可选却传给 `number`、sampler 字段赋值）。随后以**行为完全不变**的最小类型处理修好（`as E_InterpolationModes` / `as E_AnimationTargetType` / `node!`），再把 `gltfJSON()` 收窄补回。
 - **待查（归入 P4-1 D8）**：`perChannels.target.node` 在 glTF 规范中可选，当前用 `!` 沿用既有假设；`CUBICSPLINE` 经 `.toLowerCase()` 得 `cubicspline`，与枚举值 `cubicSpline` 不匹配，既有校验会抛错。两者都是先前被 `any` 掩盖的既有行为，本步未改变，留待 P4-1 逐项核实并补用例。
 - **e2e 波动**：8 workers `npm run ci` 连续两轮分别有 4 / 2 个不同既有用例失败（`shadow/PBR_dirlight_1` 等像素波动 0.14、`gltf/texture_buffer_view`、30s 超时）；2 workers 全量 **76/76 全绿**。本步改动不涉及渲染（动画取值路径等价 + 编译期类型断言），判定为并发资源竞争。用户已判定 P0-2 解决、未改配置；§4.2 的三条兜底（retries / workers / timeout）**未主动实施**，需用户确认后再动。
-- **状态**：代码完成、两道门禁与全量 e2e 验证通过，**未提交**；等用户确认后按「一项一 commit」提交。
+- **状态**：代码完成、两道门禁与全量 e2e 验证通过，**已提交 `74a44b5` 并推送**。
+
+### 10.7 小步 2 执行记录（2026-11-06，未提交）
+
+- **依赖**：`meshoptimizer@^1.3.0`（`dependencies`，`vite.lib.config.ts` external 追加）、`@gltf-transform/functions@^4.5.1`（`devDependencies`，仅离线造样本、为 P3-2 铺路）。
+- **E1 落地**：`extensionDependencies.ts` 的结构与公共 API **未泛化重构**；只在 `DEFAULT_PROVIDERS` 增加 `'meshopt.decoder': createBrowserMeshoptDecoder`（新增 `meshoptDecoderBrowser.ts`，动态 import `meshoptimizer` + `await MeshoptDecoder.ready`）。`EXT_meshopt_compression` 由既有 `readDependencies` 自动发现，资产声明即自动加载，**宿主零注入** —— 验证了「不动 `init()`、不加 per-ts 注入」的设计承诺。
+- **接口微调整**：`unregisterExtensionDependencyProvider(key, restoreDefault = true)` 新增可选参数，默认语义不变；传 `false` 可彻底移除（供单测制造缺 provider 场景 / 显式禁用内置能力）。`src/we/index.ts` 追加 `createBrowserMeshoptDecoder`（barrel 207 符号，`check:exports` 通过）。
+- **样本资产（决策 8 入库）**：用官方 `meshopt()` transform 从 `Box/glTF/Box.gltf` 生成 `public/models/gltf/base/meshopt/Box.gltf` + `Box0.bin`（3038 / 244 B），`extensionsUsed/Required = EXT_meshopt_compression + KHR_mesh_quantization`（两者均在 `ALL_EXTENSIONS` 中）。一次性生成脚本已删除。
+- **验证载体**：契约测试资产矩阵 +1（38 项，断言自动发现 `meshopt.decoder` 且解码后 accessor 非全零）；新增 `e2e-cases/gltf/box_meshopt.html/.ts`（从 `@we3d` 导入、无任何宿主注册代码），`e2e-index` 刷新到 14 目录 / 76 用例；GPU 硬件版产出 `gltf-box-meshopt.png`（2418 B）。
+- **门禁**：`npm run ci:no-e2e` 全绿（71 单测 / 43 browser / exports 207 / build:lib）；`npm run ci` **77/77 全绿**（本次 8 workers 未出现并发波动）。基线与代码同批、**未提交**。
+- **状态**：代码完成、两道门禁全绿；等用户确认后按「一项一 commit」提交。
+
+### 10.8 官方 meshopt 样本入库与 e2e 重写（2026-11-06，未提交）
+
+- **起因**：用户核查 `public` 是否已有 meshopt 测试样例。上轮已有本地 `meshopt()` transform 生成的 `public/models/gltf/base/meshopt/Box.gltf`（3 KB）；用户要求按 Khronos 参考仓库补入**官方样本**并重写 e2e 用例。
+- **资产来源**：归档仓库 `KhronosGroupArchives/glTF-Sample-Models` 的 `2.0/` 无 meshopt 专用模型；官方样本已迁至 `KhronosGroup/glTF-Sample-Assets` → `Models/MeshoptCubeTest/glTF-Meshopt`。经 GitHub Contents API 拉取 12 个模型文件（`.gltf` / `.bin` / 10 张 `.png`，约 100 KB）+ 官方 `LICENSE.md`，入库 `public/models/gltf/base/meshopt/MeshoptCubeTest/`；授权 CC0-1.0（模型）/ CC-BY-4.0（元数据），目录内 `README.md` 已写明来源、授权、用途与已知边界。
+- **唯一适配**：样本沿用旧草案名 `KHR_meshopt_compression`，而 `@gltf-transform/extensions@4.5.1` 只注册 `EXT_meshopt_compression`；两者 bufferView 扩展字段完全一致（`buffer` / `byteOffset` / `byteLength` / `byteStride` / `count` / `mode` / `filter`），故统一替换 **63 处**为规范名使通用机制能自动发现并解码。`.bin` / `.png` 未改动，`extensionsUsed/Required` 同步改写。
+- **验证载体**：契约测试资产矩阵 +1（39/39 契约、44 browser 全绿，零宿主注入自动解码）；新增 `e2e-cases/gltf/meshopt_cube_test.html/.ts`，按实测包围盒 X `[-4.5,16]` / Y `[0,19]` / Z `0` 把相机设为 `(5.75, 9.5, 25)` 正对中心；`e2e-index` 刷新到 14 目录 / **77 用例**（Playwright 78 tests）；两张 meshopt GPU 基线（`gltf-box-meshopt.png`、`gltf-meshopt-cube-test.png`）。
+- **重要发现（阻塞视觉回归）**：临时诊断用例确认页面、`window.scene` / `window.gltf`、meshopt 解压均成功，但官方资产的 **normalized 8/16 位交错顶点属性**触发 WGSL 编译错误 `vec4<f32>(vec3<i32>, …)` 类型不匹配 → RenderPipeline 无效 → 截图纯黑。进一步核对发现**上轮自制 Box meshopt 用例的基线同样为纯黑**（`meshopt()` transform 的 quantize 也产生 normalized 整数属性）。即 **P1-2（normalized accessor 修复）是所有 meshopt 视觉回归的前置条件**，当前两张基线仅作占位。诊断用例与 404（未屏蔽 favicon）已排除，资产引用资源全部入库，正式 `probe()` 屏蔽 favicon 故不受影响。
+- **建议**：把 P1-2 从「小步 4」**提前为下一小步**（用户已立项）。实施前须按 `AGENTS.md` §二.6 先读 `design/shaders/shader-register-mechanism.md` 与 `design/shaders/wgsl-authoring-guide.md`；完成后必须 `npm run test:baseline` 重新生成这两张基线并与代码同提交。在此之前 meshopt 回归由契约测试（数据层）承担，e2e 截图不具备视觉判据。
+- **门禁**：`npm run ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78 全绿**。状态：未提交。
+
+### 10.9 WGSL 报错根因分析（2026-11-06，用户要求；未修复）
+
+- **诊断方式**：临时 Playwright spec 分别加载 `e2e-cases/gltf/box_meshopt.html`（**用自制 `public/models/gltf/base/meshopt/Box.gltf` 写的 e2e 用例**）与 `meshopt_cube_test.html`，各抓 console 并延迟 5s 截图；诊断文件跑完已删除。
+- **结果**：两个页面 `console.error` 均为空，`window.scene` / `window.gltf` 均存在（模型已加载、meshopt 已解压），但**各有 252 条 shader warning**：
+  - 自制 Box：`:292:28 no matching overload for 'operator + (vec3<i32>, f32)'`
+  - 官方样本：`:303:96 no matching constructor for 'vec4<f32>(vec3<i32>, abstract-int)'`
+  - 两者 RenderPipeline 无效 → 截图 / 基线均纯黑。
+- **根因链（已核对代码）**
+  1. `src/we/model/gltf/accessorFormat.ts` 的 `I_accessorLike` 只有 `type / componentType / count`，**不读 `normalized`**；`BASE_FORMAT` / `BASE_WGSL`（`:31-48`、`:6` 注释「不做 normalized 缩放」）把 5120/5122 → `sint32`/`i`、5121/5123 → `uint32`/`u`。
+  2. `gltfTransformLoaders.ts:339-347` 把 `format` / `wgslFormat` 放进 `accessorBufferSource`；引擎据此生成 VS 的 `@location` 属性声明，`VEC3` 带符号整数即 `vec3i`（= `vec3<i32>`）。
+  3. WGSL 模板（`include.ts:503-508` 的 reflection attributes + entity / shadowmap VS）按 **`vec3f`** 使用这些属性（`position + f32`、`vec4<f32>(position, 1)`）→ 类型检查失败 → ShaderModule / RenderPipeline 无效 → 全黑。
+  4. 两个资产都命中条件：自制 Box 有 2 个 `VEC3 / 5122 / normalized:true`（`meshopt()` transform 默认 `quantize()` 把 POSITION/NORMAL 量化为 short），官方样本有 **45** 个 normalized accessor（5120 / 5121 等）。
+- **结论**：与资产来源、meshopt 解码链路**无关** —— 解压与数据层契约测试（39/39）都通过。阻塞点是引擎对 `normalized` accessor 的顶点格式处理，即 §4.5 / R7 的 **P1-2**；普通 glTF 用例没有 normalized 整数属性，所以此前 e2e 全绿。
+- **待讨论的方法（本轮不实施、不提交）**
+  - **A · 治本（P1-2）**：`I_accessorLike` 加 `normalized?`；对 normalized 整数 accessor 输出正确的 GPU 归一化顶点格式或 CPU 侧归一化成 float32，使 `wgslFormat` 始终为 `vec3f` / `vec4f`。注意 WebGPU 归一化顶点格式**没有 x3**（仅 x2 / x4），VEC3 需 padding 或 CPU 转 float。会改渲染 → 所有受影响基线（至少两张 meshopt）必须 `test:baseline` 重生成。
+  - **B · 短期规避**：生成 meshopt 样本时禁用 `quantize()`（只启用 `EXTMeshoptCompression` 压缩字节、不改 accessor 类型），让自制 Box 保持 float32 顶点属性 → 可先得到一张有内容的视觉基线并验证解码链路；官方样本含 45 个 normalized accessor，规避不了。
+  - **C · 保守**：meshopt 视觉回归暂只由契约测试（数据层）承担，移除 / 暂停两张纯黑基线，待 A 完成后再建 e2e 用例。
+  - **D · 不推荐（治标）**：改 WGSL 模板把整数属性显式转 f32 —— 数值未归一化（0~255）仍会渲染异常。
+- **建议顺序**：先用 **B 做对照实验**确认 meshopt 解码链路本身的视觉正确性，再执行 **A**，最后统一重生成两张基线。等用户拍板后再动手。
+- **用户决策（2026-11-06）**：直接执行 **A**（跳过 B），并约定「若不能解决 meshopt 的问题，本轮改动无意义、不需要提交」。结果见 §10.10 —— **A 已解决**。
+
+### 10.10 方案 A（P1-2）执行结果（2026-11-06，未提交）
+
+**决策与验收判据**：用户选 A，验收判据为「两个 meshopt e2e 页面 shader warning 归零 + 截图非纯黑」。
+
+**代码落地**
+
+1. `src/we/model/gltf/accessorFormat.ts`：顶点格式统一 `float32xN` / `vecNf` / `f32`，不再按 componentType 输出 `sint32` / `uint32`；`I_accessorLike` 加可选 `normalized?`（仅语义对齐）；保留未知 type / componentType 校验；`arrayStride` / `byteSize` 不变。理由：`#reflection location` 与 `st_vertex_output` 全按 f32 使用，顶点属性必须恒为 f32（已按 `AGENTS.md` §二.6 读两份 shader 文档确认）。
+2. `src/we/model/gltf/gltfTransformLoaders.ts`：新增 `NORMALIZED_DIVISOR`（glTF 2.0 §3.6.2.2，BYTE 127 / UBYTE 255 / SHORT 32767 / USHORT 65535 / UINT 4294967295，有符号 clamp -1）与 `getAccessorVertexArray()`；顶点 GPUBuffer 改用它（`Float32Array`），索引仍走 `getAccessorForByte()` 的 uint32 拓宽；`getAccessorForByte()` / `getAccessorForArray()` 保持不变，既有 CPU 路径与契约不受影响。
+3. `src/we/core/SHR/include.ts`：`WGSL_reflection_attributes.color[1]` 由 `attributes.color` 改为 `attributes.color.xyz`，修复 glTF VEC4 `COLOR_0` 赋给 `st_vertex_output.color: vec3f` 的 WGSL 类型错误（对 VEC3 为 identity，对 VEC4 取 rgb）。
+4. 测试适配：`accessorFormat.test.ts` 24 组期望改为 float32 并新增 normalized 断言（26 项）；`gltfTransformContract.browser.test.ts` 的 GPUBuffer 读回按 vertex / index 分别用 `Float32Array` / `Uint32Array`，新增 normalized 值域断言（39 项）。
+
+**决定性验证**（临时诊断 spec，跑完已删）
+
+| 用例 | 修复前 shader warning | 修复后 | 截图 |
+| --- | --- | --- | --- |
+| `box_meshopt`（自制 Box） | 252（`operator + (vec3<i32>, f32)`） | **0** | 红色立方体，正常 |
+| `meshopt_cube_test`（Khronos） | 252（`vec4<f32>(vec3<i32>, …)`） | **0** | 完整 5×5 网格 + 行列标签，正常 |
+
+中间态：方案 A 主体落地后，官方样本曾只剩 `vec4<f32> → vec3<f32>` 一类错误（VEC4 顶点色），补第 3 项后归零。
+
+**基线与门禁**：全量 GPU 硬件版 `test:baseline`（2 workers）**78/78**，两张 meshopt 基线由 2418 B 纯黑重生成（2931 B / 9988 B），**其它已跟踪基线零改动**。`npm run ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿。
+
+**结论**：方案 A **解决了 meshopt 的问题**，用户设定的条件满足；本轮及小步 2 的改动具有意义。**按用户约定仍未提交**，等其确认后再按「一项一 commit」提交；若提交，代码与两张基线必须同一次提交。

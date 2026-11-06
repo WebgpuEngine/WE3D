@@ -48,6 +48,7 @@ export default defineConfig({
         'hdrify',
         'js-md5',
         'ktx-parse',
+        'meshoptimizer',
         'webgpu-utils',
         'wgpu-matrix',
       ],

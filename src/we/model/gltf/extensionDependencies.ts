@@ -21,6 +21,7 @@
 import { Document, type GLTF } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { createBrowserDracoDecoder } from './dracoDecoderBrowser';
+import { createBrowserMeshoptDecoder } from './meshoptDecoderBrowser';
 
 /** 依赖加载器：返回要交给 `io.registerDependencies()` 的值（解码器模块等） */
 export type T_ExtensionDependencyLoader = () => Promise<unknown>;
@@ -39,9 +40,15 @@ export type T_GltfExtensionDeclaration = Pick<
     'extensionsUsed' | 'extensionsRequired'
 >;
 
-/** 内置默认 provider：只带加载逻辑，不打包解码器本体 / wasm */
+/**
+ * 内置默认 provider：只带加载逻辑，不打包解码器本体 / wasm。
+ * - `KHR_draco_mesh_compression` → `draco3d.decoder`（`public/draco/` 宿主资源）
+ * - `EXT_meshopt_compression` → `meshopt.decoder`（`meshoptimizer` npm 包，external 化）
+ * 两者都由 ALL_EXTENSIONS 的 readDependencies 自动发现，资产声明即自动加载。
+ */
 const DEFAULT_PROVIDERS: T_ExtensionDependencyProviders = {
     'draco3d.decoder': createBrowserDracoDecoder,
+    'meshopt.decoder': createBrowserMeshoptDecoder,
 };
 
 /** 自动发现失败时的静态兜底（key 值已核对 @gltf-transform/extensions@4.5.1 源码） */
@@ -103,9 +110,16 @@ export function registerExtensionDependencyProvider(
     loaded.delete(key);
 }
 
-/** 注销宿主注册的 provider 并清缓存；若该 key 有内置默认值则恢复内置默认 */
-export function unregisterExtensionDependencyProvider(key: string): void {
-    const fallback = DEFAULT_PROVIDERS[key];
+/**
+ * 注销宿主注册的 provider 并清缓存。
+ * @param restoreDefault 默认 true：若该 key 有内置默认值则恢复内置默认；
+ *                       传 false 则彻底移除（供缺 provider 场景验证 / 显式禁用内置能力）。
+ */
+export function unregisterExtensionDependencyProvider(
+    key: string,
+    restoreDefault = true,
+): void {
+    const fallback = restoreDefault ? DEFAULT_PROVIDERS[key] : undefined;
     if (fallback) providers.set(key, fallback);
     else providers.delete(key);
     loaded.delete(key);

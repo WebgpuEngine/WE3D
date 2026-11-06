@@ -503,7 +503,8 @@ export const WGSL_reflection_attributes: Record<string, string[]> = {
         ' let position = attributes.position; \n ',
     ],
     normal: [' let normal= vec3f(0.0,0.0,0.0); \n ', ' let normal = attributes.normal; \n '],
-    color: [' let color= vec3f(1.0,1.0,1.0); \n ', ' let color = attributes.color; \n '],
+    // glTF COLOR_0 允许 VEC3 / VEC4；用 .xyz swizzle 统一成 st_vertex_output.color 的 vec3f
+    color: [' let color= vec3f(1.0,1.0,1.0); \n ', ' let color = attributes.color.xyz; \n '],
     uv: [' var uv= vec4f(0.0,0.0,0.0,0.0); \n ', ' var uv =vec4f(attributes.uv,0.0,0.0); \n '],
     uv1: ['', ' uv[2]= attributes.uv1[0]; \n uv[3]= attributes.uv1[1]; \n '],
 };

@@ -68,6 +68,8 @@ describe('glTF 扩展运行时依赖 · 通用自动解析', () => {
         });
 
         it('缺 provider 时抛明确错误并给出注册方式', async () => {
+            // 彻底注销（含内置默认）以制造 provider 缺失场景
+            unregisterExtensionDependencyProvider(MESHOPT, false);
             const { sink } = makeSink();
             await expect(
                 resolveExtensionDependencies(sink, { extensionsUsed: ['EXT_meshopt_compression'] }),
