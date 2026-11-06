@@ -118,6 +118,10 @@ export class GltfDataAtTransform extends ModelDataLoader {
         return this.gltfJson;
     }
 
+    getAnimations(): NonNullable<GLTF.IGLTF['animations']> | undefined {
+        return this.gltfJson.animations;
+    }
+
     getScenes(): GLTF.IScene[] | undefined {
         return this.gltfJson.scenes;
     }

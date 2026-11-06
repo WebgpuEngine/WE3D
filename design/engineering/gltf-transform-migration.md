@@ -555,6 +555,9 @@ async getImage(index: number) {
 5. 更新 `pending-work.md` §1.4 为 ✅；至此第 2 类视觉验证闭环。
 
 ### Phase 4 · 增强 / 已排期的后期优化
+
+> 📋 **详细方案（2026-11-06 制定）**：`design/engineering/gltf-transform-phase4-plan.md` —— 工作项全景与优先级、逐项落地点 / 验收 / 风险、通用机制演进、门禁与提交策略、8 项待用户决策。状态为「设计草案，待确认立项」，**以下条目均为原始排期记录，未执行**。
+
 - **Worker 化 Draco 解码**（§八 决策 3 明确的「后期优化」，本次迁移不做；注意 GPUBuffer 必须在主线程创建）。
 - **KTX2 / `KHR_texture_basisu` 支持**（§八 决策 5 排期）：需另接 Basis Universal transcoder，glTF-Transform 只透传 KTX2 容器、不做转码。
 - 接 `@gltf-transform/functions`（`weld/prune/dedup/quantize/textureCompress`）、`io.writeBinary` 导出、给 `ModelDataLoader` 补 `getAnimations()` 闭合 `gltf.ts:305` 的抽象泄漏；**D1–D8 缺陷修复本期不 commit**（§八 决策 4「同意，不 commit」），如后续立项再单独处理。

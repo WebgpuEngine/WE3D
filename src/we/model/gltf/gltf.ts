@@ -315,7 +315,7 @@ export class GLTFModel extends BaseModel {
      * 2、动画组附加到NodeObject
      */
     async initAnimationsForInstance(nodeOfScene: NodeObject) {
-        const animationGroupsJSON = this.DataLoader.gltfJSON().animations;
+        const animationGroupsJSON = this.DataLoader.getAnimations();
         if (animationGroupsJSON == undefined) {
             return;
         }
@@ -333,14 +333,15 @@ export class GLTFModel extends BaseModel {
                 const targetNode = this.instanceNodes
                     .get(nodeOfScene)!
                     .nodes.get(perChannels.target.node);
-                let interpolation;
+                let interpolation: E_InterpolationModes;
                 if (perSampler.interpolation == undefined) {
                     interpolation = E_InterpolationModes.linear;
                 } else {
-                    interpolation = perSampler.interpolation.toLowerCase();
-                    if (!Object.values(E_InterpolationModes).includes(interpolation)) {
-                        throw new Error(`animation interpolation type ${interpolation} not found`);
+                    const raw = perSampler.interpolation.toLowerCase();
+                    if (!Object.values(E_InterpolationModes).includes(raw as E_InterpolationModes)) {
+                        throw new Error(`animation interpolation type ${raw} not found`);
                     }
+                    interpolation = raw as E_InterpolationModes;
                 }
                 const frames = (await this.getAccessor(
                     perSampler.input,
@@ -359,7 +360,11 @@ export class GLTFModel extends BaseModel {
                     targetAnimationType = E_AnimationTargetType.position;
                 }
 
-                if (!Object.values(E_AnimationTargetType).includes(targetAnimationType)) {
+                if (
+                    !Object.values(E_AnimationTargetType).includes(
+                        targetAnimationType as E_AnimationTargetType,
+                    )
+                ) {
                     throw new Error(`animation target type ${targetAnimationType} not found`);
                 }
 
@@ -373,7 +378,8 @@ export class GLTFModel extends BaseModel {
                         targetStride = 3;
                         break;
                     case E_AnimationTargetType.weights:
-                        targetStride = this.getMorphTargetsForNode(perChannels.target.node);
+                        // glTF IAnimationChannel.target.node 为可选；此处沿用既有假设（morph 动画必有目标节点）
+                        targetStride = this.getMorphTargetsForNode(perChannels.target.node!);
                         break;
                     default:
                         throw new Error(`animation target type ${targetAnimationType} not found`);
@@ -383,7 +389,7 @@ export class GLTFModel extends BaseModel {
                     interpolation: interpolation,
                     frames: frames,
                     values: values,
-                    target: targetAnimationType,
+                    target: targetAnimationType as E_AnimationTargetType,
                     targetStride: targetStride,
                 };
                 let oneAnimation: KeyFrameAnimation | MorphTargetAnimation;

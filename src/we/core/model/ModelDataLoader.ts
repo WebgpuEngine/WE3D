@@ -1,4 +1,5 @@
 import { TypedArray } from 'webgpu-utils';
+import type { GLTF } from '@gltf-transform/core';
 import { I_indexGPUBufferBundle, I_vsGPUBufferBundle } from '../command/DrawCommandGenerator';
 import { E_accessorUseFor } from '../../model/gltf/base';
 
@@ -6,7 +7,11 @@ export abstract class ModelDataLoader {
     /**加载并解析模型数据（gltf/glb）*/
     abstract init(): Promise<unknown>;
 
-    abstract gltfJSON(): any;
+    /** 原始 glTF JSON 视图；收窄为 IGLTF（动画段落的枚举 / 可选 node 契约已同步对齐） */
+    abstract gltfJSON(): GLTF.IGLTF;
+
+    /** 动画定义；替代构建层直读 gltfJSON().animations 的抽象泄漏（D8） */
+    abstract getAnimations(): NonNullable<GLTF.IGLTF['animations']> | undefined;
 
     /**获取accessor的原始数据
      * @param index accessor的索引

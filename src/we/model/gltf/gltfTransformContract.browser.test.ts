@@ -160,6 +160,15 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             expect(json.accessors?.length ?? 0, `${url} accessors`).toBeGreaterThan(0);
             expect(json.meshes?.length ?? 0, `${url} meshes`).toBeGreaterThan(0);
 
+            // P1-1：动画经抽象方法暴露，构建层不再直读裸 JSON
+            const animations = loader.getAnimations();
+            expect(animations, `${url} getAnimations 与 gltfJSON().animations 一致`).toBe(
+                json.animations,
+            );
+            if (url.includes('simpleAnimation')) {
+                expect(animations?.length ?? 0, `${url} 动画非空`).toBeGreaterThan(0);
+            }
+
             // Draco：通用扩展依赖自动检测，解码后占位 accessor 必须有真实数值
             if (getExtensionDependencyKeys(json).includes('draco3d.decoder')) {
                 expect(loader.isDraco(), `${url} isDraco`).toBe(true);
