@@ -34,7 +34,6 @@ import { E_TextureChannel } from '../../core/texture/base';
 import { E_accessorUseFor } from './base';
 import { BaseTexture } from '../../core/texture/baseTexture';
 import { ModelDataLoader } from '../../core/model/ModelDataLoader';
-import { GltfDataAtLoaders } from './gltfAtLoaders';
 import { GltfDataAtTransform } from './gltfTransformLoaders';
 import type { T_ExtensionDependencyProviders } from './extensionDependencies';
 import { weVec4 } from '../../core/base/coreDefine';
@@ -82,11 +81,12 @@ export async function createGLTFModel(
     if (input.dracoDecoder) {
         dependencyOverrides['draco3d.decoder'] = input.dracoDecoder;
     }
-    // 默认使用 @gltf-transform 解析层；显式传 loader:'loaders' 可秒级回滚到旧解析层。
-    const DataLoader: ModelDataLoader =
-        input.loader === 'loaders'
-            ? new GltfDataAtLoaders(input.url, input.scene.device, gltf)
-            : new GltfDataAtTransform(input.url, input.scene.device, gltf, dependencyOverrides);
+    const DataLoader: ModelDataLoader = new GltfDataAtTransform(
+        input.url,
+        input.scene.device,
+        gltf,
+        dependencyOverrides,
+    );
     await DataLoader.init();
     callBack?.beforeGltfInit?.(gltf, DataLoader);
     await gltf.initData(DataLoader);

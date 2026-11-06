@@ -8,7 +8,6 @@ export default tseslint.config(
       'examples/**',
       'e2e-cases/**',
       'docs/**',
-      'src/@loaders.gl/**',
       'node_modules/**',
       'dist/**',
       'coverage/**',

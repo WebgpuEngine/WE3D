@@ -6,7 +6,6 @@ import { DirectionalLight } from "../../../../../src/we/core/light/DirectionalLi
 import { AmbientLight } from "../../../../../src/we/core/light/ambientLight";
 import { FXAA } from "../../../../../src/we/core/postprocess/FXAA";
 import { PointLight } from "../../../../../src/we/core/light/pointLight";
-import { GltfDataAtLoaders } from "../../../../../src/we/model/gltf/gltfAtLoaders";
 
 declare global {
   interface Window {

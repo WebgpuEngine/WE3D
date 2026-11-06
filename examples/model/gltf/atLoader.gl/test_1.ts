@@ -1,7 +1,7 @@
 import { vec3 } from "wgpu-matrix";
 import { IV_Scene } from "../../../../src/we/core/scene/base";
 import { initScene } from "../../../../src/we/core/scene/fn";
-import { GltfDataAtLoaders } from "../../../../src/we/model/gltf/gltfAtLoaders";
+import { GltfDataAtTransform } from "../../../../src/we/model/gltf/gltfTransformLoaders";
 import { Scene } from "../../../../src/we/core/scene/scene";
 import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
 
@@ -48,6 +48,6 @@ let url = "/models/gltf/base/triangle/triangle.gltf";
 // const url = "/models/gltf/model/Fox/glTF-Binary/Fox.glb"
 
 
-let dataLoader = new GltfDataAtLoaders(url, scene.device);
+let dataLoader = new GltfDataAtTransform(url, scene.device);
 await dataLoader.init();
 window.dataLoader = dataLoader;

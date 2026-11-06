@@ -11,7 +11,6 @@
 | `examples/` | 示例目录（vite dev 对象） | 本地 `npm run dev` 的功能示例；**不再是 Playwright 测试对象来源**（见 `e2e-cases/`） |
 | `e2e-cases/` | Playwright e2e 用例目录 | 取代 `examples/` 成为 Playwright 测试对象来源；用例从 `@we3d` 导入，按子目录组织（如 `baseEntity/`、`geometry/`） |
 | `src/we/` | 源代码目录 | 引擎主体（`core/`、`model/`、`export/`、`reExport/`）；`index.ts` 是**唯一公共 API 入口**（curated barrel） |
-| `src/@loaders.gl/` | **待废弃**的 gltf 使用库临时目录 | **不分析、不纳入工程化门禁** |
 | `src/libs/` | 库文件目录 | 当前为空 |
 | `dist/` | lib 打包产物（`we3d.js` + `.d.ts`） | 由 `npm run build:lib` 生成，`.gitignore` 排除，发布时 CI 构建 |
 | `public/` | 资产目录 | 运行时静态资源（gltf / 贴图等） |
@@ -21,7 +20,7 @@
 
 1. **设计入口**：本文件 `AGENTS.md` 是 AI / 协作者进入仓库的第一份指引（目录约定、开发流程、发布约定均以此为准）。根目录 `README.md` 是**整个项目的说明文档**（非设计入口）。
 2. **设计产出**：所有设计、方案、约定类文件保存到 `design/` 目录。
-3. **工程化门禁范围**：`ESLint` / `tsc` 门禁仅覆盖 `src/we`（不含 `examples/`、`docs/`、`src/@loaders.gl/`），避免大范围误伤。
+3. **工程化门禁范围**：`ESLint` / `tsc` 门禁仅覆盖 `src/we`（不含 `examples/`、`docs/`），避免大范围误伤。
 4. **公共 API 入口**：`src/we/index.ts` 是唯一公开边界（curated barrel），新增公共 API 时在此显式追加，并用 `npm run check:exports` 兜底防漂移。
 5. **别名约定**：`@we3d` → `src/we/index.ts`（`vite.config.ts` 的 `resolve.alias` + `tsconfig*.json` 的 `baseUrl`/`paths`）。examples/e2e 一律从 `@we3d` 导入，不写深层相对路径。
 6. **Shader 开发必读资料**：涉及 `src/we/core/shaders/`（WGSL 编写/修改）或 `src/we/core/SHR/`（shader 注册）时，必须先阅读以下两份文档（二者互补，缺一不可）：
@@ -52,7 +51,7 @@
 - 包名：`we3d`（`https://www.npmjs.com/package/we3d`）。
 - 形态：lib 形式（ESM + `.d.ts`），**不做 web app 打包**。
 - 着色器通过 Vite `?raw` 引入，由 Vite `build.lib` 模式在打包时内联，源码零改动。
-- 依赖全部 external 化（`@loaders.gl` 后期必替换，暂不考虑），只打包 `src/we` 源码。
+- 依赖全部 external 化，只打包 `src/we` 源码。
 - `prepublishOnly` 自动跑 lint + test + build:lib + check:exports（发布兜底）。
 
 ### 发布流程（本地命令，手动模式）

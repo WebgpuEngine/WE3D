@@ -117,14 +117,7 @@
 ## 七、人工 A/B 操作步骤
 
 1. `npm run dev`，从 `examples/model/gltf/index.html` 目录页进入表 A / B 的「对应示例页」，逐项打开。
-2. **现在默认已是 `'transform'`**，示例页无需加参数；要与旧解析层对照时，在 `createGLTFModel({...})` 入参显式加 `loader: 'loaders'`：
-   ```ts
-   let gltf = await createGLTFModel({
-       scene: scene,
-       url: '/models/gltf/base/triangle/triangle.gltf',
-       loader: 'loaders',
-   });
-   ```
+2. **Phase 3 起只有新解析层**：`gltf.ts` 直接构造 `GltfDataAtTransform`，`input.loader` 双轨开关已随旧 loader 一起移除；示例页只需普通的 `createGLTFModel({ scene, url })`，回归以 `e2e-cases/gltf/` 的 GPU 截图基线为准。
 3. **Draco 页无需任何注入**：`base/mesh/box.ts`、`base/draco/box.ts`、`base/draco/LittlestTokyo.ts` 现在都只是普通的 `createGLTFModel({ scene, url })`。`init()` 按资产的 `extensionsUsed` / `extensionsRequired` 自动检测 `KHR_draco_mesh_compression`，经 `resolveExtensionDependencies()` 懒加载 `src/we/model/gltf/dracoDecoderBrowser.ts` 并注册 `'draco3d.decoder'`（通用机制见 `design/engineering/gltf-extension-dependency.md`）。
    解码器本体 / wasm 仍是宿主资源 `public/draco/`（断网可用），lib 只带加载逻辑。需要自定义路径 / CDN 时：
    ```ts

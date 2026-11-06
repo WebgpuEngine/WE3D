@@ -37,10 +37,9 @@
     "sourceMap": true,
   },
   "include": [
-    "src"
+    "src/we"
   ],
   "exclude": [
-    "node_modules",
-    "src/@loaders.gl"
+    "node_modules"
   ]
 }

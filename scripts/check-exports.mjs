@@ -53,7 +53,7 @@ function walk(dir, acc = []) {
     const p = join(dir, entry);
     const st = statSync(p);
     if (st.isDirectory()) {
-      if (entry === '@loaders.gl' || entry === 'export') continue;
+      if (entry === 'export') continue;
       walk(p, acc);
     } else if (
       entry.endsWith('.ts') &&

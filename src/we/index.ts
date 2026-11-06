@@ -189,6 +189,8 @@ export type { Sphere, boundingSphere } from './core/math/sphere';
 export { BaseModel } from './core/model/BaseModel';
 export type { I_Model } from './core/model/BaseModel';
 export { ModelDataLoader } from './core/model/ModelDataLoader';
+export { createGLTFModel, GLTFModel } from './model/gltf/gltf';
+export type { I_gltfInstanceResource } from './model/gltf/gltf';
 export { createBrowserDracoDecoder } from './model/gltf/dracoDecoderBrowser';
 export type { T_DracoDecoderModule } from './model/gltf/dracoDecoderBrowser';
 export {

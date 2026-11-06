@@ -42,7 +42,6 @@ export default defineConfig({
     rollupOptions: {
       // 全部 dependencies 外部化（wasm 相关依赖不打进产物）
       external: [
-        /^@loaders\.gl\//,
         /^@gltf-transform\//,
         'draco3dgltf',
         '@dimforge/rapier3d',

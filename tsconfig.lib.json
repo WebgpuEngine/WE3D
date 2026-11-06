@@ -26,5 +26,5 @@
     "outDir": "dist"
   },
   "include": ["src/we"],
-  "exclude": ["src/@loaders.gl", "**/*.test.ts", "**/* copy.ts", "**/*.todo", "**/*.backup"]
+  "exclude": ["**/*.test.ts", "**/* copy.ts", "**/*.todo", "**/*.backup"]
 }

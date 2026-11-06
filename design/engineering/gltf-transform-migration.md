@@ -1,6 +1,6 @@
 # pending-work #4 · `@loaders.gl` → npm `@gltf-transform` 迁移方案（新建 `gltfTransformLoaders.ts`，含 `gltfAtLoaders.ts` 逐函数替换）
 
-> 状态：✅ **方案已验证 / 确定，Phase 2 完成、默认解析层已切到 gltf-transform**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A / 0B / 1 / 2 均已完成：D6 GPU 数据收口、R8 外部资源解析专项、人工 A/B 视觉核对（用户确认无未归因差异）全部通过，`gltf.ts` 默认 loader 已由 `'loaders'` 切为 `'transform'`，显式传 `'loaders'` 仍可秒级回滚。扩展运行时依赖已改为**通用自动解析**（按扩展声明自动检测 / 懒加载 / 注册，Draco 不再需要人工注入），见 `design/engineering/gltf-extension-dependency.md`。下一步为 Phase 3 清理
+> 状态：✅ **迁移完成**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A / 0B / 1 / 2 / 3 / 3B 全部完成：默认解析层为 gltf-transform、扩展运行时依赖通用自动解析、旧 loader 与 9 个 `@loaders.gl` 依赖已清、`e2e-cases/gltf/` 21 个用例与 GPU 截图基线已建、`npm run ci` 全绿。唯一遗留：`src/@loaders.gl/` / `public/@loaders.gl/` 物理目录因工作区安全删除机制拒绝未删除（已从 git 索引移除并加入 `.gitignore`），需人工清理，见 §七「Phase 3 / 3B 执行结果」
 > 日期：2026-11-05（2026-11-06 补充 Gate 0、落地文件命名、验证分层、数据来源、全部决策记录与 Gate 0 执行结果）
 > 关联：`design/engineering/pending-work.md` §1.4、`design/workBuddy/20260923项目与gltf分析/04-迁移到glTF-Transform方案.md`（下称「04 号文档」）、`03-gltf模块深度分析.md`、`AGENTS.md`
 > 本文是 04 号文档的**实施级细化与勘误**，两份互补：04 号负责选型与阶段划分，本文负责「文件关系 + 每个函数怎么改 + 落地门禁」。
@@ -597,6 +597,17 @@ async getImage(index: number) {
 **Phase 2 完成（2026-11-06，人工核对 + 正式切换）**：① 用户按 Phase 0B 记录表完成人工 A/B 视觉核对（重点 Draco、sparse、图片三形态、GLB、morph / skin / animation），确认**无未归因可见差异**；核对表状态改为 ✅，逐行「结果 / 日期 / 验证人」以用户整体结论为准。② 据此把 `gltf.ts` 默认 loader 由 `'loaders'` 正式切到 `'transform'`，保留 `input.loader === 'loaders'` 的秒级回滚分支（不采用注释掉分支的强制单轨写法，避免死 import 导致 lint 失败）。`beforeGltfInit` 已满足（新 loader 保留 `gltfJson` 字段，见 §五）；R5 已处理（`init()` 注册 `ALL_EXTENSIONS`）；R8 已收口（见上）。程序化验证结论不替代人工视觉核对，见 §七「验证策略总表」。
 
 **解码器工厂位置调整（2026-11-06，用户决策）**：`createBrowserDracoDecoder` 由 `tests/helpers/dracoDecoderBrowser.ts` 迁入 **`src/we/model/gltf/dracoDecoderBrowser.ts`**，并在 `src/we/index.ts` 显式导出（`createBrowserDracoDecoder` + `T_DracoDecoderModule`），使 `examples/` / `e2e-cases/` / 外部宿主都能从 `@we3d` 使用，不再依赖仓库内 `tests/` 目录（该目录不在 npm 包 `files: ["dist"]` 内）。3 个 browser 测试、2 个 Draco 示例页与 `I_Model` 注释的引用已同步，旧文件已删除。**lib 仍不打包解码器本体 / wasm**：只带「按 `<script>` 加载 `/draco/draco_decoder_gltf.js` + `locateFile` 指向 wasm」的 JS 逻辑，资源仍由宿主放 `public/draco/`（本仓库已入库）。这是对 §五「`examples/` / `e2e-cases/` 内提供示例实现」的实施修正，`npm run check:exports` 已通过（barrel 197 符号）。
+
+### Phase 3 / Phase 3B 执行结果（2026-11-06）
+
+**Phase 3 清理**：删 `gltfAtLoaders.ts`、`src/loaders-gl.d.ts`、空文件 `PBR/gltfMeRoPBR.ts`；`package.json` 清掉 9 个 `@loaders.gl/*` 依赖并同步 `package-lock.json`；`vite.lib.config.ts` 移除 `/^@loaders\.gl\//` external；5 处 exclude / ignore 全部清除（`tsconfig.json` / `tsconfig.lib.json` / `eslint.config.js` / `vitest.config.ts` / `scripts/check-exports.mjs`）；6 个 `examples/model/gltf/atLoader.gl/*.ts` 换为 `GltfDataAtTransform`；`gltf.ts` 移除旧 loader 分支与 `I_Model.loader` 双轨开关；`AGENTS.md` 3 处描述更新。
+
+- **门禁范围修正**：fork 物理目录删除受工作区安全机制限制，按 `AGENTS.md` §二.3 把 `lint` 改为 `eslint src/we`、`tsconfig.json` 的 `include` 改为 `["src/we"]`，不保留任何针对 fork 的专门 exclude，门禁仍只覆盖 `src/we`。
+- **golden 快照实施偏差**：§3.6 E 原计划先固化 `tests/fixtures/gltf-parity/*.json`。实际改为新建 `gltfTransformContract.browser.test.ts`（30 个资产的数据契约 + 7 个资产的 GPUBundle/GPUBuffer 读回，37/37 通过），并删除 3 个依赖旧 loader 的 A/B 测试；数据级回归由契约测试 + **e2e GPU 截图基线**共同承担。理由：Gate 0 / D6 / R8 的等价性结论已 100% 验证并提交，旧 loader 移除后 A/B 不再可运行，而截图基线是更强的视觉级回归。
+- **仓库清理**：`src/@loaders.gl/` / `public/@loaders.gl/` 的 10 个 git 跟踪文件已 `git rm -r --cached` 移除索引并加入 `.gitignore`；物理目录（约 209 个本地 dist 产物）仍留在本机，需人工删除。
+
+**Phase 3B e2e 视觉回归**：`src/we/index.ts` 追加 `createGLTFModel` / `GLTFModel` / `I_gltfInstanceResource`（barrel 206 符号，`check:exports` 通过）；新建 `e2e-cases/gltf/` **21 个用例** —— 基础功能（triangle / sparse / fan / strip / 无索引 / matrix / material / morph / skin / animation / points / 图片三形态）、容器与压缩（Box glTF / GLB / **Draco** / Embedded、Fox glTF / GLB、`glb/suzanne_blender_monkey.glb`），全部只用 §3.7 两个基础目录内已入库资产，从 `@we3d` 导入；`npm run e2e-index` 刷新索引（14 目录 / 75 用例）；GPU 硬件版产出 21 张基线 `tests/e2e/baseline/examples.spec.ts-snapshots/gltf-*.png`，与代码同一次提交。
+- 首次 8 workers 并发撞上 Vite `504 Outdated Optimize Dep`（改 lock 后重新预构建），用 `npx vite optimize --force` + 串行跑一次生成基线后恢复；最终 `npm run ci`（含全量 `test:e2e`）**76/76 通过**，`npm run ci:no-e2e` **71 单测 / 42 browser / check:exports / build:lib** 全绿。
 
 ### 验收（按两类验证分层）
 0. **第 1 类先行**：Gate 0 数据对齐测试 100% 通过（`npm run test:run` + `npm run test:browser`），覆盖 §3.7 的 `base/**` 24 个示例 + `public/models/gltf/model/Box/` 四种形态全部条目；**Draco Box 必须由本期 `public/draco/` 的 `draco_decoder_gltf.js` + `.wasm` 真正解码并通过逐值对比**（§八 决策 2 硬要求）；golden 快照已提交，方案状态升级为「已验证」；未达成不得进入 Phase 0B 之后。

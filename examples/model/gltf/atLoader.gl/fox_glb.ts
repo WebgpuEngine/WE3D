@@ -3,7 +3,7 @@ import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCam
 import { IV_Scene } from "../../../../src/we/core/scene/base";
 import { initScene } from "../../../../src/we/core/scene/fn";
 import { createGLTFModel } from "../../../../src/we/model/gltf/gltf";
-import { GltfDataAtLoaders } from "../../../../src/we/model/gltf/gltfAtLoaders";
+import { GltfDataAtTransform } from "../../../../src/we/model/gltf/gltfTransformLoaders";
 
 declare global {
     interface Window {
@@ -57,6 +57,6 @@ await scene.add(camera);
 // await scene.add(gltf);
 
 let url="/models/gltf/model/Fox/glTF-Binary/Fox.glb"
-let dataLoader = new GltfDataAtLoaders(url, scene.device);
+let dataLoader = new GltfDataAtTransform(url, scene.device);
 await dataLoader.init();
 window.dataLoader = dataLoader;

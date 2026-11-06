@@ -22,12 +22,6 @@ export interface I_Model extends I_Update {
      */
     dataTypeOfAttribute?: 'BOL' | 'inModel';
     /**
-     * 解析层双轨开关（迁移期回滚 / 人工 A/B 用）：
-     * 1、'transform'（默认）：GltfDataAtTransform（@gltf-transform）
-     * 2、'loaders'：GltfDataAtLoaders（@loaders.gl 修改版），显式指定时用于回滚 / A/B 对照
-     */
-    loader?: 'loaders' | 'transform';
-    /**
      * glTF 扩展运行时依赖的 per-model 覆盖（通用）。
      * 默认无需传入：init() 会按资产的 extensionsUsed/Required 自动检测并懒加载。
      * key 为 glTF-Transform dependency key，如 'draco3d.decoder' / 'meshopt.decoder'。
