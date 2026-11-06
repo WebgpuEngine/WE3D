@@ -25,6 +25,9 @@ import type {
     I_vsGPUBufferBundle,
 } from '../../core/command/DrawCommandGenerator';
 import { E_accessorUseFor } from './base';
+import * as BaseFunction from './function';
+import { createCommonGPUBuffer } from '../../core/command/baseFunction';
+import { weVec3 } from '../../core/base/coreDefine';
 import type { GLTFModel } from './gltf';
 import {
     getAccessorTypeForGPUVertexFormat,
@@ -34,8 +37,6 @@ import {
 
 /** 宿主注入的 Draco 解码器工厂（lib 不自带解码器 / wasm） */
 export type T_dracoDecoderProvider = () => Promise<unknown>;
-
-const GPU_PART_PENDING = 'GltfDataAtTransform: GPU 部分待 Gate 0 判定通过后补齐';
 
 export class GltfDataAtTransform extends ModelDataLoader {
     url: string;
@@ -233,21 +234,209 @@ export class GltfDataAtTransform extends ModelDataLoader {
         return Array.from(this.getRawArray(index));
     }
 
+    /**
+     * 获取 accessor 对应的 GPUBuffer
+     */
+    getGPUBuffer(accessorID: number): GPUBuffer | undefined {
+        return this.GPUBuffers.get(accessorID);
+    }
+
+    /**
+     * 创建 accessor 对应的 GPUBuffer
+     * @param accessorID accessor 索引
+     * @param Buffer 可选，指定要上传的 ArrayBuffer；默认使用 accessor 对应的 ArrayBuffer
+     */
+    createGPUBuffer(accessorID: number, Buffer?: TypedArray): GPUBuffer {
+        let gpuBuffer: GPUBuffer;
+        const accessor = this.getAccessorOfSource(accessorID);
+        const name = accessor?.name || accessorID.toString();
+        if (Buffer != undefined) {
+            gpuBuffer = createCommonGPUBuffer(
+                this.device,
+                name,
+                Buffer.buffer as ArrayBuffer,
+                Buffer.byteOffset,
+                Buffer.byteLength,
+            );
+        } else {
+            const accessorArray = this.getAccessorForByte(accessorID);
+            gpuBuffer = createCommonGPUBuffer(
+                this.device,
+                name,
+                accessorArray.buffer as ArrayBuffer,
+                accessorArray.byteOffset,
+                accessorArray.byteLength,
+            );
+        }
+        this.GPUBuffers.set(accessorID, gpuBuffer);
+        return gpuBuffer;
+    }
+
+    async generateAccessor(
+        accessorID: number,
+        aliaseID: string,
+        useFor: E_accessorUseFor,
+    ): Promise<I_vsGPUBufferBundle | I_indexGPUBufferBundle> {
+        const accessor = this.getAccessorOfSource(accessorID);
+        if (!accessor) throw new Error(`GltfDataAtTransform: accessor ${accessorID} not found`);
+        const name = accessor.name || accessorID.toString();
+        let gpuBuffer = this.getGPUBuffer(accessorID);
+        let accessorBufferSource: I_vsGPUBufferBundle | I_indexGPUBufferBundle;
+        if (
+            useFor == E_accessorUseFor.indexTriangleList ||
+            useFor == E_accessorUseFor.indexTriangleStrip ||
+            useFor == E_accessorUseFor.indexLineList ||
+            useFor == E_accessorUseFor.indexLineStrip ||
+            useFor == E_accessorUseFor.indexPointList
+        ) {
+            if (!gpuBuffer) {
+                gpuBuffer = this.createGPUBuffer(accessorID);
+            }
+            accessorBufferSource = {
+                buffer: gpuBuffer,
+                format: 'uint32',
+                name,
+                arrayStride: 0,
+                count: accessor.count,
+                offset: 0,
+                byteSize: accessor.count * 4,
+            } as I_indexGPUBufferBundle;
+        } else if (useFor == E_accessorUseFor.indexLineLoop) {
+            const countsOfList = accessor.count * 2;
+            if (!gpuBuffer) {
+                const arrayIndexLineLoop = this.getAccessorForByte(accessorID) as Uint32Array;
+                const newIndexBuffer = BaseFunction.convertLineIndexLoopToList(
+                    arrayIndexLineLoop,
+                    accessor.count,
+                );
+                gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer);
+            }
+            accessorBufferSource = {
+                buffer: gpuBuffer,
+                format: 'uint32',
+                name,
+                arrayStride: 0,
+                count: countsOfList,
+                offset: 0,
+                byteSize: countsOfList * 4,
+            } as I_indexGPUBufferBundle;
+        } else if (useFor == E_accessorUseFor.indexTriangleFan) {
+            const countsOfList = (accessor.count - 2) * 3;
+            if (!gpuBuffer) {
+                const arrayIndexTriangleFan = this.getAccessorForByte(accessorID) as Uint32Array;
+                const newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(
+                    arrayIndexTriangleFan,
+                    accessor.count,
+                );
+                gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer);
+            }
+            accessorBufferSource = {
+                buffer: gpuBuffer,
+                format: 'uint32', // 转换后都采用 uint32
+                name,
+                count: countsOfList,
+                offset: 0,
+                byteSize: countsOfList * 4,
+            } as I_indexGPUBufferBundle;
+        } else if (useFor == E_accessorUseFor.vertex) {
+            // sparse 已由 Accessor.getArray() 合并，无需像旧 loader 那样手动写入
+            const accessorArray = this.getAccessorForByte(accessorID);
+            const { format, wgslFormat, byteSize, arrayStride } =
+                this.getAccessorTypeForGPUVertexFormat(accessorID);
+            if (!gpuBuffer) {
+                gpuBuffer = this.createGPUBuffer(accessorID, accessorArray);
+            }
+            accessorBufferSource = {
+                buffer: gpuBuffer,
+                format,
+                wgslFormat,
+                name,
+                arrayStride,
+                count: accessor.count,
+                offset: 0,
+                byteSize,
+                min: accessor.min as unknown as weVec3,
+                max: accessor.max as unknown as weVec3,
+            } as I_vsGPUBufferBundle;
+        } else {
+            throw new Error(`未实现的的 ${useFor}`);
+        }
+        return accessorBufferSource;
+    }
+
+    async generateAccessorForArray(
+        accessorID: number,
+        useFor: E_accessorUseFor,
+    ): Promise<number[]> {
+        const accessor = this.getAccessorOfSource(accessorID);
+        if (!accessor) throw new Error(`GltfDataAtTransform: accessor ${accessorID} not found`);
+        let accessorBufferSource: number[] = [];
+        if (
+            useFor == E_accessorUseFor.indexTriangleList ||
+            useFor == E_accessorUseFor.indexTriangleStrip ||
+            useFor == E_accessorUseFor.indexLineList ||
+            useFor == E_accessorUseFor.indexLineStrip ||
+            useFor == E_accessorUseFor.indexPointList
+        ) {
+            accessorBufferSource = this.getAccessorForArray(accessorID);
+        } else if (useFor == E_accessorUseFor.indexLineLoop) {
+            const arrayIndexLineLoop = this.getAccessorForByte(accessorID) as Uint32Array;
+            const newIndexBuffer = BaseFunction.convertLineIndexLoopToList(
+                arrayIndexLineLoop,
+                accessor.count,
+            );
+            accessorBufferSource = [...newIndexBuffer];
+        } else if (useFor == E_accessorUseFor.indexTriangleFan) {
+            const arrayIndexTriangleFan = this.getAccessorForByte(accessorID) as Uint32Array;
+            const newIndexBuffer = BaseFunction.convertTriangleIndexFanToList(
+                arrayIndexTriangleFan,
+                accessor.count,
+            );
+            accessorBufferSource = [...newIndexBuffer];
+        } else if (useFor == E_accessorUseFor.vertex) {
+            // sparse 已由 Accessor.getArray() 合并
+            accessorBufferSource = this.getAccessorForArray(accessorID);
+        } else {
+            throw new Error(`未实现的的 ${useFor}`);
+        }
+        return accessorBufferSource;
+    }
+
     async getAccessor(
         index: number,
         useFor: E_accessorUseFor,
     ): Promise<TypedArray | I_vsGPUBufferBundle | I_indexGPUBufferBundle> {
+        let aliaseID: string;
         if (useFor == E_accessorUseFor.array) {
-            return this.getAccessorForByte(index);
+            aliaseID = 'array_' + index;
+        } else {
+            aliaseID = 'gpuBuffer_' + index;
         }
-        throw new Error(GPU_PART_PENDING);
+        const generate = this.accessor.has(index);
+        if (generate === false) {
+            if (useFor == E_accessorUseFor.array) {
+                const array = this.getAccessorForByte(index);
+                this.accessor.set(aliaseID, array);
+                return array;
+            } else {
+                const gpuBufferBundle = await this.generateAccessor(index, aliaseID, useFor);
+                this.accessor.set(aliaseID, gpuBufferBundle);
+                return gpuBufferBundle;
+            }
+        } else {
+            return this.accessor.get(aliaseID) as
+                | TypedArray
+                | I_vsGPUBufferBundle
+                | I_indexGPUBufferBundle;
+        }
     }
 
     async getAccessorArray(index: number, useFor: E_accessorUseFor): Promise<number[]> {
         if (useFor == E_accessorUseFor.array) {
             return this.getAccessorForArray(index);
+        } else {
+            return await this.generateAccessorForArray(index, useFor);
         }
-        throw new Error(GPU_PART_PENDING);
     }
 
     getAccessorTypeForGPUVertexFormat(accessorID: number | object): I_accessorFormat {

@@ -20,6 +20,18 @@ export interface I_Model extends I_Update {
      * 2、inModel：模型内部数据
      */
     dataTypeOfAttribute?: 'BOL' | 'inModel';
+    /**
+     * 解析层双轨开关（迁移期回滚 / 人工 A/B 用）：
+     * 1、'loaders'（默认）：GltfDataAtLoaders（@loaders.gl 修改版）
+     * 2、'transform'：GltfDataAtTransform（@gltf-transform）
+     */
+    loader?: 'loaders' | 'transform';
+    /**
+     * 宿主注入的浏览器 Draco 解码器工厂（lib 不自带解码器 / wasm）。
+     * 仅 'transform' 解析层且资产声明 KHR_draco_mesh_compression 时使用；
+     * 未注入且资产用到 Draco 时，init() 会明确抛错。
+     */
+    dracoDecoder?: () => Promise<unknown>;
 }
 
 export interface I_ModelResMap {}

@@ -1,6 +1,6 @@
 # pending-work #4 · `@loaders.gl` → npm `@gltf-transform` 迁移方案（新建 `gltfTransformLoaders.ts`，含 `gltfAtLoaders.ts` 逐函数替换）
 
-> 状态：✅ **方案已验证 / 确定**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A 已完成，下一步 Phase 0B 人工视觉验证
+> 状态：✅ **方案已验证 / 确定**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A / 0B / 1 已完成，Phase 2 的 D6（GPU 数据收口）与 R8（外部资源解析专项）已完成，剩余 Phase 2 人工 A/B 视觉核对 + 切默认 loader（均需人工结论；默认 loader 仍为 `'loaders'`）
 > 日期：2026-11-05（2026-11-06 补充 Gate 0、落地文件命名、验证分层、数据来源、全部决策记录与 Gate 0 执行结果）
 > 关联：`design/engineering/pending-work.md` §1.4、`design/workBuddy/20260923项目与gltf分析/04-迁移到glTF-Transform方案.md`（下称「04 号文档」）、`03-gltf模块深度分析.md`、`AGENTS.md`
 > 本文是 04 号文档的**实施级细化与勘误**，两份互补：04 号负责选型与阶段划分，本文负责「文件关系 + 每个函数怎么改 + 落地门禁」。
@@ -581,6 +581,18 @@ async getImage(index: number) {
 - **模块形态**：该 JS 是 Emscripten **CJS/全局脚本**（`var DracoDecoderModule` + `module.exports`），无 ESM 导出；宿主实现 `tests/helpers/dracoDecoderBrowser.ts` 因此改用 `<script>` 标签加载取全局工厂 + `locateFile` 指向 wasm，而非方案里写的动态 `import()`。
 - **依赖位置**：`@gltf-transform/core|extensions@^4.5.1` 装入 **`dependencies`**（lib 运行时依赖，且在 `vite.lib.config.ts` external 化），`draco3dgltf@^1.5.9` 装入 `devDependencies`（仅补类型声明），比方案 §3.1 的 `npm i -D` 更贴合 `AGENTS.md` §四「依赖全部 external」。
 - **golden 形态**：Gate 0 用实时 A/B，未预生成 `tests/fixtures/gltf-parity/*.json`；**Phase 3 删除旧 loader 之前必须补齐并提交**（见 §3.6 E）。
+
+### Phase 1 / Phase 2 执行结果（2026-11-06）
+
+**Phase 1（新解析层完整实现）已交付**：`gltfTransformLoaders.ts` 补齐 GPU 部分（`getGPUBuffer` / `createGPUBuffer` / `generateAccessor` / `generateAccessorForArray` / 完整 `getAccessor` / `getAccessorArray`）；`createGLTFModel` 增加 `input.loader?: 'loaders' | 'transform'`（默认 `'loaders'`）双轨开关，回调签名泛化到 `ModelDataLoader`；`ModelDataLoader` 补 `abstract init()`；`I_Model` 加 `loader` / `dracoDecoder` 字段；`vitest.browser.config.ts` 加 `testTimeout: 60_000`（Draco WASM 冷启动）。门禁 `npm run ci:no-e2e` 全绿。
+
+**Phase 2 · D6（GPU 数据收口）已交付**：新增 `gltfTransformParityGPU.browser.test.ts`（7 个代表资产，覆盖 vertex 含 sparse / indexTriangleList / Fan / Strip / 无索引 / Draco），在真实 device 上对比 `generateAccessor` 的 bundle 核心元数据（`format / wgslFormat / arrayStride / count / offset / byteSize / name`）严格相等，并 `copyBufferToBuffer` + `mapAsync` 读回 GPUBuffer 逐值比对（FLOAT 容差：Draco 1e-5 / 其余 1e-6；整数严格相等）。同时把 `gltfTransformLoaders.ts` 的 vertex bundle `min/max` 由 `accessor.min ?? [0,0,0]` 修正为 `accessor.min as unknown as weVec3`（保留 undefined 语义，与旧 loader 严格等价）。
+
+**Phase 2 · R8（外部资源解析专项）已交付**：新增 `gltfTransformR8.browser.test.ts`（9 个资产：Fox glTF / GLB、图片 data-URI / bufferView / 外部 URI 三形态、Box glTF / GLB / Embedded、`point` 外部 `.bin`），在浏览器真实环境做新旧 loader 实时 A/B：① 双方 `init()` 均成功（无 404 / 严格资源抛错）；② 每个 accessor 都能取到数组且全量逐值相等（证明外部 `.bin` 已解析）；③ 每张图片都能解出 `ImageBitmap`，宽高 + 像素摘要与旧 loader 一致；④ buffers / images 数量一致。**结论：`WebIO` 保持默认 `setStrictResources(true)` 即可，无需 `setStrictResources(false)` 降级**，R8 已收口。资产全部来自 §3.7 两个基础目录且已入库，不引入本机 only 资产。
+
+**Phase 2 门禁复跑（2026-11-06）**：`npm run ci:no-e2e` 全绿 —— lint ✅ / typecheck ✅ / `test:run` 60 ✅ / `test:browser` 49 ✅（Gate 0 28 + D6 7 + R8 9 + Draco spike 1 + `baseFunction` 4）/ `check:exports` ✅（仅既有的「未纳入 barrel」提示）/ `build:lib` ✅。按 §七「验证策略总表」与 §八 决策 6，本阶段**不建 e2e 用例、不跑 `test:baseline`**。
+
+**Phase 2 剩余（需人工，本次未做）**：① 按 Phase 0B 记录表 `design/engineering/gltf-migration-visual-check.md` 完成人工 A/B 视觉核对（重点 Draco、sparse、图片三形态、GLB、morph / skin / animation），逐项填「结果 / 差异说明 / 日期 / 验证人」；② 人工核对无未归因差异后，才把 `gltf.ts` 默认 loader 切到 `'transform'`（当前仍为 `'loaders'`，双轨开关可秒级回滚）。`beforeGltfInit` 已满足（新 loader 保留 `gltfJson` 字段，见 §五）；R5 已处理（`init()` 注册 `ALL_EXTENSIONS`）；R8 已收口（见上）。程序化验证结论不替代人工视觉核对，见 §七「验证策略总表」。
 
 ### 验收（按两类验证分层）
 0. **第 1 类先行**：Gate 0 数据对齐测试 100% 通过（`npm run test:run` + `npm run test:browser`），覆盖 §3.7 的 `base/**` 24 个示例 + `public/models/gltf/model/Box/` 四种形态全部条目；**Draco Box 必须由本期 `public/draco/` 的 `draco_decoder_gltf.js` + `.wasm` 真正解码并通过逐值对比**（§八 决策 2 硬要求）；golden 快照已提交，方案状态升级为「已验证」；未达成不得进入 Phase 0B 之后。

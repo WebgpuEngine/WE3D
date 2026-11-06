@@ -23,6 +23,9 @@ export default defineConfig({
     test: {
         name: 'browser',
         include: ['src/**/*.browser.test.ts'],
+        // Draco 等 WASM 解码测试在浏览器冷启动时（fetch + 编译 wasm + 解码）常超 15s 默认值，
+        // 真实 device/WebGPU 测试也普遍更慢，统一放宽到 60s。
+        testTimeout: 60_000,
         browser: {
             enabled: true,
             provider: 'playwright',

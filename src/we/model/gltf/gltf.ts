@@ -35,6 +35,7 @@ import { E_accessorUseFor } from './base';
 import { BaseTexture } from '../../core/texture/baseTexture';
 import { ModelDataLoader } from '../../core/model/ModelDataLoader';
 import { GltfDataAtLoaders } from './gltfAtLoaders';
+import { GltfDataAtTransform } from './gltfTransformLoaders';
 import { weVec4 } from '../../core/base/coreDefine';
 import { AnimationGroup } from '../../core/animation/animationGroup';
 import {
@@ -67,13 +68,15 @@ export interface I_gltfInstanceResource {
 export async function createGLTFModel(
     input: I_Model,
     callBack?: {
-        beforeGltfInit?: (gltf: GLTFModel, dataLoader: GltfDataAtLoaders) => void;
+        beforeGltfInit?: (gltf: GLTFModel, dataLoader: ModelDataLoader) => void;
         afterGltfInit?: (gltf: GLTFModel) => void;
     },
 ): Promise<GLTFModel> {
-    let _type: 'gltf' | 'glb';
     const gltf = new GLTFModel(input);
-    const DataLoader = new GltfDataAtLoaders(input.url, input.scene.device, gltf);
+    const DataLoader: ModelDataLoader =
+        input.loader === 'transform'
+            ? new GltfDataAtTransform(input.url, input.scene.device, gltf, input.dracoDecoder)
+            : new GltfDataAtLoaders(input.url, input.scene.device, gltf);
     await DataLoader.init();
     callBack?.beforeGltfInit?.(gltf, DataLoader);
     await gltf.initData(DataLoader);
@@ -421,7 +424,7 @@ export class GLTFModel extends BaseModel {
      * 2. 初始化模型数据,meshes,materials,animations,cameras
      * 3. 初始化模型数据,
      */
-    async initData(DataLoader: GltfDataAtLoaders) {
+    async initData(DataLoader: ModelDataLoader) {
         this.DataLoader = DataLoader;
         // if (this.gltfType == "gltf") {
         //     this.gltfJson = (this.modelData as GLTFWithBuffers).json;

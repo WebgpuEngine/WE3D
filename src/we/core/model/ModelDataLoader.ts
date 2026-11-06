@@ -3,6 +3,9 @@ import { I_indexGPUBufferBundle, I_vsGPUBufferBundle } from '../command/DrawComm
 import { E_accessorUseFor } from '../../model/gltf/base';
 
 export abstract class ModelDataLoader {
+    /**加载并解析模型数据（gltf/glb）*/
+    abstract init(): Promise<unknown>;
+
     abstract gltfJSON(): any;
 
     /**获取accessor的原始数据
