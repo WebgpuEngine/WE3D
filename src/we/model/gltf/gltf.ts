@@ -36,6 +36,7 @@ import { BaseTexture } from '../../core/texture/baseTexture';
 import { ModelDataLoader } from '../../core/model/ModelDataLoader';
 import { GltfDataAtLoaders } from './gltfAtLoaders';
 import { GltfDataAtTransform } from './gltfTransformLoaders';
+import type { T_ExtensionDependencyProviders } from './extensionDependencies';
 import { weVec4 } from '../../core/base/coreDefine';
 import { AnimationGroup } from '../../core/animation/animationGroup';
 import {
@@ -73,10 +74,19 @@ export async function createGLTFModel(
     },
 ): Promise<GLTFModel> {
     const gltf = new GLTFModel(input);
+    // 扩展依赖默认由 init() 按 assets 的 extensionsUsed/Required 自动检测加载；
+    // 这里只透传宿主的 per-model 覆盖（dracoDecoder 是 'draco3d.decoder' 的兼容简写）。
+    const dependencyOverrides: T_ExtensionDependencyProviders = {
+        ...input.extensionDependencies,
+    };
+    if (input.dracoDecoder) {
+        dependencyOverrides['draco3d.decoder'] = input.dracoDecoder;
+    }
+    // 默认使用 @gltf-transform 解析层；显式传 loader:'loaders' 可秒级回滚到旧解析层。
     const DataLoader: ModelDataLoader =
-        input.loader === 'transform'
-            ? new GltfDataAtTransform(input.url, input.scene.device, gltf, input.dracoDecoder)
-            : new GltfDataAtLoaders(input.url, input.scene.device, gltf);
+        input.loader === 'loaders'
+            ? new GltfDataAtLoaders(input.url, input.scene.device, gltf)
+            : new GltfDataAtTransform(input.url, input.scene.device, gltf, dependencyOverrides);
     await DataLoader.init();
     callBack?.beforeGltfInit?.(gltf, DataLoader);
     await gltf.initData(DataLoader);

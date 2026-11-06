@@ -5,6 +5,7 @@ import { IV_NodeSpace } from '../organization/nodeSpace';
 import { Clock } from '../scene/clock';
 import { Scene } from '../scene/scene';
 import { ModelDataLoader } from './ModelDataLoader';
+import type { T_ExtensionDependencyProviders } from '../../model/gltf/extensionDependencies';
 
 export interface I_Model extends I_Update {
     scene: Scene;
@@ -22,14 +23,21 @@ export interface I_Model extends I_Update {
     dataTypeOfAttribute?: 'BOL' | 'inModel';
     /**
      * 解析层双轨开关（迁移期回滚 / 人工 A/B 用）：
-     * 1、'loaders'（默认）：GltfDataAtLoaders（@loaders.gl 修改版）
-     * 2、'transform'：GltfDataAtTransform（@gltf-transform）
+     * 1、'transform'（默认）：GltfDataAtTransform（@gltf-transform）
+     * 2、'loaders'：GltfDataAtLoaders（@loaders.gl 修改版），显式指定时用于回滚 / A/B 对照
      */
     loader?: 'loaders' | 'transform';
     /**
-     * 宿主注入的浏览器 Draco 解码器工厂（lib 不自带解码器 / wasm）。
-     * 仅 'transform' 解析层且资产声明 KHR_draco_mesh_compression 时使用；
-     * 未注入且资产用到 Draco 时，init() 会明确抛错。
+     * glTF 扩展运行时依赖的 per-model 覆盖（通用）。
+     * 默认无需传入：init() 会按资产的 extensionsUsed/Required 自动检测并懒加载。
+     * key 为 glTF-Transform dependency key，如 'draco3d.decoder' / 'meshopt.decoder'。
+     * 见 design/engineering/gltf-extension-dependency.md。
+     */
+    extensionDependencies?: T_ExtensionDependencyProviders;
+    /**
+     * 【兼容简写】覆盖 'draco3d.decoder' 的加载器。
+     * Draco 解码器现已自动加载（src/we/model/gltf/dracoDecoderBrowser.ts 是内置默认 provider）；
+     * 仅当宿主需要自定义解码器路径 / CDN 时才传。
      */
     dracoDecoder?: () => Promise<unknown>;
 }

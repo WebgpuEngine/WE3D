@@ -34,15 +34,17 @@ import {
     type I_accessorFormat,
     type I_accessorLike,
 } from './accessorFormat';
-
-/** 宿主注入的 Draco 解码器工厂（lib 不自带解码器 / wasm） */
-export type T_dracoDecoderProvider = () => Promise<unknown>;
+import {
+    resolveExtensionDependencies,
+    type T_ExtensionDependencyProviders,
+} from './extensionDependencies';
 
 export class GltfDataAtTransform extends ModelDataLoader {
     url: string;
     device: GPUDevice;
     parent?: GLTFModel;
-    private dracoDecoder?: T_dracoDecoderProvider;
+    /** 扩展依赖的 per-model 覆盖；不传则由通用解析器按扩展声明自动检测 + 懒加载 */
+    private dependencyOverrides?: T_ExtensionDependencyProviders;
 
     /** 仅作诊断字段保留；容器识别由 WebIO 按 GLB magic 完成（本期不修 D6） */
     gltfType: 'gltf' | 'glb';
@@ -66,13 +68,13 @@ export class GltfDataAtTransform extends ModelDataLoader {
         url: string,
         device: GPUDevice,
         parent?: GLTFModel,
-        dracoDecoder?: T_dracoDecoderProvider,
+        dependencyOverrides?: T_ExtensionDependencyProviders,
     ) {
         super();
         this.url = url;
         this.device = device;
         this.parent = parent;
-        this.dracoDecoder = dracoDecoder;
+        this.dependencyOverrides = dependencyOverrides;
         if (url.indexOf('.gltf') != -1) {
             this.gltfType = 'gltf';
         } else if (url.indexOf('.glb') > -1) {
@@ -89,20 +91,9 @@ export class GltfDataAtTransform extends ModelDataLoader {
     async init(): Promise<Document> {
         const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
         const jsonDoc = await io.readAsJSON(this.url);
-        const used = jsonDoc.json.extensionsUsed ?? [];
 
-        // 依赖只在资产真正用到时注入（Reader 只对 extensionsUsed 中的扩展 install 依赖）
-        if (used.includes('KHR_draco_mesh_compression')) {
-            if (!this.dracoDecoder) {
-                throw new Error(
-                    'GLTFModel: 资产使用 KHR_draco_mesh_compression，请注入 dracoDecoder（浏览器可用的 DecoderModule）',
-                );
-            }
-            io.registerDependencies({ 'draco3d.decoder': await this.dracoDecoder() });
-        }
-        if (used.includes('EXT_meshopt_compression')) {
-            throw new Error('GLTFModel: 本期未配置 meshopt.decoder（EXT_meshopt_compression）');
-        }
+        // 通用扩展依赖：按 extensionsUsed/Required 自动检测 → 懒加载 → 注册（必须在 readJSON 前）
+        await resolveExtensionDependencies(io, jsonDoc.json, this.dependencyOverrides);
 
         this.gltfJson = jsonDoc.json;
         this.jsonDoc = jsonDoc;

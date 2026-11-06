@@ -1,6 +1,6 @@
 # pending-work #4 · `@loaders.gl` → npm `@gltf-transform` 迁移方案（新建 `gltfTransformLoaders.ts`，含 `gltfAtLoaders.ts` 逐函数替换）
 
-> 状态：✅ **方案已验证 / 确定**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A / 0B / 1 已完成，Phase 2 的 D6（GPU 数据收口）与 R8（外部资源解析专项）已完成，剩余 Phase 2 人工 A/B 视觉核对 + 切默认 loader（均需人工结论；默认 loader 仍为 `'loaders'`）
+> 状态：✅ **方案已验证 / 确定，Phase 2 完成、默认解析层已切到 gltf-transform**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A / 0B / 1 / 2 均已完成：D6 GPU 数据收口、R8 外部资源解析专项、人工 A/B 视觉核对（用户确认无未归因差异）全部通过，`gltf.ts` 默认 loader 已由 `'loaders'` 切为 `'transform'`，显式传 `'loaders'` 仍可秒级回滚。扩展运行时依赖已改为**通用自动解析**（按扩展声明自动检测 / 懒加载 / 注册，Draco 不再需要人工注入），见 `design/engineering/gltf-extension-dependency.md`。下一步为 Phase 3 清理
 > 日期：2026-11-05（2026-11-06 补充 Gate 0、落地文件命名、验证分层、数据来源、全部决策记录与 Gate 0 执行结果）
 > 关联：`design/engineering/pending-work.md` §1.4、`design/workBuddy/20260923项目与gltf分析/04-迁移到glTF-Transform方案.md`（下称「04 号文档」）、`03-gltf模块深度分析.md`、`AGENTS.md`
 > 本文是 04 号文档的**实施级细化与勘误**，两份互补：04 号负责选型与阶段划分，本文负责「文件关系 + 每个函数怎么改 + 落地门禁」。
@@ -167,6 +167,8 @@ export class GltfDataAtTransform extends ModelDataLoader {
 > 新增 class 不进 `src/we/index.ts`：`scripts/check-exports.mjs:87-112` 只把「src/we 有导出未纳入 barrel」当作提示，不会让 `npm run check:exports` 失败；与今天的 `GltfDataAtLoaders` 一样属于内部实现。
 
 ### 3.3 `init()` 的一次读取、两阶段解析（核心）
+
+> ⚠️ **2026-11-06 实施更新**：下方「按扩展名硬编码 + `input.dracoDecoder` 人工注入」的代码草图已被**通用扩展依赖自动解析**取代 —— `init()` 现在调用 `resolveExtensionDependencies(io, jsonDoc.json, overrides)`，按 `extensionsUsed ∪ extensionsRequired` 自动检测、从 `ALL_EXTENSIONS` 自动发现 `readDependencies`、懒加载并注册，宿主无需在每个 ts 注入。完整设计与接口见 `design/engineering/gltf-extension-dependency.md`。以下草图保留为决策脉络，勿照抄实现。
 
 ```ts
 const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
@@ -578,7 +580,7 @@ async getImage(index: number) {
 **与方案的实施偏差（已记录）**：
 
 - **解码器文件来源**：GitHub / raw.githubusercontent 在执行时仍不可达，改由 **jsDelivr** 取同一份 google/draco 官方文件：`draco_decoder_gltf.js`（479,063 B）来自 `cdn.jsdelivr.net/gh/google/draco@main/javascript/`，`draco_decoder_gltf.wasm`（183,697 B，wasm 魔数已校验）来自 `cdn.jsdelivr.net/npm/draco3dgltf@1.5.9/`。SHA256：JS `920BFA41…0E9A`、wasm `39B78CEC…84BF`。
-- **模块形态**：该 JS 是 Emscripten **CJS/全局脚本**（`var DracoDecoderModule` + `module.exports`），无 ESM 导出；宿主实现 `tests/helpers/dracoDecoderBrowser.ts` 因此改用 `<script>` 标签加载取全局工厂 + `locateFile` 指向 wasm，而非方案里写的动态 `import()`。
+- **模块形态**：该 JS 是 Emscripten **CJS/全局脚本**（`var DracoDecoderModule` + `module.exports`），无 ESM 导出；宿主实现 `src/we/model/gltf/dracoDecoderBrowser.ts`（Phase 2 由 `tests/helpers/` 迁入并从 `@we3d` 导出）因此改用 `<script>` 标签加载取全局工厂 + `locateFile` 指向 wasm，而非方案里写的动态 `import()`。
 - **依赖位置**：`@gltf-transform/core|extensions@^4.5.1` 装入 **`dependencies`**（lib 运行时依赖，且在 `vite.lib.config.ts` external 化），`draco3dgltf@^1.5.9` 装入 `devDependencies`（仅补类型声明），比方案 §3.1 的 `npm i -D` 更贴合 `AGENTS.md` §四「依赖全部 external」。
 - **golden 形态**：Gate 0 用实时 A/B，未预生成 `tests/fixtures/gltf-parity/*.json`；**Phase 3 删除旧 loader 之前必须补齐并提交**（见 §3.6 E）。
 
@@ -592,7 +594,9 @@ async getImage(index: number) {
 
 **Phase 2 门禁复跑（2026-11-06）**：`npm run ci:no-e2e` 全绿 —— lint ✅ / typecheck ✅ / `test:run` 60 ✅ / `test:browser` 49 ✅（Gate 0 28 + D6 7 + R8 9 + Draco spike 1 + `baseFunction` 4）/ `check:exports` ✅（仅既有的「未纳入 barrel」提示）/ `build:lib` ✅。按 §七「验证策略总表」与 §八 决策 6，本阶段**不建 e2e 用例、不跑 `test:baseline`**。
 
-**Phase 2 剩余（需人工，本次未做）**：① 按 Phase 0B 记录表 `design/engineering/gltf-migration-visual-check.md` 完成人工 A/B 视觉核对（重点 Draco、sparse、图片三形态、GLB、morph / skin / animation），逐项填「结果 / 差异说明 / 日期 / 验证人」；② 人工核对无未归因差异后，才把 `gltf.ts` 默认 loader 切到 `'transform'`（当前仍为 `'loaders'`，双轨开关可秒级回滚）。`beforeGltfInit` 已满足（新 loader 保留 `gltfJson` 字段，见 §五）；R5 已处理（`init()` 注册 `ALL_EXTENSIONS`）；R8 已收口（见上）。程序化验证结论不替代人工视觉核对，见 §七「验证策略总表」。
+**Phase 2 完成（2026-11-06，人工核对 + 正式切换）**：① 用户按 Phase 0B 记录表完成人工 A/B 视觉核对（重点 Draco、sparse、图片三形态、GLB、morph / skin / animation），确认**无未归因可见差异**；核对表状态改为 ✅，逐行「结果 / 日期 / 验证人」以用户整体结论为准。② 据此把 `gltf.ts` 默认 loader 由 `'loaders'` 正式切到 `'transform'`，保留 `input.loader === 'loaders'` 的秒级回滚分支（不采用注释掉分支的强制单轨写法，避免死 import 导致 lint 失败）。`beforeGltfInit` 已满足（新 loader 保留 `gltfJson` 字段，见 §五）；R5 已处理（`init()` 注册 `ALL_EXTENSIONS`）；R8 已收口（见上）。程序化验证结论不替代人工视觉核对，见 §七「验证策略总表」。
+
+**解码器工厂位置调整（2026-11-06，用户决策）**：`createBrowserDracoDecoder` 由 `tests/helpers/dracoDecoderBrowser.ts` 迁入 **`src/we/model/gltf/dracoDecoderBrowser.ts`**，并在 `src/we/index.ts` 显式导出（`createBrowserDracoDecoder` + `T_DracoDecoderModule`），使 `examples/` / `e2e-cases/` / 外部宿主都能从 `@we3d` 使用，不再依赖仓库内 `tests/` 目录（该目录不在 npm 包 `files: ["dist"]` 内）。3 个 browser 测试、2 个 Draco 示例页与 `I_Model` 注释的引用已同步，旧文件已删除。**lib 仍不打包解码器本体 / wasm**：只带「按 `<script>` 加载 `/draco/draco_decoder_gltf.js` + `locateFile` 指向 wasm」的 JS 逻辑，资源仍由宿主放 `public/draco/`（本仓库已入库）。这是对 §五「`examples/` / `e2e-cases/` 内提供示例实现」的实施修正，`npm run check:exports` 已通过（barrel 197 符号）。
 
 ### 验收（按两类验证分层）
 0. **第 1 类先行**：Gate 0 数据对齐测试 100% 通过（`npm run test:run` + `npm run test:browser`），覆盖 §3.7 的 `base/**` 24 个示例 + `public/models/gltf/model/Box/` 四种形态全部条目；**Draco Box 必须由本期 `public/draco/` 的 `draco_decoder_gltf.js` + `.wasm` 真正解码并通过逐值对比**（§八 决策 2 硬要求）；golden 快照已提交，方案状态升级为「已验证」；未达成不得进入 Phase 0B 之后。
@@ -610,7 +614,7 @@ async getImage(index: number) {
 | --- | --- | --- | --- |
 | 1 | 过渡期双轨 | **同意**：保留 `input.loader` 开关（默认先 `'loaders'`，可秒级回滚）；正式实现仍是新建 `gltfTransformLoaders.ts` 取代旧文件旧类，不做别名 shim | §七 Phase 1 / Phase 2 |
 | 1b | golden 快照位置 | 用户未单列此项，**按本文建议定稿** `tests/fixtures/gltf-parity/`，不与 Playwright 截图基线混放 | §3.6 E |
-| 2 | Draco 解码器形态 | **补充决策（2026-11-06）：宿主注入 + google/draco `javascript/draco_decoder_gltf.js` + `draco_decoder_gltf.wasm`**；**本期 Draco 必须真能解码**（Gate 0 的 Draco Box 变体必须解开，否则方案不予确认）；关于「是不是 glTF-Transform 自带的」见下方说明 | §3.3 / §五 / §六 R2 / §七 Phase 0A |
+| 2 | Draco 解码器形态 | **补充决策（2026-11-06）：宿主注入 + google/draco `javascript/draco_decoder_gltf.js` + `draco_decoder_gltf.wasm`**；**本期 Draco 必须真能解码**（Gate 0 的 Draco Box 变体必须解开，否则方案不予确认）；关于「是不是 glTF-Transform 自带的」见下方说明。**⚠️ 二次更新（2026-11-06）：注入方式改为「通用扩展依赖自动解析」** —— 由 `init()` 按 `extensionsUsed/Required` 自动检测并懒加载，宿主不再需要 per-ts 注入；浏览器解码器文件、lib 零 wasm、本期必须真能解码等口径不变。见 `design/engineering/gltf-extension-dependency.md` | §3.3（已标注） / §五 / §六 R2 / §七 Phase 0A / 新设计文档 |
 | 3 | Draco 同步解码 | **接受**；Worker 化列为**后期优化**，不进本次迁移 | §六 R3 / §七 Phase 4 |
 | 4 | D3 / D6 / D8 | **补充决策（2026-11-06）：同意，不 commit** —— 本期不修、不提交任何修复，也不与迁移同 commit；仅随重写自然消失的项随迁移消失（解释见下方） | §六 R9 / §四 |
 | 5 | KTX2 | **不纳入本次，另排期**：核实 `KHRTextureBasisu` 只做 KTX2 容器读写、不做转码，不属于「默认自带支持」→ 命中用户「不是默认自带支持就排期」的条件 | §六 R6 / 04 号文档 §1.3 |

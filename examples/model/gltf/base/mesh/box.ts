@@ -58,7 +58,7 @@ await scene.add(camera);
 
 let gltf = await createGLTFModel({
     scene: scene,
-    url: "/models/gltf/model/Box/glTF/Box.gltf"
+    url: "/models/gltf/model/Box/glTF-Draco/Box.gltf"
 }
 );
 window.gltf = gltf;

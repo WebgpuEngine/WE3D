@@ -189,6 +189,18 @@ export type { Sphere, boundingSphere } from './core/math/sphere';
 export { BaseModel } from './core/model/BaseModel';
 export type { I_Model } from './core/model/BaseModel';
 export { ModelDataLoader } from './core/model/ModelDataLoader';
+export { createBrowserDracoDecoder } from './model/gltf/dracoDecoderBrowser';
+export type { T_DracoDecoderModule } from './model/gltf/dracoDecoderBrowser';
+export {
+    registerExtensionDependencyProvider,
+    unregisterExtensionDependencyProvider,
+    getExtensionDependencyKeys,
+} from './model/gltf/extensionDependencies';
+export type {
+    T_ExtensionDependencyLoader,
+    T_ExtensionDependencyProviders,
+    T_GltfExtensionDeclaration,
+} from './model/gltf/extensionDependencies';
 
 // pickup
 export type { IV_Pickup, T_PickupFunction, I_PickupMouseKeyEvent } from './core/pickup/base';

@@ -3,7 +3,6 @@ import { GltfDataAtLoaders } from './gltfAtLoaders';
 import { GltfDataAtTransform } from './gltfTransformLoaders';
 import { E_accessorUseFor } from './base';
 import type { GLTFModel } from './gltf';
-import { createBrowserDracoDecoder } from '../../../../tests/helpers/dracoDecoderBrowser';
 
 /**
  * Gate 0 · 第 1 类「数据级别的替换验证」（先行的方案确认闸门，§3.6）。
@@ -142,11 +141,11 @@ describe('Gate 0: gltf-transform 数据级别替换验证', () => {
 
     for (const url of ASSETS) {
         it(url, async () => {
-            const draco = url.includes('glTF-Draco') ? createBrowserDracoDecoder : undefined;
             // 旧构造器第三参数 parent 为必填；Gate 0 只做解析，不挂 GLTFModel
             const noParent = undefined as unknown as GLTFModel;
             const oldLoader = new GltfDataAtLoaders(url, device, noParent);
-            const newLoader = new GltfDataAtTransform(url, device, undefined, draco);
+            // 不注入解码器：由通用扩展依赖解析器按扩展声明自动检测并加载
+            const newLoader = new GltfDataAtTransform(url, device);
             await oldLoader.init();
             await newLoader.init();
 

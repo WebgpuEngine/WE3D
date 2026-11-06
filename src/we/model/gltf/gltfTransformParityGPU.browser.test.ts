@@ -3,7 +3,6 @@ import { GltfDataAtLoaders } from './gltfAtLoaders';
 import { GltfDataAtTransform } from './gltfTransformLoaders';
 import { E_accessorUseFor } from './base';
 import type { GLTFModel } from './gltf';
-import { createBrowserDracoDecoder } from '../../../../tests/helpers/dracoDecoderBrowser';
 
 /**
  * Phase 2 · D6（§3.6 D 表第 6 项，Gate 0 未覆盖、Phase 2 收口）：
@@ -92,10 +91,10 @@ describe('Phase 2 · D6：GPU bundle 元数据 + GPUBuffer 读回逐值对比', 
     for (const url of ASSETS) {
         it(url, async () => {
             const isDraco = url.includes('glTF-Draco');
-            const draco = isDraco ? createBrowserDracoDecoder : undefined;
             const noParent = undefined as unknown as GLTFModel;
             const oldLoader = new GltfDataAtLoaders(url, device, noParent);
-            const newLoader = new GltfDataAtTransform(url, device, undefined, draco);
+            // 不注入解码器：由通用扩展依赖解析器按扩展声明自动检测并加载
+            const newLoader = new GltfDataAtTransform(url, device);
             await oldLoader.init();
             await newLoader.init();
 
