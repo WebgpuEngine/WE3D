@@ -194,6 +194,29 @@ export type { I_gltfInstanceResource } from './model/gltf/gltf';
 export { createBrowserDracoDecoder } from './model/gltf/dracoDecoderBrowser';
 export type { T_DracoDecoderModule } from './model/gltf/dracoDecoderBrowser';
 export { createBrowserMeshoptDecoder } from './model/gltf/meshoptDecoderBrowser';
+export { createBrowserBasisTranscoder } from './model/gltf/basisTranscoderBrowser';
+export type {
+    I_BasisKTX2File,
+    I_BasisTranscoderModule,
+    I_KTX2LevelInfo,
+} from './model/gltf/basisTranscoderBrowser';
+export { transcodeKTX2ToImageBitmap } from './model/gltf/ktx2ImageDecoder';
+export {
+    registerTextureTranscoder,
+    unregisterTextureTranscoder,
+    getTextureTranscoder,
+    getSupportedTextureTranscoderMimeTypes,
+    transcodeTexture,
+} from './model/gltf/textureTranscoders';
+export type { T_TextureTranscoder } from './model/gltf/textureTranscoders';
+export {
+    KTX2_MIME_TYPE,
+    KTX2_MAGIC,
+    isKTX2Bytes,
+    SUPPORTED_IMAGE_MIME_TYPES,
+    guessImageMimeType,
+    resolveImageMimeType,
+} from './model/gltf/imageMimeType';
 export {
     registerExtensionDependencyProvider,
     unregisterExtensionDependencyProvider,

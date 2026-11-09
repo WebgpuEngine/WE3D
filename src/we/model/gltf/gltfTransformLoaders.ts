@@ -34,7 +34,12 @@ import {
     type I_accessorFormat,
     type I_accessorLike,
 } from './accessorFormat';
-import { resolveImageMimeType } from './imageMimeType';
+import {
+    KTX2_MIME_TYPE,
+    isKTX2Bytes,
+    resolveImageMimeType,
+} from './imageMimeType';
+import { transcodeTexture } from './textureTranscoders';
 import {
     resolveExtensionDependencies,
     type T_ExtensionDependencyProviders,
@@ -491,8 +496,13 @@ export class GltfDataAtTransform extends ModelDataLoader {
             const texture = this.textures[index];
             const bytes = texture?.getImage();
             if (!bytes) return undefined;
+            const declared = texture.getMimeType() ?? undefined;
+            // P2-2：KTX2 走纹理转码器（声明 MIME 或容器魔数任一命中即可）
+            if (declared === KTX2_MIME_TYPE || isKTX2Bytes(bytes)) {
+                return transcodeTexture(KTX2_MIME_TYPE, bytes);
+            }
             // P1-3：显式 MIME 白名单（PNG / JPEG / WebP），不支持的类型明确报错
-            const mimeType = resolveImageMimeType(texture.getMimeType() ?? undefined, bytes);
+            const mimeType = resolveImageMimeType(declared, bytes);
             const ab = bytes.slice().buffer as ArrayBuffer;
             return createImageBitmap(new Blob([ab], { type: mimeType }));
         })();

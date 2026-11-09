@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { GltfDataAtTransform } from './gltfTransformLoaders';
 import { E_accessorUseFor } from './base';
 import { getExtensionDependencyKeys } from './extensionDependencies';
+import { read as readKTX2 } from 'ktx-parse';
+import { isKTX2Bytes } from './imageMimeType';
 
 /**
  * Phase 3：删除旧 `GltfDataAtLoaders` 后的数据级回归基准。
@@ -37,6 +39,9 @@ const ASSETS: string[] = [
     `${BASE}texture/testTexture.gltf`,
     // P1-3：EXT_texture_webp 样本，贴图为外部 .webp
     `${BASE}texture/webp/BoxTextured.webp.gltf`,
+    // P2-2：KHR_texture_basisu 样本（ETC1S / UASTC 各一，官方轻量 .ktx2）
+    `${BASE}texture/ktx2/BoxTexturedETC1S.gltf`,
+    `${BASE}texture/ktx2/BoxTexturedUASTC.gltf`,
     `${BASE}triangle/triangle.gltf`,
     `${BASE}triangle/triangle copy.gltf`,
     `${BASE}triangle/triangleMatrix.gltf`,
@@ -253,6 +258,67 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
         }
         expect(colors.size, 'checker + 白十字至少 3 种颜色').toBeGreaterThanOrEqual(3);
     });
+
+    // P2-2：两类超压缩的 KTX2 都要经纹理转码注册表解出 RGBA8 像素。
+    // 容器字段用 ktx-parse 断言（colorModel / supercompressionScheme），
+    // 避免把 ETC1S 与 UASTC 混为一谈；解码结果断言尺寸与非黑像素。
+    const KTX2_CASES = [
+        {
+            url: `${BASE}texture/ktx2/BoxTexturedETC1S.gltf`,
+            label: 'ETC1S',
+            w: 512,
+            h: 256,
+            colorModel: 163,
+            scheme: 1,
+        },
+        {
+            url: `${BASE}texture/ktx2/BoxTexturedUASTC.gltf`,
+            label: 'UASTC',
+            w: 32,
+            h: 32,
+            colorModel: 166,
+            scheme: 2,
+        },
+    ];
+    for (const c of KTX2_CASES) {
+        it(`KHR_texture_basisu ${c.label}：容器字段与 RGBA8 转码像素`, async () => {
+            const loader = new GltfDataAtTransform(c.url, device);
+            await loader.init();
+
+            const json = loader.gltfJSON();
+            expect(json.extensionsRequired, '声明 KHR_texture_basisu').toContain('KHR_texture_basisu');
+            // 该扩展无 readDependencies，不应误入 IO 依赖机制
+            expect(getExtensionDependencyKeys(json)).toEqual([]);
+
+            const bytes = loader.documentOfGltf.getRoot().listTextures()[0].getImage();
+            expect(bytes, 'KTX2 字节').toBeDefined();
+            if (!bytes) return;
+            expect(isKTX2Bytes(bytes), 'KTX2 魔数').toBe(true);
+            const container = readKTX2(new Uint8Array(bytes));
+            expect(container.pixelWidth).toBe(c.w);
+            expect(container.pixelHeight).toBe(c.h);
+            expect(container.dataFormatDescriptor[0].colorModel).toBe(c.colorModel);
+            expect(container.supercompressionScheme).toBe(c.scheme);
+            expect(container.levelCount).toBeGreaterThan(0);
+
+            // getImage() 分流到转码器：返回 ImageBitmap，尺寸与容器一致、像素非黑
+            const bitmap = await loader.getImage(0);
+            expect(bitmap, `${c.label} 转码位图`).toBeDefined();
+            if (!bitmap) return;
+            expect(bitmap.width).toBe(c.w);
+            expect(bitmap.height).toBe(c.h);
+            const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('OffscreenCanvas 2D 不可用');
+            ctx.drawImage(bitmap, 0, 0);
+            const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height).data;
+            let nonBlack = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.max(data[i], data[i + 1], data[i + 2]) > 0) nonBlack++;
+            }
+            expect(nonBlack, `${c.label} 转码后非黑像素`).toBeGreaterThan(0);
+        });
+    }
 
     for (const url of GPU_ASSETS) {
         it(`GPU bundle / buffer ${url}`, async () => {

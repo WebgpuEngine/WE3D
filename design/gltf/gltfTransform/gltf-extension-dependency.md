@@ -75,10 +75,28 @@ registerExtensionDependencyProvider('meshopt.decoder', async () => {
 | --- | --- | --- | --- |
 | `KHR_draco_mesh_compression` | `draco3d.decoder` | `createBrowserDracoDecoder`（`<script>` 加载 `/draco/draco_decoder_gltf.js` + `locateFile` 指向 wasm） | **已实现、自动** |
 | `EXT_meshopt_compression` | `meshopt.decoder` | `createBrowserMeshoptDecoder`（动态 import `meshoptimizer` + `MeshoptDecoder.ready`） | **已实现、自动**（P2-1，2026-11-06） |
-| `KHR_texture_basisu` | ——（官方只透传 KTX2 字节，不做转码） | 需 Basis Universal transcoder 做像素解码，不属于 `registerDependencies` 范畴 | Phase 4 排期（§六 R6） |
+| `KHR_texture_basisu` | ——（官方只透传 KTX2 字节，**无 `readDependencies`**） | **不走本机制**：改由 `textureTranscoders.ts` 按 MIME 分流，见 §五.1 | **已实现、自动**（P2-2，2026-11-09） |
 | 自定义 / 未来扩展 | 自定义 key | `registerExtensionDependencyProvider(key, loader)` | 支持 |
 
 Draco / meshopt 已内置（`DEFAULT_PROVIDERS`），资产声明扩展即自动懒加载，**宿主零注册、不需要改 `init()`、不需要改每个示例页**。接入自定义 / 未来扩展只需两步：确定 `readDependencies`（自动发现会拿到）→ 用 `registerExtensionDependencyProvider()` 注册 provider。
+
+### 5.1 非 IO 依赖的扩展能力如何接入（E1，P2-2 落地）
+
+§十 决策 3 选定 **E1：并列注册点**，`extensionDependencies.ts` **保持不动**。原因：`KHRTextureBasisu`
+官方实现只有 `preread()` 把 `textures[].extensions.KHR_texture_basisu.source` 搬到 `source`，
+**没有 `readDependencies()`**，因此 `io.registerDependencies()` 那条路径根本覆盖不到「像素转码」。
+
+| —— | `extensionDependencies.ts` | `textureTranscoders.ts` |
+| --- | --- | --- |
+| 键 | glTF-Transform **dependency key**（如 `draco3d.decoder`） | **MIME**（如 `image/ktx2`） |
+| 触发 | `init()` 里 `resolveExtensionDependencies()` → `io.registerDependencies()` | `getImage()` 里按声明 MIME / 容器魔数分流 |
+| 对象 | IO 解码器（几何 / meshopt 数据） | 像素转码器（KTX2 → RGBA8 `ImageBitmap`） |
+| 公共 API | `registerExtensionDependencyProvider` | `registerTextureTranscoder` / `unregisterTextureTranscoder` |
+| 内置默认 | `draco3d.decoder` / `meshopt.decoder` | `image/ktx2` → `createBrowserBasisTranscoder()` |
+
+两个注册点职责分离、互不改动；`getImage()` 返回类型仍是 `ImageBitmap`，上传链路与材质层 format 零改动。
+若将来出现第三类能力，再按 §五 E2 评估是否统一为 `extensionProviders.ts`（当前不做）。
+安装方式与 API 契约见 `design/install/basis-universal.md`，完整方案见 `p2-2-ktx2-plan.md` §九 / §十二。
 
 ## 六、影响面
 

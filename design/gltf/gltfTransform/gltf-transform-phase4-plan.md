@@ -222,10 +222,10 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 | --- | --- | --- | --- |
 | 依赖 | `meshoptimizer` | ~~P2-1~~ ✅ 已解决 | `^1.3.0` 已入 `dependencies`，`vite.lib.config.ts` external 已追加（`bca415c`） |
 | 依赖 | `@gltf-transform/functions@^4.5.1` | P3-2 | external 已覆盖 |
-| 资源 | `basis_transcoder.js` + `.wasm` → `public/basis/` | P2-2 | 授权 / 版本需核实 |
+| 资源 | `basis_transcoder.js` + `.wasm` → `public/basis/` | ~~P2-2~~ ✅ 已解决 | 官方 `v2_50` tag 构建产物 + LICENSE（Apache-2.0）已入库，见 `p2-2-ktx2-plan.md` §八 / `design/install/basis-universal.md` |
 | 资产 | `EXT_texture_webp` 样本 ×1 | ~~P1-3~~ ✅ 已解决 | 自造 1680 B，见 §10.11（`6019038`） |
 | 资产 | `EXT_meshopt_compression` 样本 ×1 | ~~P2-1~~ ✅ 已解决 | `Box.gltf` + `Box0.bin` 已入库（`bca415c`）；另附 Khronos `MeshoptCubeTest` |
-| 资产 | KTX2 样本（ETC1S / UASTC） | P2-2 | 需 `basisu` / `toktx` 工具链 |
+| 资产 | KTX2 样本（ETC1S / UASTC） | ~~P2-2~~ ✅ 已解决 | 两个 Khronos 官方轻量 `.ktx2`（8.9 KB / 622 B，CC-BY-4.0）+ 自造 glTF 已入库；无需 `basisu`/`toktx` 工具链 |
 | 工具 | 解码耗时埋点 | P3-1 路线 C | 可用 `performance.now()` + `console.debug` |
 | 人工 | fork 物理目录删除 | P0-1 | 工作区安全删除机制限制 |
 
@@ -327,8 +327,9 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | 1 · P1-1 | ✅ 完成（已提交 `74a44b5`） | `ci:no-e2e` 全绿（71 单测 / 42 browser / exports 206 / build:lib）；全量 e2e 2 workers **76/76**；8 workers `ci` 偶发波动见 §10.6 |
 | 2 · P2-1 | ✅ **完成，无剩余 provider / 验证缺口**（已提交 `bca415c`） | 内置 `meshopt.decoder` provider（宿主零注册）；单测 11 项 + 契约真实解码 + 2 个 e2e 视觉用例与基线。`ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿（官方样本入库与 e2e 重写后）；视觉基线已由方案 A 打通，见 §10.7 / §10.10 |
 | 3 · P1-2（方案 A） | ✅ 完成（已提交 `bca415c`） | `ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；全量 `test:baseline` 78/78；`npm run ci` **78/78** 全绿。两个 meshopt 页面 shader warning 252 → **0**，截图由纯黑变为正常渲染，见 §10.10 |
-| 4 · P1-3 | ✅ 完成（本次提交） | 技术验证先行（§10.11）；`ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）；全量 `test:baseline` **79/79**、新增 1 张基线；`npm run ci` **79/79** 全绿 |
-| 5 ~ 8 | 未开始 | — |
+| 4 · P1-3 | ✅ 完成（已提交 `6019038`） | 技术验证先行（§10.11）；`ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）；全量 `test:baseline` **79/79**、新增 1 张基线；`npm run ci` **79/79** 全绿 |
+| 5 · P2-2 | ✅ **完成，未提交** | 决策与技术验证见 `p2-2-ktx2-plan.md`（§7.1 / §九 / §十二）。官方 `v2_50` transcoder + E1 并列 `textureTranscoders.ts` + `getImage()` 按 `image/ktx2` 分流；ETC1S + UASTC 两个官方样本与 e2e。`ci:no-e2e` 全绿（92 单测 / 50 browser / exports 224 / build:lib）；`test:baseline` **81/81** 新增 2 张基线；`npm run ci` **81/81**；软件版 1 worker **81/81**（2 workers 首轮 8 个既有 PBR 用例超时波动，单 worker 全绿） |
+| 6 ~ 8 | 未开始 | — |
 
 ### 10.6 小步 1 执行记录（2026-11-06，未提交）
 

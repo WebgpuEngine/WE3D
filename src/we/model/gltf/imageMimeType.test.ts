@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
     SUPPORTED_IMAGE_MIME_TYPES,
+    KTX2_MIME_TYPE,
+    KTX2_MAGIC,
+    isKTX2Bytes,
     guessImageMimeType,
     resolveImageMimeType,
 } from './imageMimeType';
@@ -76,5 +79,35 @@ describe('resolveImageMimeType: 白名单解析', () => {
 
     it('声明不受支持但字节是受支持格式时以字节为准', () => {
         expect(resolveImageMimeType('image/ktx2', WEBP)).toBe('image/webp');
+    });
+
+    it('P2-2：KTX2 不进白名单，但错误信息提示转码入口', () => {
+        expect(SUPPORTED_IMAGE_MIME_TYPES).not.toContain(KTX2_MIME_TYPE);
+        expect(() => resolveImageMimeType(KTX2_MIME_TYPE, new Uint8Array(4))).toThrow(
+            /supported:.*image\/ktx2 \(transcoded\)/,
+        );
+    });
+});
+
+describe('isKTX2Bytes: KTX2 容器魔数判定', () => {
+    it('完整 12 字节魔数识别为 KTX2', () => {
+        expect(isKTX2Bytes(Uint8Array.from(KTX2_MAGIC))).toBe(true);
+    });
+
+    it('IBL 的 KTX1 魔数「«KTX 11»」不得误判为 KTX2', () => {
+        const ktx1 = Uint8Array.from([
+            0xab, 0x4b, 0x54, 0x58, 0x20, 0x31, 0x31, 0xbb, 0x0d, 0x0a, 0x1a, 0x0a,
+        ]);
+        expect(isKTX2Bytes(ktx1)).toBe(false);
+    });
+
+    it('PNG / WebP / 未知短字节不得误判', () => {
+        expect(isKTX2Bytes(PNG)).toBe(false);
+        expect(isKTX2Bytes(WEBP)).toBe(false);
+        expect(isKTX2Bytes(new Uint8Array(4))).toBe(false);
+    });
+
+    it('魔数少一字节不得误判', () => {
+        expect(isKTX2Bytes(Uint8Array.from(KTX2_MAGIC.slice(0, 11)))).toBe(false);
     });
 });
