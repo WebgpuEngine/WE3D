@@ -229,6 +229,12 @@ await scene.add(mesh);
 * 已知缺陷与修复路线见 [design/workbuddy/core/04-问题缺陷与改进建议.md](./design/workbuddy/core/04-问题缺陷与改进建议.md)。
 * 提交 git 前必须跑 e2e 验证（或 Playwright 关键示例），防止源码改动破坏正常功能。
 * 包名 `we3d`，以 lib 形式（ESM + `.d.ts`）发布到 npm，不做 web app 打包。
+* **运行时静态资源**：Draco 解码器、Basis Universal transcoder 的 js/wasm 及 IBL DFG LUT
+  （`dfg_lut_128.hdr`）随 npm 包发布在 `public/draco/`、`public/basis/`、`public/IBL/brdfLut/`。
+  使用 Draco / KTX2 / IBL 资产的宿主需把它们复制到自己应用的静态目录
+  （如 `cp -r node_modules/we3d/public/draco public/`），否则 `/draco/`、`/basis/`、
+  `/IBL/brdfLut/dfg_lut_128.hdr` 会 404。非 Vite 项目可用 `configureRuntimeAssets()` 覆盖默认目录。
+  安装方式与注意事项见 [design/install/README.md](./design/install/README.md)。
 
 # 资料参考与推荐
 

@@ -1,6 +1,7 @@
 import { Scene } from '../scene/scene';
 import { HDRTexture } from '../texture/HDRTexture';
 import { PrefilteredCubemap } from '../texture/prefilteredCubemap';
+import { getRuntimeAssetsConfig } from '../config/runtimeAssets';
 
 // interface iblItem {
 //     AABB: number[];
@@ -57,7 +58,8 @@ export class IBL {
     input: IV_IBL | undefined;
 
     // iblArray!: iblItem[];
-    dfgLutUrl: string = '/IBL/brdfLut/dfg_lut_128.hdr';
+    /** 默认取全局运行时资产配置（`configureRuntimeAssets({ iblDfgLutUrl })`），可被 `input.dfgLutUrl` 逐实例覆盖 */
+    dfgLutUrl: string = getRuntimeAssetsConfig().iblDfgLutUrl;
 
     enable_ibl: boolean = false;
     use_ibl: number = 0;

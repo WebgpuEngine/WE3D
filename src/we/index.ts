@@ -57,6 +57,10 @@ export type {
 } from './core/base/coreDefine';
 export { weGetBinaryResourceFromGzip } from './core/base/file/getFile';
 
+// config
+export { configureRuntimeAssets } from './core/config/runtimeAssets';
+export type { IV_RuntimeAssetsConfig } from './core/config/runtimeAssets';
+
 // camera
 export { BaseCamera } from './core/camera/baseCamera';
 export type { I_BaseCameraValue } from './core/camera/baseCamera';

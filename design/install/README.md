@@ -8,33 +8,85 @@
 ## 为什么需要这一步
 
 `we3d` 是 **lib 形态**（ESM + `.d.ts`），按 `AGENTS.md` §四「依赖全部 external 化，只打包 `src/we` 源码」。
-解码器 / transcoder 的 **js glue + wasm 本体不进 `dist/`、也不进 npm 包**，由宿主应用以静态资源形式提供。
+解码器 / transcoder 的 **js glue + wasm 本体不进 `dist/we3d.js`**（`vite.lib.config.ts` 的 `publicDir: false`），
+浏览器运行时必须能从站点根 `/draco/`、`/basis/`、`/IBL/brdfLut/dfg_lut_128.hdr` 取到这些静态文件。
 
-`npm pack --dry-run --ignore-scripts --json` 实测（2026-11-09，`we3d@0.0.3`）：发布清单 **204 文件 / 353,000 B**，
-顶层只有 `dist` + `package.json` + `README.md`，**不含 `public/`、不含任何 `.wasm` / `.ktx` / `.ktx2`**。
-边界由两处保证：`package.json` 的 `"files": ["dist"]`（无 `.npmignore` 覆盖）+ `vite.lib.config.ts` 的 `publicDir: false`。
+**2026-11-09 起：这三类资源随 npm 包一起发布**（用户决定「位置仍在包 `public/` 中，宿主按需 copy」）。
+`package.json` 的 `files` 精确列出 `public/draco`、`public/basis` 与 `public/IBL/brdfLut/dfg_lut_128.hdr`，
+宿主装完包后从 `node_modules/we3d/public/` 复制到自己应用的静态目录即可，**不必再去 GitHub / CDN 单独下载**。
 
-**因此：本仓库的 `public/draco/`、`public/basis/`（规划）、`public/IBL/` 都只是「本仓库自带示例 + CI 复现」用的资源，宿主应用必须自行在自己的静态目录里放同名文件，否则相应功能运行时 404。**
+`npm pack --dry-run --ignore-scripts --json` 实测（`we3d@0.0.3`）：
+
+| —— | 改动前 | 改动后 |
+| --- | --- | --- |
+| 发布文件数 | 207 | **215** |
+| tarball | 348.2 KB | **981.9 KB** |
+| 解包体积 | 348.2 KB | **3453.8 KB** |
+| `dist/we3d.js` | 636.80 kB | **637.26 kB（+0.46 kB 配置代码）** |
+| 包内 `public/` | 无 | `public/draco/` 3 文件 + `public/basis/` 4 文件 + `dfg_lut_128.hdr` 1 文件 |
+
+包内 8 个资源文件：`draco_decoder_gltf.js/.wasm` + `LICENSE`、`basis_transcoder.js/.wasm` + `LICENSE` + `README.md`、
+`dfg_lut_128.hdr`（IBL DFG LUT）。
+**精确白名单保证不误打包**：`public/` 整体 177.8 MB（含 `public/IBL/` 31 MB 等）未被整体纳入，实测包内只有
+`public/(draco|basis)/` 两个子目录 + 单个 `dfg_lut_128.hdr`；KTX2 / WebP 样本与 IBL 的 512 / multiscatter 大文件一律不入包。
+
+⚠️ **npm 包携带资源 ≠ 运行时自动可用**：引擎默认按站点根绝对路径 `/draco/…`、`/basis/…`、
+`/IBL/brdfLut/dfg_lut_128.hdr` 加载，宿主**必须 copy 到自己应用的静态目录**（如 Vite 的 `public/`），
+否则相应功能运行时 404。
+另注意 `package.json` 的 `exports` 只声明了 `"."`，`import 'we3d/public/...'` 会被 Node exports 规则拒绝；
+资源只应按**文件路径**复制，不作为模块导入。
+
+**非 Vite 项目 / 子路径部署**：可用全局 API `configureRuntimeAssets()` 覆盖上述默认目录，无需改源码：
+
+```ts
+import { configureRuntimeAssets } from 'we3d';
+configureRuntimeAssets({
+    dracoDir: '/assets/draco/',          // 以 / 结尾
+    basisDir: '/assets/basis/',
+    iblDfgLutUrl: '/assets/ibl/dfg_lut_128.hdr',
+});
+```
+
+该配置为**全局单例**，须在创建场景 / 加载资产**之前**调用；调用后 draco / basis 解码器缓存自动失效。
+IBL 的 DFG LUT 默认值取自全局配置，仍可被 `IV_IBL.dfgLutUrl` 逐实例覆盖。
+
+### 宿主 copy 指引
+
+```bash
+# npm / yarn（扁平安装）
+cp -r node_modules/we3d/public/draco  <你的应用>/public/
+cp -r node_modules/we3d/public/basis  <你的应用>/public/
+mkdir -p <你的应用>/public/IBL/brdfLut
+cp node_modules/we3d/public/IBL/brdfLut/dfg_lut_128.hdr  <你的应用>/public/IBL/brdfLut/
+
+# pnpm（未 hoist 时从 .pnpm 解析，或用包管理器提供的路径）
+cp -r $(dirname $(node -p "require.resolve('we3d/package.json')"))/public/draco  <你的应用>/public/
+```
+
+或在构建脚本里做同样复制（推荐固定版本、随 lockfile 一起升级）。授权文件 `LICENSE` 会一起被复制，
+满足 Apache-2.0 第 4 条。**没有 Draco / KTX2 / IBL 资产的应用可以不 copy**，运行时零成本、零外网请求。
 
 ## 资源清单
 
 | 资源 | 目录 | 用途 | 触发条件 | 文档 |
 | --- | --- | --- | --- | --- |
-| google/draco 解码器 | `public/draco/` | 解 `KHR_draco_mesh_compression` glTF | 资产声明 Draco | [draco.md](./draco.md) |
-| BinomialLLC basis_universal transcoder | `public/basis/`（**P2-2 已入库**） | 解 `KHR_texture_basisu` / KTX2 贴图 | 资产含 `.ktx2` | [basis-universal.md](./basis-universal.md) |
-| Filament `cmgen` 生成的 KTX1 IBL | `public/IBL/`（已入库） | 预滤波环境贴图 / BRDF LUT | `new IBL(...)` | 见下文「ktx-parse 与 IBL」 |
+| google/draco 解码器 | `public/draco/`（**随 npm 包发布**） | 解 `KHR_draco_mesh_compression` glTF | 资产声明 Draco | [draco.md](./draco.md) |
+| BinomialLLC basis_universal transcoder | `public/basis/`（**随 npm 包发布**） | 解 `KHR_texture_basisu` / KTX2 贴图 | 资产含 `.ktx2` | [basis-universal.md](./basis-universal.md) |
+| IBL DFG LUT（`dfg_lut_128.hdr`） | `public/IBL/brdfLut/`（**单文件随 npm 包发布**） | BRDF 积分 LUT | `new IBL(...)` | 见下文「ktx-parse 与 IBL」 |
+| Filament `cmgen` 生成的 KTX1 IBL | `public/IBL/`（其余部分仅本仓库 / CI，**不入 npm 包**） | 预滤波环境贴图 | `new IBL(...)` 的 `prefilteredCubeMap` | 见下文「ktx-parse 与 IBL」 |
 
-三者在运行时**互不依赖、互不冲突**：不同的目录、不同的 MIME/魔数、不同的加载代码路径。
+各资源在运行时**互不依赖、互不冲突**：不同的目录、不同的 MIME/魔数、不同的加载代码路径。
 
 ## 通用安装约定
 
-1. **路径固定**：引擎用 `/draco/...`、`/basis/...` 这类**站点根绝对路径**加载，宿主需保证 dev server / 部署后这些 URL 可直达。子路径部署时要同步调整，或用 `registerExtensionDependencyProvider` / `registerTextureTranscoder` 覆盖加载器。
+1. **默认路径**：引擎默认用 `/draco/...`、`/basis/...`、`/IBL/brdfLut/dfg_lut_128.hdr` 这类**站点根绝对路径**加载。非 Vite 项目 / 子路径部署用 `configureRuntimeAssets()` 全局覆盖，或用 `registerExtensionDependencyProvider` / `registerTextureTranscoder` / `IV_IBL.dfgLutUrl` 做更细粒度覆盖。配置 API 的字段、优先级与示例见 [`runtime-assets-config.md`](./runtime-assets-config.md)。
 2. **js 与 wasm 必须同目录**：两者都是 Emscripten glue + wasm，`locateFile` 按 js 所在目录取 wasm；只拷一个必然失败。
 3. **版本固定、不要混搭**：glue 与 wasm 必须来自同一版本 / 同一构建，跨版本混用会静默失败或崩溃。升级时两个文件一起换，并跑对应回归。
 4. **授权文件随资源入库**：Draco 与 basis_universal 均为 Apache-2.0，需把上游 `LICENSE` 一并放入目录并保留版权声明（这是 Apache-2.0 第 4 条的要求）。许可文本不得从发布产物里剥离。
 5. **断网可用**：资源随应用静态目录部署，不走 CDN，运行时零外网请求。
-6. **lib 发布零影响**：往 `public/` 加资源只增大 git 仓库，不改 `we3d.js` 体积、不影响 `check:exports` / `prepublishOnly` / 版本号。
-7. **懒加载**：两类资源都只在首次遇到相应资产时才加载，普通 glTF 零成本。
+6. **对 lib 代码影响最小**：`dist/we3d.js` 体积基本不变（636.80 → 637.26 kB，+0.46 kB 配置代码）、`prepublishOnly` / 版本号不变；新增公共 API `configureRuntimeAssets()`（barrel 追加导出，`check:exports` 相应更新），并更新 npm 包文件清单（+8 文件 / +633.7 KB tarball），这是本次发布的显式约定变更。
+7. **懒加载**：两类资源都只在首次遇到相应资产时才加载，普通 glTF 零成本；宿主未 copy 也不会影响普通资产。
+8. **授权随包**：两个目录的 `LICENSE`（Apache-2.0）已通过 `files` 白名单进入 npm 包，复制时一并带走，不得剥离。
 
 ## `ktx-parse` 与 IBL（2026-11-09 核实，用户特别关注）
 
@@ -63,15 +115,18 @@
 # 1. 静态资源可达（dev server 启动后）
 curl -I http://localhost:5173/draco/draco_decoder_gltf.js
 curl -I http://localhost:5173/draco/draco_decoder_gltf.wasm
-curl -I http://localhost:5173/basis/basis_transcoder.js        # P2-2 实施后
-curl -I http://localhost:5173/basis/basis_transcoder.wasm      # P2-2 实施后
+curl -I http://localhost:5173/basis/basis_transcoder.js
+curl -I http://localhost:5173/basis/basis_transcoder.wasm
+curl -I http://localhost:5173/IBL/brdfLut/dfg_lut_128.hdr
 
 # 2. 回归
 npm run ci:no-e2e      # lint / typecheck / 单测 / browser 契约 / exports / build:lib
 npm run ci             # 含全量 e2e 截图比对
 
-# 3. 发布产物边界
-npm pack --dry-run --ignore-scripts --json   # 确认不含 public/ 与 wasm
+# 3. 发布产物（应含 8 个 public/ 文件，且不含 IBL 的 512/multiscatter 等其它资源）
+npm pack --dry-run --ignore-scripts --json \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const p=JSON.parse(s)[0];console.log(p.entryCount,p.size);console.log(p.files.filter(f=>f.path.startsWith('public/')).map(f=>f.path).join('\n'))})"
+tar -tzf we3d-0.0.3.tgz | grep '^package/public/'   # 实际 tarball 复核
 ```
 
 Draco 的可用回归：`src/we/model/gltf/dracoDecoder.spike.browser.test.ts` + `e2e-cases/gltf/box_draco.html`。

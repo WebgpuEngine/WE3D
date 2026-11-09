@@ -9,7 +9,14 @@
  *   与 `dracoDecoderBrowser.ts` 的 `var DracoDecoderModule` 全局工厂范式不同，勿照抄。
  * - lib 只带加载逻辑，不打包 js/wasm；只有含 KTX2 的资产才懒加载，Promise 缓存。
  * - 自定义路径 / CDN 时用 `registerTextureTranscoder('image/ktx2', loader)` 覆盖。
+ * - 资源目录默认取自全局配置 `configureRuntimeAssets({ basisDir })`（默认 `/basis/`），
+ *   变更后 transcoder 单例缓存自动失效，按新目录重新懒加载。
  */
+import {
+    getRuntimeAssetsConfig,
+    getRuntimeAssetsVersion,
+} from '../../core/config/runtimeAssets';
+
 export interface I_KTX2LevelInfo {
     origWidth: number;
     origHeight: number;
@@ -62,38 +69,42 @@ declare global {
     }
 }
 
-const TRANSCODER_JS = '/basis/basis_transcoder.js';
-const TRANSCODER_DIR = '/basis/';
-
 let pending: Promise<I_BasisTranscoderModule> | undefined;
+let pendingVersion = -1;
 
-function loadTranscoderScript(): Promise<void> {
+function loadTranscoderScript(basisDir: string): Promise<void> {
+    const transcoderJs = basisDir + 'basis_transcoder.js';
     if (typeof window === 'undefined' || typeof document === 'undefined') {
         return Promise.reject(new Error('createBrowserBasisTranscoder 只能在浏览器环境调用'));
     }
     if (window.BASIS) return Promise.resolve();
     return new Promise<void>((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = TRANSCODER_JS;
+        script.src = transcoderJs;
         script.async = true;
         script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`加载 Basis transcoder 脚本失败：${TRANSCODER_JS}`));
+        script.onerror = () => reject(new Error(`加载 Basis transcoder 脚本失败：${transcoderJs}`));
         document.head.appendChild(script);
     });
 }
 
 /** 加载并初始化官方 Basis transcoder（懒加载 + 单例缓存） */
 export function createBrowserBasisTranscoder(): Promise<I_BasisTranscoderModule> {
+    const basisDir = getRuntimeAssetsConfig().basisDir;
+    if (pendingVersion !== getRuntimeAssetsVersion()) {
+        pending = undefined;
+        pendingVersion = getRuntimeAssetsVersion();
+    }
     if (!pending) {
         pending = (async () => {
-            await loadTranscoderScript();
+            await loadTranscoderScript(basisDir);
             const factory = window.BASIS;
             if (!factory) {
-                throw new Error(`BASIS 全局未定义，请确认 ${TRANSCODER_JS} 已加载`);
+                throw new Error(`BASIS 全局未定义，请确认 ${basisDir} 下 transcoder 脚本已加载`);
             }
-            const M = await factory({ locateFile: (path) => TRANSCODER_DIR + path });
+            const M = await factory({ locateFile: (path) => basisDir + path });
             if (typeof M.initializeBasis !== 'function') {
-                throw new Error('Basis transcoder 模块缺少 initializeBasis()，请检查 public/basis/ 资源版本');
+                throw new Error('Basis transcoder 模块缺少 initializeBasis()，请检查 basis 资源版本');
             }
             M.initializeBasis();
             return M;

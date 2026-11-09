@@ -249,19 +249,45 @@ Texture.getImage() 字节
 | `LICENSE`（11,347 B，Apache-2.0） | `v2_50` tag 根 | `public/basis/` + `README.md` 注明版本 / 授权 / 上游 commit |
 | Khronos 轻量 `.ktx2` ×2 + `LICENSE.md` | `glTF-Sample-Assets` main | `public/models/gltf/base/texture/ktx2/` |
 
-`basisTranscoderBrowser.ts` 只写「加载逻辑」：`/basis/basis_transcoder.js` + `locateFile`，**不打包 wasm**。加 `vite.lib.config.ts` external **不需要**（不是 npm import，是运行时静态资源）；`package.json` / `package-lock.json` **零改动**。
+`basisTranscoderBrowser.ts` 只写「加载逻辑」：`/basis/basis_transcoder.js` + `locateFile`，**不打包 wasm**。加 `vite.lib.config.ts` external **不需要**（不是 npm import，是运行时静态资源）；`package-lock.json` 零改动。
 
-### 10.2 是否影响 lib 发布 npm 包 —— 不影响（已实测）
+### 10.2 是否影响 lib 发布 npm 包 —— 不影响 lib 代码，但 2026-11-09 起资源随包发布
 
-`npm pack --dry-run --ignore-scripts --json` 实测：`we3d@0.0.3` 发布清单 **204 文件 / 353,000 B**，顶层只有 `dist` + `package.json` + `README.md`，**不含 `public/`、不含任何 `.wasm` / `.ktx2` / basis 文件**。原因：
+**当时实测（P2-2 实现时）**：`files: ["dist"]` 下发布清单 **207 文件 / 348 KB**，不含 `public/`，
+`dist/we3d.js` 636.80 kB。
 
-- `package.json` 的 `"files": ["dist"]` 是 npm 侧的硬边界；无 `.npmignore` 覆盖它。
-- `vite.lib.config.ts` 设 `publicDir: false`，构建时 Vite 根本不复制 `public/`。
-- 现有 `public/draco/`（js 479 KB + wasm 184 KB）同样**不进包**，发布清单里只有 `dist/model/gltf/dracoDecoderBrowser.d.ts` 这一份声明文件。
+**后续变更（2026-11-09，用户决定「位置仍在包 `public/` 中，宿主按需 copy」）**：
+`package.json` 的 `files` 改为 `["dist", "public/draco", "public/basis", "public/IBL/brdfLut/dfg_lut_128.hdr"]`，实测：
 
-因此新增 `public/basis/`（约 1.1 MB）**只增大 git 仓库，不增大 npm 包、不改 `we3d.js` 体积、不影响 `check:exports` / `prepublishOnly`**。与 K2 的「lib 不打包 wasm」目标一致。
+| —— | 变更前后 |
+| --- | --- |
+| 发布文件数 | 207 → **215**（+8） |
+| tarball | 348.2 KB → **981.9 KB** |
+| 解包体积 | 348.2 KB → **3453.8 KB** |
+| `dist/we3d.js` | **637.26 kB（+0.46 kB 配置代码）** |
+| 包内 `public/` | `public/draco/`（js/wasm/LICENSE）+ `public/basis/`（js/wasm/LICENSE/README）+ `public/IBL/brdfLut/dfg_lut_128.hdr`（单文件） |
 
-⚠️ **但有一个宿主侧约束必须写入 README**：从 npm 安装 `we3d` 的用户拿不到 `basis_transcoder.js/.wasm`（draco 同理），必须在自己应用的 `public/basis/` 放这两个文件，否则 KTX2 资产会 404。这与现有 Draco 的既有约定相同，不是 P2-2 新增的问题；实现时应在 `design/gltf/gltfTransform/gltf-extension-dependency.md` 与根 `README.md` 补一句「运行时静态资源由宿主提供」。`registerTextureTranscoder` 公共 API 也可让宿主改用自己的加载路径（K4 已定）。
+- 精确白名单**不误打包**：`public/` 整体 177.8 MB（含 `public/IBL/` 31 MB）未整体纳入，实测包内只有两个资源子目录 + 单个 `dfg_lut_128.hdr`；IBL 的 512 / multiscatter 等大文件不入包。
+- `vite.lib.config.ts` 的 `publicDir: false` 仍生效，资源**不进 `dist/we3d.js`**；只是作为 npm 包内的独立文件分发。
+- **lib 代码影响**：新增公共 API `configureRuntimeAssets()`（见 §10.2.1）；`check:exports` / `prepublishOnly` / 版本号不变，变化在 npm 包文件清单、tarball 体积与 barrel 导出集合。
+- 补入 `public/draco/LICENSE`（google/draco 1.5.9，Apache-2.0，13,898 B），使随包分发的二进制附带许可文本。
+
+#### 10.2.1 运行时资产目录可配置化（2026-11-09）
+
+用户追问「Vite 中 `public` 映射为根 URL，能否增加配置灵活配置 draco / basis / IBL 资产目录，方便非 Vite 项目」。
+决策：**仅全局 API**（不扩 `IV_Scene`）、**两个独立目录 URL**（draco / basis）、**IBL 一起纳入**。落地：
+
+- 新增 `src/we/core/config/runtimeAssets.ts`：
+  - `configureRuntimeAssets({ dracoDir?, basisDir?, iblDfgLutUrl? })`：全局单例，须在创建场景 / 加载资产前调用；
+  - 内部 `getRuntimeAssetsConfig()` / `getRuntimeAssetsVersion()`（barrel 不导出）。
+- `dracoDecoderBrowser.ts` / `basisTranscoderBrowser.ts` 改读全局配置；配置变更时按版本号使单例缓存失效，按新目录重新懒加载。
+- `ibl.ts` 的 `dfgLutUrl` 默认值改读全局配置，仍可被 `IV_IBL.dfgLutUrl` 逐实例覆盖。
+
+⚠️ **npm 包携带资源 ≠ 运行时自动可用**：引擎默认按站点根 `/draco/…`、`/basis/…`、`/IBL/brdfLut/dfg_lut_128.hdr` 加载，宿主**必须**把
+`node_modules/we3d/public/` 下对应资源复制到自己应用的静态目录，否则 404；非 Vite 项目用 `configureRuntimeAssets()` 覆盖默认目录。
+`exports` 只声明 `"."`，资源按**文件路径** copy，不能 `import 'we3d/public/...'`。
+`registerTextureTranscoder` / `registerExtensionDependencyProvider` / `IV_IBL.dfgLutUrl` 仍可做更细粒度覆盖。
+完整 copy 命令与排错见 `design/install/README.md`、`design/install/draco.md`、`design/install/basis-universal.md`。
 
 ### 10.3 npm 上是否有对应包 —— 没有官方包，有同字节的第三方 vendored 版本
 
@@ -277,7 +303,7 @@ Texture.getImage() 字节
 **关键结论**：
 1. **BinomialLLC 没有发布官方 npm 包**（npm 上 `basis_universal` 是个人 CLI 包装；官方只发 GitHub tag + 源码树构建产物）。所以 K2 选「`v2_50` tag 源码树」仍是最贴近官方、授权最清晰、可复现的路径。
 2. `@loaders.gl/textures` 只是把**同一份官方二进制** vendored 进 npm，SHA256 完全相同 —— 若将来希望「从 npm registry 取、不依赖 GitHub」，可以直接从该包提取这两个文件入库，**但不要把 `@loaders.gl/textures` 加进 `dependencies`**（避免 Phase 3 移除的依赖树回流、避免 6 MB 传递依赖）。
-3. 无论从 GitHub 还是从 npm 提取，**入库形态都是 `public/basis/` 静态资源**，对 lib 发布影响相同（零影响）。
+3. 无论从 GitHub 还是从 npm 提取，**入库形态都是 `public/basis/` 静态资源**，对 `dist/we3d.js` 影响相同（零影响）；该目录自 2026-11-09 起随 npm 包发布（§10.2）。
 
 **建议**：维持 K2 的 `v2_50` tag 方案；在 `public/basis/README.md` 里同时记录两个等价来源（GitHub tag URL + npm 包名/版本 + SHA256），便于断网或网络受限时复现。此为文档性建议，不改变已确认的决策。
 **安装方式与注意事项**已单独成文：`design/install/README.md`（通用约定 + IBL 结论）、`design/install/draco.md`、`design/install/basis-universal.md`。
@@ -346,5 +372,5 @@ Texture.getImage() 字节
 
 - **P2-2 完成**：ETC1S 与 UASTC（含 Zstd）两种超压缩都能经官方 transcoder 转出 RGBA8 并正确渲染；`KHR_texture_basisu` 无 `readDependencies`，E1 并列注册表方向验证成立；`getImage()` 返回 `ImageBitmap` 契约不变，材质层零改动。
 - **K1 保留项**：GPU 压缩格式直传（BC7 / ETC2 / ASTC）、mipmap 全层级、cubemap / array、Worker 化（P3-1）均未做，按决策另立项。
-- **宿主侧**：`public/basis/` 不进 npm 包，见 `design/install/basis-universal.md` 与 `design/install/README.md`。
+- **宿主侧**：`public/basis/` 与 `public/draco/` 自 2026-11-09 起随 npm 包发布（包内路径不变），但宿主仍需 copy 到自己应用的静态目录，见 `design/install/README.md` / `basis-universal.md` / `draco.md`。
 - **状态**：代码 + 2 张基线 + 本文档 + `design/install/` 三份文档**均未提交**，等用户决定是否提交推送。

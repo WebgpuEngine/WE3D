@@ -31,7 +31,8 @@ curl -L -o LICENSE               $BASE/LICENSE
 
 - 引擎通过 `/basis/basis_transcoder.js` + `locateFile` 加载，**js 与 wasm 必须同目录、同版本**。
 - 只有含 KTX2 / `KHR_texture_basisu` 的资产才懒加载，普通 glTF 零成本。
-- 这两个文件**不进 `dist/`、也不进 npm 包**（`vite.lib.config.ts` 的 `publicDir: false` +
-  `package.json` 的 `"files": ["dist"]`）。从 npm 安装 `we3d` 的宿主必须自行把它们放到自己应用的
-  `public/basis/`，否则 KTX2 资产运行时 404。
-- 详细安装方式、API 契约与排错见 `design/install/basis-universal.md`。
+- 这两个文件**不进 `dist/we3d.js`**（`vite.lib.config.ts` 的 `publicDir: false`），但 **2026-11-09 起随 npm 包发布**：
+  `package.json` 的 `files` 已精确包含 `public/basis`，包内路径为 `public/basis/*`。
+  从 npm 安装 `we3d` 的宿主把 `node_modules/we3d/public/basis/` 复制到自己应用的 `public/basis/` 即可，
+  否则 KTX2 资产运行时 404。
+- 详细安装方式、宿主 copy 命令、API 契约与排错见 `design/install/basis-universal.md` 与 `design/install/README.md`。

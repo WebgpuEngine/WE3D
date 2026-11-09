@@ -18,6 +18,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 2. **渲染结果变更多必走基线**：按 `AGENTS.md` §三.1，改动涉及渲染 / 材质 / 几何 / 相机 / 着色时，先 `npm run test:baseline`（GPU 硬件版），再 `npm run ci`，**基线与代码同一次提交**。新增 e2e 用例后必须 `npm run e2e-index`。
 3. **公共 API 走 barrel**：新增对外能力在 `src/we/index.ts` 显式追加并跑 `npm run check:exports`（`AGENTS.md` §一.4）；e2e 用例一律从 `@we3d` 导入。
 4. **lib 边界不变**：解码器 / 转码器本体与 wasm 放 `public/`，由宿主提供，`vite.lib.config.ts` 的 `publicDir:false` 保证不进 `dist/`；新增 npm 依赖须同步 `external` 规则（当前已有 `/^@gltf-transform\//`，覆盖未来的 `functions`）。
+   - **2026-11-09 补充（发布约定变更）**：`public/draco`、`public/basis` 两个资源目录与 `public/IBL/brdfLut/dfg_lut_128.hdr`（单文件）已加入 `package.json` 的 `files` 白名单，**随 npm 包发布**（包内仍是 `public/` 路径），宿主按需 copy 到自己应用的静态目录即可。`dist/we3d.js` 体积基本不变（+0.46 kB 配置代码），仅 tarball 由 348 KB 增至 981.9 KB；`public/IBL/` 其余 31 MB（512/multiscatter 等）不入包。并新增公共 API `configureRuntimeAssets()` 支持非 Vite 项目覆盖默认目录。详见 `design/install/README.md` 与 `p2-2-ktx2-plan.md` §10.2。
 5. **资产只用已入库文件**：新能力所需样本资产必须先入库（遵循 §3.7 ⑥ 与 `.gitignore:28` 口径），CI 才可复现；未入库资产只作本地人工核对。
 
 **明确不在本阶段**

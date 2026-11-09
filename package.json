@@ -12,7 +12,10 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "public/draco",
+    "public/basis",
+    "public/IBL/brdfLut/dfg_lut_128.hdr"
   ],
   "scripts": {
     "dev": "vite",

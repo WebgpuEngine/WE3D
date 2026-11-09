@@ -55,8 +55,9 @@ tar -xzf loaders.gl-textures-4.5.4.tgz \
 与 Draco 的 `var DracoDecoderModule` 范式不同，**不能照抄** `dracoDecoderBrowser.ts`：
 
 ```ts
-// <script> 注入 /basis/basis_transcoder.js 后
-const M = await window.BASIS({ locateFile: (p) => '/basis/' + p });
+// 目录默认取自全局配置 configureRuntimeAssets({ basisDir })（默认 '/basis/'）
+// <script> 注入 <basisDir>/basis_transcoder.js 后
+const M = await window.BASIS({ locateFile: (p) => basisDir + p });
 M.initializeBasis();
 
 const RGBA32 = M.transcoder_texture_format.cTFRGBA32.value; // = 13，枚举值需取 .value
@@ -86,10 +87,10 @@ file.delete();
 | 用了 `BasisFile` 而非 `KTX2File` | 解析 KTX2 失败 | 官方 wrapper 绑定名是 `KTX2File` |
 | 格式枚举传对象 | `transcodedSize` = w×h×0.5、转码返回 0 | 取 `.value` |
 | 照抄 Draco 加载方式 | `window.BASIS` 不是工厂实例 | `await window.BASIS({locateFile})` + `initializeBasis()` |
-| 子路径部署 | `/basis/...` 404 | 调整静态目录，或用 `registerTextureTranscoder('image/ktx2', 自定义加载器)`（K4 已定为公共 API） |
+| 子路径部署 | `/basis/...` 404 | 用 `configureRuntimeAssets({ basisDir: '/你的路径/basis/' })` 全局改目录，或用 `registerTextureTranscoder('image/ktx2', 自定义加载器)`（K4 已定为公共 API） |
 | MIME 分流 | `image/ktx2` 被 P1-3 白名单抛错 | P2-2 在 `getImage()` 做显式分流；白名单语义本身保持不变 |
 | 授权 | Apache-2.0 需保留版权 / 许可声明 | `LICENSE` 随资源入库，发布产物不剥离 |
-| npm 安装 `we3d` 的宿主 | 包里没有 `public/basis/` | **必须自行把两个文件放到自己应用的 `public/basis/`**（与 Draco / IBL 同样约定） |
+| npm 安装 `we3d` 的宿主 | 包内已有 `public/basis/`，但引擎按站点根 `/basis/…` 加载 | **必须把 `node_modules/we3d/public/basis/` 复制到自己应用的 `public/basis/`**，否则 KTX2 资产 404 |
 | WASM 冷启动 | 首个 KTX2 资产有加载延迟 | 懒加载 + Promise 缓存，非 KTX2 资产零成本；Worker 化属 P3-1 |
 
 ## 五、与 IBL / `ktx-parse` 的关系（无冲突）
@@ -106,14 +107,24 @@ curl -I http://localhost:5173/basis/basis_transcoder.wasm
 npm run ci:no-e2e
 npm run ci                       # 含 2 个 KTX2 e2e 用例（ETC1S / UASTC）
 npm run test:e2e:software        # K6 硬验收：SwiftShader 下 RGBA8 输出与 GPU 基线一致
-npm pack --dry-run --ignore-scripts --json   # 确认发布清单不含 public/basis/ 与 wasm
+npm pack --dry-run --ignore-scripts --json   # 确认包内含 public/basis/ 4 文件（含 LICENSE）
 ```
 
 spike 实测结果（2026-11-09，临时页面跑完即删）：ETC1S `dgg_basecolor.ktx2` 512×256 → 524,288 B RGBA8、96,301 非黑像素；
 UASTC `Rib_N.ktx2` 32×32 → 4,096 B、1,024 非黑像素；两者 `createImageBitmap` 成功、console 零报错。
 
-## 七、对 lib 发布的影响
+## 七、对 npm 发布的影响（2026-11-09 起随包发布）
 
-**零影响**：`npm pack --dry-run` 实测发布清单（204 文件 / 353 KB）只有 `dist` + `package.json` + `README.md`，
-不含 `public/`、不含任何 wasm。`vite.lib.config.ts` 已设 `publicDir: false`、`package.json` 已设 `"files": ["dist"]`。
-新增 ~1.1 MB 只增大 git 仓库；因不是 npm import 而是运行时静态资源，**不需要加 external、也不改 `package.json`**。
+`package.json` 的 `files` 已精确包含 `public/basis`，实测 `npm pack --dry-run` 清单中的包内路径为
+`public/basis/basis_transcoder.js` / `.wasm` / `LICENSE` / `README.md`（4 文件）。宿主从 npm 安装后可直接 copy：
+
+```bash
+cp -r node_modules/we3d/public/basis <你的应用>/public/
+```
+
+- **对 lib 代码影响最小**：`dist/we3d.js` 体积基本不变（637.26 kB，+0.46 kB 配置代码）、`prepublishOnly` / 版本号不变；新增全局配置 API `configureRuntimeAssets({ basisDir })`（barrel 追加导出），变化主要在 npm 包文件清单与 tarball 体积。
+- `vite.lib.config.ts` 的 `publicDir: false` 仍生效：资源**不进 `dist/we3d.js`**，只是作为 npm 包内的独立文件分发。
+- 因不是 npm import 而是运行时静态资源，**不需要加 external**；只是 `files` 白名单增加这几项。
+- `LICENSE`（Apache-2.0）随包携带，复制时一并带走。
+- `exports` 只声明 `"."`，资源按**文件路径** copy，不能 `import 'we3d/public/...'`。
+- `public/models/gltf/base/texture/ktx2/` 的样本资产**不入包**（仅本仓库 / CI 用）。

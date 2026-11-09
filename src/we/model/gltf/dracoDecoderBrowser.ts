@@ -18,7 +18,15 @@
  * import { registerExtensionDependencyProvider } from '@we3d';
  * registerExtensionDependencyProvider('draco3d.decoder', myDecoderLoader);
  * ```
+ *
+ * 资源目录默认取自全局配置 `configureRuntimeAssets({ dracoDir })`（默认 `/draco/`），
+ * 变更后解码器单例缓存自动失效，按新目录重新懒加载。
  */
+import {
+    getRuntimeAssetsConfig,
+    getRuntimeAssetsVersion,
+} from '../../core/config/runtimeAssets';
+
 export type T_DracoDecoderModule = Record<string, unknown>;
 
 type T_DracoDecoderFactory = (options?: {
@@ -31,37 +39,44 @@ declare global {
     }
 }
 
-const DECODER_JS = '/draco/draco_decoder_gltf.js';
-const DECODER_DIR = '/draco/';
-
 let pending: Promise<T_DracoDecoderModule> | undefined;
+let pendingVersion = -1;
 
-function loadDecoderScript(): Promise<void> {
+function loadDecoderScript(dracoDir: string): Promise<void> {
+    const decoderJs = dracoDir + 'draco_decoder_gltf.js';
     if (typeof window === 'undefined' || typeof document === 'undefined') {
         return Promise.reject(new Error('createBrowserDracoDecoder 只能在浏览器环境调用'));
     }
     if (window.DracoDecoderModule) return Promise.resolve();
     return new Promise<void>((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = DECODER_JS;
+        script.src = decoderJs;
         script.async = true;
         script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`加载 Draco 解码器脚本失败：${DECODER_JS}`));
+        script.onerror = () => reject(new Error(`加载 Draco 解码器脚本失败：${decoderJs}`));
         document.head.appendChild(script);
     });
 }
 
 /** 返回可注入 `io.registerDependencies({'draco3d.decoder': ...})` 的解码器模块 */
 export function createBrowserDracoDecoder(): Promise<T_DracoDecoderModule> {
+    const dracoDir = getRuntimeAssetsConfig().dracoDir;
+    if (pendingVersion !== getRuntimeAssetsVersion()) {
+        pending = undefined;
+        pendingVersion = getRuntimeAssetsVersion();
+    }
     if (!pending) {
         pending = (async () => {
-            await loadDecoderScript();
+            await loadDecoderScript(dracoDir);
             const factory = window.DracoDecoderModule;
             if (!factory) {
-                throw new Error(`DracoDecoderModule 全局未定义，请确认 ${DECODER_JS} 已加载`);
+                throw new Error(`DracoDecoderModule 全局未定义，请确认 ${dracoDir} 下解码器脚本已加载`);
             }
-            return factory({ locateFile: (path: string) => DECODER_DIR + path });
-        })();
+            return factory({ locateFile: (path: string) => dracoDir + path });
+        })().catch((err) => {
+            pending = undefined; // 加载失败清缓存以便重试
+            throw err;
+        });
     }
     return pending;
 }
