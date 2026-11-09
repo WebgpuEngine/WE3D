@@ -20,7 +20,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:lib": "vite build --config vite.lib.config.ts",
+    "build:lib": "vite build --config vite.lib.config.ts && node scripts/build-draco-worker.mjs",
+    "build:draco-worker": "node scripts/build-draco-worker.mjs",
     "preview": "vite preview",
     "examples:generate": "node scripts/generate-examples-json.mjs",
     "e2e-index": "node scripts/generate-e2e-index.mjs",

@@ -11,6 +11,7 @@
 | 资源 | 默认 URL | 触发时机 |
 | --- | --- | --- |
 | Draco 解码器 | `/draco/draco_decoder_gltf.js`（`locateFile` 目录 `/draco/`） | 资产声明 `KHR_draco_mesh_compression` |
+| Draco 预解码 Worker | `/draco/draco-predecode-worker.js`（`dracoWorkerUrl`） | 资产声明 `KHR_draco_mesh_compression`（P3-1 Worker 化） |
 | Basis Universal transcoder | `/basis/basis_transcoder.js`（`locateFile` 目录 `/basis/`） | 资产含 `.ktx2` / `KHR_texture_basisu` |
 | IBL DFG LUT | `/IBL/brdfLut/dfg_lut_128.hdr` | `new IBL(...)` |
 
@@ -30,6 +31,10 @@ export interface IV_RuntimeAssetsConfig {
     basisDir?: string;
     /** IBL DFG LUT 资源 URL。默认 `/IBL/brdfLut/dfg_lut_128.hdr`。 */
     iblDfgLutUrl?: string;
+    /** Draco 预解码 Worker 脚本 URL。默认跟随 `dracoDir`（`dracoDir + 'draco-predecode-worker.js'`）。 */
+    dracoWorkerUrl?: string;
+    /** 是否启用 Draco Worker 预解码（默认 true；无 Worker 环境自动回退主线程）。 */
+    dracoWorkerEnabled?: boolean;
 }
 
 export function configureRuntimeAssets(next: IV_RuntimeAssetsConfig): void;
@@ -105,6 +110,9 @@ configureRuntimeAssets({ iblDfgLutUrl: '/static/dfg_lut_128.hdr' });
    注入同名 js，而是复用已有 glue、仅按新目录 `locateFile` 找 wasm。因此**建议在首次加载前完成配置**，
    避免跨目录混用 glue/wasm。
 6. **IBL 逐实例覆盖优先**：即使设置了全局 `iblDfgLutUrl`，单个 `IBL` 实例仍可用 `input.dfgLutUrl` 覆盖。
+7. **Draco Worker 预解码**：P3-1 起 Draco 资产默认走 Worker 预解码（`dracoWorkerEnabled: true`），Worker 脚本默认
+   `dracoDir + 'draco-predecode-worker.js'`（可单独用 `dracoWorkerUrl` 覆盖，未显式设置时自动跟随 `dracoDir`）。
+   无 Worker 环境（`typeof Worker === 'undefined'`）自动回退主线程解码，宿主无需手动降级。
 
 ## 七、与 npm 包发布的关系
 

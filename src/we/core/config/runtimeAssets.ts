@@ -24,12 +24,18 @@ export interface IV_RuntimeAssetsConfig {
     basisDir?: string;
     /** IBL DFG LUT 资源 URL。默认 `/IBL/brdfLut/dfg_lut_128.hdr`。 */
     iblDfgLutUrl?: string;
+    /** Draco 预解码 Worker 脚本 URL。默认跟随 `dracoDir`（`dracoDir + 'draco-predecode-worker.js'`）。 */
+    dracoWorkerUrl?: string;
+    /** 是否启用 Draco Worker 预解码（默认 true；无 Worker 环境自动回退主线程）。 */
+    dracoWorkerEnabled?: boolean;
 }
 
 const DEFAULT_RUNTIME_ASSETS: Required<IV_RuntimeAssetsConfig> = {
     dracoDir: '/draco/',
     basisDir: '/basis/',
     iblDfgLutUrl: '/IBL/brdfLut/dfg_lut_128.hdr',
+    dracoWorkerUrl: '/draco/draco-predecode-worker.js',
+    dracoWorkerEnabled: true,
 };
 
 let config: Required<IV_RuntimeAssetsConfig> = { ...DEFAULT_RUNTIME_ASSETS };
@@ -51,7 +57,12 @@ let version = 0;
  * ```
  */
 export function configureRuntimeAssets(next: IV_RuntimeAssetsConfig): void {
-    config = { ...DEFAULT_RUNTIME_ASSETS, ...next };
+    const merged = { ...DEFAULT_RUNTIME_ASSETS, ...next };
+    // dracoWorkerUrl 未显式指定时跟随 dracoDir，避免只改 dracoDir 时 Worker 脚本路径失配。
+    if (next.dracoWorkerUrl === undefined) {
+        merged.dracoWorkerUrl = merged.dracoDir + 'draco-predecode-worker.js';
+    }
+    config = merged;
     version += 1;
 }
 

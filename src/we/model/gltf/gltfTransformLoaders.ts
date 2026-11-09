@@ -44,6 +44,8 @@ import {
     resolveExtensionDependencies,
     type T_ExtensionDependencyProviders,
 } from './extensionDependencies';
+import { predecodeDracoViaWorker } from './dracoPredecode';
+import { getRuntimeAssetsConfig } from '../../core/config/runtimeAssets';
 
 /**
  * glTF 2.0 §3.6.2.2：normalized 整数 accessor 的缩放除数。
@@ -108,20 +110,64 @@ export class GltfDataAtTransform extends ModelDataLoader {
 
     async init(): Promise<Document> {
         const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
+        const t0 = performance.now();
         const jsonDoc = await io.readAsJSON(this.url);
-
-        // 通用扩展依赖：按 extensionsUsed/Required 自动检测 → 懒加载 → 注册（必须在 readJSON 前）
-        await resolveExtensionDependencies(io, jsonDoc.json, this.dependencyOverrides);
+        const fetchMs = performance.now() - t0;
 
         this.gltfJson = jsonDoc.json;
         this.jsonDoc = jsonDoc;
         this.io = io;
-        // readJSON 内部 _copyJSON 浅拷贝，不破坏 gltfJson
-        this.document = await io.readJSON(jsonDoc);
+
+        if (this.shouldUseDracoWorker(jsonDoc)) {
+            // Worker 整包预解码（transfer resources；原 jsonDoc.resources 被 detach，不再使用）
+            try {
+                const workerT0 = performance.now();
+                const decoded = await predecodeDracoViaWorker(jsonDoc);
+                const workerMs = performance.now() - workerT0;
+                const readT0 = performance.now();
+                this.document = await io.readJSON(decoded);
+                const readMs = performance.now() - readT0;
+                console.debug(
+                    `[GltfDataAtTransform] Draco Worker 预解码：fetch ${fetchMs.toFixed(1)}ms` +
+                        ` + worker ${workerMs.toFixed(1)}ms + readJSON ${readMs.toFixed(1)}ms` +
+                        ` = ${(performance.now() - t0).toFixed(1)}ms`,
+                );
+            } catch (error) {
+                // 回退主线程解码：重新 readAsJSON（原 resources 已 detach）
+                console.warn('[GltfDataAtTransform] Draco Worker 预解码失败，回退主线程解码：', error);
+                const fallbackT0 = performance.now();
+                const fallback = await io.readAsJSON(this.url);
+                this.gltfJson = fallback.json;
+                this.jsonDoc = fallback;
+                await resolveExtensionDependencies(io, fallback.json, this.dependencyOverrides);
+                this.document = await io.readJSON(fallback);
+                console.debug(
+                    `[GltfDataAtTransform] Draco 主线程回退解码：` +
+                        `${(performance.now() - fallbackT0).toFixed(1)}ms（含重新 fetch）`,
+                );
+            }
+        } else {
+            // 通用扩展依赖：按 extensionsUsed/Required 自动检测 → 懒加载 → 注册（必须在 readJSON 前）
+            await resolveExtensionDependencies(io, jsonDoc.json, this.dependencyOverrides);
+            // readJSON 内部 _copyJSON 浅拷贝，不破坏 gltfJson
+            this.document = await io.readJSON(jsonDoc);
+        }
+
         this.root = this.document.getRoot();
         this.accessors = this.root.listAccessors();
         this.textures = this.root.listTextures();
         return this.document;
+    }
+
+    /** 是否走 Draco Worker 预解码路径：仅 Draco 资产 + Worker 可用 + 未被禁用 */
+    private shouldUseDracoWorker(jsonDoc: JSONDocument): boolean {
+        if (getRuntimeAssetsConfig().dracoWorkerEnabled === false) return false;
+        if (typeof Worker === 'undefined') return false;
+        const json = jsonDoc.json;
+        return (
+            json.extensionsUsed?.includes('KHR_draco_mesh_compression') === true ||
+            json.extensionsRequired?.includes('KHR_draco_mesh_compression') === true
+        );
     }
 
     /** 暴露 Document / 原始 JSON 给测试与后续扩展使用 */

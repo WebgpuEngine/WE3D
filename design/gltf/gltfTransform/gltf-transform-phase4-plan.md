@@ -282,7 +282,7 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | 2 | P1-2 normalized 是否立项 | **立项** | §4.5 进入执行序列；会改渲染，必须单独 `test:baseline` + `ci`，新增 `points_normalized.html` |
 | 3 | 通用机制演进 | **E1**：并列新增 `textureTranscoders.ts`，`extensionDependencies.ts` 保持不动 | §五 E2 作废；P2-2 按 E1 落地，并在 `design/gltf/gltfTransform/gltf-extension-dependency.md` 补「非 IO 依赖能力如何接入」一节 |
 | 4 | P3-2 定位 | **按推荐**：`@gltf-transform/functions` 为构建期离线流水线，`writeBinary` 先评估再决定是否对外 | §4.10 推荐方案生效，不进运行时 lib |
-| 5 | P3-1 Worker 路线 | **C**：预热解码器 + 分帧/拆批 + 耗时埋点；不投入路线 A 的 spike，B 不采纳 | §4.9 只执行 C；D 保留为备选说明；不改渲染、不需要基线 |
+| 5 | P3-1 Worker 路线 | **A（已实施）**：整包预解码 Worker 化，替换原路线 C 决策（2026-11-09 方案修订，见 §10.12） | §4.9 执行路线 A；B 不采纳、C 已作废、D 保留为备选说明；不改渲染、不需要基线 |
 | 6 | P0-3 golden 快照 | **维持**（不补） | 与决策 1 一致，`tests/fixtures/gltf-parity/` 不再生成 |
 | 7 | D1–D8「不 commit」口径 | **解除**（用户原文「接触」，按语境取「解除」） | **§一「明确不在本阶段」中 D1–D8 一条作废**；P4-1 进入执行序列，仍须单独立项、逐项 commit、改渲染项单独基线 |
 | 8 | 新样本资产入库 | **是** | WebP / meshopt / KTX2 样本一律入库 `public/models/gltf/base/`，保证 CI 可复现；不触碰 `.gitignore:28` 的未入库大模型 |
@@ -314,7 +314,7 @@ P4-1 D1–D8（需先解除口径，另立任务）
         ↓
 小步 5：P2-2 KTX2 / Basis（E1 新增 textureTranscoders.ts；风险最高，放后面）
         ↓
-小步 6：P3-1 路线 C（解码器预热 + 分帧 + 埋点）
+小步 6：P3-1 路线 A（Draco Worker 整包预解码，已实施并验证 H1/H2/H3）
         ↓
 小步 7：P3-2 离线优化流水线（可与小步 2/3/5 的样本生成协同）
         ↓
@@ -330,7 +330,8 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | 3 · P1-2（方案 A） | ✅ 完成（已提交 `bca415c`） | `ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；全量 `test:baseline` 78/78；`npm run ci` **78/78** 全绿。两个 meshopt 页面 shader warning 252 → **0**，截图由纯黑变为正常渲染，见 §10.10 |
 | 4 · P1-3 | ✅ 完成（已提交 `6019038`） | 技术验证先行（§10.11）；`ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）；全量 `test:baseline` **79/79**、新增 1 张基线；`npm run ci` **79/79** 全绿 |
 | 5 · P2-2 | ✅ **完成，未提交** | 决策与技术验证见 `p2-2-ktx2-plan.md`（§7.1 / §九 / §十二）。官方 `v2_50` transcoder + E1 并列 `textureTranscoders.ts` + `getImage()` 按 `image/ktx2` 分流；ETC1S + UASTC 两个官方样本与 e2e。`ci:no-e2e` 全绿（92 单测 / 50 browser / exports 224 / build:lib）；`test:baseline` **81/81** 新增 2 张基线；`npm run ci` **81/81**；软件版 1 worker **81/81**（2 workers 首轮 8 个既有 PBR 用例超时波动，单 worker 全绿） |
-| 6 ~ 8 | 未开始 | — |
+| 6 · P3-1 | ✅ **完成，未提交** | 路线 A · Draco Worker 整包预解码（替代原路线 C），技术方案见 `p3-1-draco-worker-plan.md`、执行记录见 §10.12。H1/H2/H3 全部验证通过，接入 `gltfTransformLoaders.init()`，新增 `dracoWorkerUrl` / `dracoWorkerEnabled` 运行时配置。`ci:no-e2e` 全绿（92 单测 / 52 browser / exports 226 / build:lib）；`npm run test:e2e` **81/81** 全绿（Draco 用例渲染等价、基线零改动） |
+| 7 ~ 8 | 未开始 | — |
 
 ### 10.6 小步 1 执行记录（2026-11-06，未提交）
 
@@ -431,3 +432,23 @@ P4-1 D1–D8（需先解除口径，另立任务）
 **验收（强制）**：`npm run e2e-index` → 全量 GPU 硬件版 `npm run test:baseline`（2 workers）**79/79**，新增基线 `gltf-texture-webp.png`（10043 B，checker + 白十字渲染正确），**其它已跟踪基线零改动** → `npm run ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）→ `npm run ci` **79/79 全绿**。资源来自 `public/`，断网可用。
 
 **边界**：`EXT_texture_webp` **不需要任何解码器 provider**（它与 `KHR_draco_mesh_compression` / `EXT_meshopt_compression` 不同，无 `readDependencies`），白名单放行 `image/webp` 后由浏览器解码即可。KTX2 / AVIF 仍明确报错，留待 P2-2 转码支持。
+
+### 10.12 P3-1 · Draco Worker 化（路线 A，2026-11-09，未提交）
+
+**路线修订**：原决策 5 采用路线 C（预热 + 分帧 + 埋点，不 Worker）。本次依据技术方案 `design/gltf/gltfTransform/p3-1-draco-worker-plan.md` 改为实施**路线 A（Worker 整包预解码）**，B 不采纳、C 作废、D 保留为备选说明。不改渲染、不需要基线。
+
+**技术路线（路线 A）**：主线程 `readAsJSON`（只 fetch、不解码）后把 `{ json, resources }` 整包 transfer 给 classic Worker，Worker 内 `importScripts(dracoDir + 'draco_decoder_gltf.js')` 加载浏览器版 Draco glue → `readJSON` 触发 `KHRDracoMeshCompression.preread` 解码 → `dispose()` 去 Draco 扩展 → `writeJSON` 回传（transfer 各 `Uint8Array.buffer`）；失败回退主线程解码。规避 `Extension.preread()` 同步约束（`@gltf-transform/core` 的 `preread` 是同步方法，跨线程无法同步返回 decoder）。
+
+**代码落地**
+
+1. 新增 `src/we/model/gltf/dracoPredecode.worker.ts`：Worker 侧 `predecode()`（`importScripts` → `DracoDecoderModule()` → `new WebIO().registerExtensions(ALL_EXTENSIONS)` → `registerDependencies({ 'draco3d.decoder': module })` → `readJSON` → `listExtensionsUsed()` 中 `KHRDracoMeshCompression` 实例 `dispose()` → `writeJSON` 回传并 transfer resources）。
+2. 新增 `scripts/build-draco-worker.mjs`：esbuild 单独内联 `@gltf-transform/*` 打 IIFE（`bundle:true, format:'iife', platform:'browser', external:['node:*']`），Draco glue/wasm 不内联，产物 `public/draco/draco-predecode-worker.js`（163.8 KB）。因浏览器版 Draco glue 为纯 IIFE、`@gltf-transform/*` 为 ESM，不能复用 `vite.lib.config.ts` 的 external 规则。
+3. 新增 `src/we/model/gltf/dracoPredecode.ts`：主线程 `predecodeDracoViaWorker(jsonDoc)`，`new Worker(dracoWorkerUrl)` + transfer resources + `finally worker.terminate()`。
+4. `gltfTransformLoaders.ts` `init()` 分叉：`shouldUseDracoWorker(jsonDoc)`（`dracoWorkerEnabled !== false`、`Worker` 可用、`extensionsUsed/Required` 含 `KHR_draco_mesh_compression`）为真则走 Worker 预解码，失败 `console.warn` 并重新 `readAsJSON` 后回退主线程路径；否则原主线程路径。
+5. `runtimeAssets.ts` 新增 `dracoWorkerUrl`（默认 `/draco/draco-predecode-worker.js`，未显式设 URL 时跟随 `dracoDir`）与 `dracoWorkerEnabled`（默认 `true`）；`configureRuntimeAssets` 在未提供 `dracoWorkerUrl` 时自动拼 `merged.dracoDir + 'draco-predecode-worker.js'`。
+6. `package.json`：`build:lib` 追加 `&& node scripts/build-draco-worker.mjs`，新增 `build:draco-worker` 脚本。
+7. 测试：新增 `dracoPredecode.spike.browser.test.ts`（H3 spike：主线程解码基准 vs Worker 预解码，断言 accessor 逐元素一致、去 Draco 后不含 `KHR_draco_mesh_compression`）、`dracoWorker.spike.browser.test.ts`（修复 error 分支返回类型）。
+
+**验证与门禁（全绿）**：`npm run ci:no-e2e` 全绿——`lint` / `typecheck` 通过；`test:run` **12 files / 92 tests**；`test:browser` **5 files / 52 tests**（含 `dracoWorker.spike` / `dracoDecoder.spike` / `dracoPredecode.spike` / `gltfTransformContract`）；`check:exports` 226 barrel 符号通过；`build:lib` 生成 `dist/we3d.js`（639.25 kB / gzip 138.46 kB）与 `public/draco/draco-predecode-worker.js`（163.8 KB）。`npm run test:e2e`（GPU 硬件版）**81/81 全绿**（`box_draco` 等 Draco 用例走 Worker 路径渲染等价、既有基线零改动）。耗时埋点已生效，实测 `Box/glTF-Draco` 单资产 Worker 预解码链路：`fetch 2.1ms + worker 37.6ms + readJSON 0.3ms ≈ 40ms`。
+
+**状态**：代码、文档与门禁完成，未提交（沿用「每步完成后报告门禁结果、由用户决定是否提交」的交互模式）。
