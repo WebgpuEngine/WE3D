@@ -3,7 +3,7 @@
 > 状态：✅ **8 项决策已全部收敛，按「小步推进 + 每步严格测试」执行中**（2026-11-06 用户确认；决策结果与覆盖关系见 §十）。P0-1 / P0-2 由用户判定已解决，P0-3 维持不改。
 > 日期：2026-11-06
 > 基线：`HEAD 9e4e798` —— Phase 0A / 0B / 1 / 2 / 3 / 3B 全部完成，`npm run ci` 76/76 全绿，工作区干净。
-> 上位文档：`design/engineering/gltf-transform-migration.md` §七 Phase 4（:557-560）、§六 R3 / R6 / R7 / R10（:492,495,496,499）、§八 决策 3 / 4 / 5；`design/engineering/gltf-extension-dependency.md`。
+> 上位文档：`design/gltf/gltfTransform/gltf-transform-migration.md` §七 Phase 4（:557-560）、§六 R3 / R6 / R7 / R10（:492,495,496,499）、§八 决策 3 / 4 / 5；`design/gltf/gltfTransform/gltf-extension-dependency.md`。
 > 性质：本文件是**方案**，不是执行记录；每一项都需单独立项、单独 commit。
 
 ---
@@ -14,7 +14,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 
 **原则**
 
-1. **一项一 commit**：每项独立立项、独立提交，便于归因与回滚（`gltf-transform-migration.md` §八 决策 4 的「不与迁移混做」精神延伸）。
+1. **一项一 commit**：每项独立立项、独立提交，便于归因与回滚（`design/gltf/gltfTransform/gltf-transform-migration.md` §八 决策 4 的「不与迁移混做」精神延伸）。
 2. **渲染结果变更多必走基线**：按 `AGENTS.md` §三.1，改动涉及渲染 / 材质 / 几何 / 相机 / 着色时，先 `npm run test:baseline`（GPU 硬件版），再 `npm run ci`，**基线与代码同一次提交**。新增 e2e 用例后必须 `npm run e2e-index`。
 3. **公共 API 走 barrel**：新增对外能力在 `src/we/index.ts` 显式追加并跑 `npm run check:exports`（`AGENTS.md` §一.4）；e2e 用例一律从 `@we3d` 导入。
 4. **lib 边界不变**：解码器 / 转码器本体与 wasm 放 `public/`，由宿主提供，`vite.lib.config.ts` 的 `publicDir:false` 保证不进 `dist/`；新增 npm 依赖须同步 `external` 规则（当前已有 `/^@gltf-transform\//`，覆盖未来的 `functions`）。
@@ -61,7 +61,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 | P3-2 | `@gltf-transform/functions` + `writeBinary` 导出 | §七:560 | 否 | 是 | P3 |
 | P4-1 | D1–D8 缺陷修复 | R9 / 决策 4 | 部分是 | 否 | P4（另立项） |
 
-> 两套「D 编号」不要混用：缺陷 D1–D8 来自 `03-gltf模块深度分析.md:330-477`；Gate 0 对比维度 D1–D8 来自 `gltf-transform-migration.md:245-256`，同名不同义。
+> 两套「D 编号」不要混用：缺陷 D1–D8 来自 `03-gltf模块深度分析.md:330-477`；Gate 0 对比维度 D1–D8 来自 `design/gltf/gltfTransform/gltf-transform-migration.md:245-256`，同名不同义。
 
 ---
 
@@ -70,7 +70,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 ### 4.1 P0-1 · fork 物理目录清理（人工动作）
 
 - **现状**：10 个 git 跟踪文件已在 `9e4e798` 中删除，`.gitignore:29-31` 已忽略两个目录；本机 `src/@loaders.gl/` 仍有约 209 个未跟踪 dist 产物（工作区安全删除机制拒绝目录删除）。
-- **动作**：由用户手动 `Remove-Item -Recurse -Force 'src/@loaders.gl','public/@loaders.gl'`；完成后删除 `.gitignore` 那两行、`pending-work.md` §4 状态行去掉「唯一遗留」、主方案 §七 Phase 3 执行结果同步。
+- **动作**：由用户手动 `Remove-Item -Recurse -Force 'src/@loaders.gl','public/@loaders.gl'`；完成后删除 `.gitignore` 那两行、`design/engineering/pending-work.md` §4 状态行去掉「唯一遗留」、主方案 §七 Phase 3 执行结果同步。
 - **验收**：`git status` 干净；`npm run ci:no-e2e` 全绿；`src/we` 内 `@loaders.gl` import 仍为 0。
 
 ### 4.2 P0-2 · e2e 并发稳定性
@@ -122,15 +122,16 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 
 ### 4.7 P2-1 · `meshopt.decoder` provider（通用机制首个外部扩展验证）
 
-- **现状**：`extensionDependencies.ts` 的 `FALLBACK_DEPENDENCY_KEYS` 已含 `EXT_meshopt_compression → ['meshopt.decoder']`，`getExtensionDependencyKeys()` 能自动发现；但 `DEFAULT_PROVIDERS` 只有 Draco，缺 provider 时会明确抛错（`extensionDependencies.test.ts:74` 有断言）。`package.json` 无 `meshoptimizer`，仓库无 meshopt 压缩资产。
+- **现状（2026-11-06 立项时快照，现已完成，以本节末「执行结果」与 §10.7 为准）**：`extensionDependencies.ts` 的 `FALLBACK_DEPENDENCY_KEYS` 已含 `EXT_meshopt_compression → ['meshopt.decoder']`，`getExtensionDependencyKeys()` 能自动发现；但 `DEFAULT_PROVIDERS` 只有 Draco，缺 provider 时会明确抛错（`extensionDependencies.test.ts:74` 有断言）。`package.json` 无 `meshoptimizer`，仓库无 meshopt 压缩资产。
 - **方案**：
   1. 新增 `dependencies: meshoptimizer`（版本需 `npm view` 实测，与 `@gltf-transform@4.5.1` 兼容）；`vite.lib.config.ts` external 追加 `meshoptimizer`。
   2. 二选一（**决策点 §八.3**）：
      - **内置 provider**：在 `DEFAULT_PROVIDERS` 加 `'meshopt.decoder': async () => { const {MeshoptDecoder} = await import('meshoptimizer'); await MeshoptDecoder.ready; return MeshoptDecoder; }` —— 开箱即用，但 lib 会带动态 import；
-     - **宿主注册**：保持内置表只有 Draco，由宿主调 `registerExtensionDependencyProvider('meshopt.decoder', loader)` —— 符合 `gltf-extension-dependency.md:63-67` 现有示例，lib 零新增依赖。
+     - **宿主注册**：保持内置表只有 Draco，由宿主调 `registerExtensionDependencyProvider('meshopt.decoder', loader)` —— 符合 `design/gltf/gltfTransform/gltf-extension-dependency.md:63-67` 现有示例，lib 零新增依赖。
   3. 造 1 个 `EXT_meshopt_compression` 样本入库，新增 e2e 用例 + 基线；`extensionDependencies.test.ts` 增加「注册后 resolve 成功」的回归。
 - **验收**：`npm run ci:no-e2e` + `test:baseline` + `npm run ci` 全绿；`check:exports` / `build:lib` 通过。
 - **价值**：这是通用自动解析机制落地后**第一个真正的新扩展接入验证**，可验证「不动 `init()`、只注册 provider」的设计承诺，建议优先于 KTX2 做。
+- **执行结果（2026-11-06 小步 2，已提交 `bca415c`）**：✅ **P2-1 完成**。按决策 §八.3 选 **E1 内置 provider**：`DEFAULT_PROVIDERS` 增加 `'meshopt.decoder': createBrowserMeshoptDecoder`（新增 `meshoptDecoderBrowser.ts`），宿主**不需要也不应该单独注册 provider**；`init()` 未改动，资产声明 `EXT_meshopt_compression` 即自动懒加载。验证三层齐备，**无剩余验证缺口**：① 单测 `extensionDependencies.test.ts` 11 项；② 契约测试两个 meshopt 资产走真实 `init()` 解码并断言 accessor 非全零；③ 两个 e2e 视觉用例 + GPU 基线。依赖 `meshoptimizer@^1.3.0`（external 已追加）、样本 `Box.gltf`+`Box0.bin` 已入库、barrel 已导出 `createBrowserMeshoptDecoder`。视觉回归在方案 A（P1-2）后打通，属 P1-2 交付物，非 P2-1 缺口。详见 §10.7。
 
 ### 4.8 P2-2 · KTX2 / `KHR_texture_basisu` 转码
 
@@ -191,7 +192,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 | **E1. 并列新注册表（推荐）** | 保留 `extensionDependencies.ts` 不动；新增 `textureTranscoders.ts`：`registerTextureTranscoder(mime: string, loader)`，`getImage()` 按 MIME 分流；Worker 化单独在 `dracoDecoderBrowser.ts` 内闭环 | 职责清晰、改动面小、不破坏已验证的通用依赖机制；代价是「通用模式」变成两个注册点 |
 | **E2. 泛化为统一 provider** | 把模块升级为 `extensionProviders.ts`，按 `dependencyKey` / `mimeType` / `capability` 三类键统一注册，公共 API 改名为 `registerExtensionProvider(...)` | 概念最统一，但要改动已提交并验证的公共 API（`createBrowserDracoDecoder` 之外的 3 个导出）、`check:exports`、单测与设计文档，回归面大 |
 
-建议 **E1**：先在 P2-1 用现有机制验证「零改动接入新扩展」，P2-2 时再新增纹理转码注册表，并在 `gltf-extension-dependency.md` 补一节「非 IO 依赖的扩展能力如何接入」，把两者关系讲清楚。若届时确实出现第三类能力，再评估 E2 统一。
+建议 **E1**：先在 P2-1 用现有机制验证「零改动接入新扩展」，P2-2 时再新增纹理转码注册表，并在 `design/gltf/gltfTransform/gltf-extension-dependency.md` 补一节「非 IO 依赖的扩展能力如何接入」，把两者关系讲清楚。若届时确实出现第三类能力，再评估 E2 统一。
 
 ---
 
@@ -219,11 +220,11 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 
 | 类别 | 项 | 用于 | 备注 |
 | --- | --- | --- | --- |
-| 依赖 | `meshoptimizer`（版本实测） | P2-1 | 需追加 external |
+| 依赖 | `meshoptimizer` | ~~P2-1~~ ✅ 已解决 | `^1.3.0` 已入 `dependencies`，`vite.lib.config.ts` external 已追加（`bca415c`） |
 | 依赖 | `@gltf-transform/functions@^4.5.1` | P3-2 | external 已覆盖 |
 | 资源 | `basis_transcoder.js` + `.wasm` → `public/basis/` | P2-2 | 授权 / 版本需核实 |
-| 资产 | `EXT_texture_webp` 样本 ×1 | P1-3 | 建议自造 |
-| 资产 | `EXT_meshopt_compression` 样本 ×1 | P2-1 | 可用 `@gltf-transform/functions` 离线生成 |
+| 资产 | `EXT_texture_webp` 样本 ×1 | ~~P1-3~~ ✅ 已解决 | 自造 1680 B，见 §10.11（`6019038`） |
+| 资产 | `EXT_meshopt_compression` 样本 ×1 | ~~P2-1~~ ✅ 已解决 | `Box.gltf` + `Box0.bin` 已入库（`bca415c`）；另附 Khronos `MeshoptCubeTest` |
 | 资产 | KTX2 样本（ETC1S / UASTC） | P2-2 | 需 `basisu` / `toktx` 工具链 |
 | 工具 | 解码耗时埋点 | P3-1 路线 C | 可用 `performance.now()` + `console.debug` |
 | 人工 | fork 物理目录删除 | P0-1 | 工作区安全删除机制限制 |
@@ -278,7 +279,7 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | --- | --- | --- | --- |
 | 1 | 范围与排序 | **P0-1 / P0-2 已解决**；**P0-3 维持不改**；**其他全部小步推进，因存在不确定因素，每次都需严格测试** | §三优先级表保留，执行改为「一项一小步、每步独立门禁」；P0-1 / P0-2 / P0-3 移出执行序列；P0-3「维持」即确认 Phase 3 偏差（契约测试 + e2e 基线）为最终形态 |
 | 2 | P1-2 normalized 是否立项 | **立项** | §4.5 进入执行序列；会改渲染，必须单独 `test:baseline` + `ci`，新增 `points_normalized.html` |
-| 3 | 通用机制演进 | **E1**：并列新增 `textureTranscoders.ts`，`extensionDependencies.ts` 保持不动 | §五 E2 作废；P2-2 按 E1 落地，并在 `gltf-extension-dependency.md` 补「非 IO 依赖能力如何接入」一节 |
+| 3 | 通用机制演进 | **E1**：并列新增 `textureTranscoders.ts`，`extensionDependencies.ts` 保持不动 | §五 E2 作废；P2-2 按 E1 落地，并在 `design/gltf/gltfTransform/gltf-extension-dependency.md` 补「非 IO 依赖能力如何接入」一节 |
 | 4 | P3-2 定位 | **按推荐**：`@gltf-transform/functions` 为构建期离线流水线，`writeBinary` 先评估再决定是否对外 | §4.10 推荐方案生效，不进运行时 lib |
 | 5 | P3-1 Worker 路线 | **C**：预热解码器 + 分帧/拆批 + 耗时埋点；不投入路线 A 的 spike，B 不采纳 | §4.9 只执行 C；D 保留为备选说明；不改渲染、不需要基线 |
 | 6 | P0-3 golden 快照 | **维持**（不补） | 与决策 1 一致，`tests/fixtures/gltf-parity/` 不再生成 |
@@ -324,7 +325,7 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | 小步 | 状态 | 门禁 |
 | --- | --- | --- |
 | 1 · P1-1 | ✅ 完成（已提交 `74a44b5`） | `ci:no-e2e` 全绿（71 单测 / 42 browser / exports 206 / build:lib）；全量 e2e 2 workers **76/76**；8 workers `ci` 偶发波动见 §10.6 |
-| 2 · P2-1 | ✅ 完成（已提交 `bca415c`） | `ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿（官方样本入库与 e2e 重写后）；视觉基线已由方案 A 打通，见 §10.10 |
+| 2 · P2-1 | ✅ **完成，无剩余 provider / 验证缺口**（已提交 `bca415c`） | 内置 `meshopt.decoder` provider（宿主零注册）；单测 11 项 + 契约真实解码 + 2 个 e2e 视觉用例与基线。`ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿（官方样本入库与 e2e 重写后）；视觉基线已由方案 A 打通，见 §10.7 / §10.10 |
 | 3 · P1-2（方案 A） | ✅ 完成（已提交 `bca415c`） | `ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；全量 `test:baseline` 78/78；`npm run ci` **78/78** 全绿。两个 meshopt 页面 shader warning 252 → **0**，截图由纯黑变为正常渲染，见 §10.10 |
 | 4 · P1-3 | ✅ 完成（本次提交） | 技术验证先行（§10.11）；`ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）；全量 `test:baseline` **79/79**、新增 1 张基线；`npm run ci` **79/79** 全绿 |
 | 5 ~ 8 | 未开始 | — |
@@ -337,15 +338,15 @@ P4-1 D1–D8（需先解除口径，另立任务）
 - **e2e 波动**：8 workers `npm run ci` 连续两轮分别有 4 / 2 个不同既有用例失败（`shadow/PBR_dirlight_1` 等像素波动 0.14、`gltf/texture_buffer_view`、30s 超时）；2 workers 全量 **76/76 全绿**。本步改动不涉及渲染（动画取值路径等价 + 编译期类型断言），判定为并发资源竞争。用户已判定 P0-2 解决、未改配置；§4.2 的三条兜底（retries / workers / timeout）**未主动实施**，需用户确认后再动。
 - **状态**：代码完成、两道门禁与全量 e2e 验证通过，**已提交 `74a44b5` 并推送**。
 
-### 10.7 小步 2 执行记录（2026-11-06，未提交）
+### 10.7 小步 2 = P2-1 执行记录（2026-11-06，已提交 `bca415c`）
 
 - **依赖**：`meshoptimizer@^1.3.0`（`dependencies`，`vite.lib.config.ts` external 追加）、`@gltf-transform/functions@^4.5.1`（`devDependencies`，仅离线造样本、为 P3-2 铺路）。
 - **E1 落地**：`extensionDependencies.ts` 的结构与公共 API **未泛化重构**；只在 `DEFAULT_PROVIDERS` 增加 `'meshopt.decoder': createBrowserMeshoptDecoder`（新增 `meshoptDecoderBrowser.ts`，动态 import `meshoptimizer` + `await MeshoptDecoder.ready`）。`EXT_meshopt_compression` 由既有 `readDependencies` 自动发现，资产声明即自动加载，**宿主零注入** —— 验证了「不动 `init()`、不加 per-ts 注入」的设计承诺。
 - **接口微调整**：`unregisterExtensionDependencyProvider(key, restoreDefault = true)` 新增可选参数，默认语义不变；传 `false` 可彻底移除（供单测制造缺 provider 场景 / 显式禁用内置能力）。`src/we/index.ts` 追加 `createBrowserMeshoptDecoder`（barrel 207 符号，`check:exports` 通过）。
 - **样本资产（决策 8 入库）**：用官方 `meshopt()` transform 从 `Box/glTF/Box.gltf` 生成 `public/models/gltf/base/meshopt/Box.gltf` + `Box0.bin`（3038 / 244 B），`extensionsUsed/Required = EXT_meshopt_compression + KHR_mesh_quantization`（两者均在 `ALL_EXTENSIONS` 中）。一次性生成脚本已删除。
 - **验证载体**：契约测试资产矩阵 +1（38 项，断言自动发现 `meshopt.decoder` 且解码后 accessor 非全零）；新增 `e2e-cases/gltf/box_meshopt.html/.ts`（从 `@we3d` 导入、无任何宿主注册代码），`e2e-index` 刷新到 14 目录 / 76 用例；GPU 硬件版产出 `gltf-box-meshopt.png`（2418 B）。
-- **门禁**：`npm run ci:no-e2e` 全绿（71 单测 / 43 browser / exports 207 / build:lib）；`npm run ci` **77/77 全绿**（本次 8 workers 未出现并发波动）。基线与代码同批、**未提交**。
-- **状态**：代码完成、两道门禁全绿；等用户确认后按「一项一 commit」提交。
+- **门禁**：`npm run ci:no-e2e` 全绿（71 单测 / 43 browser / exports 207 / build:lib）；`npm run ci` **77/77 全绿**（本次 8 workers 未出现并发波动）。基线与代码同批提交。
+- **状态（P2-1 最终结论）**：✅ **完成**，已由 `bca415c` 提交并推送。内置 provider 就绪，**无需单独 provider / 宿主注册**；单测 11 项 + 契约测试真实解码 + 两个 e2e 视觉用例与 GPU 基线，**无剩余验证缺口**。后续 `78/78`（方案 A 后）、`79/79`（P1-3 后）的 `npm run ci` 持续全绿，验证其长期稳定。
 
 ### 10.8 官方 meshopt 样本入库与 e2e 重写（2026-11-06，未提交）
 
@@ -402,7 +403,7 @@ P4-1 D1–D8（需先解除口径，另立任务）
 
 **结论**：方案 A **解决了 meshopt 的问题**，用户设定的条件满足；本轮及小步 2 的改动具有意义。已由 `bca415c` 提交并推送，代码与两张基线在同一次提交中。
 
-> 说明：§10.6 ~ §10.10 各小节标题 / 正文中出现的「未提交」是 **2026-11-06 记录当时**的状态；小步 1 已于 `74a44b5` 提交，小步 2 / 官方样本 / 方案 A 已统一由 `bca415c` 提交。以 §10 进度表的状态为准。
+> 说明：§10.6 / §10.8 / §10.9 / §10.10 各小节标题或正文中残留的「未提交」是 **2026-11-06 记录当时**的状态；小步 1 已于 `74a44b5` 提交，小步 2（P2-1）/ 官方样本 / 方案 A 已统一由 `bca415c` 提交，§10.7 已同步为完成态。以 §10 进度表的状态为准。
 
 ### 10.11 P1-3 · `EXTTextureWebP` 显式支持（2026-11-09，本次提交）
 

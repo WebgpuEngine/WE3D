@@ -4,7 +4,7 @@
  * - 现在不需要宿主在 ts 里人工注入：`GltfDataAtTransform.init()` 会按资产的
  *   `extensionsUsed` / `extensionsRequired` 自动检测 `KHR_draco_mesh_compression`，
  *   经 `resolveExtensionDependencies()` 懒加载本工厂并注册 `'draco3d.decoder'`。
- *   见 `design/engineering/gltf-extension-dependency.md`。
+ *   见 `design/gltf/gltfTransform/gltf-extension-dependency.md`。
  * - 置于 `src/we/model/gltf/` 并从 `src/we/index.ts` 导出：宿主可从 `@we3d` 直接引用，
  *   用于自定义覆盖或诊断。
  * - lib 只提供「加载解码器脚本」的 JS 逻辑，**不打包解码器本体 / wasm**：

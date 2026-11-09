@@ -2,7 +2,7 @@
 
 > 状态：✅ 设计已定、已实现（2026-11-06 用户决策）
 > 日期：2026-11-06
-> 关联：`design/engineering/gltf-transform-migration.md` §3.3 / §五 / §八 决策 2、`AGENTS.md` §一.4
+> 关联：`design/gltf/gltfTransform/gltf-transform-migration.md` §3.3 / §五 / §八 决策 2、`AGENTS.md` §一.4
 > 落地文件：`src/we/model/gltf/extensionDependencies.ts`、`src/we/model/gltf/dracoDecoderBrowser.ts`
 
 ---
@@ -58,7 +58,9 @@ createGLTFModel(input)
 | `I_Model.dracoDecoder` | `BaseModel.ts` | **保留**为简写覆盖，等价于 `{'draco3d.decoder': fn}`；正常用法不再需要 |
 
 ```ts
-// 后期接入 meshopt：只注册一次，init() 无需改动
+// 自定义 / 覆盖 provider 示例（meshopt 已内置，正常用法无需这段代码）。
+// P2-1 起 meshopt.decoder 由 DEFAULT_PROVIDERS 自动提供，宿主零注册；
+// 仅当要替换为自有解码实现、或接入新的自定义扩展时才需要注册。
 import { registerExtensionDependencyProvider } from '@we3d';
 registerExtensionDependencyProvider('meshopt.decoder', async () => {
     const { MeshoptDecoder } = await import('meshoptimizer');
@@ -76,7 +78,7 @@ registerExtensionDependencyProvider('meshopt.decoder', async () => {
 | `KHR_texture_basisu` | ——（官方只透传 KTX2 字节，不做转码） | 需 Basis Universal transcoder 做像素解码，不属于 `registerDependencies` 范畴 | Phase 4 排期（§六 R6） |
 | 自定义 / 未来扩展 | 自定义 key | `registerExtensionDependencyProvider(key, loader)` | 支持 |
 
-接入新扩展只需两步：确定 `readDependencies`（自动发现会拿到）→ 注册 provider。不需要改 `init()`、不需要改每个示例页。
+Draco / meshopt 已内置（`DEFAULT_PROVIDERS`），资产声明扩展即自动懒加载，**宿主零注册、不需要改 `init()`、不需要改每个示例页**。接入自定义 / 未来扩展只需两步：确定 `readDependencies`（自动发现会拿到）→ 用 `registerExtensionDependencyProvider()` 注册 provider。
 
 ## 六、影响面
 

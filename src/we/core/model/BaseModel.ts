@@ -25,7 +25,7 @@ export interface I_Model extends I_Update {
      * glTF 扩展运行时依赖的 per-model 覆盖（通用）。
      * 默认无需传入：init() 会按资产的 extensionsUsed/Required 自动检测并懒加载。
      * key 为 glTF-Transform dependency key，如 'draco3d.decoder' / 'meshopt.decoder'。
-     * 见 design/engineering/gltf-extension-dependency.md。
+     * 见 design/gltf/gltfTransform/gltf-extension-dependency.md。
      */
     extensionDependencies?: T_ExtensionDependencyProviders;
     /**

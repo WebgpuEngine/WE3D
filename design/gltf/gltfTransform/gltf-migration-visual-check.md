@@ -2,7 +2,7 @@
 
 > 状态：✅ **人工 A/B 视觉核对通过，默认解析层已切到 `'transform'`**（2026-11-06 用户确认无未归因可见差异；Gate 0 28/28、D6 7/7、R8 9/9、`ci:no-e2e` 全绿）。表 A / B 的「结果 / 日期 / 验证人」未逐格填写，以用户整体结论为准
 > 日期：2026-11-06
-> 关联：`design/engineering/gltf-transform-migration.md` §3.7（资产清单）、§七 Phase 0B / Phase 2（本表用途与执行时机）
+> 关联：`design/gltf/gltfTransform/gltf-transform-migration.md` §3.7（资产清单）、§七 Phase 0B / Phase 2（本表用途与执行时机）
 > 性质：第 2 类 A 验证「迁移期人工视觉」的唯一记录载体；截图二进制**不提交**，本表只留结论。
 
 ---
@@ -118,7 +118,7 @@
 
 1. `npm run dev`，从 `examples/model/gltf/index.html` 目录页进入表 A / B 的「对应示例页」，逐项打开。
 2. **Phase 3 起只有新解析层**：`gltf.ts` 直接构造 `GltfDataAtTransform`，`input.loader` 双轨开关已随旧 loader 一起移除；示例页只需普通的 `createGLTFModel({ scene, url })`，回归以 `e2e-cases/gltf/` 的 GPU 截图基线为准。
-3. **Draco 页无需任何注入**：`base/mesh/box.ts`、`base/draco/box.ts`、`base/draco/LittlestTokyo.ts` 现在都只是普通的 `createGLTFModel({ scene, url })`。`init()` 按资产的 `extensionsUsed` / `extensionsRequired` 自动检测 `KHR_draco_mesh_compression`，经 `resolveExtensionDependencies()` 懒加载 `src/we/model/gltf/dracoDecoderBrowser.ts` 并注册 `'draco3d.decoder'`（通用机制见 `design/engineering/gltf-extension-dependency.md`）。
+3. **Draco 页无需任何注入**：`base/mesh/box.ts`、`base/draco/box.ts`、`base/draco/LittlestTokyo.ts` 现在都只是普通的 `createGLTFModel({ scene, url })`。`init()` 按资产的 `extensionsUsed` / `extensionsRequired` 自动检测 `KHR_draco_mesh_compression`，经 `resolveExtensionDependencies()` 懒加载 `src/we/model/gltf/dracoDecoderBrowser.ts` 并注册 `'draco3d.decoder'`（通用机制见 `design/gltf/gltfTransform/gltf-extension-dependency.md`）。
    解码器本体 / wasm 仍是宿主资源 `public/draco/`（断网可用），lib 只带加载逻辑。需要自定义路径 / CDN 时：
    ```ts
    import { registerExtensionDependencyProvider } from '@we3d';

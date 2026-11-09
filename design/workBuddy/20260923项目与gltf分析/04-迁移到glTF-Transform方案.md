@@ -4,7 +4,7 @@
 > 本文只做可行性论证、API 映射与分阶段计划，不含任何代码改动。实施需项目负责人确认后单独启动。
 > 依赖现状：`@loaders.gl/gltf` 与 `@loaders.gl/draco` 指向仓库内的本地目录 `./src/@loaders.gl/*`（**且这两个目录只有 `dist/`、没有 `src/`**）。
 >
-> **勘误 / 实施细化（2026-11-05）**：`design/engineering/gltf-transform-migration.md` 已按 `@gltf-transform@4.5.1` 源码核对并修正本文若干 API 结论（`writeJSON()` 返回 `JSONDocument` 且需 Draco encoder、`Root` 无 `listSamplers()`、`Texture` 对应 `images[]` 而非 `textures[]`、Accessor 无 `getSparseIndices/getSparseValues`、`draco3dgltf` 仅 Node 可用），并给出 `gltfAtLoaders.ts` 全部 33 个成员的逐项替换方案。**实施时以该文为准**，本文保留为选型与阶段划分依据。
+> **勘误 / 实施细化（2026-11-05）**：`design/gltf/gltfTransform/gltf-transform-migration.md` 已按 `@gltf-transform@4.5.1` 源码核对并修正本文若干 API 结论（`writeJSON()` 返回 `JSONDocument` 且需 Draco encoder、`Root` 无 `listSamplers()`、`Texture` 对应 `images[]` 而非 `textures[]`、Accessor 无 `getSparseIndices/getSparseValues`、`draco3dgltf` 仅 Node 可用），并给出 `gltfAtLoaders.ts` 全部 33 个成员的逐项替换方案。**实施时以该文为准**，本文保留为选型与阶段划分依据。
 
 ---
 

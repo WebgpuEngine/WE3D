@@ -168,7 +168,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
 
 ### 3.3 `init()` 的一次读取、两阶段解析（核心）
 
-> ⚠️ **2026-11-06 实施更新**：下方「按扩展名硬编码 + `input.dracoDecoder` 人工注入」的代码草图已被**通用扩展依赖自动解析**取代 —— `init()` 现在调用 `resolveExtensionDependencies(io, jsonDoc.json, overrides)`，按 `extensionsUsed ∪ extensionsRequired` 自动检测、从 `ALL_EXTENSIONS` 自动发现 `readDependencies`、懒加载并注册，宿主无需在每个 ts 注入。完整设计与接口见 `design/engineering/gltf-extension-dependency.md`。以下草图保留为决策脉络，勿照抄实现。
+> ⚠️ **2026-11-06 实施更新**：下方「按扩展名硬编码 + `input.dracoDecoder` 人工注入」的代码草图已被**通用扩展依赖自动解析**取代 —— `init()` 现在调用 `resolveExtensionDependencies(io, jsonDoc.json, overrides)`，按 `extensionsUsed ∪ extensionsRequired` 自动检测、从 `ALL_EXTENSIONS` 自动发现 `readDependencies`、懒加载并注册，宿主无需在每个 ts 注入。完整设计与接口见 `design/gltf/gltfTransform/gltf-extension-dependency.md`。以下草图保留为决策脉络，勿照抄实现。
 
 ```ts
 const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
@@ -475,7 +475,7 @@ async getImage(index: number) {
 | `examples/model/gltf/atLoader.gl/*.ts`（6 个） | Phase 3 换 import 为 `./gltfTransformLoaders` 与 `GltfDataAtTransform`；`new GltfDataAtTransform(url, device)` 的两参调用需继续可用（Gate 0 阶段仍可用旧类生成 golden） |
 | `examples/model/gltf/base/draco/LittlestTokyo.ts:71-77` | `beforeGltfInit` 里的注释代码写的是 `dataLoader.gltfJson...`，新 loader 保留 `gltfJson` 字段即可；若将来启用，建议改走 `dataLoader.gltfJSON()` |
 | `AGENTS.md` | Phase 3 后把「`src/@loaders.gl` 待废弃」「发布约定·external」相关描述更新 |
-| `design/engineering/gltf-migration-visual-check.md` | **Phase 0B 新建**：迁移期人工视觉核对记录表（35 个示例逐项「结果 / 差异说明 / 日期 / 验证人」），属设计产出，放 `design/`；截图二进制不提交 |
+| `design/gltf/gltfTransform/gltf-migration-visual-check.md` | **Phase 0B 新建**：迁移期人工视觉核对记录表（35 个示例逐项「结果 / 差异说明 / 日期 / 验证人」），属设计产出，放 `design/`；截图二进制不提交 |
 | `design/engineering/pending-work.md` | §1.4 状态 ⏸ → 🔵（本轮）→ ✅（**Phase 3B e2e 验证完成后**才关闭），§二 变更记录追加；迁移期 `ci:no-e2e` 的门禁偏差也在此登记 |
 
 **`src/we/index.ts` 在迁移期无改动，但在 Phase 3B 必须补一处**：glTF API 目前没进 curated barrel，而按 `AGENTS.md` §一.5 e2e 用例必须从 `@we3d` 导入；因此「迁移完成后 e2e 视觉验证」前要在 `src/we/index.ts` 显式追加 `createGLTFModel`（及需要的类型），并跑 `npm run check:exports` 兜底。新增的 `GltfDataAtTransform` 本身仍属于内部实现，不进 barrel。
@@ -514,7 +514,7 @@ async getImage(index: number) {
 
 **与 `AGENTS.md` §三.1 的衔接（临时偏差已由 §八 决策 6 同意）**：项目约定「涉及渲染 / e2e / 渲染路径改动，先 `test:baseline` 再 `npm run ci` 全绿后提交」。本次决策把 e2e 视觉验证后移到迁移完成后，故：
 
-- **迁移期中间提交**：以 `npm run ci:no-e2e`（= 云端 `ci.yml`：lint + typecheck + 单测 + browser test + check:exports + build:lib）为门禁，视觉由 2A 人工验证兜底。这是对 §三.1 的**临时偏差**，用户已同意；仍须在 `pending-work.md` 与提交信息中显式记录。
+- **迁移期中间提交**：以 `npm run ci:no-e2e`（= 云端 `ci.yml`：lint + typecheck + 单测 + browser test + check:exports + build:lib）为门禁，视觉由 2A 人工验证兜底。这是对 §三.1 的**临时偏差**，用户已同意；仍须在 `design/engineering/pending-work.md` 与提交信息中显式记录。
 - **例外（不可延后）**：若 2A 人工核对发现任何渲染结果变化，该次提交必须立即按 §三.1 补 `npm run test:baseline` + `npm run ci`，不得等迁移完成。
 - **迁移完成的最终提交**：严格回到 §三.1 —— 建 e2e 用例 → GPU 基线 → `npm run ci` 全绿后提交，基线随代码同一次提交。
 
@@ -524,10 +524,10 @@ async getImage(index: number) {
 3. **新建 `gltfTransformLoaders.ts` 的「数据层版本」**（`GltfDataAtTransform`：`init()` + 18 个结构 getter + accessor 数值 + 图片 + 外提的 `getAccessorTypeForGPUVertexFormat` 纯函数），不改任何现有渲染代码。
 4. 写 `gltfTransformParity.browser.test.ts`（新旧 loader 同 URL 逐项对比）+ `accessorFormat.test.ts`（24 组映射）；首次运行由旧 `GltfDataAtLoaders` 生成 `tests/fixtures/gltf-parity/*.json` 并提交 git。
 5. 判定：`npm run test:run` + `npm run test:browser` 按 §3.6 F 的标准**必须 100% 通过**；未通过则输出差异表、修正 §3.3 / §四 映射后重跑。
-6. **全绿 → 方案确定**：更新本文状态为「已验证」、`pending-work.md` 记录；才允许进入 Phase 0B / Phase 1。此阶段**不改 `gltf.ts`、不切默认 loader、不删 fork、不建 e2e 用例、不生成 GPU 基线**。
+6. **全绿 → 方案确定**：更新本文状态为「已验证」、`design/engineering/pending-work.md` 记录；才允许进入 Phase 0B / Phase 1。此阶段**不改 `gltf.ts`、不切默认 loader、不删 fork、不建 e2e 用例、不生成 GPU 基线**。
 
 ### Phase 0B · 迁移期人工视觉验证准备（**第 2 类 A，方案确认后**）
-1. 建人工核对记录表 `design/engineering/gltf-migration-visual-check.md`：以 §3.7 清单为骨架，为 `public/models/gltf/base/**` **24 个示例每个单列一行**（含 `*.copy.gltf` 副本、`line/` 空目录登记），再为 `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态各列一行；并关联 `examples/model/gltf/` 中对应的展示页面（35 个）便于人工打开。记录表需按「已入库 / 本地 only」分列：引用 LittlestTokyo / ford / heart / hen 等未入库资产的页面只作本地人工参考，不进 CI 验收。
+1. 建人工核对记录表 `design/gltf/gltfTransform/gltf-migration-visual-check.md`：以 §3.7 清单为骨架，为 `public/models/gltf/base/**` **24 个示例每个单列一行**（含 `*.copy.gltf` 副本、`line/` 空目录登记），再为 `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态各列一行；并关联 `examples/model/gltf/` 中对应的展示页面（35 个）便于人工打开。记录表需按「已入库 / 本地 only」分列：引用 LittlestTokyo / ford / heart / hen 等未入库资产的页面只作本地人工参考，不进 CI 验收。
 2. 借助 Phase 1 的 `input.loader` 双轨开关，在本地 `npm run dev` 中分别以 `'loaders'` / `'transform'` 各跑一遍，人工并排比对；截图存本机（不提交二进制），记录表只写「用例 / 结果 / 差异说明 / 日期 / 验证人」。
 3. 数值基准复用 Gate 0 的 golden 快照，不另建一套；人工发现数值异常先回 §3.6 定位，不靠肉眼放行。
 4. **本阶段不新增 `e2e-cases/gltf/`、不跑 `npm run e2e-index`、不跑 `npm run test:baseline`**。
@@ -544,7 +544,7 @@ async getImage(index: number) {
 - 门禁：`npm run ci:no-e2e`；**若人工核对发现渲染变化，立即按 `AGENTS.md` §三.1 补基线并跑 `npm run ci`**。
 
 ### Phase 3 · 清理（单独 commit，唯一不可逆）
-- 删 `gltfAtLoaders.ts`、`src/@loaders.gl/**`、`public/@loaders.gl/**`、`src/loaders-gl.d.ts`、空文件 `PBR/gltfMeRoPBR.ts`；清 9 个 `@loaders.gl` 依赖与所有 exclude/ignore 配置；6 个示例换类；更新 `AGENTS.md` / `pending-work.md`。
+- 删 `gltfAtLoaders.ts`、`src/@loaders.gl/**`、`public/@loaders.gl/**`、`src/loaders-gl.d.ts`、空文件 `PBR/gltfMeRoPBR.ts`；清 9 个 `@loaders.gl` 依赖与所有 exclude/ignore 配置；6 个示例换类；更新 `AGENTS.md` / `design/engineering/pending-work.md`。
 - 门禁：`npm run ci:no-e2e`（迁移期中间提交口径）；本阶段结束即视为**迁移完成**。
 
 ### Phase 3B · 迁移完成后的 e2e 视觉回归（**第 2 类 B，最终提交门禁**）
@@ -552,11 +552,11 @@ async getImage(index: number) {
 2. 按 §3.7 清单新增 `e2e-cases/gltf/*.html`：`gltf/base/**` 24 个示例 + `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态，用例从 `@we3d` 导入；资产只用两个基础目录内**已入库**的文件（不含 §3.7 ⑥ 列出的 Box 之外未入库资产），保证 CI 可复现；跑 `npm run e2e-index` 刷新索引。
 3. `npm run test:baseline`（**GPU 硬件版**产出截图基线）→ `git add tests/e2e/baseline/`；基线**与代码同一次提交**。
 4. `npm run ci`（含 `test:e2e`）全绿；可选 `npm run test:e2e:software` 做软件渲染回归。
-5. 更新 `pending-work.md` §1.4 为 ✅；至此第 2 类视觉验证闭环。
+5. 更新 `design/engineering/pending-work.md` §1.4 为 ✅；至此第 2 类视觉验证闭环。
 
 ### Phase 4 · 增强 / 已排期的后期优化
 
-> 📋 **详细方案（2026-11-06 制定）**：`design/engineering/gltf-transform-phase4-plan.md` —— 工作项全景与优先级、逐项落地点 / 验收 / 风险、通用机制演进、门禁与提交策略、8 项待用户决策。状态为「设计草案，待确认立项」，**以下条目均为原始排期记录，未执行**。
+> 📋 **详细方案（2026-11-06 制定）**：`design/gltf/gltfTransform/gltf-transform-phase4-plan.md` —— 工作项全景与优先级、逐项落地点 / 验收 / 风险、通用机制演进、门禁与提交策略、8 项待用户决策。状态为「设计草案，待确认立项」，**以下条目均为原始排期记录，未执行**。
 
 - **Worker 化 Draco 解码**（§八 决策 3 明确的「后期优化」，本次迁移不做；注意 GPUBuffer 必须在主线程创建）。
 - **KTX2 / `KHR_texture_basisu` 支持**（§八 决策 5 排期）：需另接 Basis Universal transcoder，glTF-Transform 只透传 KTX2 容器、不做转码。
@@ -628,7 +628,7 @@ async getImage(index: number) {
 | --- | --- | --- | --- |
 | 1 | 过渡期双轨 | **同意**：保留 `input.loader` 开关（默认先 `'loaders'`，可秒级回滚）；正式实现仍是新建 `gltfTransformLoaders.ts` 取代旧文件旧类，不做别名 shim | §七 Phase 1 / Phase 2 |
 | 1b | golden 快照位置 | 用户未单列此项，**按本文建议定稿** `tests/fixtures/gltf-parity/`，不与 Playwright 截图基线混放 | §3.6 E |
-| 2 | Draco 解码器形态 | **补充决策（2026-11-06）：宿主注入 + google/draco `javascript/draco_decoder_gltf.js` + `draco_decoder_gltf.wasm`**；**本期 Draco 必须真能解码**（Gate 0 的 Draco Box 变体必须解开，否则方案不予确认）；关于「是不是 glTF-Transform 自带的」见下方说明。**⚠️ 二次更新（2026-11-06）：注入方式改为「通用扩展依赖自动解析」** —— 由 `init()` 按 `extensionsUsed/Required` 自动检测并懒加载，宿主不再需要 per-ts 注入；浏览器解码器文件、lib 零 wasm、本期必须真能解码等口径不变。见 `design/engineering/gltf-extension-dependency.md` | §3.3（已标注） / §五 / §六 R2 / §七 Phase 0A / 新设计文档 |
+| 2 | Draco 解码器形态 | **补充决策（2026-11-06）：宿主注入 + google/draco `javascript/draco_decoder_gltf.js` + `draco_decoder_gltf.wasm`**；**本期 Draco 必须真能解码**（Gate 0 的 Draco Box 变体必须解开，否则方案不予确认）；关于「是不是 glTF-Transform 自带的」见下方说明。**⚠️ 二次更新（2026-11-06）：注入方式改为「通用扩展依赖自动解析」** —— 由 `init()` 按 `extensionsUsed/Required` 自动检测并懒加载，宿主不再需要 per-ts 注入；浏览器解码器文件、lib 零 wasm、本期必须真能解码等口径不变。见 `design/gltf/gltfTransform/gltf-extension-dependency.md` | §3.3（已标注） / §五 / §六 R2 / §七 Phase 0A / 新设计文档 |
 | 3 | Draco 同步解码 | **接受**；Worker 化列为**后期优化**，不进本次迁移 | §六 R3 / §七 Phase 4 |
 | 4 | D3 / D6 / D8 | **补充决策（2026-11-06）：同意，不 commit** —— 本期不修、不提交任何修复，也不与迁移同 commit；仅随重写自然消失的项随迁移消失（解释见下方） | §六 R9 / §四 |
 | 5 | KTX2 | **不纳入本次，另排期**：核实 `KHRTextureBasisu` 只做 KTX2 容器读写、不做转码，不属于「默认自带支持」→ 命中用户「不是默认自带支持就排期」的条件 | §六 R6 / 04 号文档 §1.3 |
