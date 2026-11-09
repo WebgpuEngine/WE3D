@@ -118,6 +118,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 - **方案**：`getImage()` 增加显式 MIME 白名单（PNG / JPEG / WebP）与明确的「不支持类型」报错（替代当前 `application/octet-stream` 兜底静默投喂）；入库 1 个带 `EXT_texture_webp` 的小样本（建议 `public/models/gltf/base/texture/` 下新增），新增 `e2e-cases/gltf/texture_webp.html`。
 - **验收**：`e2e-index` + `test:baseline` 产出新基线 + `npm run ci` 全绿；断网可用（资源来自 `public/`）。
 - **依赖**：需先确认 WebP 样本来源与授权（自造优先，避免引入外部资产）。
+- **执行结果（2026-11-09）**：✅ 完成。先做技术验证（§10.11）：系统无离线 WebP 编码器，改用 Chromium 原生 `canvas.toDataURL('image/webp')` 自造样本，证实引擎真实纹理链路可解码并渲染 WebP（零 console 报错、截图非黑），样本零授权依赖。随后落地显式白名单 + 正式资产 + 用例 + 基线，全部门禁全绿。
 
 ### 4.7 P2-1 · `meshopt.decoder` provider（通用机制首个外部扩展验证）
 
@@ -323,9 +324,10 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | 小步 | 状态 | 门禁 |
 | --- | --- | --- |
 | 1 · P1-1 | ✅ 完成（已提交 `74a44b5`） | `ci:no-e2e` 全绿（71 单测 / 42 browser / exports 206 / build:lib）；全量 e2e 2 workers **76/76**；8 workers `ci` 偶发波动见 §10.6 |
-| 2 · P2-1 | ✅ 完成（未提交） | `ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿（官方样本入库与 e2e 重写后）；视觉基线已由方案 A 打通，见 §10.10 |
-| 3 · P1-2（方案 A） | ✅ 完成（未提交） | `ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；全量 `test:baseline` 78/78；`npm run ci` **78/78** 全绿。两个 meshopt 页面 shader warning 252 → **0**，截图由纯黑变为正常渲染，见 §10.10 |
-| 4 ~ 8 | 未开始 | — |
+| 2 · P2-1 | ✅ 完成（已提交 `bca415c`） | `ci:no-e2e` 全绿（71 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿（官方样本入库与 e2e 重写后）；视觉基线已由方案 A 打通，见 §10.10 |
+| 3 · P1-2（方案 A） | ✅ 完成（已提交 `bca415c`） | `ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；全量 `test:baseline` 78/78；`npm run ci` **78/78** 全绿。两个 meshopt 页面 shader warning 252 → **0**，截图由纯黑变为正常渲染，见 §10.10 |
+| 4 · P1-3 | ✅ 完成（本次提交） | 技术验证先行（§10.11）；`ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）；全量 `test:baseline` **79/79**、新增 1 张基线；`npm run ci` **79/79** 全绿 |
+| 5 ~ 8 | 未开始 | — |
 
 ### 10.6 小步 1 执行记录（2026-11-06，未提交）
 
@@ -398,4 +400,31 @@ P4-1 D1–D8（需先解除口径，另立任务）
 
 **基线与门禁**：全量 GPU 硬件版 `test:baseline`（2 workers）**78/78**，两张 meshopt 基线由 2418 B 纯黑重生成（2931 B / 9988 B），**其它已跟踪基线零改动**。`npm run ci:no-e2e` 全绿（72 单测 / 44 browser / exports 207 / build:lib）；`npm run ci` **78/78** 全绿。
 
-**结论**：方案 A **解决了 meshopt 的问题**，用户设定的条件满足；本轮及小步 2 的改动具有意义。**按用户约定仍未提交**，等其确认后再按「一项一 commit」提交；若提交，代码与两张基线必须同一次提交。
+**结论**：方案 A **解决了 meshopt 的问题**，用户设定的条件满足；本轮及小步 2 的改动具有意义。已由 `bca415c` 提交并推送，代码与两张基线在同一次提交中。
+
+> 说明：§10.6 ~ §10.10 各小节标题 / 正文中出现的「未提交」是 **2026-11-06 记录当时**的状态；小步 1 已于 `74a44b5` 提交，小步 2 / 官方样本 / 方案 A 已统一由 `bca415c` 提交。以 §10 进度表的状态为准。
+
+### 10.11 P1-3 · `EXTTextureWebP` 显式支持（2026-11-09，本次提交）
+
+**先做技术验证（用户要求「先进性技术验证」）**
+
+| 验证点 | 结论 |
+| --- | --- |
+| 代码路径 | `getImage()` 的图片链路是 `Texture.getImage()` 字节 → `createImageBitmap(Blob)`；原内联 `guessMimeType()` 已嗅探 WebP 魔数，`EXTTextureWebP` 已在 `ALL_EXTENSIONS`（`init()` 全量注册）。§4.6 的「隐式支持」判断属实 |
+| 样本自造 | 系统**无**离线 WebP 编码器（无 `cwebp` / ImageMagick；Windows `convert` 是磁盘工具）。改用测试浏览器 Chromium 的原生编码 `canvas.toDataURL('image/webp')` 生成 256×256 图案，按 RIFF….WEBP 魔数校验确为 WebP —— 与运行时 `createImageBitmap` 解码同属浏览器栈，零第三方资产 / 授权依赖 |
+| 端到端渲染 | 临时 spike 页面加载声明 `EXT_texture_webp` 的 Box → **console 零报错**，截图为 checker + 白十字纹理化 Box（非黑）。WebP 解码 → ImageBitmap → GPU 纹理 → 渲染全链路打通 |
+
+结论：技术风险为零（WebP 与 PNG/JPEG 走完全相同路径，GPU 管线不区分来源格式），剩余工作全是工程化收尾；临时 spike 页面 / 脚本 / 基线跑完即删。
+
+**代码落地**
+
+1. 新增 `src/we/model/gltf/imageMimeType.ts`（纯函数）：`SUPPORTED_IMAGE_MIME_TYPES = ['image/png','image/jpeg','image/webp']`；`guessImageMimeType()` 对未知字节返回 `undefined`（不再伪装 `application/octet-stream`）；`resolveImageMimeType(declared, bytes)` 优先采用受支持的显式声明，否则回退魔数嗅探，两者皆不在白名单则**抛错并列出支持范围**。
+2. `src/we/model/gltf/gltfTransformLoaders.ts`：`getImage()` 改用 `resolveImageMimeType()`，删除文件内旧 `guessMimeType()`。保留 `texture.getMimeType()` 优先语义；`createImageBitmap` 调用不变。
+3. 白名单不误伤既有资产：临时 NodeIO 探测扫描全部 glTF 资产，`Texture.getMimeType()` 只出现 `image/png` / `image/jpeg` / `image/webp` 三种且与字节魔数一致（探测脚本跑完即删）。
+4. 资产 `public/models/gltf/base/texture/webp/`：`BoxTextured.webp`（1680 B，自造 checker）+ `BoxTextured.webp.gltf`（复用 `../BoxTextured.gltf` 几何，image 指向外部 `.webp`，声明 `extensionsUsed` / `extensionsRequired` = `EXT_texture_webp`）+ `README.md`（来源 / 授权 / 用途）。
+5. 用例 `e2e-cases/gltf/texture_webp.html` / `.ts`，`e2e-index` 刷新（78 cases）。
+6. 测试：`imageMimeType.test.ts` 新增 9 项（三种魔数、未知返回 undefined、WebP 双标记校验、声明优先、魔数兜底、`application/octet-stream` 兜底、不支持类型报错、声明不受支持但字节受支持时以字节为准）；`gltfTransformContract.browser.test.ts` 资产清单加入 WebP 样本，并新增专用断言「解出 256×256 且至少 3 种颜色的像素」。
+
+**验收（强制）**：`npm run e2e-index` → 全量 GPU 硬件版 `npm run test:baseline`（2 workers）**79/79**，新增基线 `gltf-texture-webp.png`（10043 B，checker + 白十字渲染正确），**其它已跟踪基线零改动** → `npm run ci:no-e2e` 全绿（81 单测 / 46 browser / exports 207 / build:lib）→ `npm run ci` **79/79 全绿**。资源来自 `public/`，断网可用。
+
+**边界**：`EXT_texture_webp` **不需要任何解码器 provider**（它与 `KHR_draco_mesh_compression` / `EXT_meshopt_compression` 不同，无 `readDependencies`），白名单放行 `image/webp` 后由浏览器解码即可。KTX2 / AVIF 仍明确报错，留待 P2-2 转码支持。

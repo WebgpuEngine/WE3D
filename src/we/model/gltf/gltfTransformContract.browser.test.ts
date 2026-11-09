@@ -20,7 +20,7 @@ const BASE = '/models/gltf/base/';
 const BOX = '/models/gltf/model/Box/';
 const FOX = '/models/gltf/model/Fox/';
 
-/** §3.7 资产清单：base 24 例 + Box 四形态 + Fox 两形态（R8 补充） */
+/** §3.7 资产清单：base 系列 + Box 四形态 + Fox 两形态 + meshopt / WebP 扩展样本 */
 const ASSETS: string[] = [
     `${BASE}animation/simpleAnimation.gltf`,
     `${BASE}material/simpleMaterial.gltf`,
@@ -35,6 +35,8 @@ const ASSETS: string[] = [
     `${BASE}texture/BoxTextured.gltf`,
     `${BASE}texture/BoxTexturedBufferView.gltf`,
     `${BASE}texture/testTexture.gltf`,
+    // P1-3：EXT_texture_webp 样本，贴图为外部 .webp
+    `${BASE}texture/webp/BoxTextured.webp.gltf`,
     `${BASE}triangle/triangle.gltf`,
     `${BASE}triangle/triangle copy.gltf`,
     `${BASE}triangle/triangleMatrix.gltf`,
@@ -225,6 +227,32 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             }
         });
     }
+
+    // P1-3：真实 WebP 样本必须经 MIME 白名单解析后解出 256×256 的彩色像素，
+    // 而不是一个纯色占位图（通用循环只断言「能解出像素」）。
+    it('EXT_texture_webp 样本：WebP 图片解码出彩色像素', async () => {
+        const url = `${BASE}texture/webp/BoxTextured.webp.gltf`;
+        const loader = new GltfDataAtTransform(url, device);
+        await loader.init();
+        const bitmap = await loader.getImage(0);
+        expect(bitmap, 'WebP image[0]').toBeDefined();
+        if (!bitmap) return;
+        expect(bitmap.width).toBe(256);
+        expect(bitmap.height).toBe(256);
+        const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('OffscreenCanvas 2D 不可用');
+        ctx.drawImage(bitmap, 0, 0);
+        const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height).data;
+        const colors = new Set<string>();
+        for (let y = 0; y < bitmap.height; y += 16) {
+            for (let x = 0; x < bitmap.width; x += 16) {
+                const i = (y * bitmap.width + x) * 4;
+                colors.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
+            }
+        }
+        expect(colors.size, 'checker + 白十字至少 3 种颜色').toBeGreaterThanOrEqual(3);
+    });
 
     for (const url of GPU_ASSETS) {
         it(`GPU bundle / buffer ${url}`, async () => {

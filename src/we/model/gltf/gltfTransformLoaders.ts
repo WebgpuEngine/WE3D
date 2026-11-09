@@ -34,6 +34,7 @@ import {
     type I_accessorFormat,
     type I_accessorLike,
 } from './accessorFormat';
+import { resolveImageMimeType } from './imageMimeType';
 import {
     resolveExtensionDependencies,
     type T_ExtensionDependencyProviders,
@@ -490,33 +491,12 @@ export class GltfDataAtTransform extends ModelDataLoader {
             const texture = this.textures[index];
             const bytes = texture?.getImage();
             if (!bytes) return undefined;
-            const mimeType = texture.getMimeType() || guessMimeType(bytes);
+            // P1-3：显式 MIME 白名单（PNG / JPEG / WebP），不支持的类型明确报错
+            const mimeType = resolveImageMimeType(texture.getMimeType() ?? undefined, bytes);
             const ab = bytes.slice().buffer as ArrayBuffer;
             return createImageBitmap(new Blob([ab], { type: mimeType }));
         })();
         this.imageCache.set(index, promise);
         return promise;
     }
-}
-
-function guessMimeType(bytes: Uint8Array): string {
-    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
-        return 'image/png';
-    }
-    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
-        return 'image/jpeg';
-    }
-    if (
-        bytes[0] === 0x52 &&
-        bytes[1] === 0x49 &&
-        bytes[2] === 0x46 &&
-        bytes[3] === 0x46 &&
-        bytes[8] === 0x57 &&
-        bytes[9] === 0x45 &&
-        bytes[10] === 0x42 &&
-        bytes[11] === 0x50
-    ) {
-        return 'image/webp';
-    }
-    return 'application/octet-stream';
 }
