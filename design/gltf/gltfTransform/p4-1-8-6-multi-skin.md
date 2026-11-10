@@ -1,6 +1,6 @@
 # P4-1 · 8-6（D4 多 skin 绑定）执行记录
 
-> 状态：✅ 已落地，门禁全绿，D4 代码 + 数据层断言已由 `5f6b5b3` 提交推送；后按用户要求补充 multi skins e2e 用例（本批，未提交）。
+> 状态：✅ 已落地，门禁全绿，D4 代码 + 数据层断言已由 `5f6b5b3` 提交推送；multi/single skin e2e 用例（播放 0.5s 动画）已由 `08063e3` 提交推送。
 > 追加（2026-11-10）：按用户要求，单 skin 用例 `e2e-cases/gltf/skin.ts` 也改为「播放 0.5s 动画后停在当前帧」（与 `multi_skin.ts` 一致），覆盖单 skin 动画驱动；`gltf-skin.png` 基线随之更新（0 帧 → 0.5s 帧）。
 > 日期：2026-11-10
 > 关联：方案 `p4-1-defects-plan.md` §5.4 / §六（小步 8-6）；总计划 `gltf-transform-phase4-plan.md` §10.5；F1「覆盖真空」的最后一项。
@@ -53,4 +53,4 @@
 2. `targetNodesByGroup` 是实例内临时数据，随 `instanceNodes` 生命周期（`debug === false` 时 `initInstance` 末尾 delete）；`initSkinsForInstance` 依赖 `initAnimationsForInstance` 先执行（现有调用顺序如此）。
 3. `MultiSkin` 两组 skin 复用同一 mesh / 逆绑定矩阵数据，仅靠 node 平移左右分离（x ∓ 0.7）；除数据层归属断言外，已按用户要求补充 e2e 视觉回归（`e2e-cases/gltf/multi_skin.*` → `gltf-multi-skin.png`）。
 4. 至此 §七 8-0 ~ 8-8 中除 8-7（D5 有意降级为已知性能边界、不实施）外全部落地；D8 保留的 4 个抽象 getter、`getMorphTargetsForNode` 只取 `primitives[0]`、P4-2 / P4-3 仍属各自批次。
-5. 按方案「每项独立 commit」：D4 代码 + 数据层断言已提交 `5f6b5b3`；本次 e2e 用例补充（资产 x 分离 + `multi_skin.*` + 基线）**未提交**。
+5. 按方案「每项独立 commit」：D4 代码 + 数据层断言已提交 `5f6b5b3`；e2e 用例补充（资产 x 分离 + `multi_skin.*` + `skin.*` 0.5s 动画 + 2 张基线）已提交 `08063e3`。

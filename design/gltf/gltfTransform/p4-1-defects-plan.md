@@ -133,7 +133,7 @@
 
 **门禁**：`e2e-index` → `test:baseline`（新增 1 张）→ `ci`。
 
-**执行记录（2026-11-10，已完成，未提交）**：复核发现 `line/` 在 D1 批次已有官方 `MeshPrimitiveModes`（mode 0–6 含 mode=2），但无 `COLOR_0` 且未进入契约 / e2e；本次另造带 `COLOR_0` 的 `LineLoop.gltf` 作视觉载体，并把两个资产加入契约矩阵。修复前实测契约断言红（`indexTriangleList`）、截图只有 2 行 × 248 px；两处 `case 2` 改 `indexLineLoop` 后截图为 988 px 闭合矩形。`ci:no-e2e` / `test:baseline` 84/84 / `npm run ci` 84/84 全绿，见 `p4-1-d2-line-loop.md`。
+**执行记录（2026-11-10，已完成，已提交 `5ed29a2`）**：复核发现 `line/` 在 D1 批次已有官方 `MeshPrimitiveModes`（mode 0–6 含 mode=2），但无 `COLOR_0` 且未进入契约 / e2e；本次另造带 `COLOR_0` 的 `LineLoop.gltf` 作视觉载体，并把两个资产加入契约矩阵。修复前实测契约断言红（`indexTriangleList`）、截图只有 2 行 × 248 px；两处 `case 2` 改 `indexLineLoop` 后截图为 988 px 闭合矩形。`ci:no-e2e` / `test:baseline` 84/84 / `npm run ci` 84/84 全绿，见 `p4-1-d2-line-loop.md`。
 
 ### 5.3 D3 · 缓存正确性收口（先单测，后主路径）
 
@@ -152,7 +152,7 @@
 
 **验收**：全部 26 张 gltf 基线零改动（本项是性能 / 正确性修复，不应改渲染）；`ci:no-e2e` + `ci`。**门禁**：不改基线。
 
-**执行记录（2026-11-10，已完成，未提交）**：先写 4 条契约断言并实测全红（命中分支从未执行，loop / fan 转换后 buffer 串给普通索引，逐值读回 `[0,1,1,2]` / `[0,3,2,0]`）；再把 `aliaseID` 改为 `` `${useFor}_${index}` ``、`has(aliaseID)` 启用命中，并给 `GPUBuffers` 增加仅转换用途使用的独立 key；`generateAccessor` 的 `aliaseID` 形参确认未消费，保留签名。`ci:no-e2e` 全绿（92 单测 / 61 browser / exports 226 / build:lib）、`npm run ci` **84/84**（8 workers 硬件 GPU 首轮全绿），当前 84 张基线零改动。详见 `p4-1-d3-accessor-cache.md`。
+**执行记录（2026-11-10，已完成，已提交 `1789f13`）**：先写 4 条契约断言并实测全红（命中分支从未执行，loop / fan 转换后 buffer 串给普通索引，逐值读回 `[0,1,1,2]` / `[0,3,2,0]`）；再把 `aliaseID` 改为 `` `${useFor}_${index}` ``、`has(aliaseID)` 启用命中，并给 `GPUBuffers` 增加仅转换用途使用的独立 key；`generateAccessor` 的 `aliaseID` 形参确认未消费，保留签名。`ci:no-e2e` 全绿（92 单测 / 61 browser / exports 226 / build:lib）、`npm run ci` **84/84**（8 workers 硬件 GPU 首轮全绿），当前 84 张基线零改动。详见 `p4-1-d3-accessor-cache.md`。
 
 ### 5.4 D4 · 多 skin 按 joints 交集绑定
 
@@ -167,7 +167,7 @@
 
 **验收**：现有 `gltf-skin.png` 基线零改动；契约断言通过。**门禁**：`ci:no-e2e` + `ci`，不改基线。**风险**：若某资产的动画 channel 不直接指向 joints（例如只驱动父节点），交集为空会漏绑 —— 需在 `MultiSkin` 与 `Fox` / `simpleSkin` 上同时验证；必要时退化为「交集为空且只有一个 skin 时仍绑定」（保持向后兼容），并在方案执行记录中写明。
 
-**执行记录（2026-11-10，已完成，已提交 `5f6b5b3`；另补充 e2e 用例未提交）**：按 §六 补齐 `MultiSkin.gltf` + `.bin` + `README.md`（2 skin / 2 animation，各自 channel 只驱动自己 joints），契约矩阵 40 → 41；先写 3 条断言实测 2 红（多 skin 组 `listSkins` 为 2、跨实例 bundle 抛 `Cannot read properties of undefined (reading 'Entity')`），再落地 `targetNodesByGroup` 记录、joints 交集过滤、bundle 实例过滤，并保留「单 skin 交集为空仍绑定」的向后兼容兜底（即本节风险段给出的退化策略）。`ci:no-e2e` 全绿（92 单测 / 73 browser、契约 66）；`npm run ci` **84/84**（8 workers 首轮全绿），`gltf-skin` 等 84 张基线零改动。后补充 multi skins e2e 用例，`npm run test:e2e` **85/85**（新增 `gltf-multi-skin.png`，其余 84 张零改动），用例播放 0.5s 动画后停止（覆盖 skin 动画驱动，非 0 帧）。**再追加（2026-11-10）**：按用户要求单 skin 用例 `e2e-cases/gltf/skin.ts` 同样改为播放 0.5s 动画后停止，`gltf-skin.png` 基线由 0 帧更新为 0.5s 帧（本步「基线零改动」表述仅指 D4 落地当时；后续用户追加改动了该用例）。详见 `p4-1-8-6-multi-skin.md`。
+**执行记录（2026-11-10，已完成，已提交 `5f6b5b3`；e2e 用例已提交 `08063e3`）**：按 §六 补齐 `MultiSkin.gltf` + `.bin` + `README.md`（2 skin / 2 animation，各自 channel 只驱动自己 joints），契约矩阵 40 → 41；先写 3 条断言实测 2 红（多 skin 组 `listSkins` 为 2、跨实例 bundle 抛 `Cannot read properties of undefined (reading 'Entity')`），再落地 `targetNodesByGroup` 记录、joints 交集过滤、bundle 实例过滤，并保留「单 skin 交集为空仍绑定」的向后兼容兜底（即本节风险段给出的退化策略）。`ci:no-e2e` 全绿（92 单测 / 73 browser、契约 66）；`npm run ci` **84/84**（8 workers 首轮全绿），`gltf-skin` 等 84 张基线零改动。后补充 multi skins e2e 用例，`npm run test:e2e` **85/85**（新增 `gltf-multi-skin.png`，其余 84 张零改动），用例播放 0.5s 动画后停止（覆盖 skin 动画驱动，非 0 帧）。**再追加（2026-11-10）**：按用户要求单 skin 用例 `e2e-cases/gltf/skin.ts` 同样改为播放 0.5s 动画后停止，`gltf-skin.png` 基线由 0 帧更新为 0.5s 帧（本步「基线零改动」表述仅指 D4 落地当时；后续用户追加改动了该用例）。详见 `p4-1-8-6-multi-skin.md`。
 
 ### 5.5 D5 · uint16 索引保留（⏸ 已降级：已知性能边界，本轮不实施）
 
@@ -206,7 +206,7 @@
 
 **验收**：`ci:no-e2e` + `ci`，基线零改动。这是零行为风险批次，可作为 P4-1 的「热身」验证门禁流程。
 
-**执行记录（2026-11-10，已完成，未提交）**：本次只执行用户指定的 D8 纯清理（D6 未纳入）。删 `base.ts` 两个死枚举成员、`function.ts` 481 行死代码 / 注释 / `TypedArray` import、`gltfTransformLoaders.ts` 的 `getScenesCount()`；`gltf.ts` 局部 `indecis` → `indices`；契约测试补 D7 `metallicFactor: 0` 断言（契约 54 → 55 项）。复核发现 `getScenes()` / `getTexture()` / `getSampler()` / `getSkins()` 是 `ModelDataLoader` 抽象方法的唯一实现，按本节「不要删基类抽象方法」的约束**保留**（详见 `p4-1-d8-cleanup.md` §三）。`ci:no-e2e` 全绿（92 单测 / 62 browser / exports 226）；`npm run ci` 8 workers 83/84（既有 `shadow/PBR_dirlight_1` 并发波动），2 workers 复跑 84/84，基线零改动。
+**执行记录（2026-11-10，已完成，已提交 `2f15580`）**：本次只执行用户指定的 D8 纯清理（D6 未纳入）。删 `base.ts` 两个死枚举成员、`function.ts` 481 行死代码 / 注释 / `TypedArray` import、`gltfTransformLoaders.ts` 的 `getScenesCount()`；`gltf.ts` 局部 `indecis` → `indices`；契约测试补 D7 `metallicFactor: 0` 断言（契约 54 → 55 项）。复核发现 `getScenes()` / `getTexture()` / `getSampler()` / `getSkins()` 是 `ModelDataLoader` 抽象方法的唯一实现，按本节「不要删基类抽象方法」的约束**保留**（详见 `p4-1-d8-cleanup.md` §三）。`ci:no-e2e` 全绿（92 单测 / 62 browser / exports 226）；`npm run ci` 8 workers 83/84（既有 `shadow/PBR_dirlight_1` 并发波动），2 workers 复跑 84/84，基线零改动。
 
 ### 5.8 §10.6 动画两项待查（归入 D8 新增子项）
 
@@ -216,7 +216,7 @@
 
 **验收**：现有 `animation` 用例基线零改动（现有资产全为 LINEAR）；`ci:no-e2e` + `ci`。
 
-**执行记录（2026-11-10，已完成，未提交）**：先按 §六 入库自造 `CubicSpline.gltf` + `.bin` + `README.md` 并加入契约矩阵（39 → 40），再写 3 条断言实测全红（`cubicspline not found`、`target.node` 缺失导致 `BaseAnimation` 崩、未知插值丢失原始字符串）；随后在 `gltf.ts` 新增**非导出**的大小写不敏感映射 `normalizeInterpolation()`、给 `target.node` 加「跳过 + warn」守卫并去掉 4 处裸用 / `!`、`getMorphTargetsForNode` 补 `targets?.length ?? 0`。`check:exports` 226 / 582 不变（零新增公共 API）。`ci:no-e2e` 全绿（92 单测 / 69 browser、契约 62）；`npm run ci` 8 workers 82/84（2 个既有并发波动），2 workers 复跑 84/84，基线零改动。详见 `p4-1-8-2-animation.md`。
+**执行记录（2026-11-10，已完成，已提交 `52eea6c`）**：先按 §六 入库自造 `CubicSpline.gltf` + `.bin` + `README.md` 并加入契约矩阵（39 → 40），再写 3 条断言实测全红（`cubicspline not found`、`target.node` 缺失导致 `BaseAnimation` 崩、未知插值丢失原始字符串）；随后在 `gltf.ts` 新增**非导出**的大小写不敏感映射 `normalizeInterpolation()`、给 `target.node` 加「跳过 + warn」守卫并去掉 4 处裸用 / `!`、`getMorphTargetsForNode` 补 `targets?.length ?? 0`。`check:exports` 226 / 582 不变（零新增公共 API）。`ci:no-e2e` 全绿（92 单测 / 69 browser、契约 62）；`npm run ci` 8 workers 82/84（2 个既有并发波动），2 workers 复跑 84/84，基线零改动。详见 `p4-1-8-2-animation.md`。
 
 ### 5.9 D9 · baseColorFactor × baseColorTexture 未组合（着色器层，D1 验证时暴露）
 
@@ -246,7 +246,7 @@ albedo_uniform = textureSample(u_texture_albedo, u_sampler_albedo, uv_temp) * u_
 
 **门禁**：`test:baseline`（更新 `gltf-morph-primitives-test.png` 基线）→ `ci`。**风险**：若现有任一资产 factor 非默认且带纹理，其基线会随之改变，属**正确的渲染修正**，需一并更新基线并记录。
 
-**执行修订（2026-11-10，已完成，未提交）**：上述「仅 `PBR.fs.wgsl` 一行」经实测**不足以修复** —— `PBRMaterial.readyForGPU()` 在有纹理时不写 `insideUniformBundle.value`，`baseColorFactor` 从未进入 GPU uniform，只改 shader 截图零变化。实际落地为「shader 采样语句乘 factor + `PBRMaterial.ts` 纹理分支写入 albedo 的 4 个分量」，`§七` 小步 8-8 的改动描述以此为准。根因、影响面、验收与门禁数据见执行记录 `p4-1-d9-base-color-factor.md`。
+**执行修订（2026-11-10，已完成，已提交 `155b356`）**：上述「仅 `PBR.fs.wgsl` 一行」经实测**不足以修复** —— `PBRMaterial.readyForGPU()` 在有纹理时不写 `insideUniformBundle.value`，`baseColorFactor` 从未进入 GPU uniform，只改 shader 截图零变化。实际落地为「shader 采样语句乘 factor + `PBRMaterial.ts` 纹理分支写入 albedo 的 4 个分量」，`§七` 小步 8-8 的改动描述以此为准。根因、影响面、验收与门禁数据见执行记录 `p4-1-d9-base-color-factor.md`。
 
 ---
 

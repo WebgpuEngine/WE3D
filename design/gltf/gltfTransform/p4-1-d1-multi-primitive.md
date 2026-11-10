@@ -1,6 +1,6 @@
 # P4-1 · D1 单 mesh 多 primitive 渲染修复记录
 
-> 状态：✅ 已落地，门禁全绿（`ci:no-e2e` + `test:e2e`），待提交。
+> 状态：✅ 已落地，门禁全绿，已提交 `4cd35d4`。
 > 日期：2026-11-10
 > 关联：方案 `p4-1-defects-plan.md` §5.1；总计划 `gltf-transform-phase4-plan.md`
 

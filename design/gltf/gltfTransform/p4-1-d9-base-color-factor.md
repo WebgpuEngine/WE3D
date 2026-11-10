@@ -1,6 +1,6 @@
 # P4-1 · D9 `baseColorFactor` × `baseColorTexture` 组合修复记录
 
-> 状态：✅ 已落地，门禁全绿，**未提交**（等用户决定）。
+> 状态：✅ 已落地，门禁全绿，已提交 `155b356`。
 > 日期：2026-11-10
 > 关联：方案 `p4-1-defects-plan.md` §5.9（小步 8-8）；总计划 `gltf-transform-phase4-plan.md` §10.5；D1 记录 `p4-1-d1-multi-primitive.md` §七.1
 
@@ -43,4 +43,4 @@ glTF 2.0 规定 `baseColor = baseColorFactor × baseColorTexture`（逐分量相
 
 1. `insideUniformBundle` 的 albedo 默认值第 4 位为 0（`[1,1,1,0]`），且 `value` 分支只写前 3 位；本次未改，纯 factor 材质的 alpha 语义维持原状。
 2. FS 中 metallic / roughness 的 `// xxx *= value` 仍为注释、emissive 已乘 value；其它 PBR 参数「factor × texture」是否完整符合 glTF 规范不在 D9 范围，未核实。
-3. D9 是 P4-1 子步 8-8；按方案「每项独立 commit」，本次**未提交**。
+3. D9 是 P4-1 子步 8-8；按方案「每项独立 commit」，本次已提交 `155b356`。

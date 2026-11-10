@@ -1,6 +1,6 @@
 # P4-1 · D2 `LINE_LOOP`（mode=2）映射修复记录
 
-> 状态：✅ 已落地，门禁全绿，**未提交**（等用户决定）。
+> 状态：✅ 已落地，门禁全绿，已提交 `5ed29a2`。
 > 日期：2026-11-10
 > 关联：方案 `p4-1-defects-plan.md` §5.2（小步 8-4）；总计划 `gltf-transform-phase4-plan.md` §10.5；D1 记录 `p4-1-d1-multi-primitive.md` §五
 
@@ -48,4 +48,4 @@ glTF `primitive.mode = 2`（`LINE_LOOP`）应把 N 个索引展开为 N 条首�
 1. **D3 缓存 key 未修**：`getAccessor()` 的 `has(index)` 恒 false，`GPUBuffers` 按 `accessorID` 缓存。若同一 accessor 先按普通索引、再按 loop / fan 使用，loop 分支会拿到未转换的 GPUBuffer。本次两个 line 资产的每个 indices accessor 只对应单一用途，不受影响；按方案归入小步 8-3「缓存正确性收口」。
 2. 官方 `MeshPrimitiveModes` 无 `COLOR_0`，只承担数据层契约（mode 0–6 可解析 + mode=2 索引展开），不做视觉判据。
 3. 数组路径 `getIndecisArrayOfPrimitive` 已同改，但当前 e2e 只覆盖 GPU 路径；数组路径由契约断言覆盖。
-4. 按方案「每项独立 commit」，本次**未提交**。
+4. 按方案「每项独立 commit」，本次已提交 `5ed29a2`。

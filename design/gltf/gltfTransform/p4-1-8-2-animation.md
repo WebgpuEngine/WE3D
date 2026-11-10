@@ -1,6 +1,6 @@
 # P4-1 · 8-2（§5.8 动画两项待查）执行记录
 
-> 状态：✅ 已落地，门禁全绿，**未提交**（等用户决定）。
+> 状态：✅ 已落地，门禁全绿，已提交 `52eea6c`。
 > 日期：2026-11-10
 > 关联：方案 `p4-1-defects-plan.md` §5.8 / §六（小步 8-2）；总计划 `gltf-transform-phase4-plan.md` §10.5 / §10.6；D8 纯清理 `p4-1-d8-cleanup.md`（`2f15580`）、D6 `p4-1-d6-url-check.md`（`a087a8e`）。
 > 背景：用户确认 §5.8 此前未执行、也未被其它批次覆盖。`E_InterpolationModes.cubicSpline` 是驼峰，`"CUBICSPLINE".toLowerCase()` 得 `cubicspline` 必抛错；`IAnimationChannelTarget.node` 在规范中可选，却被 4 处裸用 / `!` 掩盖。
@@ -51,4 +51,4 @@
 2. `target.node` 缺失时仍会创建一个 `AnimationGroup`（既有行为：每个 animation group 建一个组），只是 `list` 为空；测试按此断言，未改变分组语义。
 3. 除方案要求的「node 缺失」外，同源补了「node 已给但实例节点查不到」的 warn 守卫，避免同类崩溃。
 4. D4 / D5（已降级）/ D8 保留的 4 个抽象 getter / P4-2 / P4-3 仍属各自批次，未纳入。
-5. 按方案「每项独立 commit」，本批**未提交**。
+5. 按方案「每项独立 commit」，本批已提交 `52eea6c`。
