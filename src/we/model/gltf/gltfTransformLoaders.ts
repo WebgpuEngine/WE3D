@@ -198,9 +198,6 @@ export class GltfDataAtTransform extends ModelDataLoader {
     getCurrentScene(): number {
         return this.gltfJson.scene ?? 0;
     }
-    getScenesCount(): number {
-        return this.gltfJson.scenes?.length ?? 0;
-    }
 
     getNodes(): GLTF.INode[] | undefined {
         return this.gltfJson.nodes;

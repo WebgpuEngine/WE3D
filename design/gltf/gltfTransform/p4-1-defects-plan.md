@@ -202,6 +202,8 @@
 
 **验收**：`ci:no-e2e` + `ci`，基线零改动。这是零行为风险批次，可作为 P4-1 的「热身」验证门禁流程。
 
+**执行记录（2026-11-10，已完成，未提交）**：本次只执行用户指定的 D8 纯清理（D6 未纳入）。删 `base.ts` 两个死枚举成员、`function.ts` 481 行死代码 / 注释 / `TypedArray` import、`gltfTransformLoaders.ts` 的 `getScenesCount()`；`gltf.ts` 局部 `indecis` → `indices`；契约测试补 D7 `metallicFactor: 0` 断言（契约 54 → 55 项）。复核发现 `getScenes()` / `getTexture()` / `getSampler()` / `getSkins()` 是 `ModelDataLoader` 抽象方法的唯一实现，按本节「不要删基类抽象方法」的约束**保留**（详见 `p4-1-d8-cleanup.md` §三）。`ci:no-e2e` 全绿（92 单测 / 62 browser / exports 226）；`npm run ci` 8 workers 83/84（既有 `shadow/PBR_dirlight_1` 并发波动），2 workers 复跑 84/84，基线零改动。
+
 ### 5.8 §10.6 动画两项待查（归入 D8 新增子项）
 
 1. **CUBICSPLINE**：`gltf.ts:340-344` 改为「大小写不敏感的显式映射」，而不是继续 `toLowerCase()` 硬比枚举。建议新增纯函数 `normalizeInterpolation(raw: string): E_InterpolationModes`（放在 `src/we/core/animation/base.ts` 或 gltf 模块内），映射表 `{ LINEAR: linear, STEP: step, CUBICSPLINE: cubicSpline }`，未知值抛带原始字符串的错误。注意 `E_InterpolationModes`（`src/we/core/animation/base.ts:8-12`）的值是驼峰 `cubicSpline`，**不要改枚举值**（会牵动引擎动画模块）。

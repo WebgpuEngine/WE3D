@@ -1169,15 +1169,15 @@ export class GLTFModel extends BaseModel {
                     }
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     //gpubuffer of index and draw mode   part
-                    let indecis;
+                    let indices;
                     if (this.dataTypeOfAttribute == 'inModel') {
-                        indecis = await this.getIndecisOfPrimitive(primitive, i, j);
+                        indices = await this.getIndecisOfPrimitive(primitive, i, j);
                     } else {
-                        indecis = await this.getIndecisArrayOfPrimitive(primitive, i, j);
+                        indices = await this.getIndecisArrayOfPrimitive(primitive, i, j);
                     }
-                    const drawMode = indecis.drawMode;
-                    const indicesOfDataOfEntity = indecis.indecis;
-                    const stripIndexFormat = indecis.stripIndexFormat;
+                    const drawMode = indices.drawMode;
+                    const indicesOfDataOfEntity = indices.indecis;
+                    const stripIndexFormat = indices.stripIndexFormat;
                     /////////////////////////////////////////////////////////////////////////////////////////////////////
                     // primitive of render
                     let primitiveOfDataOfRender: GPUPrimitiveState = {

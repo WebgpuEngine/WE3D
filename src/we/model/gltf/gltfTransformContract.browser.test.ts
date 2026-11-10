@@ -536,4 +536,19 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             expect(await readAll(plain), `${c.label} 普通索引 GPUBuffer 逐值`).toEqual(source);
         });
     }
+
+    // P4-1 D7 回归载体：BoxTextured.gltf 显式声明 `metallicFactor: 0.0`。
+    // 旧构建层用 `|| 1` 会把 0 吞成 1（非金属被渲染成纯金属），现已改为 `?? 1`；
+    // 这里锁定解析层输出仍为 0，保证该资产与取值语义不被后续改动破坏。
+    it('P4-1 D7 metallicFactor: 0 的资产解析后 value 保持 0', async () => {
+        const url = `${BASE}texture/BoxTextured.gltf`;
+        const loader = new GltfDataAtTransform(url, device);
+        await loader.init();
+        const material = loader.getMaterial(0);
+        expect(material, 'BoxTextured 材质[0]').toBeDefined();
+        expect(
+            material?.pbrMetallicRoughness?.metallicFactor,
+            '显式 metallicFactor: 0 解析后必须为 0，不能被默认值 1 吞掉',
+        ).toBe(0);
+    });
 });

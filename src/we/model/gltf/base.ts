@@ -14,8 +14,6 @@ export enum E_accessorUseFor {
     indexLineList = 'indexLineList',
     indexLineLoop = 'indexLineLoop',
     indexPointList = 'indexPointList',
-    samplerAnimation = 'samplerAnimation', //animation.samplers
-    inverseBindMatrices = 'inverseBindMatrices', //skins[].inverseBindMatrices
 }
 
 export type T_accessorBufferSource =
