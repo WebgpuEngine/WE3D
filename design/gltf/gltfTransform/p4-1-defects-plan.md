@@ -167,7 +167,7 @@
 
 **验收**：现有 `gltf-skin.png` 基线零改动；契约断言通过。**门禁**：`ci:no-e2e` + `ci`，不改基线。**风险**：若某资产的动画 channel 不直接指向 joints（例如只驱动父节点），交集为空会漏绑 —— 需在 `MultiSkin` 与 `Fox` / `simpleSkin` 上同时验证；必要时退化为「交集为空且只有一个 skin 时仍绑定」（保持向后兼容），并在方案执行记录中写明。
 
-**执行记录（2026-11-10，已完成，未提交）**：按 §六 补齐 `MultiSkin.gltf` + `.bin` + `README.md`（2 skin / 2 animation，各自 channel 只驱动自己 joints），契约矩阵 40 → 41；先写 3 条断言实测 2 红（多 skin 组 `listSkins` 为 2、跨实例 bundle 抛 `Cannot read properties of undefined (reading 'Entity')`），再落地 `targetNodesByGroup` 记录、joints 交集过滤、bundle 实例过滤，并保留「单 skin 交集为空仍绑定」的向后兼容兜底（即本节风险段给出的退化策略）。`ci:no-e2e` 全绿（92 单测 / 73 browser、契约 66）；`npm run ci` **84/84**（8 workers 首轮全绿），`gltf-skin` 等 84 张基线零改动。详见 `p4-1-8-6-multi-skin.md`。
+**执行记录（2026-11-10，已完成，已提交 `5f6b5b3`；另补充 e2e 用例未提交）**：按 §六 补齐 `MultiSkin.gltf` + `.bin` + `README.md`（2 skin / 2 animation，各自 channel 只驱动自己 joints），契约矩阵 40 → 41；先写 3 条断言实测 2 红（多 skin 组 `listSkins` 为 2、跨实例 bundle 抛 `Cannot read properties of undefined (reading 'Entity')`），再落地 `targetNodesByGroup` 记录、joints 交集过滤、bundle 实例过滤，并保留「单 skin 交集为空仍绑定」的向后兼容兜底（即本节风险段给出的退化策略）。`ci:no-e2e` 全绿（92 单测 / 73 browser、契约 66）；`npm run ci` **84/84**（8 workers 首轮全绿），`gltf-skin` 等 84 张基线零改动。后补充 multi skins e2e 用例，`npm run test:e2e` **85/85**（新增 `gltf-multi-skin.png`，其余 84 张零改动），用例播放 0.5s 动画后停止（覆盖 skin 动画驱动，非 0 帧）。**再追加（2026-11-10）**：按用户要求单 skin 用例 `e2e-cases/gltf/skin.ts` 同样改为播放 0.5s 动画后停止，`gltf-skin.png` 基线由 0 帧更新为 0.5s 帧（本步「基线零改动」表述仅指 D4 落地当时；后续用户追加改动了该用例）。详见 `p4-1-8-6-multi-skin.md`。
 
 ### 5.5 D5 · uint16 索引保留（⏸ 已降级：已知性能边界，本轮不实施）
 

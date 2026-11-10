@@ -5,6 +5,7 @@ import {
     AmbientLight,
     DirectionalLight,
     createGLTFModel,
+    E_AnimationPlayType,
 } from '@we3d';
 
 declare global {
@@ -42,4 +43,13 @@ const gltf = await createGLTFModel({
     url: '/models/gltf/base/skin/simpleSkin.gltf',
 });
 window.gltf = gltf;
-await scene.add(gltf);
+const node = await scene.add(gltf);
+
+// e2e 约定：固定播放 0.5 秒后停在当前帧（而非 0 帧），确保截图基线覆盖 skin 动画驱动结果
+node.AnimationGroup?.forEach((group) => {
+    group.play({
+        speed: 1,
+        mode: { type: E_AnimationPlayType.time, time: 0.5 },
+        stopToFirst: false,
+    });
+});
