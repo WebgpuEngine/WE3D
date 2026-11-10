@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { GltfDataAtTransform } from './gltfTransformLoaders';
+import { GLTFModel } from './gltf';
 import { E_accessorUseFor } from './base';
+import { E_InterpolationModes } from '../../core/animation/base';
 import { getExtensionDependencyKeys } from './extensionDependencies';
 import { read as readKTX2 } from 'ktx-parse';
 import { isKTX2Bytes } from './imageMimeType';
@@ -25,6 +27,8 @@ const FOX = '/models/gltf/model/Fox/';
 /** §3.7 资产清单：base 系列 + Box 四形态 + Fox 两形态 + meshopt / WebP 扩展样本 */
 const ASSETS: string[] = [
     `${BASE}animation/simpleAnimation.gltf`,
+    // P4-1 §5.8：自造 CUBICSPLINE 动画样本（数据层断言，不新增 e2e 基线）
+    `${BASE}animation/CubicSpline.gltf`,
     `${BASE}material/simpleMaterial.gltf`,
     `${BASE}morphTarget/MorphTarget.gltf`,
     `${BASE}morphTarget/MorphTarget copy.gltf`,
@@ -161,6 +165,31 @@ async function digestBitmap(bitmap: ImageBitmap) {
         hash = Math.imul(hash, 16777619);
     }
     return { w: bitmap.width, h: bitmap.height, digest: hash >>> 0 };
+}
+
+/** §5.8：最小替身驱动 initAnimationsForInstance，避免构造完整 Scene / WebGPU 管线 */
+function makeAnimationHarness(animations: any[], frames: number[], values: number[]) {
+    const fakeScene = {
+        animationManager: { add: () => undefined },
+        animationGroupManager: { add: () => undefined },
+    };
+    const targetNode = { scene: fakeScene, Animation: [] as unknown[] };
+    const nodeOfScene: { AnimationGroup?: unknown[] } = {};
+    const model: any = Object.create(GLTFModel.prototype);
+    model.scene = fakeScene;
+    model.DataLoader = { getAnimations: () => animations };
+    model.instanceNodes = new Map([
+        [
+            nodeOfScene,
+            {
+                nodes: new Map<number, unknown>([[0, targetNode]]),
+                animation: new Map(),
+                animationGroup: new Map(),
+            },
+        ],
+    ]);
+    model.getAccessor = async (index: number) => (index === 2 ? frames : values);
+    return { model, nodeOfScene };
 }
 
 describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
@@ -593,4 +622,75 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             }
         });
     }
+
+    // P4-1 §5.8：旧代码用 `"CUBICSPLINE".toLowerCase()` 硬比驼峰枚举值 `cubicSpline`，
+    // 必然抛错；修复后按大小写不敏感的显式映射，且 in/value/out 三段数据完整送入 sampler。
+    it('P4-1 §5.8 CUBICSPLINE：映射 cubicSpline 且三段数据完整', async () => {
+        const url = `${BASE}animation/CubicSpline.gltf`;
+        const loader = new GltfDataAtTransform(url, device);
+        await loader.init();
+        const json = loader.gltfJSON();
+        const samplerJSON = json.animations![0].samplers[0];
+        expect(samplerJSON.interpolation, '资产声明 CUBICSPLINE').toBe('CUBICSPLINE');
+
+        const frames = loader.getAccessorForArray(samplerJSON.input);
+        const values = loader.getAccessorForArray(samplerJSON.output);
+        expect(frames, 'input 为 2 个时间戳').toEqual([0, 1]);
+        expect(values, 'output 为 2 帧 × 三段 × VEC3').toEqual([
+            0, 0, 0, 0, 0, 0, 1, 0, 0,
+            1, 0, 0, 1, 0, 0, 0, 0, 0,
+        ]);
+
+        const { model, nodeOfScene } = makeAnimationHarness(json.animations!, frames, values);
+        await expect(model.initAnimationsForInstance(nodeOfScene)).resolves.toBeUndefined();
+        const groups = nodeOfScene.AnimationGroup as any[];
+        expect(groups.length, '生成 1 个 AnimationGroup').toBe(1);
+        const sampler = groups[0].list[0].getSampler();
+        expect(sampler.interpolation, 'CUBICSPLINE → cubicSpline').toBe(
+            E_InterpolationModes.cubicSpline,
+        );
+        expect(Array.from(sampler.frames), 'frames 逐值').toEqual(frames);
+        expect(Array.from(sampler.values), 'values 三段逐值').toEqual(values);
+    });
+
+    // `IAnimationChannelTarget.node` 在 glTF 规范中可选（可能由扩展定义），
+    // 引擎不支持该扩展时应跳过该 channel 并 warn，而不是把 undefined 传给 KeyFrameAnimation。
+    it('P4-1 §5.8 target.node 缺失：跳过 channel + warn 不崩', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        try {
+            const animations = [
+                {
+                    samplers: [{ input: 2, interpolation: 'LINEAR', output: 3 }],
+                    channels: [{ sampler: 0, target: { path: 'translation' } }],
+                },
+            ];
+            const { model, nodeOfScene } = makeAnimationHarness(
+                animations,
+                [0, 1],
+                [0, 0, 0, 1, 0, 0],
+            );
+            await expect(model.initAnimationsForInstance(nodeOfScene)).resolves.toBeUndefined();
+            expect(warn, '必须走 warn 分支').toHaveBeenCalled();
+            const groups = nodeOfScene.AnimationGroup as any[];
+            expect(groups, '仍生成 1 个 AnimationGroup（既有行为）').toHaveLength(1);
+            expect(groups[0].list, '缺失 channel 不生成动画').toHaveLength(0);
+        } finally {
+            warn.mockRestore();
+        }
+    });
+
+    it('P4-1 §5.8 未知插值：抛带原始字符串的错误', async () => {
+        const animations = [
+            {
+                samplers: [{ input: 2, interpolation: 'BEZIER', output: 3 }],
+                channels: [{ sampler: 0, target: { node: 0, path: 'translation' } }],
+            },
+        ];
+        const { model, nodeOfScene } = makeAnimationHarness(
+            animations,
+            [0, 1],
+            [0, 0, 0, 1, 0, 0],
+        );
+        await expect(model.initAnimationsForInstance(nodeOfScene)).rejects.toThrow(/BEZIER/);
+    });
 });

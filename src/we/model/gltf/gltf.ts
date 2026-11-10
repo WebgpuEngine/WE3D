@@ -58,6 +58,22 @@ import { MeshSkins } from '../../core/entity/animationEntity/meshOfSkins';
 import { SkinsEntity } from '../../core/entity/animationEntity/skinsEntity';
 import { I_TextureForPBR, IV_PBRMaterial, PBRMaterial } from '../../core/material/PBR/PBRMaterial';
 
+/** glTF 插值字符串 → 引擎枚举：大小写不敏感的显式映射（不改动枚举值） */
+const INTERPOLATION_MODES = new Map<string, E_InterpolationModes>([
+    ['LINEAR', E_InterpolationModes.linear],
+    ['STEP', E_InterpolationModes.step],
+    ['CUBICSPLINE', E_InterpolationModes.cubicSpline],
+]);
+
+/** 未知值抛带原始字符串的错误，避免 toLowerCase() 丢失诊断信息 */
+function normalizeInterpolation(raw: string): E_InterpolationModes {
+    const mode = INTERPOLATION_MODES.get(raw.toUpperCase());
+    if (mode === undefined) {
+        throw new Error(`animation interpolation type ${raw} not found`);
+    }
+    return mode;
+}
+
 /** 实例化gltf绑定动画与动画组的资源 */
 export interface I_gltfInstanceResource {
     nodes: Map<any, NodeObject>;
@@ -306,8 +322,8 @@ export class GLTFModel extends BaseModel {
         if (mesh == undefined) {
             throw new Error(`mesh ${node.mesh} not found`);
         }
-        const stride = mesh.primitives[0].targets.length;
-        return stride;
+        const targets = mesh.primitives[0].targets;
+        return targets?.length ?? 0;
     }
     /**
      * 初始化动画
@@ -329,20 +345,27 @@ export class GLTFModel extends BaseModel {
             const perGroupList: (KeyFrameAnimation | MorphTargetAnimation)[] = [];
             for (const j in perAnimationGroupJSON.channels) {
                 const perChannels = perAnimationGroupJSON.channels[j];
-                const perSampler = perAnimationGroupJSON.samplers[perChannels.sampler];
-                const targetNode = this.instanceNodes
-                    .get(nodeOfScene)!
-                    .nodes.get(perChannels.target.node);
-                let interpolation: E_InterpolationModes;
-                if (perSampler.interpolation == undefined) {
-                    interpolation = E_InterpolationModes.linear;
-                } else {
-                    const raw = perSampler.interpolation.toLowerCase();
-                    if (!Object.values(E_InterpolationModes).includes(raw as E_InterpolationModes)) {
-                        throw new Error(`animation interpolation type ${raw} not found`);
-                    }
-                    interpolation = raw as E_InterpolationModes;
+                // glTF 规范中 target.node 可选（可能由扩展定义），引擎不支持该扩展：
+                // 跳过该 channel + warn，避免把 undefined 传给 KeyFrameAnimation。
+                const targetNodeID = perChannels.target.node;
+                if (targetNodeID === undefined) {
+                    console.warn(
+                        `[GLTFModel] animation channel[${j}] 缺少 target.node，跳过该 channel`,
+                    );
+                    continue;
                 }
+                const perSampler = perAnimationGroupJSON.samplers[perChannels.sampler];
+                const targetNode = this.instanceNodes.get(nodeOfScene)!.nodes.get(targetNodeID);
+                if (targetNode === undefined) {
+                    console.warn(
+                        `[GLTFModel] animation channel[${j}] 目标节点 ${targetNodeID} 未实例化，跳过该 channel`,
+                    );
+                    continue;
+                }
+                const interpolation =
+                    perSampler.interpolation === undefined
+                        ? E_InterpolationModes.linear
+                        : normalizeInterpolation(perSampler.interpolation);
                 const frames = (await this.getAccessor(
                     perSampler.input,
                     E_accessorUseFor.array,
@@ -378,8 +401,8 @@ export class GLTFModel extends BaseModel {
                         targetStride = 3;
                         break;
                     case E_AnimationTargetType.weights:
-                        // glTF IAnimationChannel.target.node 为可选；此处沿用既有假设（morph 动画必有目标节点）
-                        targetStride = this.getMorphTargetsForNode(perChannels.target.node!);
+                        // target.node 已在循环开头守卫，此处直接用收窄后的 number
+                        targetStride = this.getMorphTargetsForNode(targetNodeID);
                         break;
                     default:
                         throw new Error(`animation target type ${targetAnimationType} not found`);
@@ -395,12 +418,12 @@ export class GLTFModel extends BaseModel {
                 let oneAnimation: KeyFrameAnimation | MorphTargetAnimation;
                 if (targetAnimationType === E_AnimationTargetType.weights) {
                     oneAnimation = new MorphTargetAnimation({
-                        parent: targetNode!,
+                        parent: targetNode,
                         sampler: sampler,
                     });
                 } else {
                     oneAnimation = new KeyFrameAnimation({
-                        parent: targetNode!,
+                        parent: targetNode,
                         sampler: sampler,
                     });
                 }

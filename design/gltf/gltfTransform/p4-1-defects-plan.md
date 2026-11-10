@@ -190,7 +190,7 @@
 
 **验收**：`ci:no-e2e` + `ci` 全绿，基线零改动。**门禁**：不改基线。
 
-**执行记录（2026-11-10，已完成，未提交）**：先写 3 条 URL 契约断言并实测全红（无扩展名 URL 抛 `GLTFModel: unknown file type`、另两例 `gltfType` 字段仍在）；再删 `gltfType` 字段（−3）与 constructor 整段 `indexOf` 判断（−7），容器识别完全交给 `WebIO.readAsJSON()` 的 `isGLB()`。复核纠正方案举例：含 `.glb` / `.gltf` 子串的 URL 旧代码并不抛错，真正被误拒绝的是不含子串的 REST 风格 / blob URL。`ci:no-e2e` 全绿（92 单测 / 65 browser / exports 226）；`npm run ci` **84/84**（8 workers 首轮全绿），基线零改动。详见 `p4-1-d6-url-check.md`。
+**执行记录（2026-11-10，已完成，已提交 `a087a8e`）**：先写 3 条 URL 契约断言并实测全红（无扩展名 URL 抛 `GLTFModel: unknown file type`、另两例 `gltfType` 字段仍在）；再删 `gltfType` 字段（−3）与 constructor 整段 `indexOf` 判断（−7），容器识别完全交给 `WebIO.readAsJSON()` 的 `isGLB()`。复核纠正方案举例：含 `.glb` / `.gltf` 子串的 URL 旧代码并不抛错，真正被误拒绝的是不含子串的 REST 风格 / blob URL。`ci:no-e2e` 全绿（92 单测 / 65 browser / exports 226）；`npm run ci` **84/84**（8 workers 首轮全绿），基线零改动。详见 `p4-1-d6-url-check.md`。
 
 ### 5.7 D8 · 纯清理（与 D6 同批或紧邻一批）
 
@@ -213,6 +213,8 @@
 3. 测试：用 §六 的 `CubicSpline` 样本，断言 `initAnimationsForInstance` 不抛错、`sampler.interpolation === E_InterpolationModes.cubicSpline`、帧数值按 in/out/value 三段正确解析；补一个「`target.node` 缺失」的最小 JSON 断言走 warn 分支不崩。
 
 **验收**：现有 `animation` 用例基线零改动（现有资产全为 LINEAR）；`ci:no-e2e` + `ci`。
+
+**执行记录（2026-11-10，已完成，未提交）**：先按 §六 入库自造 `CubicSpline.gltf` + `.bin` + `README.md` 并加入契约矩阵（39 → 40），再写 3 条断言实测全红（`cubicspline not found`、`target.node` 缺失导致 `BaseAnimation` 崩、未知插值丢失原始字符串）；随后在 `gltf.ts` 新增**非导出**的大小写不敏感映射 `normalizeInterpolation()`、给 `target.node` 加「跳过 + warn」守卫并去掉 4 处裸用 / `!`、`getMorphTargetsForNode` 补 `targets?.length ?? 0`。`check:exports` 226 / 582 不变（零新增公共 API）。`ci:no-e2e` 全绿（92 单测 / 69 browser、契约 62）；`npm run ci` 8 workers 82/84（2 个既有并发波动），2 workers 复跑 84/84，基线零改动。详见 `p4-1-8-2-animation.md`。
 
 ### 5.9 D9 · baseColorFactor × baseColorTexture 未组合（着色器层，D1 验证时暴露）
 
