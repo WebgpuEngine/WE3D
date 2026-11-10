@@ -167,6 +167,8 @@
 
 **验收**：现有 `gltf-skin.png` 基线零改动；契约断言通过。**门禁**：`ci:no-e2e` + `ci`，不改基线。**风险**：若某资产的动画 channel 不直接指向 joints（例如只驱动父节点），交集为空会漏绑 —— 需在 `MultiSkin` 与 `Fox` / `simpleSkin` 上同时验证；必要时退化为「交集为空且只有一个 skin 时仍绑定」（保持向后兼容），并在方案执行记录中写明。
 
+**执行记录（2026-11-10，已完成，未提交）**：按 §六 补齐 `MultiSkin.gltf` + `.bin` + `README.md`（2 skin / 2 animation，各自 channel 只驱动自己 joints），契约矩阵 40 → 41；先写 3 条断言实测 2 红（多 skin 组 `listSkins` 为 2、跨实例 bundle 抛 `Cannot read properties of undefined (reading 'Entity')`），再落地 `targetNodesByGroup` 记录、joints 交集过滤、bundle 实例过滤，并保留「单 skin 交集为空仍绑定」的向后兼容兜底（即本节风险段给出的退化策略）。`ci:no-e2e` 全绿（92 单测 / 73 browser、契约 66）；`npm run ci` **84/84**（8 workers 首轮全绿），`gltf-skin` 等 84 张基线零改动。详见 `p4-1-8-6-multi-skin.md`。
+
 ### 5.5 D5 · uint16 索引保留（⏸ 已降级：已知性能边界，本轮不实施）
 
 > **状态变更（2026-11-10）**：本节自「必修项」降级为**重启预案**，本轮不执行、不产生 commit / 基线；分析与决策见 `p4-1-d5-uint32-index-decision.md`。原因：统一 32 位是为顶点属性对齐特意设计的策略，索引被顺带拓宽；uint32 索引合法且渲染正确，改动收益 < 1 MiB 而风险覆盖全量渲染路径。以下内容仅在决策记录 §五.3 的重启条件满足时使用。

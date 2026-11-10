@@ -38,6 +38,8 @@ const ASSETS: string[] = [
     `${BASE}skin/simpleSkin.gltf`,
     `${BASE}skin/simpleSkin_nodeModefy.gltf`,
     `${BASE}skin/test2.gltf`,
+    // P4-1 §5.4：自造 2 组 skin + 2 个 animation 的多 skin 样本（数据层断言，不新增 e2e 基线）
+    `${BASE}skin/MultiSkin.gltf`,
     `${BASE}texture/BoxTextured.gltf`,
     `${BASE}texture/BoxTexturedBufferView.gltf`,
     `${BASE}texture/testTexture.gltf`,
@@ -185,10 +187,64 @@ function makeAnimationHarness(animations: any[], frames: number[], values: numbe
                 nodes: new Map<number, unknown>([[0, targetNode]]),
                 animation: new Map(),
                 animationGroup: new Map(),
+                targetNodesByGroup: new Map(),
             },
         ],
     ]);
     model.getAccessor = async (index: number) => (index === 2 ? frames : values);
+    return { model, nodeOfScene };
+}
+
+/** §5.4：最小替身驱动 initAnimationsForInstance + initSkinsForInstance（不构造完整 WebGPU 管线） */
+function makeSkinHarness(
+    json: any,
+    bundles: Array<{ meshID: number; skinID: number; nodeID: number }>,
+) {
+    const fakeScene = {
+        animationManager: { add: () => undefined },
+        animationGroupManager: { add: () => undefined },
+        skinsManager: { add: () => undefined },
+    };
+    const makeNode = (nodeID: number) => ({
+        nodeID,
+        scene: fakeScene,
+        Animation: [] as unknown[],
+        _skinAnimation: [] as unknown[],
+        Entity: {
+            JointsMatCount: 0,
+            WeightsCount: 4,
+            JointMatrixByteSize: 0,
+            _animationType: new Set<unknown>(),
+        },
+    });
+    const nodes = new Map<number, any>();
+    for (let id = 0; id < 6; id++) nodes.set(id, makeNode(id));
+    const nodeOfScene: { AnimationGroup?: any[] } = {};
+    const model: any = Object.create(GLTFModel.prototype);
+    model.scene = fakeScene;
+    model.DataLoader = {
+        getAnimations: () => json.animations,
+        getSkin: (i: number) => json.skins[i],
+        getMesh: (i: number) => json.meshes[i],
+        getAccessorOfSource: () => ({ type: 'VEC4' }),
+    };
+    model.meshAndSkinBundle = bundles;
+    model.instanceNodes = new Map([
+        [
+            nodeOfScene,
+            {
+                nodes,
+                animation: new Map(),
+                animationGroup: new Map(),
+                targetNodesByGroup: new Map(),
+            },
+        ],
+    ]);
+    model.getAccessor = async (index: number) => {
+        if (index === 4) return new Float32Array(32);
+        if (index === 5) return [0, 1];
+        return [0, 0, 0, 1];
+    };
     return { model, nodeOfScene };
 }
 
@@ -692,5 +748,65 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             [0, 0, 0, 1, 0, 0],
         );
         await expect(model.initAnimationsForInstance(nodeOfScene)).rejects.toThrow(/BEZIER/);
+    });
+
+    // P4-1 §5.4 D4：多 skin 必须按「channel 目标集合 ∩ skin.joints」绑定。
+    // 修复前是全量双重循环，两个 AnimationGroup 都会拿到 2 个 SkinAnimation（互相串驱动）。
+    it('P4-1 D4 多 skin：两个 AnimationGroup 各绑定自己的 skin', async () => {
+        const url = `${BASE}skin/MultiSkin.gltf`;
+        const loader = new GltfDataAtTransform(url, device);
+        await loader.init();
+        const json = loader.gltfJSON();
+        expect(json.skins, '样本含 2 组 skin').toHaveLength(2);
+        expect(json.animations, '样本含 2 个动画').toHaveLength(2);
+
+        const { model, nodeOfScene } = makeSkinHarness(json, [
+            { meshID: 0, skinID: 0, nodeID: 0 },
+            { meshID: 0, skinID: 1, nodeID: 1 },
+        ]);
+        await model.initAnimationsForInstance(nodeOfScene);
+        await model.initSkinsForInstance(nodeOfScene);
+        const groups = nodeOfScene.AnimationGroup as any[];
+        expect(groups, '生成 2 个 AnimationGroup').toHaveLength(2);
+        expect(groups[0].listSkins, '组 0 只绑 1 个 skin').toHaveLength(1);
+        expect(groups[1].listSkins, '组 1 只绑 1 个 skin').toHaveLength(1);
+        expect(
+            groups[0].listSkins[0].skeleton.joints.map((j: any) => j.nodeID),
+            '组 0 绑定 SkinA 的 joints [2,3]',
+        ).toEqual([2, 3]);
+        expect(
+            groups[1].listSkins[0].skeleton.joints.map((j: any) => j.nodeID),
+            '组 1 绑定 SkinB 的 joints [4,5]',
+        ).toEqual([4, 5]);
+    });
+
+    it('P4-1 D4 单 skin：既有 simpleSkin 仍绑定成功', async () => {
+        const url = `${BASE}skin/simpleSkin.gltf`;
+        const loader = new GltfDataAtTransform(url, device);
+        await loader.init();
+        const { model, nodeOfScene } = makeSkinHarness(loader.gltfJSON(), [
+            { meshID: 0, skinID: 0, nodeID: 0 },
+        ]);
+        await model.initAnimationsForInstance(nodeOfScene);
+        await model.initSkinsForInstance(nodeOfScene);
+        const groups = nodeOfScene.AnimationGroup as any[];
+        expect(groups).toHaveLength(1);
+        expect(groups[0].listSkins, '单 skin 保持绑定').toHaveLength(1);
+    });
+
+    it('P4-1 D4 跨实例 bundle：不属于当前实例的条目被过滤', async () => {
+        const url = `${BASE}skin/MultiSkin.gltf`;
+        const loader = new GltfDataAtTransform(url, device);
+        await loader.init();
+        const { model, nodeOfScene } = makeSkinHarness(loader.gltfJSON(), [
+            { meshID: 0, skinID: 0, nodeID: 0 },
+            { meshID: 0, skinID: 1, nodeID: 1 },
+            { meshID: 0, skinID: 0, nodeID: 99 },
+        ]);
+        await model.initAnimationsForInstance(nodeOfScene);
+        await expect(model.initSkinsForInstance(nodeOfScene)).resolves.toBeUndefined();
+        const groups = nodeOfScene.AnimationGroup as any[];
+        expect(groups[0].listSkins, '实例外 bundle 不产生绑定').toHaveLength(1);
+        expect(groups[1].listSkins, '实例外 bundle 不产生绑定').toHaveLength(1);
     });
 });

@@ -79,6 +79,8 @@ export interface I_gltfInstanceResource {
     nodes: Map<any, NodeObject>;
     animation: Map<any, any>;
     animationGroup: Map<any, any>;
+    /** D4：每个 AnimationGroup 的 channel 目标节点集合（joints 交集绑定用，实例内临时数据） */
+    targetNodesByGroup: Map<AnimationGroup, Set<number>>;
 }
 
 export async function createGLTFModel(
@@ -209,6 +211,7 @@ export class GLTFModel extends BaseModel {
             nodes: new Map<any, NodeObject>(),
             animation: new Map<any, any>(),
             animationGroup: new Map<any, any>(),
+            targetNodesByGroup: new Map<AnimationGroup, Set<number>>(),
         });
         nodeOfScene._modelOrigin = this;
         nodeOfScene._name = 'gltf scene ,WE id:' + nodeOfScene.ID;
@@ -246,9 +249,12 @@ export class GLTFModel extends BaseModel {
         //1、递归获得mesh和skin的组合，以及对应的node ,输出[{meshID,skinID,nodeID}]
 
         //2、遍历mesh和skin的组合，初始化SkinAnimation,输出  [SkinAnimation]
-        const skinAnimations: SkinAnimation[] = [];
-        for (const bundle of this.meshAndSkinBundle) {
-            const node = this.instanceNodes.get(nodeOfScene)!.nodes.get(bundle.nodeID);
+        const instanceResource = this.instanceNodes.get(nodeOfScene)!;
+        const skinAnimations: Array<{ joints: number[]; animation: SkinAnimation }> = [];
+        // D4：meshAndSkinBundle 在 addNode 中跨实例累积，只处理当前实例确实存在的节点
+        const bundles = this.meshAndSkinBundle.filter((b) => instanceResource.nodes.has(b.nodeID));
+        for (const bundle of bundles) {
+            const node = instanceResource.nodes.get(bundle.nodeID);
             const _mesh = node?.Entity;
             const skin = this.DataLoader.getSkin(bundle.skinID);
 
@@ -284,23 +290,24 @@ export class GLTFModel extends BaseModel {
                 entity: node!.Entity as SkinsEntity,
                 weightsCount: weightsCount,
             });
-            skinAnimations.push(skinAnimation);
+            skinAnimations.push({ joints: jointsNodes, animation: skinAnimation });
         }
 
         //3、为每个animation group 增加skin animation：
-        // //nodeOfScene.animationGroup.addSkinAnimation(skinAnimation)
         if (nodeOfScene.AnimationGroup == undefined) {
-            // console.warn(`can not found animation group for skin at node id: ${nodeOfScene.ID}`);
             return;
         }
-        /** 为每个animation group 增加skin animation
-         * 1、每个animation group为一个动作，比如：走、跑等
-         * 2、为每个animation group，都有添加skin animation（可能有多个skins，一般只有一个skin）。（未在gltf的定义中找到skins与animation group的对应关系的定义）
-         * 3、动作是关键帧（每个动画组不同），skins是逆绑定矩阵（相同），所以产生不同的骨骼动画
+        /** D4：按「channel 目标节点集合 ∩ skin.joints」绑定，避免多 skin 互相串驱动。
+         * 1、动画 channel 的目标通常是 joint，而非挂 skin 的 mesh node，用 bundle.nodeID 相等会漏绑。
+         * 2、单 skin 时保持既有全绑定语义（交集为空也绑定），避免误伤只驱动父节点的资产。
          */
         for (const animationGroup of nodeOfScene.AnimationGroup) {
-            for (const skinAnimation of skinAnimations) {
-                animationGroup.addSkinAnimation(skinAnimation);
+            const targetNodes = instanceResource.targetNodesByGroup.get(animationGroup);
+            for (const { joints, animation } of skinAnimations) {
+                const hasIntersection =
+                    targetNodes !== undefined && joints.some((joint) => targetNodes.has(joint));
+                if (!hasIntersection && skinAnimations.length !== 1) continue;
+                animationGroup.addSkinAnimation(animation);
             }
         }
     }
@@ -339,10 +346,13 @@ export class GLTFModel extends BaseModel {
             return;
         }
         const animationGroups: AnimationGroup[] = [];
+        const instanceResource = this.instanceNodes.get(nodeOfScene)!;
         for (const i in animationGroupsJSON) {
             const perAnimationGroupJSON = animationGroupsJSON[i];
             const name = perAnimationGroupJSON.name || i;
             const perGroupList: (KeyFrameAnimation | MorphTargetAnimation)[] = [];
+            // D4：收集本组所有 channel 的 target.node，供 skin 绑定时与 skin.joints 求交集
+            const perGroupTargetNodes = new Set<number>();
             for (const j in perAnimationGroupJSON.channels) {
                 const perChannels = perAnimationGroupJSON.channels[j];
                 // glTF 规范中 target.node 可选（可能由扩展定义），引擎不支持该扩展：
@@ -362,6 +372,7 @@ export class GLTFModel extends BaseModel {
                     );
                     continue;
                 }
+                perGroupTargetNodes.add(targetNodeID);
                 const interpolation =
                     perSampler.interpolation === undefined
                         ? E_InterpolationModes.linear
@@ -435,6 +446,7 @@ export class GLTFModel extends BaseModel {
                 parent: nodeOfScene,
                 name,
             });
+            instanceResource.targetNodesByGroup.set(animationGroup, perGroupTargetNodes);
             animationGroups.push(animationGroup);
         }
         nodeOfScene.AnimationGroup = animationGroups;
