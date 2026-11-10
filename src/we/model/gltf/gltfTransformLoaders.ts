@@ -321,18 +321,38 @@ export class GltfDataAtTransform extends ModelDataLoader {
     }
 
     /**
+     * 转换类索引用途（LINE_LOOP / TRIANGLE_FAN）会改变索引数据，必须用独立 key：
+     * 同一 accessor 先按转换用途、再按普通索引 / 顶点使用时，若共享纯 accessorID
+     * 会拿到转换后的错误 buffer。其余用途仍按纯 accessorID 共享，避免无谓显存重复。
+     */
+    private getGPUBufferKey(accessorID: number, useFor?: E_accessorUseFor): number | string {
+        if (
+            useFor === E_accessorUseFor.indexLineLoop ||
+            useFor === E_accessorUseFor.indexTriangleFan
+        ) {
+            return `${useFor}_${accessorID}`;
+        }
+        return accessorID;
+    }
+
+    /**
      * 获取 accessor 对应的 GPUBuffer
      */
-    getGPUBuffer(accessorID: number): GPUBuffer | undefined {
-        return this.GPUBuffers.get(accessorID);
+    getGPUBuffer(accessorID: number, useFor?: E_accessorUseFor): GPUBuffer | undefined {
+        return this.GPUBuffers.get(this.getGPUBufferKey(accessorID, useFor));
     }
 
     /**
      * 创建 accessor 对应的 GPUBuffer
      * @param accessorID accessor 索引
      * @param Buffer 可选，指定要上传的 ArrayBuffer；默认使用 accessor 对应的 ArrayBuffer
+     * @param useFor 可选，转换类索引用途使用独立缓存 key
      */
-    createGPUBuffer(accessorID: number, Buffer?: TypedArray): GPUBuffer {
+    createGPUBuffer(
+        accessorID: number,
+        Buffer?: TypedArray,
+        useFor?: E_accessorUseFor,
+    ): GPUBuffer {
         let gpuBuffer: GPUBuffer;
         const accessor = this.getAccessorOfSource(accessorID);
         const name = accessor?.name || accessorID.toString();
@@ -354,7 +374,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
                 accessorArray.byteLength,
             );
         }
-        this.GPUBuffers.set(accessorID, gpuBuffer);
+        this.GPUBuffers.set(this.getGPUBufferKey(accessorID, useFor), gpuBuffer);
         return gpuBuffer;
     }
 
@@ -366,7 +386,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
         const accessor = this.getAccessorOfSource(accessorID);
         if (!accessor) throw new Error(`GltfDataAtTransform: accessor ${accessorID} not found`);
         const name = accessor.name || accessorID.toString();
-        let gpuBuffer = this.getGPUBuffer(accessorID);
+        let gpuBuffer = this.getGPUBuffer(accessorID, useFor);
         let accessorBufferSource: I_vsGPUBufferBundle | I_indexGPUBufferBundle;
         if (
             useFor == E_accessorUseFor.indexTriangleList ||
@@ -376,7 +396,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
             useFor == E_accessorUseFor.indexPointList
         ) {
             if (!gpuBuffer) {
-                gpuBuffer = this.createGPUBuffer(accessorID);
+                gpuBuffer = this.createGPUBuffer(accessorID, undefined, useFor);
             }
             accessorBufferSource = {
                 buffer: gpuBuffer,
@@ -395,7 +415,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
                     arrayIndexLineLoop,
                     accessor.count,
                 );
-                gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer);
+                gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer, useFor);
             }
             accessorBufferSource = {
                 buffer: gpuBuffer,
@@ -414,7 +434,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
                     arrayIndexTriangleFan,
                     accessor.count,
                 );
-                gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer);
+                gpuBuffer = this.createGPUBuffer(accessorID, newIndexBuffer, useFor);
             }
             accessorBufferSource = {
                 buffer: gpuBuffer,
@@ -430,7 +450,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
             const { format, wgslFormat, byteSize, arrayStride } =
                 this.getAccessorTypeForGPUVertexFormat(accessorID);
             if (!gpuBuffer) {
-                gpuBuffer = this.createGPUBuffer(accessorID, accessorArray);
+                gpuBuffer = this.createGPUBuffer(accessorID, accessorArray, useFor);
             }
             accessorBufferSource = {
                 buffer: gpuBuffer,
@@ -492,13 +512,11 @@ export class GltfDataAtTransform extends ModelDataLoader {
         index: number,
         useFor: E_accessorUseFor,
     ): Promise<TypedArray | I_vsGPUBufferBundle | I_indexGPUBufferBundle> {
-        let aliaseID: string;
-        if (useFor == E_accessorUseFor.array) {
-            aliaseID = 'array_' + index;
-        } else {
-            aliaseID = 'gpuBuffer_' + index;
-        }
-        const generate = this.accessor.has(index);
+        // 缓存 key 必须同时含 useFor 与 index：同一 accessor 用作顶点 / 普通索引 / loop / fan
+        // 时 bundle 布局不同；旧两值 key 配合 has(number) 使命中分支从未执行。
+        // aliaseID 仍按既有签名传入 generateAccessor（后者不消费），不改抽象层契约。
+        const aliaseID = `${useFor}_${index}`;
+        const generate = this.accessor.has(aliaseID);
         if (generate === false) {
             if (useFor == E_accessorUseFor.array) {
                 const array = this.getAccessorForByte(index);

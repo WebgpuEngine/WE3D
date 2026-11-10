@@ -150,6 +150,8 @@
 
 **验收**：全部 26 张 gltf 基线零改动（本项是性能 / 正确性修复，不应改渲染）；`ci:no-e2e` + `ci`。**门禁**：不改基线。
 
+**执行记录（2026-11-10，已完成，未提交）**：先写 4 条契约断言并实测全红（命中分支从未执行，loop / fan 转换后 buffer 串给普通索引，逐值读回 `[0,1,1,2]` / `[0,3,2,0]`）；再把 `aliaseID` 改为 `` `${useFor}_${index}` ``、`has(aliaseID)` 启用命中，并给 `GPUBuffers` 增加仅转换用途使用的独立 key；`generateAccessor` 的 `aliaseID` 形参确认未消费，保留签名。`ci:no-e2e` 全绿（92 单测 / 61 browser / exports 226 / build:lib）、`npm run ci` **84/84**（8 workers 硬件 GPU 首轮全绿），当前 84 张基线零改动。详见 `p4-1-d3-accessor-cache.md`。
+
 ### 5.4 D4 · 多 skin 按 joints 交集绑定
 
 **判据定义**（修正深度分析文档里模糊的「按 node 匹配」）：对每个 `AnimationGroup`，收集其所有 channel 的 `target.node`（在 `initAnimationsForInstance :330-408` 里顺带记入 `I_gltfInstanceResource` 的一个临时 `Map<AnimationGroup, Set<number>>`）；对每个 `meshAndSkinBundle`，取 `skin.joints`；**两者有交集才 `addSkinAnimation`**。理由：动画 channel 目标通常是 joint 而非挂 skin 的 mesh node，直接用 `bundle.nodeID` 相等会漏绑。

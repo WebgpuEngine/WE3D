@@ -445,4 +445,95 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             ).toEqual(expected);
         }
     });
+
+    // P4-1 D3：getAccessor() 的命中分支此前从未执行（has(number) vs set/get(string)），
+    // 且 GPUBuffers 只按 accessorID 缓存：loop / fan 转换后的索引会串给普通索引用途。
+    // 以下断言先写红，再把 alias 与 GPUBuffer 的 key 同时按 useFor 收口。
+    const D3_TRIANGLE = `${BASE}triangle/triangle.gltf`;
+
+    it('P4-1 D3 缓存命中：同 (index, useFor) 返回同一对象引用', async () => {
+        const loader = new GltfDataAtTransform(D3_TRIANGLE, device);
+        await loader.init();
+        const indexID = loader.gltfJSON().meshes![0].primitives[0].indices as number;
+        const first = await loader.getAccessor(indexID, E_accessorUseFor.indexTriangleList);
+        const second = await loader.getAccessor(indexID, E_accessorUseFor.indexTriangleList);
+        expect(second, '命中 accessor 缓存必须复用同一 bundle').toBe(first);
+    });
+
+    it('P4-1 D3 array / vertex 用途互不污染且各自命中', async () => {
+        const loader = new GltfDataAtTransform(D3_TRIANGLE, device);
+        await loader.init();
+        const prim = loader.gltfJSON().meshes![0].primitives[0];
+        const posID = prim.attributes!.POSITION as number;
+        const array = await loader.getAccessor(posID, E_accessorUseFor.array);
+        const vertex = (await loader.getAccessor(
+            posID,
+            E_accessorUseFor.vertex,
+        )) as unknown as T_BundleLike;
+        expect(ArrayBuffer.isView(array), 'array 用途返回 TypedArray').toBe(true);
+        expect(vertex.format, 'vertex 用途返回 float32 顶点 bundle').toMatch(/^float32/);
+        expect(vertex.buffer).toBeDefined();
+        expect(await loader.getAccessor(posID, E_accessorUseFor.array), 'array 再次命中').toBe(
+            array,
+        );
+        expect(
+            await loader.getAccessor(posID, E_accessorUseFor.vertex),
+            'vertex 再次命中且不被 array 覆盖',
+        ).toBe(vertex);
+    });
+
+    const D3_CONVERTED_CASES = [
+        {
+            label: 'LINE_LOOP',
+            url: `${BASE}line/LineLoop.gltf`,
+            useFor: E_accessorUseFor.indexLineLoop,
+            expand: (src: number[]) => {
+                const out: number[] = [];
+                for (let i = 1; i < src.length; i++) out.push(src[i - 1], src[i]);
+                out.push(src[src.length - 1], src[0]);
+                return out;
+            },
+        },
+        {
+            label: 'TRIANGLE_FAN',
+            url: `${BASE}triangle/TriangleFan/TriangleFan.gltf`,
+            useFor: E_accessorUseFor.indexTriangleFan,
+            expand: (src: number[]) => {
+                const out: number[] = [];
+                for (let i = 2; i < src.length; i++) out.push(src[0], src[i - 1], src[i]);
+                return out;
+            },
+        },
+    ];
+    for (const c of D3_CONVERTED_CASES) {
+        it(`P4-1 D3 ${c.label}：转换用途与普通索引不串 GPUBuffer`, async () => {
+            const loader = new GltfDataAtTransform(c.url, device);
+            await loader.init();
+            const indexID = loader.gltfJSON().meshes![0].primitives[0].indices as number;
+            const source = Array.from(loader.getAccessorForByte(indexID) as Uint32Array);
+            const expected = c.expand(source);
+
+            const converted = (await loader.getAccessor(
+                indexID,
+                c.useFor,
+            )) as unknown as T_BundleLike;
+            const plain = (await loader.getAccessor(
+                indexID,
+                E_accessorUseFor.indexTriangleList,
+            )) as unknown as T_BundleLike;
+
+            expect(converted, '不同 useFor 必须是不同 bundle').not.toBe(plain);
+            expect(converted.count, `${c.label} 转换后 count`).toBe(expected.length);
+            expect(plain.count, `${c.label} 普通索引 count`).toBe(source.length);
+            expect(converted.format).toBe('uint32');
+            expect(plain.format).toBe('uint32');
+
+            const readAll = async (bundle: T_BundleLike) =>
+                Array.from(
+                    new Uint32Array(await readGPUBuffer(device, bundle.buffer, bundle.byteSize)),
+                );
+            expect(await readAll(converted), `${c.label} 转换 GPUBuffer 逐值`).toEqual(expected);
+            expect(await readAll(plain), `${c.label} 普通索引 GPUBuffer 逐值`).toEqual(source);
+        });
+    }
 });
