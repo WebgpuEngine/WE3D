@@ -347,6 +347,7 @@ P4-1 D1–D8（需先解除口径，另立任务）
 | P4-1 · 8-3（D3） | ✅ 完成，未提交 | 见 `p4-1-d3-accessor-cache.md`。先写 4 条契约断言实测全红（缓存不命中 + loop/fan 转换 buffer 串给普通索引），再收口 bundle key 与 GPUBuffer key 后转绿。`ci:no-e2e` 全绿（92 单测 / 61 browser / exports 226 / build:lib）；`npm run ci` **84/84**（8 workers 硬件 GPU 首轮全绿），84 张基线零改动，门禁不改基线 |
 | P4-1 · 8-4（D2） | ✅ 完成，未提交 | 见 `p4-1-d2-line-loop.md`。先补自造 `LineLoop`（带 `COLOR_0`）+ 官方 `MeshPrimitiveModes` 契约载体，实测修复前契约红（`mode=2 → indexTriangleList`）、截图仅上下两条水平线；两处 `case 2` 改 `indexLineLoop` 后为闭合矩形。`ci:no-e2e` 全绿（57 browser / exports 226 / build:lib）；`test:baseline` **84/84** 新增 1 张基线；`npm run ci` **84/84**（8 workers 首轮全绿），其余 83 张基线零改动 |
 | P4-1 · 8-8（D9） | ✅ 完成，未提交 | 见 `p4-1-d9-base-color-factor.md`。`ci:no-e2e` 全绿（92 单测 / 54 browser / exports 226 / build:lib）；全量 `test:baseline` **83/83**，仅更新 `gltf-morph-primitives-test.png`，其余 82 张零改动；`npm run ci` 8 workers 2 个既有并发超时，2 workers 复跑 **83/83** |
+| P4-1 · 8-7（D5） | ⏸ 降级：已知性能边界，不实施 | 2026-11-10 决策，见 `p4-1-d5-uint32-index-decision.md`。统一 32 位是为顶点属性对齐特意设计、索引被顺带拓宽；uint32 索引合法且渲染正确，属显存/带宽优化而非正确性缺陷。已入库样本收益 ≈834 KiB（约索引显存 6.5%），改动面覆盖 35/40 资产与绝大多数 gltf e2e，收益/风险比不成立 → 取消 8-7，无 commit / 无基线 / 无门禁动作；§5.5 保留为重启预案 |
 
 ### 10.6 小步 1 执行记录（2026-11-06，未提交）
 
