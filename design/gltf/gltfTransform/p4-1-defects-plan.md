@@ -131,6 +131,8 @@
 
 **门禁**：`e2e-index` → `test:baseline`（新增 1 张）→ `ci`。
 
+**执行记录（2026-11-10，已完成，未提交）**：复核发现 `line/` 在 D1 批次已有官方 `MeshPrimitiveModes`（mode 0–6 含 mode=2），但无 `COLOR_0` 且未进入契约 / e2e；本次另造带 `COLOR_0` 的 `LineLoop.gltf` 作视觉载体，并把两个资产加入契约矩阵。修复前实测契约断言红（`indexTriangleList`）、截图只有 2 行 × 248 px；两处 `case 2` 改 `indexLineLoop` 后截图为 988 px 闭合矩形。`ci:no-e2e` / `test:baseline` 84/84 / `npm run ci` 84/84 全绿，见 `p4-1-d2-line-loop.md`。
+
 ### 5.3 D3 · 缓存正确性收口（先单测，后主路径）
 
 **改动**（`gltfTransformLoaders.ts:491-518`）：

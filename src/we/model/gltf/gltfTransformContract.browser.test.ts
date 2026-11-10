@@ -67,6 +67,10 @@ const ASSETS: string[] = [
     `${BASE}primitive/MultiPrimitive.gltf`,
     // P4-1 D1：官方 multiple_primitives 样本（多 primitive + 法线 / UV / morph target + 纹理，CC BY 4.0）
     `${BASE}primitive/MorphPrimitivesTest/MorphPrimitivesTest.gltf`,
+    // P4-1 D2：自造 LINE_LOOP 闭合矩形（mode=2 + COLOR_0）
+    `${BASE}line/LineLoop.gltf`,
+    // P4-1 D2：官方 mode 0–6 全覆盖样本（含 LINE_LOOP，CC0 1.0）
+    `${BASE}line/MeshPrimitiveModes/MeshPrimitiveModes.gltf`,
 ];
 
 /** GPU 数据收口（D6）代表资产：vertex 含 sparse、各类 index、无索引、Draco */
@@ -125,7 +129,7 @@ interface T_BundleLike {
     [k: string]: unknown;
 }
 
-/** 与 gltf.ts:1578-1602 一致的 mode → useFor 映射（不修既有 case 2 行为） */
+/** 与 gltf.ts 的 GPU / 数组两条 getIndecis*OfPrimitive switch 一致的 mode → useFor 映射 */
 function modeToUseFor(mode: number): E_accessorUseFor {
     switch (mode) {
         case 0:
@@ -133,7 +137,7 @@ function modeToUseFor(mode: number): E_accessorUseFor {
         case 1:
             return E_accessorUseFor.indexLineList;
         case 2:
-            return E_accessorUseFor.indexTriangleList;
+            return E_accessorUseFor.indexLineLoop;
         case 3:
             return E_accessorUseFor.indexLineStrip;
         case 5:
@@ -394,4 +398,51 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             }
         });
     }
+
+    // P4-1 D2：mode=2 (LINE_LOOP) 必须映射到 indexLineLoop，把 N 个索引展开为
+    // N 条首尾相接的线段（2N 个索引）。gltf.ts 的 GPU / 数组两条路径各有同一份 switch，
+    // 此处的 modeToUseFor 是它们的契约镜像；视觉回归由 e2e-cases/gltf/line_loop 承担。
+    it('P4-1 D2 LINE_LOOP：mode=2 映射 indexLineLoop 且索引闭合展开', async () => {
+        expect(
+            modeToUseFor(2),
+            'mode=2 必须映射 indexLineLoop（与 gltf.ts 两处 switch 一致）',
+        ).toBe(E_accessorUseFor.indexLineLoop);
+
+        for (const url of [
+            `${BASE}line/LineLoop.gltf`,
+            `${BASE}line/MeshPrimitiveModes/MeshPrimitiveModes.gltf`,
+        ]) {
+            const loader = new GltfDataAtTransform(url, device);
+            await loader.init();
+            const json = loader.gltfJSON();
+            const loops = (json.meshes ?? [])
+                .flatMap((m) => m.primitives ?? [])
+                .filter((p) => p.mode === 2);
+            expect(loops.length, `${url} 应含 1 个 mode=2 primitive`).toBe(1);
+
+            const accessorID = loops[0].indices as number;
+            const count = json.accessors![accessorID].count;
+            const source = loader.getAccessorForByte(accessorID) as Uint32Array;
+            const expected: number[] = [];
+            for (let i = 1; i < count; i++) expected.push(source[i - 1], source[i]);
+            expected.push(source[count - 1], source[0]);
+
+            const bundle = (await loader.generateAccessor(
+                accessorID,
+                '',
+                E_accessorUseFor.indexLineLoop,
+            )) as unknown as T_BundleLike;
+            expect(bundle.count, `${url} loop bundle.count`).toBe(count * 2);
+            expect(bundle.byteSize, `${url} loop bundle.byteSize`).toBe(count * 2 * 4);
+            expect(bundle.format, `${url} loop format`).toBe('uint32');
+            const bytes = await readGPUBuffer(device, bundle.buffer, bundle.byteSize);
+            expect(Array.from(new Uint32Array(bytes)), `${url} loop GPUBuffer 逐值`).toEqual(
+                expected,
+            );
+            expect(
+                await loader.generateAccessorForArray(accessorID, E_accessorUseFor.indexLineLoop),
+                `${url} loop 数组路径逐值`,
+            ).toEqual(expected);
+        }
+    });
 });

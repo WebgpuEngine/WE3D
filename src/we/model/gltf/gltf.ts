@@ -1604,7 +1604,7 @@ export class GLTFModel extends BaseModel {
                     useFor = E_accessorUseFor.indexLineList;
                     break;
                 case 2:
-                    useFor = E_accessorUseFor.indexTriangleList;
+                    useFor = E_accessorUseFor.indexLineLoop;
                     break;
                 case 3:
                     useFor = E_accessorUseFor.indexLineStrip;
@@ -1682,7 +1682,7 @@ export class GLTFModel extends BaseModel {
                     useFor = E_accessorUseFor.indexLineList;
                     break;
                 case 2:
-                    useFor = E_accessorUseFor.indexTriangleList;
+                    useFor = E_accessorUseFor.indexLineLoop;
                     break;
                 case 3:
                     useFor = E_accessorUseFor.indexLineStrip;

@@ -1,0 +1,92 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "name": "LineLoop.POSITION",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        0.8999999761581421,
+        0.8999999761581421,
+        0
+      ],
+      "min": [
+        -0.8999999761581421,
+        -0.8999999761581421,
+        0
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "name": "LineLoop.COLOR_0",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 4,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "name": "LineLoop.indices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 4,
+      "bufferView": 1,
+      "byteOffset": 0
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 96,
+      "byteStride": 24,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 96,
+      "byteLength": 8,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "LineLoop.bin",
+      "byteLength": 104
+    }
+  ],
+  "meshes": [
+    {
+      "name": "LineLoopMesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "COLOR_0": 1
+          },
+          "mode": 2,
+          "indices": 2
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "LineLoopNode",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}
