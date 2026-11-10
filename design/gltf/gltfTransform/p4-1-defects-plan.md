@@ -230,6 +230,8 @@ albedo_uniform = textureSample(u_texture_albedo, u_sampler_albedo, uv_temp) * u_
 
 **门禁**：`test:baseline`（更新 `gltf-morph-primitives-test.png` 基线）→ `ci`。**风险**：若现有任一资产 factor 非默认且带纹理，其基线会随之改变，属**正确的渲染修正**，需一并更新基线并记录。
 
+**执行修订（2026-11-10，已完成，未提交）**：上述「仅 `PBR.fs.wgsl` 一行」经实测**不足以修复** —— `PBRMaterial.readyForGPU()` 在有纹理时不写 `insideUniformBundle.value`，`baseColorFactor` 从未进入 GPU uniform，只改 shader 截图零变化。实际落地为「shader 采样语句乘 factor + `PBRMaterial.ts` 纹理分支写入 albedo 的 4 个分量」，`§七` 小步 8-8 的改动描述以此为准。根因、影响面、验收与门禁数据见执行记录 `p4-1-d9-base-color-factor.md`。
+
 ---
 
 ## 六、前置资产与回归载体（小步 8-0，硬性）

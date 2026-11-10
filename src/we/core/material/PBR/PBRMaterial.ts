@@ -611,6 +611,20 @@ export class PBRMaterial extends BaseMaterial {
                                 this.defaultSamplerBindingType;
                         }
                         //vec3 channel 固定，不需要channel参数
+                        // glTF 2.0 规定 baseColor = baseColorFactor × baseColorTexture：
+                        // 有纹理时 value 是 factor 而非被替代的值，仍需写入 uniform 供 FS 相乘。
+                        if (
+                            key == E_TextureType.albedo &&
+                            perOne.value != undefined &&
+                            typeof perOne.value != 'number'
+                        ) {
+                            const factor = perOne.value;
+                            const uniformValue = this.insideUniformBundle[index].value;
+                            uniformValue[0] = factor[0];
+                            uniformValue[1] = factor[1];
+                            uniformValue[2] = factor[2];
+                            uniformValue[3] = factor[3];
+                        }
                     }
                     //如果参数是值
                     else if (perOne.value) {

@@ -59,9 +59,8 @@ struct st_pbr_UniformInput{
     //albedo
     var albedo_uniform : vec4f = u_pbr_uniform.albedo.value;
     if(u_pbr_uniform.albedo.kind == 1){//use texture albedo * (uniform albedo as factor)
-        // albedo_uniform *= u_pbr_uniform.albedo.value;
         if(u_pbr_uniform.albedo.data1 == 1){        uv_temp = uv1;    }    else {        uv_temp = uv;    }
-         albedo_uniform = textureSample(u_texture_albedo,u_sampler_albedo,uv_temp);
+         albedo_uniform = textureSample(u_texture_albedo,u_sampler_albedo,uv_temp) * u_pbr_uniform.albedo.value;
     }    
     albedo=albedo_uniform.rgb;
     
