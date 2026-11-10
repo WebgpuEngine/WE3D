@@ -66,9 +66,6 @@ export class GltfDataAtTransform extends ModelDataLoader {
     /** 扩展依赖的 per-model 覆盖；不传则由通用解析器按扩展声明自动检测 + 懒加载 */
     private dependencyOverrides?: T_ExtensionDependencyProviders;
 
-    /** 仅作诊断字段保留；容器识别由 WebIO 按 GLB magic 完成（本期不修 D6） */
-    gltfType: 'gltf' | 'glb';
-
     /** ① 原始 JSON 视图：所有按 index getter 的来源；也供 beforeGltfInit 兼容访问 */
     gltfJson!: GLTF.IGLTF;
     private jsonDoc!: JSONDocument;
@@ -95,13 +92,6 @@ export class GltfDataAtTransform extends ModelDataLoader {
         this.device = device;
         this.parent = parent;
         this.dependencyOverrides = dependencyOverrides;
-        if (url.indexOf('.gltf') != -1) {
-            this.gltfType = 'gltf';
-        } else if (url.indexOf('.glb') > -1) {
-            this.gltfType = 'glb';
-        } else {
-            throw new Error('GLTFModel: unknown file type');
-        }
         if (parent) {
             this.GPUBuffers = parent.modelRes['GPUBuffers'];
             this.accessor = parent.modelRes['accessor'];

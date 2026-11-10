@@ -190,6 +190,8 @@
 
 **验收**：`ci:no-e2e` + `ci` 全绿，基线零改动。**门禁**：不改基线。
 
+**执行记录（2026-11-10，已完成，未提交）**：先写 3 条 URL 契约断言并实测全红（无扩展名 URL 抛 `GLTFModel: unknown file type`、另两例 `gltfType` 字段仍在）；再删 `gltfType` 字段（−3）与 constructor 整段 `indexOf` 判断（−7），容器识别完全交给 `WebIO.readAsJSON()` 的 `isGLB()`。复核纠正方案举例：含 `.glb` / `.gltf` 子串的 URL 旧代码并不抛错，真正被误拒绝的是不含子串的 REST 风格 / blob URL。`ci:no-e2e` 全绿（92 单测 / 65 browser / exports 226）；`npm run ci` **84/84**（8 workers 首轮全绿），基线零改动。详见 `p4-1-d6-url-check.md`。
+
 ### 5.7 D8 · 纯清理（与 D6 同批或紧邻一批）
 
 | 项 | 位置 | 动作 |

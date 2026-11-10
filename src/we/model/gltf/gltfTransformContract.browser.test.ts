@@ -551,4 +551,46 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             '显式 metallicFactor: 0 解析后必须为 0，不能被默认值 1 吞掉',
         ).toBe(0);
     });
+
+    // P4-1 D6：容器识别完全交给 WebIO 的 GLB magic，URL 字符串不得参与控制流。
+    // 修复前 constructor 按 url.indexOf('.gltf'/'.glb') 判断：无扩展名 URL 直接抛错，
+    // 且 gltfType 诊断字段全仓无读取者。三类 URL 都必须能构造并读出 Document。
+    const D6_URL_CASES: Array<{ label: string; make: () => Promise<string> }> = [
+        {
+            label: '带 query / hash 的 .gltf',
+            make: async () => `${BASE}triangle/triangle.gltf?v=2#x`,
+        },
+        {
+            label: '无扩展名 URL（REST 风格，本地静态资源经 blob 承载）',
+            make: async () => {
+                const text = await (await fetch(`${BASE}triangle/triangle.gltf`)).text();
+                return URL.createObjectURL(new Blob([text], { type: 'model/gltf+json' }));
+            },
+        },
+        {
+            label: 'GLB 内容但 URL 以 .gltf 结尾',
+            make: async () => `${BOX}glTF-Binary/Box.glb?v=1.2.gltf`,
+        },
+    ];
+    for (const c of D6_URL_CASES) {
+        it(`P4-1 D6 URL 形态：${c.label}`, async () => {
+            const url = await c.make();
+            try {
+                expect(
+                    () => new GltfDataAtTransform(url, device),
+                    `${c.label}：constructor 不得按 URL 扩展名抛错`,
+                ).not.toThrow();
+                const loader = new GltfDataAtTransform(url, device);
+                expect('gltfType' in loader, `${c.label}：诊断字段已移除`).toBe(false);
+                const doc = await loader.init();
+                expect(loader.gltfJSON().asset.version, `${c.label}：解析出 glTF 2.0`).toBe('2.0');
+                expect(
+                    doc.getRoot().listMeshes().length,
+                    `${c.label}：Document 含 mesh`,
+                ).toBeGreaterThan(0);
+            } finally {
+                if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+            }
+        });
+    }
 });
