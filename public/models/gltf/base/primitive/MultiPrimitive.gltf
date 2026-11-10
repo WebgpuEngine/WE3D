@@ -1,0 +1,152 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "name": "leftRed.POSITION",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3,
+      "max": [
+        -0.20000000298023224,
+        0.6000000238418579,
+        0
+      ],
+      "min": [
+        -1,
+        -0.6000000238418579,
+        0
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "name": "leftRed.indices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "name": "rightBlue.indices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 3,
+      "bufferView": 1,
+      "byteOffset": 8
+    },
+    {
+      "name": "rightBlue.POSITION",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3,
+      "max": [
+        1,
+        0.6000000238418579,
+        0
+      ],
+      "min": [
+        0.20000000298023224,
+        -0.6000000238418579,
+        0
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 36,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 36,
+      "byteLength": 16,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 52,
+      "byteLength": 36,
+      "byteStride": 12,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "name": "MultiPrimitive.bin",
+      "uri": "MultiPrimitive.bin",
+      "byteLength": 88
+    }
+  ],
+  "materials": [
+    {
+      "name": "leftRed.material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "rightBlue.material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "MultiPrimitiveMesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 1
+        },
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 2
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "MultiPrimitiveNode",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

@@ -13,10 +13,10 @@ import { NodeObject, newNode } from '../../core/organization/nodeObject';
  * @param parent 父节点
  * @param root 根节点
  *
- * 一、未处理的情况与问题
- *   1、mesh有多个primitive，目前只处理了第一个primitive。
- *         A、一个实体的点线面可能都存在
- *         B、非相关实体，但对于后续操作，比如动画由相同的操作
+ * 一、多 primitive 处理（D1，见 design/gltf/gltfTransform/p4-1-d1-multi-primitive.md）
+ *   1、单 mesh 多 primitive：第 1 个 primitive 挂主 node，第 2..N 个各建子 NodeObject 承载，
+ *      TRS 继承父节点，不写入 instanceNodes.nodes。
+ *   2、未处理边界：getMorphTargetsForNode 仍只取 primitives[0] 的 targets。
  *
  * 二、同时处理的数据
  *  1、meshAndskinBundle：即、骨骼动画
@@ -42,7 +42,9 @@ export async function addNode(
     //如果当前节点有mesh，就添加到parent中
     if (node.mesh !== undefined && typeof node.mesh == 'number') {
         //有mesh，就添加到parent中
-        const mesh = (await gltf.getRes(T_ModelResKind.entity, node.mesh)) as BaseEntity;
+        const meshID = node.mesh;
+        const primitives = gltf.DataLoader.getMeshes()?.[meshID]?.primitives ?? [];
+        const mesh = (await gltf.getRes(T_ModelResKind.entity, meshID)) as BaseEntity;
         if (node.matrix !== undefined) {
             // mesh.setMatrix(node.matrix);
         } else {
@@ -62,6 +64,19 @@ export async function addNode(
             // mesh.setWeights(node.weights);
         }
         oneNode.attachEntity(mesh);
+        // D1：单 mesh 多 primitive。第 1 个 primitive 挂主 node，第 2..N 个各建子 NodeObject 承载，
+        // TRS 继承父节点，不写入 instanceNodes.nodes（避免污染 node 索引映射）。
+        for (let j = 1; j < primitives.length; j++) {
+            const childEntity = (await gltf.getRes(
+                T_ModelResKind.entity,
+                `${meshID}_${j}`,
+            )) as BaseEntity;
+            if (!childEntity) continue;
+            const childNode = await newNode(oneNode);
+            childNode.Name = `${oneNode.Name} ${j}`;
+            await childNode.attachEntity(childEntity);
+            await oneNode.addChild(childNode);
+        }
         // await parent.addChild(oneNode);
     }
     //////////////////////////////////////////////

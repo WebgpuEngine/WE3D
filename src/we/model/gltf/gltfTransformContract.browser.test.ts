@@ -63,6 +63,10 @@ const ASSETS: string[] = [
     `${BASE}meshopt/Box.gltf`,
     // Khronos 官方压力测试样本：交错顶点 / normalized / filters / 动画（扩展名已规范化）
     `${BASE}meshopt/MeshoptCubeTest/MeshoptCubeTest.gltf`,
+    // P4-1 D1：单 mesh 多 primitive 样本（1 mesh / 2 primitive / 2 material）
+    `${BASE}primitive/MultiPrimitive.gltf`,
+    // P4-1 D1：官方 multiple_primitives 样本（多 primitive + 法线 / UV / morph target + 纹理，CC BY 4.0）
+    `${BASE}primitive/MorphPrimitivesTest/MorphPrimitivesTest.gltf`,
 ];
 
 /** GPU 数据收口（D6）代表资产：vertex 含 sparse、各类 index、无索引、Draco */

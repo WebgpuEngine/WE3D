@@ -1294,7 +1294,12 @@ export class GLTFModel extends BaseModel {
                     } else {
                         throw new Error('primitiveMode not support');
                     }
-                    this.modelRes.entity.set(Number(i), entity);
+                    // D1：单 mesh 多 primitive 需全部保留。复合 key 存每个 primitive，
+                    // 同时保留「mesh 索引 → 首个 primitive」兼容项（供 getRes 与 skin/morph 单 Entity 假设）。
+                    this.modelRes.entity.set(`${i}_${j}`, entity);
+                    if (Number(j) === 0) {
+                        this.modelRes.entity.set(Number(i), entity);
+                    }
                 }
             }
         } else {

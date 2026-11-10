@@ -1,7 +1,7 @@
-# P4-1 · D1–D8 缺陷修复准备方案（复核后再聚焦）
+# P4-1 · D1–D9 缺陷修复准备方案（复核后再聚焦）
 
 > 状态：📋 **方案已就绪，未改任何代码**；等待用户确认后按 §七 小步序列执行。
-> 日期：2026-11-09
+> 日期：2026-11-09（D9 于 2026-11-10 D1 验证时新发现并登记）
 > 上位文档：`gltf-transform-phase4-plan.md` §4.11 / §十（决策 7 已解除「不 commit」口径、决策 1「小步推进 + 每步严格测试」）；`design/workBuddy/20260923项目与gltf分析/03-gltf模块深度分析.md` §六（:330-477，D1–D8 原始定义）；`AGENTS.md` §三.1 门禁。
 > 性质：本文是 **P4-1 的具体执行方案**，不是执行记录；每一项独立立项、独立 commit。
 > 定位：D1–D8 原始清单是 **2026-09-23 对旧 loader（`gltfAtLoaders.ts`）的静态分析**。迁移到 `GltfDataAtTransform` 并完成 Phase 4 小步 1~6 后，代码已大幅变化。本文按当前 HEAD 重新实测，**纠正原定性、裁定范围、给出可执行方案**。
@@ -40,6 +40,7 @@
 | D7 | `||` 吞 0 | `gltf.ts:884,995,1015` 与 `:871,924,962,990,1009,1029` | ❌ **已修复** | — | — | 多个 `metallicFactor:0` 资产隐式覆盖 |
 | D8 | 其它小问题 | 见 §四 | 部分 | 抽象泄漏已修；剩余项需切分 | 部分 | — |
 | 新 | 动画两待查 | `gltf.ts:340-344`（`CUBICSPLINE`）、`:333-335,382,398,403`（`target.node`）、`:309`（`primitives[0]`） | ✅ **均属实** | 中：CUBICSPLINE 资产必抛错；`node` 可选被 `!` 掩盖 | 否（新资产） | ❌ 无 CUBICSPLINE 资产 |
+| D9 | `baseColorFactor` 与 `baseColorTexture` 未组合 | `src/we/core/shaders/material/PBR/PBR.fs.wgsl:60-66` | ✅ **仍存在**（D1 验证时暴露） | 中：`kind==1`（有纹理）分支直接采样纹理，`baseColorFactor` 被忽略；glTF 规范要求 `baseColor = factor × texture` | **是**（官方 `MorphPrimitivesTest`） | ❌ 无「非默认 factor + 纹理」资产 |
 
 ---
 
@@ -85,7 +86,7 @@
 
 ## 四、范围裁定
 
-**纳入 P4-1（本方案）**：D1、D2、D3、D4、D5、D6、D8 中的「纯清理」与「动画两项待查」、D7 的回归断言补齐。
+**纳入 P4-1（本方案）**：D1、D2、D3、D4、D5、D6、D8 中的「纯清理」与「动画两项待查」、D7 的回归断言补齐、**D9（着色器层 baseColorFactor × baseColorTexture，D1 验证时新发现）**。
 
 **明确排除**：
 
@@ -201,6 +202,34 @@
 
 **验收**：现有 `animation` 用例基线零改动（现有资产全为 LINEAR）；`ci:no-e2e` + `ci`。
 
+### 5.9 D9 · baseColorFactor × baseColorTexture 未组合（着色器层，D1 验证时暴露）
+
+**根因**：`src/we/core/shaders/material/PBR/PBR.fs.wgsl:60-66` 的 albedo 采样逻辑：
+
+```wgsl
+var albedo_uniform : vec4f = u_pbr_uniform.albedo.value;      // 初始化为 baseColorFactor
+if(u_pbr_uniform.albedo.kind == 1){                            // 有 baseColorTexture
+    // albedo_uniform *= u_pbr_uniform.albedo.value;          // ← 被注释；且位于采样前，即使取消注释也会被下一行覆盖
+    ...
+    albedo_uniform = textureSample(...);                      // 直接覆盖为纹理采样值，factor 丢失
+}
+albedo = albedo_uniform.rgb;
+```
+
+glTF 2.0 规范要求 `baseColor = baseColorFactor × baseColorTexture`（逐分量相乘）。当前 `kind==1` 分支直接取纹理采样值，完全忽略 `baseColorFactor`，导致「有纹理 + 非默认 factor」的资产 albedo 错误（如官方 `MorphPrimitivesTest` 渲染为灰而非预期的红/绿）。
+
+**改动**（仅 `PBR.fs.wgsl` 一行，乘法放到采样语句上，而非采样前）：
+
+```wgsl
+albedo_uniform = textureSample(u_texture_albedo, u_sampler_albedo, uv_temp) * u_pbr_uniform.albedo.value;
+```
+
+删除被注释的那行 `// albedo_uniform *= ...`。`value` 为 `vec4f`（RGBA factor），`textureSample` 亦返回 `vec4f`，逐分量相乘符合规范；`kind==0`（无纹理纯 factor）分支不变。
+
+**验收**：官方 `MorphPrimitivesTest` e2e 截图从「灰」变回红/绿两色；其余既有基线理论上零改动（现有资产 factor 均默认 `[1,1,1,1]`，乘 1 不变）——需跑全量 `test:baseline` 确认。
+
+**门禁**：`test:baseline`（更新 `gltf-morph-primitives-test.png` 基线）→ `ci`。**风险**：若现有任一资产 factor 非默认且带纹理，其基线会随之改变，属**正确的渲染修正**，需一并更新基线并记录。
+
 ---
 
 ## 六、前置资产与回归载体（小步 8-0，硬性）
@@ -240,9 +269,11 @@
             └ ci:no-e2e + ci，基线零改动
 小步 8-7  D5 uint16 索引（先数据级 spike，再格式/数据/契约同步 + 全量基线）
             └ test:baseline → ci，理论基线零改动；有差异即回退
+小步 8-8  D9 baseColorFactor × baseColorTexture 组合（着色器一行 + 更新 morph 基线）
+            └ test:baseline → ci，更新 gltf-morph-primitives-test.png 基线
 ```
 
-**排序理由**：零风险项先跑通门禁流程 → 数据层修复（D3）为后续缓存行为打底 → 两项「新增资产 + 新增基线」的渲染修复在流程熟练后做 → 架构级 D1 单独一批 → 语义级 D4 → 影响面最大的 D5 压轴，此时前面每批的基线都已稳定，便于精确归因。
+**排序理由**：零风险项先跑通门禁流程 → 数据层修复（D3）为后续缓存行为打底 → 两项「新增资产 + 新增基线」的渲染修复在流程熟练后做 → 架构级 D1 单独一批 → 语义级 D4 → 影响面最大的 D5 压轴，此时前面每批的基线都已稳定，便于精确归因。D9 是着色器层单行修复，排在 D5 之后作为收尾，其官方资产 `MorphPrimitivesTest` 已在 D1 入库，仅需更新该基线。
 
 **每步收尾**：更新 `design/engineering/pending-work.md` §4 与 `gltf-transform-phase4-plan.md` §10.5 进度表；8-7 完成后把主方案 §三 P4-1 行与 §七 Phase 4 条目标注「已完成」并指向本文执行记录。**不主动提交**，沿用「报告门禁结果 → 用户决定提交」的交互模式。
 
