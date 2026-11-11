@@ -42,7 +42,7 @@ export class RootManager extends NodeObject {
     // async addChild(child: NodeObject): Promise<number> {
     //     return await super.addChild(child);
     // }
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<unknown> {
         return true;
     }
 

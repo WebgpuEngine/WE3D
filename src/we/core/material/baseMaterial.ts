@@ -297,7 +297,7 @@ export abstract class BaseMaterial extends RootGPU {
      * @param scene 场景对象
      * @returns
      */
-    async init(scene: Scene): Promise<any> {
+    async init(scene: Scene): Promise<void> {
         //如果已经初始化，直接返回
         if (this._state == E_lifeState.finished) return;
         this.scene = scene;

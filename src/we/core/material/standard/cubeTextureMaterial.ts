@@ -59,7 +59,7 @@ export class CubeTextureMaterial extends TextureMaterial {
         }
     }
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         if (this.inputValues.texture == undefined) {
             throw new Error('CubeTextureMaterial 缺少cubeTexture');
         }

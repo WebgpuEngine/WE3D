@@ -9,7 +9,7 @@ export interface IV_AmbientLight extends I_optionBaseLight {
 }
 
 export class AmbientLight extends BaseLight {
-    async readyForGPU(): Promise<any> {}
+    async readyForGPU(): Promise<void> {}
     _destroy(): void {
         throw new Error('Method not implemented.');
     }

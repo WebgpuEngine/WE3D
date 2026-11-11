@@ -36,7 +36,7 @@ export class VertexColorMaterial extends BaseStandardMaterial {
     _destroy(): void {
         throw new Error('Method not implemented.');
     }
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this._state = E_lifeState.finished;
     }
 

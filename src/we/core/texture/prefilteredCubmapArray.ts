@@ -29,7 +29,7 @@ export class PrefilteredCubmapArray extends BaseTexture {
         this.iblCount = (input.source as string[]).length;
     }
 
-    async initTextureAndLayout(): Promise<any> {
+    async initTextureAndLayout(): Promise<unknown> {
         this.texture = undefined;
         const source = this.inputValues.source;
         let width = 256;

@@ -121,8 +121,9 @@ export interface IV_Node extends IV_NodeSpace {
  * 4、updateSelf需要实例化
  */
 export class NodeObject extends NodeSpace {
-    override async readyForGPU(): Promise<any> {
+    override async readyForGPU(): Promise<unknown> {
         // throw new Error("Method not implemented.");
+        return undefined;
     }
     override _destroy(): void {
         // throw new Error("Method not implemented.");
@@ -400,7 +401,7 @@ export class NodeObject extends NodeSpace {
      * @param renderID
      * @returns
      */
-    async init(scene: Scene, parent?: NodeObject, _renderID?: number): Promise<any> {
+    async init(scene: Scene, parent?: NodeObject, _renderID?: number): Promise<void> {
         super.init(scene);
         if (parent) {
             this.Parent = parent;
@@ -994,7 +995,7 @@ export class NodeObject extends NodeSpace {
 //     loadJSON(json: any): void {
 //         throw new Error("Method not implemented.");
 //     }
-//     async readyForGPU(): Promise<any> {
+//     async readyForGPU(): Promise<void> {
 //         // throw new Error("Method not implemented.");
 
 //     }
@@ -1034,7 +1035,7 @@ export class NodeObject extends NodeSpace {
 //     loadJSON(json: any): void {
 //         throw new Error("Method not implemented.");
 //     }
-//     async readyForGPU(): Promise<any> {
+//     async readyForGPU(): Promise<void> {
 //         // throw new Error("Method not implemented.");
 
 //     }

@@ -91,7 +91,7 @@ export class VideoMaterial extends BaseStandardMaterial {
         this._state = E_lifeState.destroyed;
     }
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.defaultSampler = this.checkSampler(this.inputValues);
         if (this.inputValues.textures[E_TextureType.video] instanceof VideoTexture) {
             this.textures[E_TextureType.video] = this.inputValues.textures[

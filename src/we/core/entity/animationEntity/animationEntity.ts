@@ -51,7 +51,7 @@ export abstract class AnimationEntity extends EntityBundleMaterial {
         );
     }
 
-    // override async init(scene: Scene): Promise<any> {
+    // override async init(scene: Scene): Promise<void> {
     //     await super.init(scene);
     //     // await this.updateAnimationBuffer();
     // }

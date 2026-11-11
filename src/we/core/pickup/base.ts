@@ -41,14 +41,14 @@ export interface IV_Pickup {
  *
  * @param scope 调用者,pickup类自身
  * @param event 事件,只返回三种：mouse,pen,touch
- * @returns Promise<any> 可选返回值,根据具体实现而定
+ * @returns Promise<void> 可选返回值,根据具体实现而定
  *
  * 参考：https://developer.mozilla.org/zh-CN/docs/Web/API/Pointer_events#相关接口
  *
  * 1、返回三种Mose，Pen，Touch的event
  * 2、按需调用 await getTargetID(x,y) 来获取目标
  */
-export type T_PickupFunction = (scope: Pickup, event: Event) => Promise<any>;
+export type T_PickupFunction = (scope: Pickup, event: Event) => Promise<void>;
 
 /**
  * mouse 拾取目标定义

@@ -93,7 +93,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             console.warn('Mesh constructor: material is undefined');
         } else this._material = input.material;
     }
-    override async init(scene: Scene): Promise<any> {
+    override async init(scene: Scene): Promise<void> {
         if (this.kind == E_entityType.mesh && this.attributes.vertices.normal == undefined) {
             if (
                 Array.isArray(this.attributes.vertices.position) &&

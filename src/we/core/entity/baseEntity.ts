@@ -460,7 +460,7 @@ export abstract class BaseEntity extends NodeSpace {
      * 三段式初始化的第二步：init
      * @param values
      */
-    override async init(scene: Scene): Promise<any> {
+    override async init(scene: Scene): Promise<void> {
         //如果已经初始化，直接返回
         if (this._state == E_lifeState.finished) return;
         this._state = E_lifeState.initializing;

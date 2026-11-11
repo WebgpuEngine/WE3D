@@ -141,9 +141,10 @@ export abstract class BaseTexture extends RootGPU {
         this.registerToManager();
         return this._state;
     }
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<unknown> {
         await this.initTextureAndLayout(this.inputValues);
         await this.initSamplerAndLayout(this.inputValues);
+        return undefined;
     }
     registerToManager() {
         if (this.scene == undefined) {
@@ -160,7 +161,7 @@ export abstract class BaseTexture extends RootGPU {
      * 2、明确采样器： sampler!: GPUSampler;
      * 3、明确采样器的layout：samplerLayout:GPUSamplerBindingLayout
      */
-    abstract initTextureAndLayout(input: I_BaseTexture): Promise<any>;
+    abstract initTextureAndLayout(input: I_BaseTexture): Promise<unknown>;
     /**
      * 初始化采样器和采样器的layout。
      * 1、默认的采样器：linear

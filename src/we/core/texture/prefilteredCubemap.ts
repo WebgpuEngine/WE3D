@@ -26,7 +26,7 @@ export class PrefilteredCubemap extends BaseTexture {
         this.textureFormat = 'rg11b10ufloat';
     }
 
-    async initTextureAndLayout(): Promise<any> {
+    async initTextureAndLayout(): Promise<unknown> {
         const source = this.inputValues.source;
         let width = 256;
         let height = 256;

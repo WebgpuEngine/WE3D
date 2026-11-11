@@ -33,7 +33,7 @@ export class DefaultCubeTexture extends Texture {
         );
     }
     updateSelf(): void {}
-    async readyForGPU(): Promise<any> {}
+    async readyForGPU(): Promise<void> {}
     saveJSON() {
         throw new Error('Method not implemented.');
     }

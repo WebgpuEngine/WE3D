@@ -458,7 +458,7 @@ export class PBRMaterial extends BaseMaterial {
         };
     }
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.createUniformPointer();
         // if (this.inputValues.name == "alpha") debugger;
 

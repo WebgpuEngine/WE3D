@@ -5,7 +5,7 @@
 /** 通用的用户自定义的function */
 export type userFN = (scope: unknown) => unknown;
 /** 通用的用户自定义的function，返回Promise */
-export type userPromiseFN = (scope: unknown) => Promise<unknown>;
+export type userPromiseFN = (scope: unknown) => Promise<void>;
 /** 简单的自定义function，没有返回 */
 export type SimpleFunction = () => void;
 

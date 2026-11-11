@@ -27,15 +27,15 @@ export async function addNode(
     nodeID: number,
     parent: NodeObject,
     root: NodeObject,
-): Promise<any> {
-    const node = gltf.DataLoader.getNode(nodeID);
+): Promise<void> {
+    const node = gltf.DataLoader.getNode(nodeID)!;
     //存在骨骼动画，就添加到meshAndSkinBundle中
     if (node.mesh != undefined && node.skin != undefined) {
         gltf.meshAndSkinBundle.push({ meshID: node.mesh, skinID: node.skin, nodeID: nodeID });
     }
 
     const oneNode = await newNode(parent);
-    oneNode.Name = node.name || nodeID;
+    oneNode.Name = node.name || String(nodeID);
     // console.log(oneNode.ID, oneNode.Name);
     ////////////////////////////////////////////////
     //如果当前节点有mesh，就添加到parent中

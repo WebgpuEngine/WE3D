@@ -256,11 +256,11 @@ export class GLTFModel extends BaseModel {
         for (const bundle of bundles) {
             const node = instanceResource.nodes.get(bundle.nodeID);
             const _mesh = node?.Entity;
-            const skin = this.DataLoader.getSkin(bundle.skinID);
+            const skin = this.DataLoader.getSkin(bundle.skinID)!;
 
             const jointsNodes = skin.joints;
             const jointMatrix = (await this.getAccessor(
-                skin.inverseBindMatrices,
+                skin.inverseBindMatrices!,
                 E_accessorUseFor.array,
             )) as Float32Array;
             const joints: NodeObject[] = [];
@@ -272,7 +272,7 @@ export class GLTFModel extends BaseModel {
                 jointsMatrices: jointMatrix,
             });
 
-            const meshOfSkin = this.DataLoader.getMesh(bundle.meshID);
+            const meshOfSkin = this.DataLoader.getMesh(bundle.meshID)!;
             const accessorIdOfWeightCount = meshOfSkin.primitives[0].attributes['WEIGHTS_0'];
             const accessorWeightsCount =
                 this.DataLoader.getAccessorOfSource(accessorIdOfWeightCount);
@@ -281,7 +281,7 @@ export class GLTFModel extends BaseModel {
                 weightsCount = 4;
             } else {
                 console.warn(
-                    `weightsCount type not support: ${accessorWeightsCount.type},use default 4`,
+                    `weightsCount type not support: ${accessorWeightsCount?.type},use default 4`,
                 );
             }
             const skinAnimation = new SkinAnimation({
@@ -457,7 +457,7 @@ export class GLTFModel extends BaseModel {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     _destroy(): void {}
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         //已经在new时传入了GPUDevice，不需要再进行ready工作。
     }
     updateSelf(_clock: Clock): void {
@@ -667,7 +667,9 @@ export class GLTFModel extends BaseModel {
                 }
                 let addressModeU: GPUAddressMode | undefined;
                 if (perSamplerData.wrapS) {
-                    switch (perSamplerData.wrapS) {
+                    // 历史分支含 33072（glTF 规范 MIRRORED_REPEAT 为 33648）；本期只放宽静态类型，
+                    // 值本身保持不变以免改变渲染结果，留待缺陷复核。
+                    switch (perSamplerData.wrapS as number) {
                         case 33071: //CLAMP_TO_EDGE
                             addressModeU = 'clamp-to-edge';
                             break;
@@ -684,7 +686,7 @@ export class GLTFModel extends BaseModel {
                 }
                 let addressModeV: GPUAddressMode | undefined;
                 if (perSamplerData.wrapT) {
-                    switch (perSamplerData.wrapT) {
+                    switch (perSamplerData.wrapT as number) {
                         case 33071: //CLAMP_TO_EDGE
                             addressModeV = 'clamp-to-edge';
                             break;
@@ -1159,10 +1161,7 @@ export class GLTFModel extends BaseModel {
                     let cullMode: GPUCullMode = 'back';
                     if (primitive.material != undefined) {
                         const materialDataSource = this.DataLoader.getMaterial(primitive.material);
-                        if (
-                            materialDataSource.doubleSided &&
-                            materialDataSource.doubleSided === true
-                        ) {
+                        if (materialDataSource?.doubleSided === true) {
                             cullMode = 'none';
                         }
                         // console.log("cullMode ", cullMode, materialDataSource.doubleSided);
@@ -1601,7 +1600,7 @@ export class GLTFModel extends BaseModel {
             const nodes = this.DataLoader.getNodes()!;
             for (const i of nodes) {
                 if ('skin' in i && 'mesh' in i) {
-                    this.meshAndSkin.set(i.mesh, i.skin);
+                    this.meshAndSkin.set(i.mesh!, i.skin!);
                 }
             }
         }

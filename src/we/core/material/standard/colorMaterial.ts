@@ -98,7 +98,7 @@ export class ColorMaterial extends BaseStandardMaterial {
             TT: E_shaderRegisterAlianName['material.color.blend'],
         };
     }
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.writeUniformCommon();
         this._state = E_lifeState.finished;
         // console.log(this._state);

@@ -83,7 +83,7 @@ export class TextureMaterial extends BaseStandardMaterial {
         this._state = E_lifeState.destroyed;
     }
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.writeUniformCommon();
         this.defaultSampler = this.checkSampler(this.inputValues);
         const texture = this.inputValues.texture;

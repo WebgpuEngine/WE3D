@@ -157,16 +157,16 @@ export interface IJ_Scene {
         //     0.0,
         //     -0.9
         // ],
-        physicsEngine: any;
+        physicsEngine: unknown;
         physicsEnabled: boolean;
-        physicsGravity: any;
+        physicsGravity: unknown;
         // "cameras": [],
         activeCameraID: number;
-        entities: any[];
-        materials: any[];
-        sounds: any[];
-        particleSystems: any[];
-        skeletons: any[];
+        entities: unknown[];
+        materials: unknown[];
+        sounds: unknown[];
+        particleSystems: unknown[];
+        skeletons: unknown[];
     };
 }
 

@@ -415,7 +415,7 @@ export abstract class BaseCamera extends NodeObject {
             this.isLookAtGlobal = option.isLookAtGlobal;
         }
     }
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.aspect = this.scene.aspect;
         this.updateProjectionMatrix();
         this.updateByPositionDirection(this.Position, this.LookAt, false); //这里需要是world position
