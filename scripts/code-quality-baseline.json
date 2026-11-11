@@ -4,10 +4,10 @@
     "metrics": {
         "explicitAny": 112,
         "typeEscapes": 0,
-        "giantFiles": 8,
+        "giantFiles": 7,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
-        "commentedCodeLines": 1132
+        "commentedCodeLines": 1117
     },
     "details": {
         "anyTopFiles": [
@@ -100,10 +100,6 @@
             {
                 "file": "src/we/core/organization/nodeObject.ts",
                 "lines": 1062
-            },
-            {
-                "file": "src/we/core/light/lightsManager.ts",
-                "lines": 1020
             }
         ],
         "emptyStubFiles": [],
