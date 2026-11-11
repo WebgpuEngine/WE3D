@@ -137,8 +137,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     override _destroy(): void {
         super._destroy();
         // this._material.destroy();
-        //@ts-ignore
-        this._material = undefined;
+        this._material = undefined!;
     }
     /**三段式初始化的第三段
      * 覆写 Root的function,因为材料类需要GPUDevice

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import type { IV_Scene } from './base';
 
 // WebGPU 全局在 node 环境缺失；Scene 的导入链在模块顶层引用了 GPUTextureUsage 等。
 // 在动态导入前补齐这些数值常量（仅需在运行期存在，值不影响 baseUnit 测试）。
@@ -22,9 +23,11 @@ beforeAll(() => {
     ]) {
         flags[k] = num;
     }
-    (globalThis as any).GPUTextureUsage = { ...flags };
-    (globalThis as any).GPUBufferUsage = { ...flags };
-    (globalThis as any).GPUMapMode = { READ: 1, WRITE: 2 };
+    Object.assign(globalThis, {
+        GPUTextureUsage: { ...flags },
+        GPUBufferUsage: { ...flags },
+        GPUMapMode: { READ: 1, WRITE: 2 },
+    });
 });
 
 describe('Scene 构造 — P0-4 baseUnit 默认值', () => {
@@ -36,7 +39,7 @@ describe('Scene 构造 — P0-4 baseUnit 默认值', () => {
                 lengthUnit: '',
                 axisUp: '',
             },
-        } as any);
+        } as unknown as IV_Scene);
 
         expect(scene.baseUnit.scaleFactorToKm).toBe(0);
         expect(scene.baseUnit.lengthUnit).toBe('');
@@ -49,14 +52,14 @@ describe('Scene 构造 — P0-4 baseUnit 默认值', () => {
         const { Scene } = await import('./scene');
         const scene = new Scene({
             baseUnit: { rightHand: false },
-        } as any);
+        } as unknown as IV_Scene);
 
         expect(scene.baseUnit.rightHand).toBe(false);
     });
 
     it('未提供 baseUnit 时使用全部默认值', async () => {
         const { Scene } = await import('./scene');
-        const scene = new Scene({} as any);
+        const scene = new Scene({} as unknown as IV_Scene);
 
         expect(scene.baseUnit.scaleFactorToKm).toBeCloseTo(1 / 1000);
         expect(scene.baseUnit.lengthUnit).toBe('m');

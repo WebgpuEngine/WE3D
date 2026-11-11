@@ -1454,8 +1454,9 @@ export class DrawCommandGenerator {
                         ) // && isGPUBindGroupLayoutEntry(values.data.unifromLayout[i])) {
                         {
                             //如果传入的参数中有GPUBindGroupLayoutEntry，就从GPUBindGroupLayoutEntry中获取，
-                            //@ts-ignore
-                            perBindGroupLayoutEntry = values.data.unifromLayout[i]![j]; //使用断言，判断在前面已经判断了layout不为空
+                            perBindGroupLayoutEntry = (
+                                values.data.unifromLayout[i] as GPUBindGroupLayoutEntry[]
+                            )[j]; //使用断言，判断在前面已经判断了layout不为空
                             bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
                         }
                         //没有对应的layout，从resources中获取

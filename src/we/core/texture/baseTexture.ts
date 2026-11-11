@@ -103,7 +103,7 @@ export abstract class BaseTexture extends RootGPU {
     _destroy(): void {
         if (this.texture) {
             this.texture.destroy();
-            this.texture = undefined as any;
+            this.texture = undefined;
         }
         this.scene.textureManager.remove(this);
     }

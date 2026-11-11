@@ -154,8 +154,7 @@ export class Mesh extends EntityBundleMaterial {
         super._destroy();
         if (this._materialWireframe) {
             this._materialWireframe.destroy();
-            //@ts-ignore
-            this._materialWireframe = undefined;
+            this._materialWireframe = undefined!;
         }
     }
     /**三段式初始化的第三段

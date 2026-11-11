@@ -242,8 +242,7 @@ export class BlockOffsetLength implements I_UUID {
 
     destroy(): boolean {
         this.gpuBuffer.destroy();
-        // @ts-ignore
-        this.cpuBuffer = null;
+        this.cpuBuffer = null!;
         this._isDestroy = true;
         return this._isDestroy;
     }

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import type { Scene } from '../scene/scene';
 
 // WebGPU 全局在 node 环境缺失；DrawCommandGenerator 的 import 链在模块顶层引用了 GPUTextureUsage 等。
 // 在动态 import 前补齐这些数值常量（仅需运行期存在，值不影响缓存 key 测试）。
@@ -21,9 +22,11 @@ beforeAll(() => {
     ]) {
         flags[k] = 1;
     }
-    (globalThis as any).GPUTextureUsage = { ...flags };
-    (globalThis as any).GPUBufferUsage = { ...flags };
-    (globalThis as any).GPUMapMode = { READ: 1, WRITE: 2 };
+    Object.assign(globalThis, {
+        GPUTextureUsage: { ...flags },
+        GPUBufferUsage: { ...flags },
+        GPUMapMode: { READ: 1, WRITE: 2 },
+    });
 });
 
 describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
@@ -36,10 +39,10 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     const mockDevice = {
         createPipelineLayout: () => ({}),
         createRenderPipeline: () => ({}),
-    } as any;
+    } as unknown as GPUDevice;
 
     function makeGenerator() {
-        const resources = { pipeline: new Map<string, any>() };
+        const resources = { pipeline: new Map<string, unknown>() };
         const scene = {
             device: mockDevice,
             resourcesGPU: resources,
@@ -68,15 +71,15 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
                     depthCompare: 'less',
                 },
             },
-        } as any;
+        } as unknown as Scene;
         const generator = new DrawCommandGenerator({ scene });
         return { resources, generator };
     }
 
-    const vertex = { vs: {}, name: 'vs-md5' } as any;
+    const vertex = { vs: {}, name: 'vs-md5' };
     const fragment = { fs: undefined, name: 'fs-md5' };
 
-    const makeValue = (depthWriteEnabled: boolean): any => ({
+    const makeValue = (depthWriteEnabled: boolean) => ({
         label: 'p0-3',
         data: {},
         render: {

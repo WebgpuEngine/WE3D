@@ -53,7 +53,7 @@ export interface IV_ComputeCommand {
          *
          * workgroupBuffer=this.unifromBuffer[0][0],对应：@group(0)@binding(0)  
          */
-        afterUpdate?: (scope: any) => Promise<any>;
+        afterUpdate?: (scope: ComputeCommand) => Promise<void>;
         /** callback function 
          * 
          * 正确性由上级程序保障
@@ -69,7 +69,7 @@ export interface IV_ComputeCommand {
         2、  workgroupReadBuffer.unmap();
         * 
         */
-        map?: (scope: any, encode: GPUCommandEncoder) => Promise<any>;
+        map?: (scope: ComputeCommand, encode: GPUCommandEncoder) => Promise<void>;
     };
 }
 

@@ -1,24 +1,24 @@
 import { weColor3, weColor4, weMat3, weMat4, weVec2, weVec3, weVec4 } from './coreDefine';
 
-export function isWeColor3(value: any): value is weColor3 {
+export function isWeColor3(value: unknown): value is weColor3 {
     return Array.isArray(value) && value.length == 3;
 }
-export function isWeColor4(value: any): value is weColor4 {
+export function isWeColor4(value: unknown): value is weColor4 {
     return Array.isArray(value) && value.length == 4;
 }
-export function isWeVec2(value: any): value is weVec2 {
+export function isWeVec2(value: unknown): value is weVec2 {
     return Array.isArray(value) && value.length == 2;
 }
-export function isWeVec3(value: any): value is weVec3 {
+export function isWeVec3(value: unknown): value is weVec3 {
     return Array.isArray(value) && value.length == 3;
 }
-export function isWeVec4(value: any): value is weVec4 {
+export function isWeVec4(value: unknown): value is weVec4 {
     return Array.isArray(value) && value.length == 4;
 }
-export function isWeMat4(value: any): value is weMat4 {
+export function isWeMat4(value: unknown): value is weMat4 {
     return Array.isArray(value) && value.length == 16;
 }
-export function isWeMat3(value: any): value is weMat3 {
+export function isWeMat3(value: unknown): value is weMat3 {
     return Array.isArray(value) && value.length == 9;
 }
 

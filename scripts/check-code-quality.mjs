@@ -2,7 +2,7 @@
 // 代码层质量 ratchet 门禁：指标只许下降，不许上升。
 // 用法：npm run check:quality      —— 与基线比较，任一指标上升即非 0 退出
 //       npm run quality:baseline   —— 显式刷新基线（治理见效后收紧，基线只能手工更新）
-// 统计口径见 design/workBuddy/20260923项目与gltf分析/07-代码层质量治理分析与方案-20261111.md
+// 统计口径见 design/engineering/代码层质量治理分析与方案-20261111.md
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';

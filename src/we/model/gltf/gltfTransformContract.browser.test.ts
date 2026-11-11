@@ -3,6 +3,18 @@ import { GltfDataAtTransform } from './gltfTransformLoaders';
 import { GLTFModel } from './gltf';
 import { E_accessorUseFor } from './base';
 import { E_InterpolationModes } from '../../core/animation/base';
+
+/** harness 视角：只声明测试实际读取的字段，运行时由引擎写入最小替身对象 */
+type AnimationGroupHarness = {
+    list: Array<{
+        getSampler: () => {
+            interpolation: unknown;
+            frames: ArrayLike<number>;
+            values: ArrayLike<number>;
+        };
+    }>;
+    listSkins: Array<{ skeleton: { joints: Array<{ nodeID: number }> } }>;
+};
 import { getExtensionDependencyKeys } from './extensionDependencies';
 import { read as readKTX2 } from 'ktx-parse';
 import { isKTX2Bytes } from './imageMimeType';
@@ -176,7 +188,7 @@ function makeAnimationHarness(animations: any[], frames: number[], values: numbe
         animationGroupManager: { add: () => undefined },
     };
     const targetNode = { scene: fakeScene, Animation: [] as unknown[] };
-    const nodeOfScene: { AnimationGroup?: unknown[] } = {};
+    const nodeOfScene: { AnimationGroup?: AnimationGroupHarness[] } = {};
     const model: any = Object.create(GLTFModel.prototype);
     model.scene = fakeScene;
     model.DataLoader = { getAnimations: () => animations };
@@ -219,7 +231,7 @@ function makeSkinHarness(
     });
     const nodes = new Map<number, any>();
     for (let id = 0; id < 6; id++) nodes.set(id, makeNode(id));
-    const nodeOfScene: { AnimationGroup?: any[] } = {};
+    const nodeOfScene: { AnimationGroup?: AnimationGroupHarness[] } = {};
     const model: any = Object.create(GLTFModel.prototype);
     model.scene = fakeScene;
     model.DataLoader = {
@@ -699,7 +711,7 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
 
         const { model, nodeOfScene } = makeAnimationHarness(json.animations!, frames, values);
         await expect(model.initAnimationsForInstance(nodeOfScene)).resolves.toBeUndefined();
-        const groups = nodeOfScene.AnimationGroup as any[];
+        const groups = nodeOfScene.AnimationGroup!;
         expect(groups.length, '生成 1 个 AnimationGroup').toBe(1);
         const sampler = groups[0].list[0].getSampler();
         expect(sampler.interpolation, 'CUBICSPLINE → cubicSpline').toBe(
@@ -727,7 +739,7 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             );
             await expect(model.initAnimationsForInstance(nodeOfScene)).resolves.toBeUndefined();
             expect(warn, '必须走 warn 分支').toHaveBeenCalled();
-            const groups = nodeOfScene.AnimationGroup as any[];
+            const groups = nodeOfScene.AnimationGroup!;
             expect(groups, '仍生成 1 个 AnimationGroup（既有行为）').toHaveLength(1);
             expect(groups[0].list, '缺失 channel 不生成动画').toHaveLength(0);
         } finally {
@@ -766,16 +778,16 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
         ]);
         await model.initAnimationsForInstance(nodeOfScene);
         await model.initSkinsForInstance(nodeOfScene);
-        const groups = nodeOfScene.AnimationGroup as any[];
+        const groups = nodeOfScene.AnimationGroup!;
         expect(groups, '生成 2 个 AnimationGroup').toHaveLength(2);
         expect(groups[0].listSkins, '组 0 只绑 1 个 skin').toHaveLength(1);
         expect(groups[1].listSkins, '组 1 只绑 1 个 skin').toHaveLength(1);
         expect(
-            groups[0].listSkins[0].skeleton.joints.map((j: any) => j.nodeID),
+            groups[0].listSkins[0].skeleton.joints.map((j) => j.nodeID),
             '组 0 绑定 SkinA 的 joints [2,3]',
         ).toEqual([2, 3]);
         expect(
-            groups[1].listSkins[0].skeleton.joints.map((j: any) => j.nodeID),
+            groups[1].listSkins[0].skeleton.joints.map((j) => j.nodeID),
             '组 1 绑定 SkinB 的 joints [4,5]',
         ).toEqual([4, 5]);
     });
@@ -789,7 +801,7 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
         ]);
         await model.initAnimationsForInstance(nodeOfScene);
         await model.initSkinsForInstance(nodeOfScene);
-        const groups = nodeOfScene.AnimationGroup as any[];
+        const groups = nodeOfScene.AnimationGroup!;
         expect(groups).toHaveLength(1);
         expect(groups[0].listSkins, '单 skin 保持绑定').toHaveLength(1);
     });
@@ -805,7 +817,7 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
         ]);
         await model.initAnimationsForInstance(nodeOfScene);
         await expect(model.initSkinsForInstance(nodeOfScene)).resolves.toBeUndefined();
-        const groups = nodeOfScene.AnimationGroup as any[];
+        const groups = nodeOfScene.AnimationGroup!;
         expect(groups[0].listSkins, '实例外 bundle 不产生绑定').toHaveLength(1);
         expect(groups[1].listSkins, '实例外 bundle 不产生绑定').toHaveLength(1);
     });

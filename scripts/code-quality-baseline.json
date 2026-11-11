@@ -2,8 +2,8 @@
     "generatedAt": "2026-11-11",
     "scope": "src/we 生产源码（排除 *.test.ts 与生成数据）+ 全仓备份命名文件",
     "metrics": {
-        "explicitAny": 230,
-        "typeEscapes": 4,
+        "explicitAny": 186,
+        "typeEscapes": 0,
         "giantFiles": 8,
         "emptyStubFiles": 0,
         "backupNamedFiles": 7,
@@ -24,14 +24,6 @@
                 "count": 14
             },
             {
-                "file": "src/we/core/base/coreDefine.ts",
-                "count": 8
-            },
-            {
-                "file": "src/we/core/base/coreFunction.ts",
-                "count": 7
-            },
-            {
                 "file": "src/we/core/organization/root.ts",
                 "count": 7
             },
@@ -40,42 +32,50 @@
                 "count": 7
             },
             {
-                "file": "src/we/core/control/cameracControl.ts",
-                "count": 6
-            },
-            {
-                "file": "src/we/core/command/baseFunction.ts",
-                "count": 5
-            },
-            {
-                "file": "src/we/core/command/base.ts",
+                "file": "src/we/core/base/coreDefine.ts",
                 "count": 4
             },
             {
-                "file": "src/we/core/command/ComputeCommand.ts",
-                "count": 4
+                "file": "src/we/core/input/inputManager.ts",
+                "count": 3
             },
             {
-                "file": "src/we/core/input/baseInputControl.ts",
-                "count": 4
+                "file": "src/we/core/model/BaseModel.ts",
+                "count": 3
+            },
+            {
+                "file": "src/we/core/pickup/pickup.ts",
+                "count": 3
+            },
+            {
+                "file": "src/we/core/texture/base.ts",
+                "count": 3
             },
             {
                 "file": "src/we/core/texture/baseTexture.ts",
-                "count": 4
+                "count": 3
             },
             {
-                "file": "src/we/core/bufferBlock/pointer.ts",
+                "file": "src/we/core/texture/videoTexture.ts",
                 "count": 3
+            },
+            {
+                "file": "src/we/core/camera/baseCamera.ts",
+                "count": 2
+            },
+            {
+                "file": "src/we/core/camera/cameraPositionAndinvertVP.ts",
+                "count": 2
             },
             {
                 "file": "src/we/core/command/BaseCommand.ts",
-                "count": 3
+                "count": 2
             }
         ],
         "giantFiles": [
             {
                 "file": "src/we/core/command/DrawCommandGenerator.ts",
-                "lines": 1803
+                "lines": 1804
             },
             {
                 "file": "src/we/model/gltf/gltf.ts",
@@ -91,7 +91,7 @@
             },
             {
                 "file": "src/we/core/entity/entityBundleMaterial.ts",
-                "lines": 1080
+                "lines": 1079
             },
             {
                 "file": "src/we/core/scene/renderManager.ts",

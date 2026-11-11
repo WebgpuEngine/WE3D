@@ -15,7 +15,7 @@ export abstract class ECSManager<T extends I_UUID> {
     }
     // abstract add(entity: T): void;
     // abstract remove(entity: T): void;
-    add(entity: T, _scendValue?: any) {
+    add(entity: T, _scendValue?: unknown) {
         const index = this.list.indexOf(entity);
         if (index != -1) {
             return;
@@ -25,7 +25,7 @@ export abstract class ECSManager<T extends I_UUID> {
             entity._manager = this;
         }
     }
-    remove(entity: T, _scendValue?: any) {
+    remove(entity: T, _scendValue?: unknown) {
         const index = this.list.indexOf(entity);
         if (index != -1) {
             this.list.splice(index, 1);

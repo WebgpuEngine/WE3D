@@ -1,17 +1,17 @@
 import { T_uniformOneGroup } from './base';
 
 //跨窗口/iframe 会失效
-// function isArrayBuffer(v: any): v is ArrayBuffer {
+// function isArrayBuffer(v: unknown): v is ArrayBuffer {
 //     // 严格判断是否为 ArrayBuffer 实例
 //     return v instanceof ArrayBuffer;
 // }
 
 /** 判断是否为ArrayBuffer */
-export function isArrayBuffer(value: any) {
+export function isArrayBuffer(value: unknown) {
     return Object.prototype.toString.call(value) === '[object ArrayBuffer]';
 }
 
-function isArrayBufferView(v: any): v is ArrayBufferView {
+function isArrayBufferView(v: unknown): v is ArrayBufferView {
     // 排除 null/undefined + 是对象/数组 + 有 buffer 属性且 buffer 是 ArrayBuffer
     return v != null && typeof v === 'object' && 'buffer' in v && v.buffer instanceof ArrayBuffer;
 }
@@ -26,12 +26,13 @@ export function checkGPUBufferSize(size: number): number {
 export function isGPUBindGroup(obj: T_uniformOneGroup): obj is GPUBindGroup {
     return obj instanceof GPUBindGroup;
 }
-export function isGPUBindGroupLayout(obj: any): obj is GPUBindGroupLayout {
+export function isGPUBindGroupLayout(obj: unknown): obj is GPUBindGroupLayout {
     return obj instanceof GPUBindGroupLayout;
 }
 
-export function isGPUBindGroupLayoutEntry(obj: any): obj is GPUBindGroupLayoutEntry {
-    return obj.binding != undefined && obj.visibility != undefined;
+export function isGPUBindGroupLayoutEntry(obj: unknown): obj is GPUBindGroupLayoutEntry {
+    const entry = obj as GPUBindGroupLayoutEntry;
+    return entry.binding != undefined && entry.visibility != undefined;
 }
 
 /**
@@ -258,7 +259,7 @@ export function updataOneUniformBuffer(
     );
 }
 
-export function getTypedArrayType(arr: any) {
+export function getTypedArrayType(arr: unknown): string | null {
     if (!ArrayBuffer.isView(arr)) return null; // 不是 TypedArray 直接返回
     return Object.prototype.toString.call(arr).slice(8, -1);
 }
