@@ -58,7 +58,7 @@
 
 > ⚠️ **当前为手动发布**：npm 将于 2027-01 起强制 2FA，自动化 token 无法直发 public registry；**2026-10-28 起 npm 2FA 流程仍在变化，待其流程文档齐备后再整合自动化**，现阶段一律手工发布。
 
-完整步骤（详见 `design/engineering/phase7-ci-publish.md` §5.3）：
+完整步骤（详见 `design/engineering/ci-publish/phase7-ci-publish.md` §5.3）：
 
 1. bump `version`（`package.json` + `package-lock.json` via `npm install --package-lock-only`）。
 2. `npm run docs:build`（版本变更才生成 `docs/`）→ `git add docs && git commit`（文档已移出 PR CI，由本地提交维护）。

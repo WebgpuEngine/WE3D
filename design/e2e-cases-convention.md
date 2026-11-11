@@ -1,7 +1,7 @@
 # e2e-cases 约定
 
 > 定位：`e2e-cases/` 目录（Playwright e2e 被测页面）的编写与维护约定。
-> 关联方案：`design/engineering/phase4-playwright-e2e.md`（§3.6 用例源目录与 e2e 链）。
+> 关联方案：`design/engineering/testing/phase4-playwright-e2e.md`（§3.6 用例源目录与 e2e 链）。
 > 生成：2026-10-28　状态：生效中。
 
 ## 一、目录结构

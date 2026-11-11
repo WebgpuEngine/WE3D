@@ -71,7 +71,7 @@ Phase 4 是迁移完成后的**增强阶段**，不再做等价性替换。范�
 ### 4.1 P0-1 · fork 物理目录清理（人工动作）
 
 - **现状**：10 个 git 跟踪文件已在 `9e4e798` 中删除，`.gitignore:29-31` 已忽略两个目录；本机 `src/@loaders.gl/` 仍有约 209 个未跟踪 dist 产物（工作区安全删除机制拒绝目录删除）。
-- **动作**：由用户手动 `Remove-Item -Recurse -Force 'src/@loaders.gl','public/@loaders.gl'`；完成后删除 `.gitignore` 那两行、`design/engineering/pending-work.md` §4 状态行去掉「唯一遗留」、主方案 §七 Phase 3 执行结果同步。
+- **动作**：由用户手动 `Remove-Item -Recurse -Force 'src/@loaders.gl','public/@loaders.gl'`；完成后删除 `.gitignore` 那两行、`design/engineering/meta/pending-work.md` §4 状态行去掉「唯一遗留」、主方案 §七 Phase 3 执行结果同步。
 - **验收**：`git status` 干净；`npm run ci:no-e2e` 全绿；`src/we` 内 `@loaders.gl` import 仍为 0。
 
 ### 4.2 P0-2 · e2e 并发稳定性
@@ -280,7 +280,7 @@ P3-2 离线优化流水线（可与 P2 的样本生成协同）
 P4-1 D1–D8（需先解除口径，另立任务）
 ```
 
-每批结束更新 `design/engineering/pending-work.md` §4 与本文状态行；全部完成后把主方案 §七 Phase 4 的条目逐项标注为「已完成」并指向对应执行记录。
+每批结束更新 `design/engineering/meta/pending-work.md` §4 与本文状态行；全部完成后把主方案 §七 Phase 4 的条目逐项标注为「已完成」并指向对应执行记录。
 
 ---
 

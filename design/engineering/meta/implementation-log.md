@@ -45,7 +45,7 @@ Phase1(构建变绿) → Phase2/3/5(lint/单测/文档) → Phase4(基线) → P
 
 - **计划要点**
   - 写 `AGENTS.md`：目录约定、AI 工作约定、开发流程、发布约定、脚本速查。
-  - 本方案存入 `design/engineering/engineering-plan.md`。
+  - 本方案存入 `design/engineering/meta/engineering-plan.md`。
   - 根 `README.md` 仅作说明文档（设计入口为 `AGENTS.md`）。
 - **实施记录**
   - `AGENTS.md` 已存在且目录约定齐备（9 项全部覆盖）。

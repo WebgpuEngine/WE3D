@@ -218,7 +218,7 @@ await scene.add(mesh);
 # Engineering and Development Conventions
 
 * For directory structure conventions, AI working conventions, development workflow, and release conventions, see [AGENTS.md](./AGENTS.md).
-* For the engineering improvement plan (vitest / ESLint / Prettier / Playwright / CI / lib bundling), see [design/engineering-plan.md](./design/engineering-plan.md).
+* For the engineering improvement plan (vitest / ESLint / Prettier / Playwright / CI / lib bundling), see [design/engineering-plan.md](./design/engineering/meta/engineering-plan.md).
 * For known defects and the fix roadmap, see [design/workbuddy/core/04-问题缺陷与改进建议.md](./design/workbuddy/core/04-问题缺陷与改进建议.md).
 * Before committing to git, you must run the e2e verification (or key Playwright examples) to prevent source changes from breaking normal functionality.
 * Package name `we3d`, published to npm as a lib (ESM + `.d.ts`); no web app bundling.

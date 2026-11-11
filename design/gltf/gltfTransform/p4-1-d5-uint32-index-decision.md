@@ -108,7 +108,7 @@ D5 **不是正确性缺陷**：uint32 索引符合 WebGPU 与 glTF 规范，渲�
 | --- | --- |
 | `p4-1-defects-plan.md` | 头部加变更说明；§一 F4 处置列、§二 复核表 D5 行改状态；§四 从「纳入」移入「明确排除」；§5.5 标注为「重启预案，不执行」；§六 移除 D5 验收载体；§七 8-7 标注取消；§八 移除 D5 判据；§九 默认选择 1 改写 |
 | `gltf-transform-phase4-plan.md` §10.5 | 新增 8-7（D5）决策行 |
-| `design/engineering/pending-work.md` §二 | 新增变更记录一行 |
+| `design/engineering/meta/pending-work.md` §二 | 新增变更记录一行 |
 
 ### 5.3 重启条件（满足任一才重新立项）
 
