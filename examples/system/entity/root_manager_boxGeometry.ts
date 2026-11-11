@@ -1,16 +1,5 @@
 import { vec3 } from "wgpu-matrix";
-import { E_renderForDC } from "../../../src/we/core/base/coreDefine";
-import { OrthographicCamera } from "../../../src/we/core/camera/orthographicCamera";
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { ArcballCameraControl } from "../../../src/we/core/control/arcballCameraControl";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
+import { E_renderForDC, OrthographicCamera, PerspectiveCamera, DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, eventOfScene, type IV_Scene, type userDefineEventCall, initScene, E_renderPassName, Scene, ArcballCameraControl, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh } from '@we3d';
 
 declare global {
   interface Window {
@@ -121,14 +110,10 @@ const oneTriangleColorArray = [
 ];
 const oneTriangleVertexF32A = new Float32Array(oneTriangleVertexArray);
 
-
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
-
-
 
 let valueDC: IV_DC = {
   label: "dc1",
@@ -180,8 +165,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
 let dc = DCManager.generateDrawCommand(valueDC);
 
 let oneCall: userDefineEventCall = {
@@ -195,7 +178,6 @@ let oneCall: userDefineEventCall = {
   event: eventOfScene.onBeforeRender
 }
 await scene.addUserDefineEvent(oneCall);
-
 
 let boxGeometry = new BoxGeometry();
 
@@ -213,4 +195,3 @@ let inputMesh: IV_MeshEntity = {
 window.mesh = new Mesh(inputMesh);
 console.log(window.mesh);
 await scene.add(window.mesh);
-

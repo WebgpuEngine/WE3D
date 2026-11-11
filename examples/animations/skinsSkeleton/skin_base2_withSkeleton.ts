@@ -1,15 +1,6 @@
+import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, Lines, E_AnimationType, VertexColorMaterial, Skeleton, NodeObject, LinesSkins } from '@we3d';
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
 import { Mat4, mat4, vec3 } from "wgpu-matrix";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
-import { E_AnimationType } from "../../../src/we/core/animation/base";
-import { VertexColorMaterial } from "../../../src/we/core/material/standard/vertexColorMaterial";
-import { Skeleton } from "../../../src/we/core/animation/skeleton";
-import { NodeObject } from "../../../src/we/core/organization/nodeObject";
-import { LinesSkins } from "../../../src/we/core/entity/animationEntity/linesOfSkins";
 
 declare global {
   interface Window {
@@ -41,9 +32,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
 
 // let colorMaterial = new VertexColorMaterial();
 let colorMaterial = new ColorMaterial({
@@ -131,7 +119,6 @@ for (let i = 0; i < numBones; ++i) {
 
 }
 
-
 //////////////////////基础参数///////////////////////////////
 lines.JointsMatCount = numBones;                        //骨骼数量
 lines.JointMatrixByteSize = 16 * 4 * numBones;          //每个骨骼矩阵大小
@@ -190,7 +177,6 @@ joint_0.add(joint_1);
 joint_1.add(joint_2);
 joint_2.add(joint_3);
 
-
 ///////////////////////////// 更新关节节点的世界矩阵////////////////
 let jointsNodeObject = [joint_0, joint_1, joint_2, joint_3];
 for (let i of jointsNodeObject) {
@@ -202,6 +188,4 @@ skeletons.setJoints(jointsNodeObject);
 skeletons.generateInverseBindMatrices();
 console.log("skeletons:JointsMat =初始世界矩阵的逆", skeletons.inverseBindMatrices);
 
-
 window.mesh = joint_0;
-

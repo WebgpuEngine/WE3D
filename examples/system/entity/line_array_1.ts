@@ -1,9 +1,4 @@
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import {  IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
-
+import { PerspectiveCamera, IV_Scene, initScene, ColorMaterial, IV_LinesEntity, Lines } from '@we3d';
 
 declare global {
   interface Window {
@@ -31,8 +26,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
 
 let colorMaterial = new ColorMaterial({
   color: [1, 1, 0, 1]
@@ -136,4 +129,3 @@ let inputMesh: IV_LinesEntity = {
 window.mesh = new Lines(inputMesh);
 console.log(window.mesh);
 await scene.add(window.mesh);
-

@@ -1,13 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { TextureMaterial } from "../../../src/we/core/material/standard/textureMaterial";
-import { Blur3x3 } from "../../../src/we/core/postprocess/blur3x3";
-import { PP_RedToOne } from "../../../src/we/core/postprocess/RedToOne";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, TextureMaterial, Blur3x3, PP_RedToOne } from '@we3d';
 
 declare global {
   interface Window {
@@ -38,10 +29,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
-
-
 let boxGeometry = new BoxGeometry();
 
 let colorMaterial = new ColorMaterial({
@@ -66,6 +53,5 @@ let inputMesh: IV_MeshEntity = {
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-
 
 let blur =new PP_RedToOne({scene});

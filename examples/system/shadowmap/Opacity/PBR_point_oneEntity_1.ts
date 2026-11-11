@@ -1,18 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { PointLight } from "../../../../src/we/core/light/pointLight";
-import { AmbientLight } from "../../../../src/we/core/light/ambientLight";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PhongMaterial } from "../../../../src/we/core/material/phong/phongMaterial";
-import { DirectionalLight } from "../../../../src/we/core/light/DirectionalLight";
-import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
-import { SpotLight } from "../../../../src/we/core/light/SpotLight";
-import { IV_PBRMaterial, PBRMaterial } from "../../../../src/we/core/material/PBR/PBRMaterial";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, PointLight, AmbientLight, SphereGeometry, PhongMaterial, DirectionalLight, PlaneGeometry, SpotLight, IV_PBRMaterial, PBRMaterial } from '@we3d';
 
 declare global {
   interface Window {
@@ -114,7 +100,6 @@ let sphere = new SphereGeometry({
   heightSegments: 128,
 });
 
-
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]
 // });
@@ -124,9 +109,6 @@ let phongMaterial = new PhongMaterial({
   metalness: 0.1,
   shininess: 32
 });
-
-
-
 
 //实体球
 let geometry = new SphereGeometry({

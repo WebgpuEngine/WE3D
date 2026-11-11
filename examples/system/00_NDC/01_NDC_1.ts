@@ -1,5 +1,4 @@
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
+import { IV_Scene, initScene } from '@we3d';
 
 declare global {
   interface Window {
@@ -19,9 +18,4 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-
-
-
 scene.run();
-
-

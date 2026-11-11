@@ -1,11 +1,5 @@
 import { mat4 } from "wgpu-matrix";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_Scene, userDefineEventCall, eventOfScene, E_ToneMappingType } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { weGetBinaryResourceFromGzip } from "../../../src/we/core/base/file/getFile";
-
+import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_Scene, userDefineEventCall, eventOfScene, E_ToneMappingType, initScene, E_renderPassName, Scene, weGetBinaryResourceFromGzip } from '@we3d';
 
 declare global {
   interface Window {
@@ -50,7 +44,6 @@ import shader from "./ndc_base_1.wgsl?raw";
 //   @builtin(position) position : vec4f,
 //   @location(0) uv: vec2f,
 // }
-
 
 // @vertex fn vs(
 //   @builtin(vertex_index) VertexIndex : u32
@@ -125,9 +118,6 @@ let inputDC: IV_DrawCommandGenerator = {
   parent: scene,
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
-
-
 
 let valueDC: IV_DC = {
   label: "dc1",
@@ -214,8 +204,4 @@ let oneCall: userDefineEventCall = {
 }
 scene.addUserDefineEvent(oneCall);
 
-
-
 scene.run();
-
-

@@ -1,11 +1,5 @@
 import { mat4 } from "wgpu-matrix";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_Scene, userDefineEventCall, eventOfScene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { weGetBinaryResourceFromGzip } from "../../../src/we/core/base/file/getFile";
-
+import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_Scene, userDefineEventCall, eventOfScene, initScene, E_renderPassName, Scene, weGetBinaryResourceFromGzip } from '@we3d';
 
 declare global {
   interface Window {
@@ -28,7 +22,6 @@ window.scene = scene;
 //////////////////////////////////////////////////////////////
 //volume shader
 let shader = `   
-
 
 // 渲染常量
 const dx: f32 = 0.015;
@@ -113,8 +106,6 @@ fn rot_z( a:f32)->mat3x3f
   return mat3x3f(ca,sa,.0,    -sa,ca,.0,  .0,.0,1.);
 }
 
-
-
 //////////////////////////////////////////////////////////////
 struct st_uniform_toy {
     u_resolution: vec2f,
@@ -127,7 +118,6 @@ struct VertexOutput {
   @builtin(position) Position : vec4f,
   @location(0) uv: vec2f,
 }
-
 
 @vertex fn vs(
   @builtin(vertex_index) VertexIndex : u32
@@ -154,7 +144,6 @@ fn fs(fsInput: VertexOutput) -> @location(0) vec4f {
   var rd = normalize(vec3(p,-.5));
 
   var mo:vec2f = (u_toy.u_mouse_xy / u_toy.u_resolution.xy -0.5)*2.0;// 速度增加2倍
-
 
   if(u_toy.u_mouse_btn == 0)
   {
@@ -228,9 +217,6 @@ let inputDC: IV_DrawCommandGenerator = {
 }
 let DCManager = new DrawCommandGenerator(inputDC);
 
-
-
-
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
@@ -290,7 +276,6 @@ scene.canvas.addEventListener('pointerup', (event) => {
   st_uniform_toyViews.u_mouse_xy[1] = event.clientY;
   // console.log(event.buttons, event.clientX, event.clientY, st_uniform_toyViews.u_mouse_btn[0],st_uniform_toyViews.u_mouse_xy[0],st_uniform_toyViews.u_mouse_xy[1]);
 
-
 });
 scene.canvas.addEventListener("pointermove", (event) => {
   if (!isMouseDown) {
@@ -322,8 +307,4 @@ let oneCall: userDefineEventCall = {
 }
 scene.addUserDefineEvent(oneCall);
 
-
-
 scene.run();
-
-

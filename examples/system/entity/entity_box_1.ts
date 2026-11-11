@@ -1,10 +1,6 @@
 import { vec3 } from "wgpu-matrix";
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { PerspectiveCamera, eventOfScene, type IV_Scene, type userDefineEventCall, initScene, E_renderPassName, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -21,8 +17,6 @@ let scene = await initScene({
   initConfig: input,
 });
 window.scene = scene;
-
-
 
 let radius = 5;
 let Y = 0;
@@ -41,8 +35,6 @@ let camera = new PerspectiveCamera({
   },
 });
 await scene.add(camera);
-
-
 
 let oneCall: userDefineEventCall = {
   call: (scope: Scene) => {

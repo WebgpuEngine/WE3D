@@ -1,0 +1,120 @@
+{
+    "generatedAt": "2026-11-11",
+    "scope": "src/we 生产源码（排除 *.test.ts 与生成数据）+ 全仓备份命名文件",
+    "metrics": {
+        "explicitAny": 230,
+        "typeEscapes": 4,
+        "giantFiles": 8,
+        "emptyStubFiles": 0,
+        "backupNamedFiles": 7,
+        "commentedCodeLines": 1132
+    },
+    "details": {
+        "anyTopFiles": [
+            {
+                "file": "src/we/model/gltf/gltf.ts",
+                "count": 32
+            },
+            {
+                "file": "src/we/core/model/ModelDataLoader.ts",
+                "count": 16
+            },
+            {
+                "file": "src/we/core/resources/resourcesGPU.ts",
+                "count": 14
+            },
+            {
+                "file": "src/we/core/base/coreDefine.ts",
+                "count": 8
+            },
+            {
+                "file": "src/we/core/base/coreFunction.ts",
+                "count": 7
+            },
+            {
+                "file": "src/we/core/organization/root.ts",
+                "count": 7
+            },
+            {
+                "file": "src/we/core/scene/base.ts",
+                "count": 7
+            },
+            {
+                "file": "src/we/core/control/cameracControl.ts",
+                "count": 6
+            },
+            {
+                "file": "src/we/core/command/baseFunction.ts",
+                "count": 5
+            },
+            {
+                "file": "src/we/core/command/base.ts",
+                "count": 4
+            },
+            {
+                "file": "src/we/core/command/ComputeCommand.ts",
+                "count": 4
+            },
+            {
+                "file": "src/we/core/input/baseInputControl.ts",
+                "count": 4
+            },
+            {
+                "file": "src/we/core/texture/baseTexture.ts",
+                "count": 4
+            },
+            {
+                "file": "src/we/core/bufferBlock/pointer.ts",
+                "count": 3
+            },
+            {
+                "file": "src/we/core/command/BaseCommand.ts",
+                "count": 3
+            }
+        ],
+        "giantFiles": [
+            {
+                "file": "src/we/core/command/DrawCommandGenerator.ts",
+                "lines": 1803
+            },
+            {
+                "file": "src/we/model/gltf/gltf.ts",
+                "lines": 1774
+            },
+            {
+                "file": "src/we/core/scene/scene.ts",
+                "lines": 1431
+            },
+            {
+                "file": "src/we/core/entity/baseEntity.ts",
+                "lines": 1097
+            },
+            {
+                "file": "src/we/core/entity/entityBundleMaterial.ts",
+                "lines": 1080
+            },
+            {
+                "file": "src/we/core/scene/renderManager.ts",
+                "lines": 1067
+            },
+            {
+                "file": "src/we/core/organization/nodeObject.ts",
+                "lines": 1061
+            },
+            {
+                "file": "src/we/core/light/lightsManager.ts",
+                "lines": 1020
+            }
+        ],
+        "emptyStubFiles": [],
+        "backupNamedFiles": [
+            "examples/atmosphere/bruneton/brunetonNdc copy.wgsl",
+            "public/models/gltf/base/morphTarget/MorphTarget copy.gltf",
+            "public/models/gltf/base/point/PointCloudWithRGBColors copy.gltf",
+            "public/models/gltf/base/triangle/triangle copy.gltf",
+            "src/we/core/shaders/defer/deferRender.fs copy 2.wgsl",
+            "src/we/core/shaders/defer/deferRender.fs copy.wgsl",
+            "src/we/core/shaders/material/PBR/PBR.fs copy.wgsl"
+        ]
+    }
+}

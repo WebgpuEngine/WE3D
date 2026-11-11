@@ -1,15 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PhongMaterial } from "../../../../src/we/core/material/phong/phongMaterial";
-import { DirectionalLight } from "../../../../src/we/core/light/DirectionalLight";
-import { AmbientLight } from "../../../../src/we/core/light/ambientLight";
-import { PointLight } from "../../../../src/we/core/light/pointLight";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, PhongMaterial, DirectionalLight, AmbientLight, PointLight } from '@we3d';
 
 declare global {
   interface Window {
@@ -46,7 +35,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 let onelight = new PointLight(
   {
     position: [0.0, 0.0, 2.0],
@@ -60,7 +48,6 @@ let onelight = new PointLight(
 //   intensity: 1,
 //   });
 
-
 await scene.add(onelight);
 
 let ambientLight = new AmbientLight(
@@ -72,7 +59,6 @@ let ambientLight = new AmbientLight(
 await scene.add(ambientLight);
 
 let geometry = new BoxGeometry();
-
 
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]

@@ -1,10 +1,6 @@
 import { mat4 } from "wgpu-matrix";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_Scene, userDefineEventCall, eventOfScene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { weGetBinaryResourceFromGzip } from "../../../src/we/core/base/file/getFile";
+import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_Scene, userDefineEventCall, eventOfScene, initScene, E_renderPassName, Scene, weGetBinaryResourceFromGzip } from '@we3d';
+
 import shader from "./atmosphere_wlBXWK.wgsl?raw";
 
 declare global {
@@ -78,9 +74,6 @@ let inputDC: IV_DrawCommandGenerator = {
 }
 let DCManager = new DrawCommandGenerator(inputDC);
 
-
-
-
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
@@ -140,7 +133,6 @@ scene.canvas.addEventListener('pointerup', (event) => {
   st_uniform_toyViews.u_mouse_xy[1] = event.clientY;
   // console.log(event.buttons, event.clientX, event.clientY, st_uniform_toyViews.u_mouse_btn[0],st_uniform_toyViews.u_mouse_xy[0],st_uniform_toyViews.u_mouse_xy[1]);
 
-
 });
 scene.canvas.addEventListener("pointermove", (event) => {
   if (!isMouseDown) {
@@ -172,8 +164,4 @@ let oneCall: userDefineEventCall = {
 }
 scene.addUserDefineEvent(oneCall);
 
-
-
 scene.run();
-
-

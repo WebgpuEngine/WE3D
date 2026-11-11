@@ -1,11 +1,4 @@
-import { PerspectiveCamera } from "../../../../../src/we/core/camera/perspectiveCamera";
-import { E_ToneMappingType, IV_Scene } from "../../../../../src/we/core/scene/base";
-import { initScene } from "../../../../../src/we/core/scene/fn";
-import { createGLTFModel } from "../../../../../src/we/model/gltf/gltf";
-import { DirectionalLight } from "../../../../../src/we/core/light/DirectionalLight";
-import { AmbientLight } from "../../../../../src/we/core/light/ambientLight";
-import { FXAA } from "../../../../../src/we/core/postprocess/FXAA";
-import { PointLight } from "../../../../../src/we/core/light/pointLight";
+import { PerspectiveCamera, E_ToneMappingType, IV_Scene, initScene, createGLTFModel, DirectionalLight, AmbientLight, FXAA, PointLight } from '@we3d';
 
 declare global {
   interface Window {
@@ -33,8 +26,6 @@ let oneDirlight = new DirectionalLight({
 });
 await scene.add(oneDirlight);
 
-
-
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
@@ -44,7 +35,6 @@ let ambientLight = new AmbientLight(
 await scene.add(ambientLight);
 let fxaa = new FXAA({ scene });
 // fxaa.setShowEdges(1);
-
 
 let radius = 5;
 let Y = 0;
@@ -59,7 +49,6 @@ let camera = new PerspectiveCamera({
 
 });
 await scene.add(camera);
-
 
 let gltf = await createGLTFModel({
   name: "LittlestTokyo",
@@ -84,4 +73,3 @@ window.gltfInstance = await scene.add(gltf, {
 });
 
 window.gltfInstance.AnimationGroup[0].play("loop");
-

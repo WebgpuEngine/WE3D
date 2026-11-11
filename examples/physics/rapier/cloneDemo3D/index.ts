@@ -20,7 +20,6 @@ import * as Voxels from "./demos/voxels";
 import * as glbToConvexHull from "./demos/glbtoConvexHull";
 import * as glbToTrimesh from "./demos/glbToTrimesh";
 
-
 declare global {
     interface Window {
         scene: any

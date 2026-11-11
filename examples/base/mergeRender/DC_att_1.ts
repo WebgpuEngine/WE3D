@@ -1,6 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -48,12 +46,10 @@ const oneTriangleVertexArray_right = [
   1, -0.5, 0,
 ];
 
-
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
 
 ////////////////////////////////////////////////////////
 
@@ -105,11 +101,9 @@ scene.BPC.BOLs.all.get(0).updateForce();
 scene.BPC.update(scene.clock);
 scene.memoryBlockManager.update(scene.clock);
 
-
 ///分别提交 ，只保留最后一个
 // dc_1.submit()
 // dc_2.submit()
-
 
 ////////////////////////////////////////////////////
 // 合并提交
@@ -120,7 +114,6 @@ let passEncoder = commandEncoder.beginRenderPass(scene.getRenderPassDescriptorFo
 //2.1 设置pipeline
 passEncoder.setPipeline(dc_left.pipeline);
 
-
 ////////////////////////////////DC1 数据
 //2.2 设置vertexBuffer
 passEncoder.setVertexBuffer(0, dc_left.vertexBuffers[0].gpuBufferView.buffer, dc_left.vertexBuffers[0].gpuBufferView.offset, dc_left.vertexBuffers[0].gpuBufferView.byteSize);
@@ -128,8 +121,6 @@ passEncoder.setVertexBuffer(0, dc_left.vertexBuffers[0].gpuBufferView.buffer, dc
 passEncoder.setBindGroup(0, undefined);
 //2.4  draw
 passEncoder.draw(3, 1, 0, 0,);
-
-
 
 // scene.rpdNDC.colorAttachments[0].loadOp = "load";
 // scene.rpdNDC.depthStencilAttachment.depthLoadOp = "load";
@@ -144,9 +135,7 @@ passEncoder.draw(3, 1, 0, 0,);
 
 passEncoder.end();
 
-
 const commandBuffer = commandEncoder.finish();
 scene.device.queue.submit([commandBuffer]);
-
 
 scene.renderToSurface();

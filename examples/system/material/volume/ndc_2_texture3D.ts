@@ -1,12 +1,5 @@
 import { mat4 } from "wgpu-matrix";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../../src/we/core/command/DrawCommandGenerator";
-import { IV_Scene, userDefineEventCall, eventOfScene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../../src/we/core/scene/scene";
-import { weGetBinaryResourceFromGzip } from "../../../../src/we/core/base/file/getFile";
-import { Texture3D } from "../../../../src/we/core/texture/texture3D";
-
+import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_Scene, userDefineEventCall, eventOfScene, initScene, E_renderPassName, Scene, weGetBinaryResourceFromGzip, Texture3D } from '@we3d';
 
 declare global {
   interface Window {
@@ -244,9 +237,6 @@ let inputDC: IV_DrawCommandGenerator = {
 }
 let DCManager = new DrawCommandGenerator(inputDC);
 
-
-
-
 let valueDC: IV_DC = {
   label: "dc1",
   data: {
@@ -283,7 +273,6 @@ dc.submit();
 
 // // // dc.submit()
 
-
 let oneCall: userDefineEventCall = {
   call: (scope: Scene) => {
     // scope.renderManager.clean();
@@ -301,8 +290,4 @@ let oneCall: userDefineEventCall = {
 }
 scene.addUserDefineEvent(oneCall);
 
-
-
 scene.run();
-
-

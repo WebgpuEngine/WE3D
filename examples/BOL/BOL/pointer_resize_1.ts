@@ -1,12 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import {  IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { BlockOffsetLength, IV_BOL } from "../../../src/we/core/bufferBlock/BOL";
-import { E_BOLBufferType } from "../../../src/we/core/bufferBlock/base";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, BlockOffsetLength, IV_BOL, E_BOLBufferType } from '@we3d';
 
 declare global {
   interface Window {
@@ -37,10 +29,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
-
-
 let boxGeometry = new BoxGeometry();
 
 let colorMaterial = new ColorMaterial({
@@ -65,7 +53,6 @@ window.instanceMash=await scene.add(mesh);
 
 window.BPC= scene.BPC;
 
-
 let bolParams:IV_BOL={
   name: "test1",
   size: 1024*1024*10,
@@ -77,4 +64,3 @@ console.log(bol1);
 
 let pointer1_info = bol1.allocatePointer(1,1024);
 console.log(pointer1_info);
-

@@ -1,12 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { IV_BOL } from "../../../src/we/core/bufferBlock/BOL";
-import { E_BOLBufferType } from "../../../src/we/core/bufferBlock/base";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, IV_BOL, E_BOLBufferType } from '@we3d';
 
 declare global {
   interface Window {
@@ -24,7 +16,6 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-
 let camera = new PerspectiveCamera({
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
@@ -35,10 +26,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
-
 
 let boxGeometry = new BoxGeometry();
 

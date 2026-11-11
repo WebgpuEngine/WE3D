@@ -1,23 +1,12 @@
 // import * as THREE from "three";
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import RAPIER from "@dimforge/rapier3d";
-import { Scene } from "../../../../src/we/core/scene/scene";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { CylinderGeometry } from "../../../../src/we/core/geometry/cylinderGeometry";
-import { ConeGeometry } from "../../../../src/we/core/geometry/coneGeometry";
-import { PhongMaterial } from "../../../../src/we/core/material/phong/phongMaterial";
-import { Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { IV_Node, NodeObject } from "../../../../src/we/core/organization/nodeObject";
-import { IV_LinesEntity, Lines } from "../../../../src/we/core/entity/mesh/lines";
-import { VertexColorMaterial } from "../../../../src/we/core/material/standard/vertexColorMaterial";
+import { Scene, BoxGeometry, SphereGeometry, CylinderGeometry, ConeGeometry, PhongMaterial, Mesh, IV_Node, NodeObject, IV_LinesEntity, Lines, VertexColorMaterial } from '@we3d';
 
 const BOX_INSTANCE_INDEX = 0;
 const BALL_INSTANCE_INDEX = 1;
 const CYLINDER_INSTANCE_INDEX = 2;
 const CONE_INSTANCE_INDEX = 3;
-
-
 
 type RAPIER_API = typeof import("@dimforge/rapier3d");
 
@@ -118,7 +107,6 @@ export class Graphics {
     scene: Scene;
     listOfCollidersToNodeObject: Map<number, number> = new Map(); // collider to node object
 
-
     // raycaster: THREE.Raycaster;
     highlightedCollider: null | number;
     coll2mesh: Map<number, Mesh> = new Map();     // collider to mesh
@@ -172,7 +160,6 @@ export class Graphics {
         let cylinderGeometry = new CylinderGeometry({ radiusTop: 1.0, radiusBottom: 1.0, height: 2.0 });
         let coneGeometry = new ConeGeometry({ radius: 1.0, height: 2.0 });
 
-
         let materials: PhongMaterial[] =
             this.colorPalette.map((color) => {
                 return new PhongMaterial({
@@ -222,7 +209,6 @@ export class Graphics {
             })
         );
 
-
         this.instanceGroups.push(
             materials.map((material) => {
                 return new Mesh(
@@ -259,8 +245,6 @@ export class Graphics {
             })
         );
 
-
-
     }
 
     render(world: RAPIER.World, debugRender: boolean) {
@@ -282,8 +266,6 @@ export class Graphics {
 
         this.updatePositions(world);
     }
-
-
 
     updatePositions(world: RAPIER.World) {
         world.forEachCollider((collider) => {
@@ -313,8 +295,6 @@ export class Graphics {
         }
 
     }
-
-
 
     removeRigidBody(body: RAPIER.RigidBody) {
         if (!!this.rb2colls.get(body.handle)) {
@@ -459,7 +439,6 @@ export class Graphics {
         }
         this.listOfColliderToNodeObject.set(collider.handle, instance);
 
-
         // //获取高亮实例，根据实例描述的组id和实例id获取实例
         // let highlightInstance = this.instanceGroups[meshIndex][this.highlightInstanceId()];//红色
         // highlightInstance.count = 0;//高亮实例：0，无高亮
@@ -469,6 +448,5 @@ export class Graphics {
         instance.Position = [t.x, t.y, t.z];
         instance.Quaternion = [r.x, r.y, r.z, r.w];
     }
-
 
 }

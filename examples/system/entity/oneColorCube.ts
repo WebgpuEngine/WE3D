@@ -1,8 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { E_ToneMappingType, IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { OneColoeCube } from "../../../src/we/core/entity/mesh/oneColorCube";
+import { PerspectiveCamera, E_ToneMappingType, IV_Scene, initScene, OneColoeCube } from '@we3d';
 
 declare global {
   interface Window {
@@ -34,14 +30,10 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]
 // });
 
-
 let mesh = new OneColoeCube ();
 console.log(mesh);
 await scene.add(mesh);
-

@@ -1,9 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { I_pointerCreateParams, I_pointerStruct } from "../../../src/we/core/bufferBlock/pointer";
-import { E_BOLBufferType } from "../../../src/we/core/bufferBlock/base";
+import { PerspectiveCamera, IV_Scene, initScene, I_pointerCreateParams, I_pointerStruct, E_BOLBufferType } from '@we3d';
 
 declare global {
   interface Window {
@@ -40,7 +35,6 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-
 let camera = new PerspectiveCamera({
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
@@ -51,11 +45,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
-
-
 
 window.BPC = scene.BPC;
 console.log(scene.BPC);

@@ -1,12 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, PlaneGeometry } from '@we3d';
 
 declare global {
   interface Window {
@@ -39,7 +31,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 ////////////////////////////////////
 //plane
 let planeGeometry = new PlaneGeometry({
@@ -64,7 +55,6 @@ let inputMesh0: IV_MeshEntity = {
   scale: [10, 10, 10],
   rotate: [1, 0, 0, Math.PI / 2],
 
-
 }
 let mesh0 = new Mesh(inputMesh0);
 
@@ -72,8 +62,6 @@ window.white = await scene.add({
   entity: mesh0,
   id: 1 //这里的ID是临时测试代码，为了固定ID，测试TTPF
 });
-
-
 
 let colorMaterial1 = new ColorMaterial({
   color: [1, 0., 0., 0.2]
@@ -94,8 +82,6 @@ await scene.add({
   id: 2
 });
 
-
-
 let colorMaterial2 = new ColorMaterial({
   color: [0, 1, 0, .3]
 });
@@ -114,4 +100,3 @@ await scene.add({
   entity: mesh2,
   id: 3
 });
-

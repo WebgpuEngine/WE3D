@@ -1,11 +1,5 @@
 import { vec3 } from "wgpu-matrix";
-import { E_renderForDC } from "../../../src/we/core/base/coreDefine";
-import { OrthographicCamera } from "../../../src/we/core/camera/orthographicCamera";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { E_renderForDC, OrthographicCamera, DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, eventOfScene, type IV_Scene, type userDefineEventCall, initScene, E_renderPassName, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -82,7 +76,6 @@ var<private> matrix_z_reversed : mat4x4f = mat4x4f(
     projectionMatrix = U_MVP.projection;
     MVP = projectionMatrix * viewMatrix * modelMatrix;
 
-
         var vsOutput: OurVertexShaderOutput;
         vsOutput.position = matrix_z * MVP* vec4f(position, 1.0);//vec4f(position,  1.0);
         vsOutput.color = color;
@@ -115,14 +108,10 @@ const oneTriangleColorArray = [
 ];
 const oneTriangleVertexF32A = new Float32Array(oneTriangleVertexArray);
 
-
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
-
-
 
 let valueDC: IV_DC = {
   label: "dc1",
@@ -166,7 +155,6 @@ let orthCamera = new OrthographicCamera({
 
 });
 await scene.add(orthCamera);
-
 
 let dc = DCManager.generateDrawCommand(valueDC);
 

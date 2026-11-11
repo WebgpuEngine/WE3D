@@ -1,8 +1,4 @@
-import { V_weLinearFormat } from "../../../src/we/core/base/coreDefine";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_SimpleDrawCommand, SimpleDrawCommand } from "../../../src/we/core/command/SimpleDrawCommand";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { V_weLinearFormat, DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, IV_SimpleDrawCommand, SimpleDrawCommand, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {

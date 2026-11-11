@@ -1,11 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { CubeTextureMaterial } from "../../../src/we/core/material/standard/cubeTextureMaterial";
-import { PrefilteredCubemap } from "../../../src/we/core/texture/prefilteredCubemap";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, IV_MeshEntity, Mesh, CubeTextureMaterial, PrefilteredCubemap } from '@we3d';
 
 declare global {
   interface Window {
@@ -36,12 +29,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
-
-
-
-
 let ktxTexture = new PrefilteredCubemap({
   // source: "/IBL/brdfLut/dfg_lut_512.ktx",
   source: "/IBL/pine_attic_2k/ktx1/output_ibl.ktx",
@@ -49,7 +36,6 @@ let ktxTexture = new PrefilteredCubemap({
   // format: "rgba32float",
 }, scene.device, scene);
 await ktxTexture.init();
-
 
 let textureMaterial = new CubeTextureMaterial({
   /** 立方体贴图 JPG 格式*/
@@ -74,5 +60,3 @@ let inputMesh: IV_MeshEntity = {
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-
-

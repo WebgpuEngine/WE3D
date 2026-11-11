@@ -1,7 +1,4 @@
-import { I_uniformArrayBufferEntry } from "../../../src/we/core/command/base";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { I_uniformArrayBufferEntry, DrawCommandGenerator, type IV_DrawCommandGenerator, IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -25,7 +22,6 @@ let shader = `
         return vec4f(1.0, 0.0, 0.0, 1.0);
   }`;
 //====================================================
-
 
 let rpd = scene.getRenderPassDescriptorForNDC();
 let depthStencil = scene.depthMode.depthStencil;
@@ -68,4 +64,3 @@ scene.BPC.update(scene.clock);
 scene.memoryBlockManager.update(scene.clock);
 dc0.submit()
 scene.renderToSurface();
-

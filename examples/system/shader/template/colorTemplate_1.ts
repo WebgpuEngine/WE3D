@@ -1,8 +1,4 @@
-import { I_optionShadowEntity } from "../../../../src/we/core/entity/base";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-
+import { I_optionShadowEntity, ColorMaterial, IV_Scene, initScene } from '@we3d';
 
 declare global {
   interface Window {
@@ -21,7 +17,6 @@ let scene = await initScene({
 window.scene = scene;
 
 window.scene = scene;
-
 
 let c1 = new ColorMaterial(
   {

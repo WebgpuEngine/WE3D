@@ -1,6 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformArrayBufferEntry, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformArrayBufferEntry, type IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -43,7 +41,6 @@ dataF32A[0] = 0.0;
 dataF32A[1] = 0.0;
 dataF32A[2] = 1.0;
 dataF32A[3] = 1.0;
-
 
 let unifrom1: I_uniformArrayBufferEntry = {
   label: "uniform1",
@@ -124,8 +121,6 @@ let DCManager = new DrawCommandGenerator(inputDC);
 let dc0 = DCManager.generateDrawCommand(valueDC);
 // dc0.submit()
 
-
-
 let valueDC_1: IV_DC = {
   label: "dc1",
   data: {
@@ -156,10 +151,6 @@ let valueDC_1: IV_DC = {
   renderPassDescriptor: rpd,
 
 }
-
-
-
-
 
 let dc1 = DCManager.generateDrawCommand(valueDC_1);
 

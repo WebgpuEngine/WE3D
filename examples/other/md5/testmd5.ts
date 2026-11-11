@@ -1,6 +1,6 @@
 // import md5 from 'js-md5'
 
-import { MD5 } from "../../../src/we/reExport/md5"
+import { MD5 } from '@we3d';
 
 // 1. 准备 ArrayBuffer
 const buffer = new ArrayBuffer(16)

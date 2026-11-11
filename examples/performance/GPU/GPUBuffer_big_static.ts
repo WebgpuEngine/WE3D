@@ -1,12 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { eventOfScene, IV_Scene, userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { createEmptyGPUBuffer } from "../../../src/we/core/command/baseFunction";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { PerspectiveCamera, eventOfScene, IV_Scene, userDefineEventCall, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, createEmptyGPUBuffer, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -36,8 +28,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
 
 let size = 128 * 1024 * 1024;//2MB
 let cpuMemList: ArrayBuffer[] = [];

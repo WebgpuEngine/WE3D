@@ -1,15 +1,5 @@
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, PhongMaterial, DirectionalLight, AmbientLight, PointLight } from '@we3d';
 
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PhongMaterial } from "../../../../src/we/core/material/phong/phongMaterial";
-import { DirectionalLight } from "../../../../src/we/core/light/DirectionalLight";
-import { AmbientLight } from "../../../../src/we/core/light/ambientLight";
-import { PointLight } from "../../../../src/we/core/light/pointLight";
 import { vec3 } from "wgpu-matrix";
 
 declare global {
@@ -48,9 +38,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
-
 let ambientLight = new AmbientLight(
   {
     color: [1, 1, 1],
@@ -58,8 +45,6 @@ let ambientLight = new AmbientLight(
   }
 )
 await scene.add(ambientLight);
-
-
 
 ////////////////////////////////////////////////////////   mesh part 
 let ballGeometry = new SphereGeometry({
@@ -71,7 +56,6 @@ let lightMaterial = new ColorMaterial(
   {
     color: [1, 1, 1, 1]
   });
-
 
 let lightBall = new Mesh(
   {
@@ -105,8 +89,6 @@ let onelight = new PointLight(
   }
 );
 await nodeLight1.addChild(onelight);
-
-
 
 let geometry = new BoxGeometry();
 let phongMaterial = new PhongMaterial({

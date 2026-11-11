@@ -1,17 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { PointLight } from "../../../../src/we/core/light/pointLight";
-import { AmbientLight } from "../../../../src/we/core/light/ambientLight";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PhongMaterial } from "../../../../src/we/core/material/phong/phongMaterial";
-import { DirectionalLight } from "../../../../src/we/core/light/DirectionalLight";
-import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
-import { IV_PBRMaterial, PBRMaterial } from "../../../../src/we/core/material/PBR/PBRMaterial";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, PointLight, AmbientLight, SphereGeometry, PhongMaterial, DirectionalLight, PlaneGeometry, IV_PBRMaterial, PBRMaterial } from '@we3d';
 
 declare global {
   interface Window {
@@ -43,7 +30,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
 
 //环境光
 let ambientLight = new AmbientLight(

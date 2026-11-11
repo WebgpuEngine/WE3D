@@ -1,8 +1,4 @@
-import { T_uniformGroups } from "../../../src/we/core/command/base";
-import { ComputeCommand, IV_ComputeCommand } from "../../../src/we/core/command/ComputeCommand";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
-
+import { T_uniformGroups, ComputeCommand, IV_ComputeCommand, IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -15,7 +11,6 @@ let scene = new Scene(input);
 await scene._init();
 
 window.scene = scene;
-
 
 const dispatchCount: [number, number, number] = [4, 3, 2];
 const workgroupSize = [2, 3, 4];
@@ -67,13 +62,10 @@ const numWorkgroups = arrayProd(dispatchCount);
 const numResults = numWorkgroups * numThreadsPerWorkgroup;
 const size = numResults * 4 * 4;  // vec3f * u32
 
-
 let usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC;
 const workgroupBuffer = scene.device.createBuffer({ size, usage });
 const localBuffer = scene.device.createBuffer({ size, usage });
 const globalBuffer = scene.device.createBuffer({ size, usage });
-
-
 
 usage = GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST;
 const workgroupReadBuffer = scene.device.createBuffer({ size, usage });
@@ -196,5 +188,3 @@ let DC = new ComputeCommand(options);
 // await DC.init();
 window.DC = DC;
 DC.submit()
-
-

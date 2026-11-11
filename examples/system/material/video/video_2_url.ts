@@ -1,4 +1,3 @@
-
 import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, VideoMaterial, PlaneGeometry } from "@we3d";
 
 declare global {
@@ -30,11 +29,7 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
 let video_1 = document.getElementById("video") as HTMLVideoElement;
-
-
 
 let colorMaterial = new VideoMaterial({
   textures: {
@@ -68,4 +63,3 @@ let inputMesh: IV_MeshEntity = {
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-

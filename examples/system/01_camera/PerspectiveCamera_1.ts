@@ -1,10 +1,5 @@
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh } from '@we3d';
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
 import { vec3 } from "wgpu-matrix";
 
 declare global {
@@ -50,8 +45,6 @@ let camera = new PerspectiveCamera({
   // controlType:"arcball",
 });
 await scene.add(camera);
-
-
 
 let boxGeometry = new BoxGeometry();
 

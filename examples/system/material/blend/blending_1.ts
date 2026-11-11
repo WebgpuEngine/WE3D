@@ -1,16 +1,7 @@
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 import GUI from "muigui";
-import { IV_OrthographicCamera, OrthographicCamera } from "../../../../src/we/core/camera/orthographicCamera";
-import { Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { TextureMaterial } from "../../../../src/we/core/material/standard/textureMaterial";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { Texture } from "../../../../src/we/core/texture/texture";
-import { E_TransparentType } from "../../../../src/we/core/material/base";
+import { IV_OrthographicCamera, OrthographicCamera, Mesh, PlaneGeometry, ColorMaterial, TextureMaterial, IV_Scene, initScene, Texture, E_TransparentType } from '@we3d';
 
 //from webgpufundemental
 const hsl = (h: number, s: number, l: number) => `hsl(${h * 360 | 0}, ${s * 100}%, ${l * 100 | 0}%)`;
@@ -72,8 +63,6 @@ const size = 300;
 const srcCanvas = createSourceImage(size);
 const dstCanvas = createDestinationImage(size);
 
-
-
 ///////////////////////////////////////////////////////////////////////////
 //scene
 declare global {
@@ -94,7 +83,6 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-
 const cameraOption: IV_OrthographicCamera = {
   left: -1,
   right: 1,
@@ -107,9 +95,6 @@ const cameraOption: IV_OrthographicCamera = {
 }
 let camera = new OrthographicCamera(cameraOption);
 await scene.add(camera);
-
-
-
 
 ////enities 初始化
 
@@ -145,16 +130,12 @@ let dstTexturePremultiplied = new Texture({
 );
 await dstTexturePremultiplied.init();
 
-
-
 let dstMaterial = new TextureMaterial({
   transparent: {
     type: E_TransparentType.alpha,
     alphaTest: 0.
   },
-  textures: {
-    color: dstTexturePremultiplied  //Texture 类
-  }
+  texture: dstTexturePremultiplied,
 });
 let dstPlane = new Mesh({
   name: "dst",
@@ -165,8 +146,6 @@ let dstPlane = new Mesh({
   position: [0, 0, 0.1],//Z值小 
   // cullmode: "none"
 });
-
-
 
 //非预乘 SRC
 let srcTextureUnPremultiplied = new Texture({
@@ -188,17 +167,12 @@ let srcTexturePremultiplied = new Texture({
   scene);
 await srcTexturePremultiplied.init();
 
-
-
-
 let srcMaterial = new TextureMaterial({
   transparent: {
     type: E_TransparentType.alpha,
     alphaTest: 0.
   },
-  textures: {
-    color: srcTexturePremultiplied
-  }
+  texture: srcTexturePremultiplied,
 });
 let srcPlane = new Mesh({
   name: "src",
@@ -211,7 +185,6 @@ let srcPlane = new Mesh({
 
 await scene.add(dstPlane);
 await scene.add(srcPlane);
-
 
 window.srcPlane = srcPlane;
 window.dstPlane = dstPlane;
@@ -401,7 +374,6 @@ function update() {
   // console.log(settings);
   // console.log("",color,alpha,constant,clear);
 
-
   //背景色，
   if (settings.alphaMode == "premultiplied") {
     // scene.setBackgroudColor({
@@ -434,12 +406,12 @@ function update() {
 
   //纹理预乘
   if (settings.textureSet == 0) {//纹理预乘
-    srcMaterial.textures.texture = srcTexturePremultiplied;
-    dstMaterial.textures.texture = dstTexturePremultiplied;
+    srcMaterial.textures.color = srcTexturePremultiplied;
+    dstMaterial.textures.color = dstTexturePremultiplied;
   }
   else {//纹理不预乘
-    srcMaterial.textures.texture = srcTextureUnPremultiplied;
-    dstMaterial.textures.texture = dstTextureUnPremultiplied;
+    srcMaterial.textures.color = srcTextureUnPremultiplied;
+    dstMaterial.textures.color = dstTextureUnPremultiplied;
   }
 
   //settings.preset（这个是组合，就是后面的color与alpha） || Blending的color 与alpha处理
@@ -459,7 +431,6 @@ function update() {
     // }
   }
   srcMaterial.setBlend(blendingValues);
-
 
   //blending ,constant ,todo
   let blendConstants = [...constant.color, constant.alpha];

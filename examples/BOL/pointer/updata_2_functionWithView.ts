@@ -1,9 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { I_pointerCreateParams } from "../../../src/we/core/bufferBlock/pointer";
-import { E_BOLBufferType } from "../../../src/we/core/bufferBlock/base";
+import { PerspectiveCamera, IV_Scene, initScene, I_pointerCreateParams, E_BOLBufferType } from '@we3d';
 
 declare global {
   interface Window {
@@ -35,11 +30,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
-
-
 
 window.BPC = scene.BPC;
 console.log(scene.BPC);
@@ -89,4 +79,3 @@ window.pointers.updatePointerData(pointer1, {
   offsetByteOfWriteToPointer: 4 * 8,//U32类型，每个元素占4个byte节，从指针的第4个byte节开始写入
 })
 console.log("after update pointer1: 9101112:", pointer1);
-

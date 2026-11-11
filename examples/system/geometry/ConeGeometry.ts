@@ -1,13 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import {  IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-import { CircleGeometry } from "../../../src/we/core/geometry/circleGeometry";
-import { ConeGeometry } from "../../../src/we/core/geometry/coneGeometry";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, CircleGeometry, ConeGeometry } from '@we3d';
 
 declare global {
   interface Window {
@@ -38,10 +29,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
-
-
-
 let geometry = new ConeGeometry();
 
 let colorMaterial = new ColorMaterial({
@@ -62,4 +49,3 @@ let inputMesh: IV_MeshEntity = {
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-

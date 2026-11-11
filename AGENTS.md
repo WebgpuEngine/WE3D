@@ -30,9 +30,9 @@
 ## 三、开发流程约定
 
 1. **提交前本地门禁（必须，未通过不得提交 / 推送）**：任何提交前必须先跑本地门禁，全绿后再提交。
-   - 常规改动：`npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）。
+   - 常规改动：`npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + check:quality + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）。
    - 涉及渲染 / e2e 用例 / 引擎渲染路径改动：先 `npm run test:baseline` 更新基线，再 `npm run ci`（= `ci:no-e2e` + `test:e2e`）确认 e2e 全绿后提交。
-   - 分步等价：`npm run lint` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
+   - 分步等价：`npm run lint` → `npm run check:quality` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
 2. **错误修复顺序**：先让构建变绿 → 建回归基线 → 加单测 → 再修错误（不盲改）。
 3. **Playwright e2e 回归**：测试对象已迁移到 `e2e-cases/`（按子目录组织，用例从 `@we3d` 导入），不再来自 `examples/`。
    - 跑全部（GPU 硬件版）：`npm run test:e2e`（= `playwright test`，默认 GPU 配置），GPU 渲染结果与 GPU 基线逐帧比对做差值检测，不生成基线。
@@ -52,7 +52,7 @@
 - 形态：lib 形式（ESM + `.d.ts`），**不做 web app 打包**。
 - 着色器通过 Vite `?raw` 引入，由 Vite `build.lib` 模式在打包时内联，源码零改动。
 - 依赖全部 external 化，只打包 `src/we` 源码。
-- `prepublishOnly` 自动跑 lint + test + build:lib + check:exports（发布兜底）。
+- `prepublishOnly` 自动跑 lint + check:quality + test + build:lib + check:exports（发布兜底）。
 
 ### 发布流程（本地命令，手动模式）
 
@@ -70,7 +70,7 @@
 
 | 云端 workflow | 触发 | 云端动作 | 本地等价命令 |
 | --- | --- | --- | --- |
-| `.github/workflows/ci.yml` | push/PR | `ci:no-e2e`（lint+typecheck+test+check:exports+build:lib，无 e2e/文档） | `npm run ci:no-e2e`（自测）/ `npm run ci`（含 e2e） |
+| `.github/workflows/ci.yml` | push/PR | `ci:no-e2e`（lint+check:quality+typecheck+test+check:exports+build:lib，无 e2e/文档） | `npm run ci:no-e2e`（自测）/ `npm run ci`（含 e2e） |
 | `.github/workflows/release.yml` | `v*` tag | `build:lib` + `docs:build:force` + 回写 `docs/` | 步骤 2（`docs:build` 本地提交）+ 步骤 4（tag 触发云端重建） |
 
 ## 五、脚本速查
@@ -82,6 +82,8 @@
 | `npm run build:lib` | Vite lib 打包到 `dist/`（`we3d.js` + `.d.ts`，读 `vite.lib.config.ts`） |
 | `npm run preview` | vite preview（预览 examples 构建产物） |
 | `npm run check:exports` | 校验 `src/we/index.ts` barrel 与 `src/we` 实际导出集合 |
+| `npm run check:quality` | 代码层质量 ratchet 门禁（`any` / `@ts-ignore` / 巨型文件 / 空占位 / 备份命名 / 注释代码行），与 `scripts/code-quality-baseline.json` 比较，只许下降 |
+| `npm run quality:baseline` | 治理见效后显式收紧质量基线（须与治理同一次提交，基线不自动放宽） |
 | `npm run lint` / `lint:fix` | ESLint 检查 / 自动修复（仅 src/we） |
 | `npm run format` / `format:check` | Prettier 格式化 / 检查 |
 | `npm run typecheck` | tsc --noEmit 纯类型检查（不含 examples 打包） |
@@ -95,8 +97,8 @@
 | `npm run docs:build:watch` | 监听模式重建 `docs/`（typedoc `--watch`） |
 | `npm run examples:generate` | 重新生成 `examples/files.json` 索引 |
 | `npm run e2e-index` | 重新生成 `e2e-cases/index.html` 索引（扫描 `e2e-cases` 一级目录下 `*.html`） |
-| `npm run ci` | 本地完整门禁：lint + typecheck + test + check:exports + build:lib + **test:e2e** |
-| `npm run ci:no-e2e` | 云端 `ci.yml` 等价：同上但 **不含 e2e / 文档** |
+| `npm run ci` | 本地完整门禁：lint + check:quality + typecheck + test + check:exports + build:lib + **test:e2e** |
+| `npm run ci:no-e2e` | 云端 `ci.yml` 等价：同上但 **不含 e2e / 文档**（含 `test:browser`） |
 | `npm run publish:if-new` | 手工发布：版本未变跳过，变更则 `npm publish`（发布前自动 `prepublishOnly`） |
 
 ## 六、Git 提交约定

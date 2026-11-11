@@ -1,7 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { eventOfScene, userDefineEventCall, IV_Scene } from "../../../src/we/core/scene/base";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, eventOfScene, userDefineEventCall, IV_Scene, E_renderPassName, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -53,9 +50,6 @@ let inputDC: IV_DrawCommandGenerator = {
   parent: scene,
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
-
-
 
 let valueDC: IV_DC = {
   label: "dc1",

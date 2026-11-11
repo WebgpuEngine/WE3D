@@ -1,13 +1,6 @@
+import { PerspectiveCamera, IV_Scene, initScene, IV_LinesEntity, Lines, E_AnimationType, VertexColorMaterial, LinesSkins, NodeObject } from '@we3d';
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
 import { Mat4, mat4, vec3 } from "wgpu-matrix";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
-import { E_AnimationType } from "../../../src/we/core/animation/base";
-import { VertexColorMaterial } from "../../../src/we/core/material/standard/vertexColorMaterial";
-import { LinesSkins } from "../../../src/we/core/entity/animationEntity/linesOfSkins";
-import { NodeObject } from "../../../src/we/core/organization/nodeObject";
 
 declare global {
   interface Window {
@@ -37,9 +30,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
 
 let colorMaterial = new VertexColorMaterial();
 // let colorMaterial = new ColorMaterial({
@@ -157,7 +147,6 @@ lines.JointMatrixByteSize = 16 * 4 * numBones;          //每个骨骼矩阵大�
 // lines.AnimationType(E_AnimationType.skeleton);
 lines._animationType.add(E_AnimationType.skeleton);
 
-
 let linesEntity = await scene.add(
   {
     entity: lines,
@@ -189,7 +178,4 @@ console.log("骨骼节点变换矩阵组:", bonesJointsMatWorld);
 
 linesEntity.JointsMat = boneArray;
 
-
-
 window.mesh = linesEntity;
-
