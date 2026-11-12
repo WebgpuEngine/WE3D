@@ -1,13 +1,13 @@
 {
-    "generatedAt": "2026-11-11",
+    "generatedAt": "2026-11-12",
     "scope": "src/we 生产源码（排除 *.test.ts 与生成数据）+ 全仓备份命名文件",
     "metrics": {
         "explicitAny": 112,
         "typeEscapes": 0,
-        "giantFiles": 7,
+        "giantFiles": 6,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
-        "commentedCodeLines": 1117
+        "commentedCodeLines": 1078
     },
     "details": {
         "anyTopFiles": [
@@ -92,10 +92,6 @@
             {
                 "file": "src/we/core/entity/entityBundleMaterial.ts",
                 "lines": 1079
-            },
-            {
-                "file": "src/we/core/scene/renderManager.ts",
-                "lines": 1067
             },
             {
                 "file": "src/we/core/organization/nodeObject.ts",
