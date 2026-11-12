@@ -15,10 +15,7 @@ import { BaseMaterial } from '../../core/material/baseMaterial';
 import { Clock } from '../../core/scene/clock';
 import { BaseModel, I_Model, T_ModelResKind } from '../../core/model/BaseModel';
 // import { IV_NodeSpace, NodeObject, NodeObject, RootGPU } from "../../core/organization/root";
-import {
-    I_vsGPUBufferBundle,
-    T_indexAttribute,
-} from '../../core/command/DrawCommandGenerator';
+import { I_vsGPUBufferBundle, T_indexAttribute } from '../../core/command/DrawCommandGenerator';
 import { IV_MeshEntity, Mesh } from '../../core/entity/mesh/mesh';
 import { IV_PointsEntity, Points } from '../../core/entity/mesh/points';
 import { IV_LinesEntity, Lines } from '../../core/entity/mesh/lines';
@@ -603,13 +600,21 @@ export class GLTFModel extends BaseModel {
     async initGPUTextures() {
         return gltfTextures.initGPUTextures(this);
     }
-    async getGPUTexture(id: number | string, format: GPUTextureFormat = 'rgba8unorm-srgb', premultipliedAlpha: boolean = false) {
+    async getGPUTexture(
+        id: number | string,
+        format: GPUTextureFormat = 'rgba8unorm-srgb',
+        premultipliedAlpha: boolean = false,
+    ) {
         return gltfTextures.getGPUTexture(this, id, format, premultipliedAlpha);
     }
     async initTextures() {
         return gltfTextures.initTextures(this);
     }
-    async getTexture(id: number, format: GPUTextureFormat = 'rgba8unorm-srgb', premultipliedAlpha: boolean = false) {
+    async getTexture(
+        id: number,
+        format: GPUTextureFormat = 'rgba8unorm-srgb',
+        premultipliedAlpha: boolean = false,
+    ) {
         return gltfTextures.getTexture(this, id, format, premultipliedAlpha);
     }
     initTextureInfo() {
@@ -827,10 +832,18 @@ export class GLTFModel extends BaseModel {
             throw new Error(`gltf not found meshes`);
         }
     }
-    async getVerticesOfPrimitive(primitive: any, meshID: string, primitiveID: string): Promise<{ [name: string]: I_vsGPUBufferBundle }> {
+    async getVerticesOfPrimitive(
+        primitive: any,
+        meshID: string,
+        primitiveID: string,
+    ): Promise<{ [name: string]: I_vsGPUBufferBundle }> {
         return gltfPrimitive.getVerticesOfPrimitive(this, primitive, meshID, primitiveID);
     }
-    async getVerticesArrayOfPrimitive(primitive: any, meshID: string, primitiveID: string): Promise<{ [name: string]: number[] }> {
+    async getVerticesArrayOfPrimitive(
+        primitive: any,
+        meshID: string,
+        primitiveID: string,
+    ): Promise<{ [name: string]: number[] }> {
         return gltfPrimitive.getVerticesArrayOfPrimitive(this, primitive, meshID, primitiveID);
     }
     meshHasMorphTarget(primitive: any): boolean {
@@ -840,10 +853,26 @@ export class GLTFModel extends BaseModel {
     meshHasSkins(meshID: number): boolean {
         return gltfPrimitive.meshHasSkins(this, meshID);
     }
-    async getIndecisOfPrimitive(primitive: any, meshID: string, primitiveID: string): Promise<{ indecis: T_indexAttribute | undefined; drawMode: I_drawMode | I_drawModeIndexed; stripIndexFormat: GPUIndexFormat }> {
+    async getIndecisOfPrimitive(
+        primitive: any,
+        meshID: string,
+        primitiveID: string,
+    ): Promise<{
+        indecis: T_indexAttribute | undefined;
+        drawMode: I_drawMode | I_drawModeIndexed;
+        stripIndexFormat: GPUIndexFormat;
+    }> {
         return gltfPrimitive.getIndecisOfPrimitive(this, primitive, meshID, primitiveID);
     }
-    async getIndecisArrayOfPrimitive(primitive: any, meshID: string, primitiveID: string): Promise<{ indecis: number[]; drawMode: I_drawMode | I_drawModeIndexed; stripIndexFormat: GPUIndexFormat }> {
+    async getIndecisArrayOfPrimitive(
+        primitive: any,
+        meshID: string,
+        primitiveID: string,
+    ): Promise<{
+        indecis: number[];
+        drawMode: I_drawMode | I_drawModeIndexed;
+        stripIndexFormat: GPUIndexFormat;
+    }> {
         return gltfPrimitive.getIndecisArrayOfPrimitive(this, primitive, meshID, primitiveID);
     }
     getAccessor(idOfaccessors: any, useFor: E_accessorUseFor) {

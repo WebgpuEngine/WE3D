@@ -391,7 +391,9 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             await loader.init();
 
             const json = loader.gltfJSON();
-            expect(json.extensionsRequired, '声明 KHR_texture_basisu').toContain('KHR_texture_basisu');
+            expect(json.extensionsRequired, '声明 KHR_texture_basisu').toContain(
+                'KHR_texture_basisu',
+            );
             // 该扩展无 readDependencies，不应误入 IO 依赖机制
             expect(getExtensionDependencyKeys(json)).toEqual([]);
 
@@ -434,11 +436,17 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
             const jobs: Array<{ id: number; useFor: E_accessorUseFor; semantic: string }> = [];
             for (const mesh of json.meshes ?? []) {
                 for (const primitive of mesh.primitives ?? []) {
-                    for (const [semantic, accessorID] of Object.entries(primitive.attributes ?? {})) {
+                    for (const [semantic, accessorID] of Object.entries(
+                        primitive.attributes ?? {},
+                    )) {
                         const key = `${accessorID}:vertex`;
                         if (seen.has(key)) continue;
                         seen.add(key);
-                        jobs.push({ id: accessorID as number, useFor: E_accessorUseFor.vertex, semantic });
+                        jobs.push({
+                            id: accessorID as number,
+                            useFor: E_accessorUseFor.vertex,
+                            semantic,
+                        });
                     }
                     if (primitive.indices !== undefined) {
                         const useFor = modeToUseFor(primitive.mode ?? 4);
@@ -453,7 +461,11 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
 
             for (const { id, useFor, semantic } of jobs) {
                 const label = `${url} accessor[${id}] ${semantic}(${useFor})`;
-                const bundle = (await loader.generateAccessor(id, '', useFor)) as unknown as T_BundleLike;
+                const bundle = (await loader.generateAccessor(
+                    id,
+                    '',
+                    useFor,
+                )) as unknown as T_BundleLike;
                 expect(bundle.count, `${label} count`).toBeGreaterThan(0);
                 const expectedByteSize =
                     useFor === E_accessorUseFor.vertex
@@ -705,8 +717,7 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
         const values = loader.getAccessorForArray(samplerJSON.output);
         expect(frames, 'input 为 2 个时间戳').toEqual([0, 1]);
         expect(values, 'output 为 2 帧 × 三段 × VEC3').toEqual([
-            0, 0, 0, 0, 0, 0, 1, 0, 0,
-            1, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0,
         ]);
 
         const { model, nodeOfScene } = makeAnimationHarness(json.animations!, frames, values);
@@ -754,11 +765,7 @@ describe('glTF 新解析层契约（Phase 3 数据级回归）', () => {
                 channels: [{ sampler: 0, target: { node: 0, path: 'translation' } }],
             },
         ];
-        const { model, nodeOfScene } = makeAnimationHarness(
-            animations,
-            [0, 1],
-            [0, 0, 0, 1, 0, 0],
-        );
+        const { model, nodeOfScene } = makeAnimationHarness(animations, [0, 1], [0, 0, 0, 1, 0, 0]);
         await expect(model.initAnimationsForInstance(nodeOfScene)).rejects.toThrow(/BEZIER/);
     });
 

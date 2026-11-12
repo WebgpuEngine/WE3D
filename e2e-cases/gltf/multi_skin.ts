@@ -32,9 +32,7 @@ const camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-await scene.add(
-    new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }),
-);
+await scene.add(new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }));
 await scene.add(new AmbientLight({ color: [1, 1, 1], intensity: 0.2 }));
 
 // P4-1 D4：多 skin 渲染回归。两个 skinned mesh（SkinA / SkinB）左右分离（x ∓ 0.7），

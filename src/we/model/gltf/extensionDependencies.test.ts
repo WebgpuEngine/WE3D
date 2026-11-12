@@ -23,20 +23,22 @@ function makeSink() {
 describe('glTF 扩展运行时依赖 · 通用自动解析', () => {
     describe('getExtensionDependencyKeys（从 ALL_EXTENSIONS 自动发现，非硬编码）', () => {
         it('Draco → draco3d.decoder', () => {
-            expect(getExtensionDependencyKeys({ extensionsUsed: ['KHR_draco_mesh_compression'] })).toEqual([
-                'draco3d.decoder',
-            ]);
+            expect(
+                getExtensionDependencyKeys({ extensionsUsed: ['KHR_draco_mesh_compression'] }),
+            ).toEqual(['draco3d.decoder']);
         });
 
         it('Meshopt → meshopt.decoder', () => {
-            expect(getExtensionDependencyKeys({ extensionsUsed: ['EXT_meshopt_compression'] })).toEqual([
-                MESHOPT,
-            ]);
+            expect(
+                getExtensionDependencyKeys({ extensionsUsed: ['EXT_meshopt_compression'] }),
+            ).toEqual([MESHOPT]);
         });
 
         it('无扩展声明 / 纯结构扩展返回空', () => {
             expect(getExtensionDependencyKeys({})).toEqual([]);
-            expect(getExtensionDependencyKeys({ extensionsUsed: ['KHR_materials_unlit'] })).toEqual([]);
+            expect(getExtensionDependencyKeys({ extensionsUsed: ['KHR_materials_unlit'] })).toEqual(
+                [],
+            );
         });
 
         it('仅声明在 extensionsRequired 也能识别', () => {
@@ -134,7 +136,9 @@ describe('glTF 扩展运行时依赖 · 通用自动解析', () => {
             });
             const a = makeSink();
             await expect(
-                resolveExtensionDependencies(a.sink, { extensionsUsed: ['EXT_meshopt_compression'] }),
+                resolveExtensionDependencies(a.sink, {
+                    extensionsUsed: ['EXT_meshopt_compression'],
+                }),
             ).rejects.toThrow('load failed');
 
             const b = makeSink();

@@ -21,7 +21,9 @@ export async function transcodeKTX2ToImageBitmap(
 ): Promise<ImageBitmap> {
     const RGBA32 = M.transcoder_texture_format?.cTFRGBA32?.value;
     if (typeof RGBA32 !== 'number') {
-        throw new Error('GLTFModel: Basis transcoder 缺少 cTFRGBA32 格式枚举（请检查 public/basis/ 资源版本）');
+        throw new Error(
+            'GLTFModel: Basis transcoder 缺少 cTFRGBA32 格式枚举（请检查 public/basis/ 资源版本）',
+        );
     }
 
     const file = new M.KTX2File(bytes);
@@ -53,7 +55,9 @@ export async function transcodeKTX2ToImageBitmap(
             throw new Error('GLTFModel: KTX2 transcodeImage() 失败');
         }
 
-        return await createImageBitmap(new ImageData(new Uint8ClampedArray(dst.buffer), width, height));
+        return await createImageBitmap(
+            new ImageData(new Uint8ClampedArray(dst.buffer), width, height),
+        );
     } finally {
         file.delete();
     }

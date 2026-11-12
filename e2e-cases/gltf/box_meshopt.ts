@@ -31,9 +31,7 @@ const camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-await scene.add(
-    new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }),
-);
+await scene.add(new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }));
 await scene.add(new AmbientLight({ color: [1, 1, 1], intensity: 0.2 }));
 
 // P2-1：EXT_meshopt_compression 由内置 meshopt.decoder provider 自动检测加载，无需宿主注入

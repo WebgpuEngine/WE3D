@@ -33,9 +33,7 @@ const camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-await scene.add(
-    new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }),
-);
+await scene.add(new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }));
 await scene.add(new AmbientLight({ color: [1, 1, 1], intensity: 0.2 }));
 
 // 官方样本：EXT_meshopt_compression（来源/授权/扩展名规范化见资产目录 README.md）

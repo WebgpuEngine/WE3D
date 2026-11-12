@@ -64,10 +64,7 @@ export function guessImageMimeType(bytes: Uint8Array): string | undefined {
  * 2. 否则回退到字节魔数嗅探结果（兼容声明缺失 / 写成 octet-stream 的资产）；
  * 3. 两者都不是受支持类型 → 抛错，明确列出支持范围，避免静默失败。
  */
-export function resolveImageMimeType(
-    declared: string | undefined,
-    bytes: Uint8Array,
-): string {
+export function resolveImageMimeType(declared: string | undefined, bytes: Uint8Array): string {
     const detected = guessImageMimeType(bytes);
     if (declared && SUPPORTED_IMAGE_MIME_TYPES.includes(declared)) {
         return declared;

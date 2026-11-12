@@ -13,7 +13,11 @@ describe('draco worker 基础验证（spike）', () => {
         const gltfUrl = '/models/gltf/model/Box/glTF-Draco/Box.gltf';
         const gltf = (await (await fetch(gltfUrl)).json()) as {
             bufferViews: { byteOffset?: number; byteLength: number }[];
-            meshes: { primitives: { extensions: { KHR_draco_mesh_compression: { bufferView: number } } }[] }[];
+            meshes: {
+                primitives: {
+                    extensions: { KHR_draco_mesh_compression: { bufferView: number } };
+                }[];
+            }[];
         };
         const binUrl = gltfUrl.replace(/\.gltf$/, '.bin');
         const bin = new Uint8Array(await (await fetch(binUrl)).arrayBuffer());
@@ -57,7 +61,13 @@ describe('draco worker 基础验证（spike）', () => {
         const result = await new Promise<IDecodeResult>((resolve) => {
             worker.onmessage = (e) => resolve(e.data as IDecodeResult);
             worker.onerror = (e) =>
-                resolve({ ok: false, geometryType: 0, numFaces: 0, numPoints: 0, error: e.message });
+                resolve({
+                    ok: false,
+                    geometryType: 0,
+                    numFaces: 0,
+                    numPoints: 0,
+                    error: e.message,
+                });
             worker.postMessage(compressed);
         });
 

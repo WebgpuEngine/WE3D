@@ -40,7 +40,10 @@ describe('textureTranscoders: 按 MIME 的纹理转码注册表', () => {
     });
 
     it('unregister 默认恢复内置默认，传 false 彻底禁用', () => {
-        registerTextureTranscoder(KTX2_MIME_TYPE, vi.fn(async () => ({}) as ImageBitmap));
+        registerTextureTranscoder(
+            KTX2_MIME_TYPE,
+            vi.fn(async () => ({}) as ImageBitmap),
+        );
         unregisterTextureTranscoder(KTX2_MIME_TYPE);
         expect(getTextureTranscoder(KTX2_MIME_TYPE)).not.toBeUndefined();
 
@@ -57,7 +60,10 @@ describe('textureTranscoders: 按 MIME 的纹理转码注册表', () => {
 
     it('自定义 MIME 也能注册 / 恢复', async () => {
         const fake = {} as ImageBitmap;
-        registerTextureTranscoder('image/custom', vi.fn(async () => fake));
+        registerTextureTranscoder(
+            'image/custom',
+            vi.fn(async () => fake),
+        );
         expect(await transcodeTexture('image/custom', new Uint8Array(0))).toBe(fake);
         unregisterTextureTranscoder('image/custom', false);
         expect(getTextureTranscoder('image/custom')).toBeUndefined();

@@ -157,9 +157,9 @@ describe('RenderManager — 渲染阶段特征基线（C0）', () => {
             drawData,
             distance: 12.5,
         } as I_renderPassOptions);
-        const transparentQueue = manager.RC[E_renderPassName.transparent][
-            'cam-1'
-        ] as unknown as { distance: number }[];
+        const transparentQueue = manager.RC[E_renderPassName.transparent]['cam-1'] as unknown as {
+            distance: number;
+        }[];
         expect(transparentQueue).toHaveLength(1);
         expect(transparentQueue[0].distance).toBe(12.5);
     });

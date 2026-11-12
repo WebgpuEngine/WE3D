@@ -35,10 +35,7 @@ export interface I_DependencySink {
 }
 
 /** 解析器只依赖扩展声明字段，不要求完整的 `GLTF.IGLTF`（`asset` 等字段与本机制无关） */
-export type T_GltfExtensionDeclaration = Pick<
-    GLTF.IGLTF,
-    'extensionsUsed' | 'extensionsRequired'
->;
+export type T_GltfExtensionDeclaration = Pick<GLTF.IGLTF, 'extensionsUsed' | 'extensionsRequired'>;
 
 /**
  * 内置默认 provider：只带加载逻辑，不打包解码器本体 / wasm。
@@ -82,9 +79,7 @@ function discoverExtensionDependencyKeys(): Map<string, string[]> {
 const DISCOVERED_DEPENDENCY_KEYS = discoverExtensionDependencyKeys();
 
 /** 全局 provider 注册表：内置默认 + 宿主通过 registerExtensionDependencyProvider 补充 / 覆盖 */
-const providers = new Map<string, T_ExtensionDependencyLoader>(
-    Object.entries(DEFAULT_PROVIDERS),
-);
+const providers = new Map<string, T_ExtensionDependencyLoader>(Object.entries(DEFAULT_PROVIDERS));
 
 /** 已加载依赖的 Promise 缓存（同一 key 跨资产复用；失败时删除以便重试） */
 const loaded = new Map<string, Promise<unknown>>();
@@ -115,10 +110,7 @@ export function registerExtensionDependencyProvider(
  * @param restoreDefault 默认 true：若该 key 有内置默认值则恢复内置默认；
  *                       传 false 则彻底移除（供缺 provider 场景验证 / 显式禁用内置能力）。
  */
-export function unregisterExtensionDependencyProvider(
-    key: string,
-    restoreDefault = true,
-): void {
+export function unregisterExtensionDependencyProvider(key: string, restoreDefault = true): void {
     const fallback = restoreDefault ? DEFAULT_PROVIDERS[key] : undefined;
     if (fallback) providers.set(key, fallback);
     else providers.delete(key);
@@ -133,8 +125,7 @@ export function getExtensionDependencyKeys(json: T_GltfExtensionDeclaration): st
     ]);
     const keys = new Set<string>();
     for (const name of used) {
-        const list =
-            DISCOVERED_DEPENDENCY_KEYS.get(name) ?? FALLBACK_DEPENDENCY_KEYS[name] ?? [];
+        const list = DISCOVERED_DEPENDENCY_KEYS.get(name) ?? FALLBACK_DEPENDENCY_KEYS[name] ?? [];
         for (const key of list) keys.add(key);
     }
     return [...keys];

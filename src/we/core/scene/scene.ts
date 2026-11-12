@@ -928,7 +928,10 @@ export class Scene {
     _bindGroupZeroOfCamera: { [key: string]: GPUBindGroup } = {};
     _bindGroupLayoutZeroOfLight!: GPUBindGroupLayout;
     _bindGroupZeroOfLight: { [key: string]: GPUBindGroup } = {};
-    getSystemBindGroupAndBindGroupLayoutForZero(UUID: string, kind: E_renderForDC): I_bindGroupAndGroupLayout {
+    getSystemBindGroupAndBindGroupLayoutForZero(
+        UUID: string,
+        kind: E_renderForDC,
+    ): I_bindGroupAndGroupLayout {
         return bg0.getSystemBindGroupAndBindGroupLayoutForZero(this, UUID, kind);
     }
     getBindGroupLayoutZeroOfCamera(): GPUBindGroupLayout {
@@ -946,10 +949,17 @@ export class Scene {
     refreshSystemBindGroupAndBindGroupLayoutZeroForCamera() {
         return rpd.refreshSystemBindGroupAndBindGroupLayoutZeroForCamera(this);
     }
-    getRenderPassDescriptor(UUID: string, kind: E_renderForDC, _MSAA?: T_rpdInfomationOfMSAA): GPURenderPassDescriptor {
+    getRenderPassDescriptor(
+        UUID: string,
+        kind: E_renderForDC,
+        _MSAA?: T_rpdInfomationOfMSAA,
+    ): GPURenderPassDescriptor {
         return rpd.getRenderPassDescriptor(this, UUID, kind, _MSAA);
     }
-    getRenderPassDescriptorOfTransparent(UUID: string, _kind: E_renderForDC): GPURenderPassDescriptor {
+    getRenderPassDescriptorOfTransparent(
+        UUID: string,
+        _kind: E_renderForDC,
+    ): GPURenderPassDescriptor {
         return rpd.getRenderPassDescriptorOfTransparent(this, UUID, _kind);
     }
     rpdNDC: GPURenderPassDescriptor | undefined;

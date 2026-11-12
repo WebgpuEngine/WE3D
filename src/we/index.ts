@@ -277,7 +277,11 @@ export { E_BOLBufferType } from './core/bufferBlock/base';
 export type { I_pointerCreateParams, I_pointerStruct } from './core/bufferBlock/pointer';
 export type { IV_DrawCommandGenerator } from './core/command/DrawCommandGenerator';
 export type { I_uniformArrayBufferEntry, T_uniformGroups } from './core/command/base';
-export { createVerticesBuffer, createCommonGPUBuffer, createEmptyGPUBuffer } from './core/command/baseFunction';
+export {
+    createVerticesBuffer,
+    createCommonGPUBuffer,
+    createEmptyGPUBuffer,
+} from './core/command/baseFunction';
 export type { I_optionShadowEntity } from './core/entity/base';
 export { EntityBundleMaterial } from './core/entity/entityBundleMaterial';
 export { WePbrMaterial } from './core/material/PBR/PBRMaterial';

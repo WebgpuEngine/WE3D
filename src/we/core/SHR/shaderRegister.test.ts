@@ -73,7 +73,11 @@ describe('ShaderRegister shader 合成', () => {
 
     describe('#reflection', () => {
         it('location 反射注入', () => {
-            const result = sr.reflection('#reflection location', ['position'], ['@location(0) position : vec3f ,']);
+            const result = sr.reflection(
+                '#reflection location',
+                ['position'],
+                ['@location(0) position : vec3f ,'],
+            );
             expect(result).toContain('@location(0) position : vec3f');
             expect(result).not.toContain('#reflection location');
         });
@@ -84,7 +88,11 @@ describe('ShaderRegister shader 合成', () => {
             expect(result).not.toContain('attributes.normal');
         });
         it('morphTarget 反射动态生成 position_* 数组', () => {
-            const result = sr.reflection('#reflection morphTarget', ['position', 'position_1', 'position_2'], []);
+            const result = sr.reflection(
+                '#reflection morphTarget',
+                ['position', 'position_1', 'position_2'],
+                [],
+            );
             expect(result).toContain('array<vec3f,2>');
             expect(result).toContain('attributes.position_1');
             expect(result).toContain('attributes.position_2');

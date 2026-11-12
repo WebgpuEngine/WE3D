@@ -169,7 +169,9 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
             depthMode: {},
             finalTarget: { NDC: false },
         };
-        const generator = new DrawCommandGenerator({ scene } as unknown as ConstructorParameters<Ctor>[0]);
+        const generator = new DrawCommandGenerator({
+            scene,
+        } as unknown as ConstructorParameters<Ctor>[0]);
         return { generator, resources };
     }
 

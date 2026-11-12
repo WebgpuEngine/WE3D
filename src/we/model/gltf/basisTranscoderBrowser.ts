@@ -12,10 +12,7 @@
  * - 资源目录默认取自全局配置 `configureRuntimeAssets({ basisDir })`（默认 `/basis/`），
  *   变更后 transcoder 单例缓存自动失效，按新目录重新懒加载。
  */
-import {
-    getRuntimeAssetsConfig,
-    getRuntimeAssetsVersion,
-} from '../../core/config/runtimeAssets';
+import { getRuntimeAssetsConfig, getRuntimeAssetsVersion } from '../../core/config/runtimeAssets';
 
 export interface I_KTX2LevelInfo {
     origWidth: number;
@@ -38,7 +35,12 @@ export interface I_BasisKTX2File {
     getImageLevelInfo(level: number, layer: number, face: number): I_KTX2LevelInfo;
     startTranscoding(): number;
     /** 4 参数：level, layer, face, format */
-    getImageTranscodedSizeInBytes(level: number, layer: number, face: number, format: number): number;
+    getImageTranscodedSizeInBytes(
+        level: number,
+        layer: number,
+        face: number,
+        format: number,
+    ): number;
     /** 8 参数：dst, level, layer, face, format, getAlpha, channel0, channel1 */
     transcodeImage(
         dst: Uint8Array,
@@ -61,7 +63,9 @@ export interface I_BasisTranscoderModule {
     KTX2File: new (bytes: Uint8Array) => I_BasisKTX2File;
 }
 
-type T_BasisFactory = (options?: { locateFile?: (path: string) => string }) => Promise<I_BasisTranscoderModule>;
+type T_BasisFactory = (options?: {
+    locateFile?: (path: string) => string;
+}) => Promise<I_BasisTranscoderModule>;
 
 declare global {
     interface Window {
@@ -104,7 +108,9 @@ export function createBrowserBasisTranscoder(): Promise<I_BasisTranscoderModule>
             }
             const M = await factory({ locateFile: (path) => basisDir + path });
             if (typeof M.initializeBasis !== 'function') {
-                throw new Error('Basis transcoder 模块缺少 initializeBasis()，请检查 basis 资源版本');
+                throw new Error(
+                    'Basis transcoder 模块缺少 initializeBasis()，请检查 basis 资源版本',
+                );
             }
             M.initializeBasis();
             return M;

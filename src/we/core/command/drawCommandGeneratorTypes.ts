@@ -1,6 +1,13 @@
 import { E_renderForDC, TypedArray, weVec3 } from '../base/coreDefine';
 import { BaseEntity } from '../entity/baseEntity';
-import type { I_DrawCommandIDs, I_viewport, T_BindGroupLayout, T_drawMode, T_rpdInfomationOfMSAA, T_uniformGroups } from './base';
+import type {
+    I_DrawCommandIDs,
+    I_viewport,
+    T_BindGroupLayout,
+    T_drawMode,
+    T_rpdInfomationOfMSAA,
+    T_uniformGroups,
+} from './base';
 import type { I_VertexBufferEntry } from './BaseDrawCommand';
 import type { I_DrawInputValueMaterial } from './DrawCommand';
 import type { Scene } from '../scene/scene';

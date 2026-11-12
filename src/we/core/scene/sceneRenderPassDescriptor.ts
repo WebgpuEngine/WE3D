@@ -15,22 +15,22 @@ import type { Scene } from './scene';
  * 2、重建deferRender的DC
  */
 export function refreshSystemBindGroupAndBindGroupLayoutZeroForCamera(scope: Scene) {
-        scope._bindGroupZeroOfCamera = {};
-        for (const perCamera of scope.cameraManager.list) {
-            // let UUID = perCamera.UUID;
-            // let kind: E_renderForDC = E_renderForDC.camera;
-            // let bindGroup = this.resourcesGPU.systemGroup0ByID.get(UUID);
-            // // let bindGroupLayout = this.resourcesGPU.systemGroupToGroupLayout.get(bindGroup!);
-            // this.resourcesGPU.systemGroupToGroupLayout.delete(bindGroup!);
-            // this.resourcesGPU.systemGroup0ByID.delete(UUID);
-            // this.getSystemBindGroupAndBindGroupLayoutForZero(UUID, kind);
-            // bindGroup = undefined;
-            scope.getBindGroupZeroOfCamera(perCamera.UUID);
-        }
-        scope.cameraManager.deferDCG.clear();
-        for (const perCamera of scope.cameraManager.list) {
-            scope.cameraManager.deferDCG.add(perCamera.UUID);
-        }
+    scope._bindGroupZeroOfCamera = {};
+    for (const perCamera of scope.cameraManager.list) {
+        // let UUID = perCamera.UUID;
+        // let kind: E_renderForDC = E_renderForDC.camera;
+        // let bindGroup = this.resourcesGPU.systemGroup0ByID.get(UUID);
+        // // let bindGroupLayout = this.resourcesGPU.systemGroupToGroupLayout.get(bindGroup!);
+        // this.resourcesGPU.systemGroupToGroupLayout.delete(bindGroup!);
+        // this.resourcesGPU.systemGroup0ByID.delete(UUID);
+        // this.getSystemBindGroupAndBindGroupLayoutForZero(UUID, kind);
+        // bindGroup = undefined;
+        scope.getBindGroupZeroOfCamera(perCamera.UUID);
+    }
+    scope.cameraManager.deferDCG.clear();
+    for (const perCamera of scope.cameraManager.list) {
+        scope.cameraManager.deferDCG.add(perCamera.UUID);
+    }
 }
 
 /**
@@ -40,35 +40,35 @@ export function refreshSystemBindGroupAndBindGroupLayoutZeroForCamera(scope: Sce
  * @returns GPURenderPassDescriptor
  */
 export function getRenderPassDescriptor(
-        scope: Scene,
-        UUID: string,
-        kind: E_renderForDC,
-        _MSAA?: T_rpdInfomationOfMSAA,
+    scope: Scene,
+    UUID: string,
+    kind: E_renderForDC,
+    _MSAA?: T_rpdInfomationOfMSAA,
 ): GPURenderPassDescriptor {
-        if (kind == E_renderForDC.camera) {
-            if (scope.MSAA && _MSAA != undefined) {
-                if (_MSAA == 'MSAA') return scope.cameraManager.getRPD_MSAA_ByUUID(UUID);
-                else return scope.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
-            } else {
-                const rdp = scope.cameraManager.getRPDByUUID(UUID);
-                if (rdp) return rdp;
-                else throw new Error('获取RPD失败');
-            }
+    if (kind == E_renderForDC.camera) {
+        if (scope.MSAA && _MSAA != undefined) {
+            if (_MSAA == 'MSAA') return scope.cameraManager.getRPD_MSAA_ByUUID(UUID);
+            else return scope.cameraManager.getRPD_MSAAInfo_ByUUID(UUID);
         } else {
-            const rdp = scope.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
+            const rdp = scope.cameraManager.getRPDByUUID(UUID);
             if (rdp) return rdp;
             else throw new Error('获取RPD失败');
         }
+    } else {
+        const rdp = scope.lightsManager.gettShadowMapRPD_ByMergeID(UUID);
+        if (rdp) return rdp;
+        else throw new Error('获取RPD失败');
+    }
 }
 
 export function getRenderPassDescriptorOfTransparent(
-        scope: Scene,
-        UUID: string,
-        _kind: E_renderForDC,
+    scope: Scene,
+    UUID: string,
+    _kind: E_renderForDC,
 ): GPURenderPassDescriptor {
-        const rdp = scope.cameraManager.getRpdOfTransparentByUUID(UUID);
-        if (rdp) return rdp;
-        else throw new Error('获取RPD失败');
+    const rdp = scope.cameraManager.getRpdOfTransparentByUUID(UUID);
+    if (rdp) return rdp;
+    else throw new Error('获取RPD失败');
 }
 
 /**
@@ -76,53 +76,53 @@ export function getRenderPassDescriptorOfTransparent(
  * @returns
  */
 export function getRenderPassDescriptorForNDC(scope: Scene): GPURenderPassDescriptor {
-        // if (this.MSAA) {
-        //     const renderPassDescriptor: GPURenderPassDescriptor = {
-        //         colorAttachments: [
-        //             {
-        //                 view: this.finalTarget.color!.createView(),
-        //                 resolveTarget: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
-        //                 clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置
-        //                 loadOp: 'clear',
-        //                 storeOp: "store"
-        //             }
-        //         ],
-        //         depthStencilAttachment: {
-        //             view: this.finalTarget.depth!.createView(),
+    // if (this.MSAA) {
+    //     const renderPassDescriptor: GPURenderPassDescriptor = {
+    //         colorAttachments: [
+    //             {
+    //                 view: this.finalTarget.color!.createView(),
+    //                 resolveTarget: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
+    //                 clearValue: this.getBackgroudColor(),//预乘alpha,需要在初始化的时候设置
+    //                 loadOp: 'clear',
+    //                 storeOp: "store"
+    //             }
+    //         ],
+    //         depthStencilAttachment: {
+    //             view: this.finalTarget.depth!.createView(),
 
-        //             depthClearValue: this.reversedZ.cleanValue,// 1.0,
-        //             depthLoadOp: 'clear',// depthLoadOp: 'load',
-        //             depthStoreOp: 'store',
+    //             depthClearValue: this.reversedZ.cleanValue,// 1.0,
+    //             depthLoadOp: 'clear',// depthLoadOp: 'load',
+    //             depthStoreOp: 'store',
 
-        //         },
-        //     };
-        //     return renderPassDescriptor;
-        // }
-        // else
-        if (scope.rpdNDC) return scope.rpdNDC;
-        else {
-            // let colorAttachments: GPURenderPassColorAttachment[] = [];
-            const renderPassDescriptor: GPURenderPassDescriptor = {
-                colorAttachments: [
-                    {
-                        // view: this.finalTarget.createView(),
-                        view: scope.finalTarget.color!.createView(),
-                        // view: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
-                        // clearValue: this.backgroudColor,//未预乘alpha
-                        clearValue: scope.getBackgroudColor(), //预乘alpha,需要在初始化的时候设置
-                        // clearValue: [0.5, 0.5, 0.5, 1],
-                        loadOp: 'clear',
-                        storeOp: 'store',
-                    },
-                ],
-                depthStencilAttachment: {
-                    view: scope.finalTarget.depth!.createView(),
-                    depthClearValue: scope.reversedZ.cleanValue,
-                    depthLoadOp: 'clear', // depthLoadOp: 'load',
-                    depthStoreOp: 'store',
+    //         },
+    //     };
+    //     return renderPassDescriptor;
+    // }
+    // else
+    if (scope.rpdNDC) return scope.rpdNDC;
+    else {
+        // let colorAttachments: GPURenderPassColorAttachment[] = [];
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            colorAttachments: [
+                {
+                    // view: this.finalTarget.createView(),
+                    view: scope.finalTarget.color!.createView(),
+                    // view: (this.context as GPUCanvasContext).getCurrentTexture().createView(),
+                    // clearValue: this.backgroudColor,//未预乘alpha
+                    clearValue: scope.getBackgroudColor(), //预乘alpha,需要在初始化的时候设置
+                    // clearValue: [0.5, 0.5, 0.5, 1],
+                    loadOp: 'clear',
+                    storeOp: 'store',
                 },
-            };
-            scope.rpdNDC = renderPassDescriptor;
-            return renderPassDescriptor;
-        }
+            ],
+            depthStencilAttachment: {
+                view: scope.finalTarget.depth!.createView(),
+                depthClearValue: scope.reversedZ.cleanValue,
+                depthLoadOp: 'clear', // depthLoadOp: 'load',
+                depthStoreOp: 'store',
+            },
+        };
+        scope.rpdNDC = renderPassDescriptor;
+        return renderPassDescriptor;
+    }
 }
