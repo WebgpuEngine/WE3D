@@ -4,7 +4,7 @@
     "metrics": {
         "explicitAny": 112,
         "typeEscapes": 0,
-        "giantFiles": 2,
+        "giantFiles": 1,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
         "commentedCodeLines": 1043
@@ -48,10 +48,6 @@
                 "count": 2
             },
             {
-                "file": "src/we/core/command/DrawCommandGenerator.ts",
-                "count": 2
-            },
-            {
                 "file": "src/we/core/commandInfo/base.ts",
                 "count": 2
             },
@@ -70,13 +66,13 @@
             {
                 "file": "src/we/core/texture/videoTexture.ts",
                 "count": 2
+            },
+            {
+                "file": "src/we/core/animation/animationGroup.ts",
+                "count": 1
             }
         ],
         "giantFiles": [
-            {
-                "file": "src/we/core/command/DrawCommandGenerator.ts",
-                "lines": 1804
-            },
             {
                 "file": "src/we/core/organization/nodeObject.ts",
                 "lines": 1062
