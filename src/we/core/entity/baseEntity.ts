@@ -20,6 +20,13 @@ import { NodeSpace } from '../organization/nodeSpace';
 import { I_pointerCreateParams, I_pointerStruct } from '../bufferBlock/pointer';
 import { E_BOLBufferType } from '../bufferBlock/base';
 import { DrawCommand } from '../command/DrawCommand';
+import {
+    getBindGroupAndBindGroupLayout as getBindGroupAndBindGroupLayoutImpl,
+    generateGPUBindGroupLayoutDescriptor as generateGPUBindGroupLayoutDescriptorImpl,
+    checkPointerRebuildTime as checkPointerRebuildTimeImpl,
+    generateGPUBindGroupEntries as generateGPUBindGroupEntriesImpl,
+    getBindingOfBindGroup as getBindingOfBindGroupImpl,
+} from './baseEntityBindGroup';
 
 export abstract class BaseEntity extends NodeSpace {
     ////////////////////////////////////////////////////////////////////
@@ -929,122 +936,13 @@ export abstract class BaseEntity extends NodeSpace {
      * @returns I_bindGroupAndGroupLayout
      */
     getBindGroupAndBindGroupLayout(): I_bindGroupAndGroupLayout {
-        /**
-         * 1、判断bind group 和layout 是否存在，没有新建
-         *      A、判断 this.bindGroup ,this.bindGroupLayout  undefined
-         *      B、新建
-         *      C、缓存layout ，bindgroup
-         * 2、如果存在，判断是否需要更新bind group。layout 不变.
-         *      A、判断 flagInstanceArrayBufferReNew ，
-         *      B、如果=true ，更新，并重置为false
-         *      C、返回值
-         *
-         */
-        let createBindGroup = false;
-        //undefined，创建
-        if (this.bindGroup == undefined && this.bindGroupLayout == undefined) {
-            //////////////////////////////////////////////////
-            //bind group  layout
-            const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor =
-                this.generateGPUBindGroupLayoutDescriptor();
-            this.bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
-            //////////////////////////////////////////////////
-            //bind group
-            createBindGroup = true;
-        }
-        //当前帧有instance变化，更新
-        else if (this.flagInstanceArrayBufferReNew === true) {
-            createBindGroup = true;
-        }
-        //当前帧有pointer布局有变化（来自BOL系统，非entity的变化，比如BOL的rebuild等），更新bind group
-        else {
-            createBindGroup = this.checkPointerRebuildTime();
-        }
-
-        //创建或更新bind group
-        if (createBindGroup === true) {
-            const entries: GPUBindGroupEntry[] = this.generateGPUBindGroupEntries();
-            const bindGroupDescriptor: GPUBindGroupDescriptor = {
-                label: `entity:${this.ID}`,
-                layout: this.bindGroupLayout,
-                entries: entries,
-            };
-            this.bindGroup = this.device.createBindGroup(bindGroupDescriptor);
-            this.flagInstanceArrayBufferReNew = false; //重置为false
-        }
-
-        return {
-            bindGroup: this.bindGroup,
-            bindGroupLayout: this.bindGroupLayout,
-        };
+        return getBindGroupAndBindGroupLayoutImpl(this);
     }
     generateGPUBindGroupLayoutDescriptor(): GPUBindGroupLayoutDescriptor {
-        return {
-            label: `entity:${this.ID}`,
-            entries: [
-                {
-                    //@group(1) @binding(0) var<uniform> u_entity_base:st_entity;
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: {
-                        type: 'uniform',
-                    },
-                },
-                {
-                    //@group(1) @binding(1) var<storage> u_entity_instances: array<st_instance_info>;      //length=instance count
-                    binding: 1,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: {
-                        type: 'read-only-storage',
-                    },
-                },
-                {
-                    //@group(1) @binding(2) var<storage> world_matrix: array<mat4x4f>;          //length=instance count;
-                    binding: 2,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: {
-                        type: 'read-only-storage',
-                    },
-                },
-                // {//@group(1) @binding(3) var<storage> morph_matrix: array<f32>;              //length=instance count * morph target count * vertex count
-                //     binding: 3,
-                //     visibility: GPUShaderStage.VERTEX,
-                //     buffer: {
-                //         type: "read-only-storage"
-                //     }
-                // },
-                // {//@group(1) @binding(4) var<storage> joint_matrix: array<mat4x4f>;           //length=instance count * joint matrix count
-                //     binding: 4,
-                //     visibility: GPUShaderStage.VERTEX,
-                //     buffer: {
-                //         type: "read-only-storage"
-                //     }
-                // },
-            ],
-        };
+        return generateGPUBindGroupLayoutDescriptorImpl(this);
     }
     checkPointerRebuildTime(): boolean {
-        //当前帧匹配，调试模式下，使用手工调用rebuild，不能精确匹配。非手工模式可以
-        // if (this.bufferPointers.uniformCommonEntity?.rebuildTime == this.scene.clock.now
-        //     ||
-        //     this.bufferPointers.instances?.rebuildTime == this.scene.clock.now
-        //     ||
-        //     this.bufferPointers.wolrdMatrix?.rebuildTime == this.scene.clock.now
-        // )
-
-        //匹配手工和当前帧模式
-        if (
-            this.bufferPointers.uniformCommonEntity?.rebuildTime ||
-            this.bufferPointers.instances?.rebuildTime ||
-            this.bufferPointers.wolrdMatrix?.rebuildTime
-        ) {
-            //重新设置为0
-            this.bufferPointers.uniformCommonEntity!.rebuildTime = 0;
-            this.bufferPointers.instances!.rebuildTime = 0;
-            this.bufferPointers.wolrdMatrix!.rebuildTime = 0;
-            return true;
-        }
-        return false;
+        return checkPointerRebuildTimeImpl(this);
     }
     /**
      * todo:20260322,这里需要BOL改造
@@ -1052,23 +950,7 @@ export abstract class BaseEntity extends NodeSpace {
      * @returns GPUBindGroupEntry[]
      */
     generateGPUBindGroupEntries(): GPUBindGroupEntry[] {
-        const entries: GPUBindGroupEntry[] = [];
-        for (const i in this.bufferPointers) {
-            const binding = this.getBindingOfBindGroup(i); //获取绑定的顺序
-            const perEntry: GPUBindGroupEntry = {
-                binding: binding,
-                resource: {
-                    buffer: this.bufferPointers[i as keyof typeof this.bufferPointers]!
-                        .gpuBufferView.buffer,
-                    offset: this.bufferPointers[i as keyof typeof this.bufferPointers]!
-                        .gpuBufferView.offset,
-                    size: this.bufferPointers[i as keyof typeof this.bufferPointers]!.gpuBufferView
-                        .size,
-                },
-            };
-            entries.push(perEntry);
-        }
-        return entries;
+        return generateGPUBindGroupEntriesImpl(this);
     }
     /**
      * 获取bind group 的binding,固定的与shader中的顺序对应
@@ -1079,18 +961,6 @@ export abstract class BaseEntity extends NodeSpace {
      * @returns number
      */
     getBindingOfBindGroup(name: string): number {
-        switch (name) {
-            case 'uniformCommonEntity':
-                return 0;
-            case 'instances':
-                return 1;
-            case 'wolrdMatrix':
-                return 2;
-            // case "morphMatrix":
-            //     return 3;
-            // case "jointMatrix":
-            //     return 4;
-        }
-        throw new Error(`未找到绑定${name}`);
+        return getBindingOfBindGroupImpl(name);
     }
 }
