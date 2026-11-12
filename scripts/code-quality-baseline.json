@@ -4,7 +4,7 @@
     "metrics": {
         "explicitAny": 112,
         "typeEscapes": 0,
-        "giantFiles": 6,
+        "giantFiles": 5,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
         "commentedCodeLines": 1078
@@ -88,10 +88,6 @@
             {
                 "file": "src/we/core/entity/baseEntity.ts",
                 "lines": 1097
-            },
-            {
-                "file": "src/we/core/entity/entityBundleMaterial.ts",
-                "lines": 1079
             },
             {
                 "file": "src/we/core/organization/nodeObject.ts",
