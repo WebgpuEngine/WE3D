@@ -4,10 +4,10 @@
     "metrics": {
         "explicitAny": 112,
         "typeEscapes": 0,
-        "giantFiles": 4,
+        "giantFiles": 3,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
-        "commentedCodeLines": 1078
+        "commentedCodeLines": 1043
     },
     "details": {
         "anyTopFiles": [
@@ -80,10 +80,6 @@
             {
                 "file": "src/we/model/gltf/gltf.ts",
                 "lines": 1773
-            },
-            {
-                "file": "src/we/core/scene/scene.ts",
-                "lines": 1431
             },
             {
                 "file": "src/we/core/organization/nodeObject.ts",
