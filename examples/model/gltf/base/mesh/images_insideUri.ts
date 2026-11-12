@@ -1,13 +1,5 @@
 import { vec3 } from "wgpu-matrix";
-import { PerspectiveCamera } from "../../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../../src/we/core/scene/base";
-import { initScene } from "../../../../../src/we/core/scene/fn";
-import { createGLTFModel } from "../../../../../src/we/model/gltf/gltf";
-import { SphereGeometry } from "../../../../../src/we/core/geometry/sphereGeometry";
-import { ColorMaterial } from "../../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../../src/we/core/entity/mesh/mesh";
-import { DirectionalLight } from "../../../../../src/we/core/light/DirectionalLight";
-import { AmbientLight } from "../../../../../src/we/core/light/ambientLight";
+import { PerspectiveCamera, IV_Scene, initScene, createGLTFModel, SphereGeometry, ColorMaterial, IV_MeshEntity, Mesh, DirectionalLight, AmbientLight } from '@we3d';
 
 declare global {
   interface Window {
@@ -40,7 +32,6 @@ let ambientLight = new AmbientLight(
 )
 await scene.add(ambientLight);
 
-
 let radius = 5;
 let Y = 0;
 let camera = new PerspectiveCamera({
@@ -55,7 +46,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 let gltf = await createGLTFModel({
   scene: scene,
   url: "/models/gltf/base/texture/BoxTextured.gltf"
@@ -69,14 +59,12 @@ let box =scene.add(gltf, {
   rotate: [0, 1, 0, Math.PI/4],
 });
 
-
 console.log("add gltf instance", box);
 
 // gltf.printAccessorContent(0)
 // gltf.printAccessorContent(1)
 // gltf.printAccessorContent(2)
 // gltf.printAccessorContent(3)
-
 
 // let geometry = new SphereGeometry(
 

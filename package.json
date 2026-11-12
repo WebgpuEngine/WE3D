@@ -32,6 +32,8 @@
     "lint:fix": "eslint src/we --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "check:quality": "node scripts/check-code-quality.mjs",
+    "quality:baseline": "node scripts/check-code-quality.mjs --update",
     "test": "vitest run",
     "test:run": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
@@ -43,10 +45,10 @@
     "check:exports": "node scripts/check-exports.mjs",
     "optimize:gltf": "node scripts/optimize-gltf.mjs",
     "typecheck": "tsc --noEmit",
-    "ci": "npm run lint && npm run typecheck && npm run test:run && npm run check:exports && npm run build:lib && npm run test:e2e",
-    "ci:no-e2e": "npm run lint && npm run typecheck && npm run test:run && npm run test:browser && npm run check:exports && npm run build:lib",
+    "ci": "npm run lint && npm run format:check && npm run check:quality && npm run typecheck && npm run test:run && npm run test:browser && npm run check:exports && npm run build:lib && npm run test:e2e",
+    "ci:no-e2e": "npm run lint && npm run format:check && npm run check:quality && npm run typecheck && npm run test:run && npm run test:browser && npm run check:exports && npm run build:lib",
     "publish:if-new": "node scripts/npm-publish-if-new.mjs",
-    "prepublishOnly": "npm run lint && npm run test:run && npm run build:lib && npm run check:exports"
+    "prepublishOnly": "npm run lint && npm run check:quality && npm run test:run && npm run build:lib && npm run check:exports"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

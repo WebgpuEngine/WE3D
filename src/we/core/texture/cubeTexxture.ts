@@ -24,10 +24,13 @@ export class CubeTexture extends Texture {
         this._upsideDownY = false;
     }
 
-    override async initTextureAndLayout(_input: I_BaseTexture): Promise<any> {
+    override async initTextureAndLayout(_input: I_BaseTexture): Promise<unknown> {
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
-            this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
+            this.texture = this.scene.resourcesGPU.get(
+                source,
+                E_resourceKind.textureOfString,
+            ) as GPUTexture;
         } else {
             const allImages: ImageBitmap[] = await weGetImagesByUrl([
                 source + '_px.jpg',

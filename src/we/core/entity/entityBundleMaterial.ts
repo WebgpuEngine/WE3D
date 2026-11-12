@@ -27,6 +27,8 @@ import { E_renderPassName } from '../scene/renderManager';
 import { I_EntityAttributes, IV_BaseEntity, E_entityType } from './base';
 import { BaseEntity } from './baseEntity';
 import { createIndexBuffer, createVerticesBuffer } from '../command/baseFunction';
+import { generateInputValueOfDC } from './entityBundleMaterialDC';
+import type { I_bundleForInputValueOfDC } from './entityBundleMaterialDC';
 
 import {
     computeNormalsArrayFromPositionsAndIndices,
@@ -93,7 +95,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             console.warn('Mesh constructor: material is undefined');
         } else this._material = input.material;
     }
-    override async init(scene: Scene): Promise<any> {
+    override async init(scene: Scene): Promise<void> {
         if (this.kind == E_entityType.mesh && this.attributes.vertices.normal == undefined) {
             if (
                 Array.isArray(this.attributes.vertices.position) &&
@@ -137,8 +139,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
     override _destroy(): void {
         super._destroy();
         // this._material.destroy();
-        //@ts-ignore
-        this._material = undefined;
+        this._material = undefined!;
     }
     /**三段式初始化的第三段
      * 覆写 Root的function,因为材料类需要GPUDevice
@@ -654,98 +655,11 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      */
     generateInputValueOfDC(
         renderType: E_renderForDC,
-        // UUID: string,
-        bundle: {
-            vs: {
-                code: string;
-                entryPoint?: string;
-            };
-            fs?: I_materialBundleOutput;
-            // fs?: {
-            //     materialType: E_materialTypeForBindGroup,
-            //     code: string,
-            //     entryPoint?: string,
-            //     aliasName: string,
-            // }
-        },
+        bundle: I_bundleForInputValueOfDC,
         vsOnly: boolean = false,
         scope: EntityBundleMaterial = this,
     ): IV_DC {
-        // if (scope.boundingBox == undefined)
-        //     scope.generateBoxAndSphere();
-        let boundingBoxMaxSize = scope.getBoundingBoxMaxSize(); //生成 shader 中的cubeVecUV使用
-        if (boundingBoxMaxSize === 0) boundingBoxMaxSize = 1;
-
-        let fragment = undefined;
-        if (bundle.fs) {
-            fragment = {
-                code: bundle.fs.code,
-                entryPoint: bundle.fs.entryPoint || 'fs',
-                aliasName: bundle.fs.aliasName,
-            };
-        }
-        const valueDC: IV_DC = {
-            label: `${scope.kind} ${scope.Name || scope.ID}`,
-            data: {
-                vertices: scope.attributes.vertices,
-                vertexStepMode: scope.attributes.vertexStepMode,
-                indices: scope.attributes.indices,
-                // uniforms,
-            },
-            render: {
-                vertex: {
-                    code: bundle.vs.code,
-                    entryPoint: bundle.vs.entryPoint || 'vs',
-                    constants: {
-                        boundingBoxMaxSize: boundingBoxMaxSize,
-                    },
-                },
-                fragment,
-                // drawMode: (UUID: string, kind: E_renderForDC) => { return scope.getDrawModeArrayOfInstances(UUID, kind) },
-                primitive: scope._primitive,
-            },
-            system: {
-                // UUID: scope.UUID,
-                type: renderType,
-                parent: scope,
-            },
-            IDS: {
-                UUID: scope.UUID,
-                ID: scope.ID,
-                renderID: scope.ID,
-            },
-        };
-        if (bundle.fs) {
-            valueDC.system!.material = {
-                owner: scope._material,
-                type: bundle.fs.materialType,
-            };
-        }
-        if (scope._dynamicAttribute) {
-            valueDC.dynamic = {
-                vs: true,
-            };
-        }
-        // // 如果是动态材质，需要在DrawCommand中添加dynamic属性,并每帧重新生成bind group
-        // if (bundle.fsBundle && bundle.fsBundle.shaderTemplateFinal.material?.dynamic === true) {
-        //     if (valueDC.dynamic == undefined)
-        //         valueDC.dynamic = { fs: true };
-        //     else
-        //         valueDC.dynamic.fs = true;
-        // }
-        if (scope.inputValues.primitive) {
-            valueDC.render.primitive = scope.inputValues.primitive;
-        } else {
-            if (scope.kind == E_entityType.lines) {
-                valueDC.render.primitive!.topology = 'line-list';
-            }
-        }
-
-        if (vsOnly) {
-            delete valueDC.render.fragment;
-            valueDC.label += ' vsOnly';
-        }
-        return valueDC;
+        return generateInputValueOfDC(scope, renderType, bundle, vsOnly);
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 生成DC

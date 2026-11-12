@@ -1,7 +1,4 @@
-import { I_uniformArrayBufferEntry } from "../../../src/we/core/command/base";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { I_uniformArrayBufferEntry, DrawCommandGenerator, type IV_DrawCommandGenerator, IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -45,7 +42,6 @@ dataF32A[1] = 0.0;
 dataF32A[2] = 1.0;
 dataF32A[3] = 1.0;
 
-
 let unifrom1: I_uniformArrayBufferEntry = {
   label: "uniform1",
   binding: 0,
@@ -76,7 +72,6 @@ const oneTriangleColorArray = [
 const oneTriangleIndexArray = [
   0, 1, 2,
 ];
-
 
 let rpd = scene.getRenderPassDescriptorForNDC();
 let depthStencil = scene.depthStencil;
@@ -122,4 +117,3 @@ scene.BPC.update(scene.clock);
 scene.memoryBlockManager.update(scene.clock);
 dc0.submit()
 scene.renderToSurface();
-

@@ -1,8 +1,6 @@
 import { vec3 } from "wgpu-matrix";
-import { EntityBundleMaterial } from "../../../../../src/we/core/entity/entityBundleMaterial";
-import { NodeObject } from "../../../../../src/we/core/organization/nodeObject";
-import { Scene } from "../../../../../src/we/core/scene/scene";
-import { createGLTFModel } from "../../../../../src/we/model/gltf/gltf";
+import { EntityBundleMaterial, NodeObject, Scene, createGLTFModel } from '@we3d';
+
 import type { Testbed } from "../Testbed";
 // import {
 //     Vector3,

@@ -3,7 +3,7 @@
 > 定稿日期：2026-11-05
 > 代码状态：`5012a05 1105 修复 MSAA 法线异常：GBuffer normal 格式改回 rgba16float`（工作区干净）
 > 适用范围：`src/we/core/gbuffers/base.ts` 的 `V_ForwardGBufferNames.normal`，以及所有 GBuffer normal 的读写 shader
-> 关联：`design/engineering/pending-work.md` §7/#8（待办跟踪）、`design/shaders/wgsl-authoring-guide.md` §5.3/§5.4（GBuffer 结构与 output 契约）
+> 关联：`design/engineering/meta/pending-work.md` §7/#8（待办跟踪）、`design/shaders/wgsl-authoring-guide.md` §5.3/§5.4（GBuffer 结构与 output 契约）
 
 ---
 

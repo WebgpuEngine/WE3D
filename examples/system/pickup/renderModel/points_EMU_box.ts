@@ -1,14 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { IV_PointsEntity, Points } from "../../../../src/we/core/entity/mesh/points";
-import { IV_LinesEntity, Lines } from "../../../../src/we/core/entity/mesh/lines";
-import { IV_Pickup, pickupTargetOfIDs } from "../../../../src/we/core/pickup/base";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, IV_PointsEntity, Points, IV_LinesEntity, Lines, IV_Pickup, pickupTargetOfIDs } from '@we3d';
 
 declare global {
   interface Window {
@@ -38,10 +28,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
-
 
 let geometry = new SphereGeometry();
 
@@ -75,10 +61,6 @@ let inputMesh: IV_PointsEntity = {
 let mesh = new Points(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-
-
-
-
 
 let colorMaterial = new ColorMaterial({
   color: [1, 0, 0, 1]
@@ -181,7 +163,6 @@ let inputline: IV_LinesEntity = {
 }
 let line = new Lines(inputline);
 await scene.add(line);
-
 
 let pickupManager = scene.pickupManager;
 let pickupValue: IV_Pickup = {

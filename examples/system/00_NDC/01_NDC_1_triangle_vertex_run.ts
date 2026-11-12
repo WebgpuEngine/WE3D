@@ -1,9 +1,4 @@
-
-import { IV_Scene, userDefineEventCall, eventOfScene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
+import { IV_Scene, userDefineEventCall, eventOfScene, initScene, Scene, IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, E_renderPassName } from '@we3d';
 
 declare global {
   interface Window {
@@ -59,15 +54,11 @@ const oneTriangleColorArray = [
 ];
 const oneTriangleVertexF32A = new Float32Array(oneTriangleVertexArray);
 
-
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene,
   parent: scene,
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
-
-
 
 let valueDC: IV_DC = {
   label: "dc1",
@@ -121,8 +112,4 @@ let oneCall: userDefineEventCall = {
 }
 scene.addUserDefineEvent(oneCall);
 
-
-
 scene.run();
-
-

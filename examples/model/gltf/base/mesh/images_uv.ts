@@ -1,13 +1,5 @@
 import { vec3 } from "wgpu-matrix";
-import { PerspectiveCamera } from "../../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../../src/we/core/scene/base";
-import { initScene } from "../../../../../src/we/core/scene/fn";
-import { createGLTFModel } from "../../../../../src/we/model/gltf/gltf";
-import { SphereGeometry } from "../../../../../src/we/core/geometry/sphereGeometry";
-import { ColorMaterial } from "../../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../../src/we/core/entity/mesh/mesh";
-import { DirectionalLight } from "../../../../../src/we/core/light/DirectionalLight";
-import { AmbientLight } from "../../../../../src/we/core/light/ambientLight";
+import { PerspectiveCamera, IV_Scene, initScene, createGLTFModel, SphereGeometry, ColorMaterial, IV_MeshEntity, Mesh, DirectionalLight, AmbientLight } from '@we3d';
 
 declare global {
     interface Window {
@@ -54,7 +46,6 @@ let camera = new PerspectiveCamera({
 
 });
 await scene.add(camera);
-
 
 let gltf = await createGLTFModel({
     scene: scene,

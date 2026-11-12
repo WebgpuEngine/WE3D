@@ -1,19 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PhongMaterial } from "../../../../src/we/core/material/phong/phongMaterial";
-import { DirectionalLight } from "../../../../src/we/core/light/DirectionalLight";
-import { IV_PBRMaterial, PBRMaterial } from "../../../../src/we/core/material/PBR/PBRMaterial";
-import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
-import { AmbientLight } from "../../../../src/we/core/light/ambientLight";
-import { PointLight } from "../../../../src/we/core/light/pointLight";
-import { Texture } from "../../../../src/we/core/texture/texture";
-import { I_BaseTexture } from "../../../../src/we/core/texture/base";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, PhongMaterial, DirectionalLight, IV_PBRMaterial, PBRMaterial, PlaneGeometry, AmbientLight, PointLight, Texture, I_BaseTexture } from '@we3d';
 
 declare global {
   interface Window {
@@ -44,7 +29,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 let dirlight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [0, 1, 0],
@@ -68,7 +52,7 @@ let geometry = new SphereGeometry({
 
 //////////////////////////
 // 加载PBR材质的纹理,Texture and sampler ,samplerBindingType
-let sampler = scene.resourcesGPU.getSampler("filtering") as GPUSampler;
+let sampler = scene.resourcesGPU.getSampler("linear") as GPUSampler;
 // let sampler = scene.resourcesGPU.getSampler("nearest") as GPUSampler;
 
 let albedoInput: I_BaseTexture = {

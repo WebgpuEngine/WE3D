@@ -75,7 +75,7 @@ export class Texture3D extends BaseTexture {
             textureLayout: this.textureLayout,
         };
     }
-    async initTextureAndLayout(): Promise<any> {
+    async initTextureAndLayout(): Promise<unknown> {
         const source = this.inputValues.source;
 
         this.texture = this.device.createTexture({

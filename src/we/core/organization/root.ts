@@ -119,12 +119,13 @@ export abstract class RootGPU implements I_UUID {
      * @param renderID
      * @returns
      */
-    async init(scene: Scene, _option?: any): Promise<any> {
+    async init(scene: Scene, _option?: unknown): Promise<unknown> {
         //如果已经初始化，直接返回
         if (this._state == E_lifeState.finished) return;
         this.scene = scene;
         await this.setRootENV(scene);
         await this.readyForGPU();
+        return undefined;
     }
     /**由init()调用 */
     async setRootENV(scene: Scene) {
@@ -138,7 +139,7 @@ export abstract class RootGPU implements I_UUID {
      * 当前对象的GPU已经可以用时，执行此调用。
      * when GPU is ready, call this function
      */
-    abstract readyForGPU(): Promise<any>;
+    abstract readyForGPU(): Promise<unknown>;
     destroy(): void {
         if (this._isDestroy) return;
         this._isDestroy = true;

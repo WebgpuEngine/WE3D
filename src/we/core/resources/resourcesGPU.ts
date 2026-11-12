@@ -22,7 +22,7 @@ export class ResourceManagerOfGPU {
     device: GPUDevice;
     scene: Scene;
     //所有为分类的,未定义，未分类，分类失败
-    resources: Map<any, any> = new Map();
+    resources: Map<unknown, unknown> = new Map();
 
     /////////////////////////////////////////////////////////////////////////////////////////
     // 单个（每个binding）uniform-->GPUBindGroupLayoutEntry
@@ -91,7 +91,7 @@ export class ResourceManagerOfGPU {
     //////////////////////////////////////////////////////////////////////////////////////////
     //stroge buffer
     /**string 可以是buffer的名称等 */
-    storageBuffer: Map<any, GPUBuffer> = new Map();
+    storageBuffer: Map<unknown, GPUBuffer> = new Map();
 
     constructor(scene: Scene) {
         this.scene = scene;
@@ -104,7 +104,7 @@ export class ResourceManagerOfGPU {
 
     //基础单位数据
     /**顶点资源管理器 */
-    // vertices: Map<any, GPUBuffer> = new Map();
+    // vertices: Map<unknown, GPUBuffer> = new Map();
     vertices: Map<string, I_pointerStruct> = new Map();
     /**索引资源管理器 */
     indices: Map<string, I_pointerStruct> = new Map(); //GPUBuffer默认使用uint32的格式。
@@ -139,14 +139,14 @@ export class ResourceManagerOfGPU {
         this.indices.set(md5, indices);
     }
     /**动态顶点属性资源管理器 */
-    verticesDynamic: Map<any, GPUBuffer> = new Map();
+    verticesDynamic: Map<unknown, GPUBuffer> = new Map();
     /**动态索引属性资源管理器 */
-    indicesDynamic: Map<any, GPUBuffer> = new Map();
+    indicesDynamic: Map<unknown, GPUBuffer> = new Map();
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //texture
     /**string 可以是URL或texture的名称等 */
-    textureOfString: Map<any, GPUTexture> = new Map();
+    textureOfString: Map<string, GPUTexture> = new Map();
     textureToBindGroupLayoutEntry: Map<GPUTexture, GPUTextureBindingLayout> = new Map();
     weTextureOfString: Map<string, Texture> = new Map();
     weMaterialOfString: Map<string, BaseMaterial> = new Map();
@@ -393,7 +393,7 @@ export class ResourceManagerOfGPU {
      * @param key
      * @param kind
      */
-    registerResource(_key: any, _kind: E_resourceKind) {}
+    registerResource(_key: unknown, _kind: E_resourceKind) {}
     /**
      * 清理资源
      * 1、遍历所有资源，删除引用计数为0的资源
@@ -430,13 +430,18 @@ export class ResourceManagerOfGPU {
     但是，如果你没有保留指向原对象的任何其他引用，你将无法再访问到 Map 中的这个键值对，因为你失去了唯一的 “钥匙”。
     这种情况下，该对象将成为垃圾回收的目标，当垃圾回收器运行时，会释放该对象占用的内存，Map 中对应的键值对也会随之被清除。
     */
-    check(res: Map<any, any>) {
+    check<K, V>(res: Map<K, V>) {
         for (const entry of res.entries()) {
             const key = entry[0];
             const value = entry[1];
             if (key == undefined || value == undefined || key == null || value == null) {
                 res.delete(key);
-            } else if ('_isDestroy' in value && value._isDestroy === true) {
+            } else if (
+                typeof value === 'object' &&
+                value !== null &&
+                '_isDestroy' in value &&
+                (value as { _isDestroy?: boolean })._isDestroy === true
+            ) {
                 res.delete(key);
             }
         }

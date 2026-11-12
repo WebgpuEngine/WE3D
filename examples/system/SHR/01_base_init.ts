@@ -1,6 +1,4 @@
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { ShaderRegister } from "../../../src/we/core/SHR/shaderRegister";
+import { type IV_Scene, Scene, ShaderRegister } from '@we3d';
 
 declare global {
   interface Window {

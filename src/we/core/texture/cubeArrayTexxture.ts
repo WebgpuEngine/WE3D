@@ -25,10 +25,13 @@ export class CubeArrayTexture extends Texture {
         this._upsideDownY = false;
     }
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<unknown> {
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
-            this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
+            this.texture = this.scene.resourcesGPU.get(
+                source,
+                E_resourceKind.textureOfString,
+            ) as GPUTexture;
         } else {
             const allImages: ImageBitmap[] = await weGetImagesByUrl([
                 source + '_px.jpg',

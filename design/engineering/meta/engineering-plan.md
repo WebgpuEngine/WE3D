@@ -17,14 +17,14 @@
 
 ### Phase 0 — 约定与文档
 - 写 `AGENTS.md`：目录约定、AI 工作约定、开发流程、发布约定、脚本速查。
-- 本方案存入 `design/engineering/engineering-plan.md`（原 `design/engineering-plan.md`，2026-10-22 迁移至 `design/engineering/`）。
+- 本方案存入 `design/engineering/meta/engineering-plan.md`（原 `design/engineering-plan.md`，2026-10-22 迁移至 `design/engineering/`）。
 - 根 `README.md` 仅仅是说明文档（设计入口为 `AGENTS.md`，非 `README.md`）。
 
 ### Phase 1 — 让构建变绿（P0-0）
 - 现状（2026-10-22 探查）：`tsconfig.json` 与 `tsconfig.examples.json` 已存在（`src` 与 `examples` 已拆分）；`noUnusedLocals/noUnusedParameters` 均为 `false`（注释写明未使用检查移交 ESLint）。
 - `scripts/fix-unused-declarations.mjs` 不存在，未使用清理改由 Phase 2 ESLint `lint:fix` 接管。
 - 修复唯一真实类型错误：`GBuffers.ts:9` 导入不存在的 `V_TransparentGBufferNames`（`base.ts:123` 已注释掉该导出；该符号在 `GBuffers.ts` 仅出现在注释代码中）。
-- 目标：`src` 的 `tsc --noEmit` 收敛到 0。详见 `design/engineering/phase1-build-green.md`。
+- 目标：`src` 的 `tsc --noEmit` 收敛到 0。详见 `design/engineering/build/phase1-build-green.md`。
 
 ### Phase 2 — ESLint + Prettier
 - 安装 `eslint` + `typescript-eslint` + `eslint-config-prettier` + `prettier`。
@@ -38,7 +38,7 @@
 - `vitest.config.ts`，`include: test/**/*.test.ts`。
 - `test/` 用例（无 GPU 依赖）：数学（`weMat4/weVec3`、`Box3/Sphere`、ID 生成）；修复回归（`checkGPUBufferSize` 等）。（注：渲染相关冒烟原拟 mock `navigator.gpu`，已取消，由 Phase 4 真实 WebGPU 设备回归承担。）
 - 脚本：`test` / `test:run` / `coverage`。
-- 现状与样例：详见 `design/engineering/phase3-vitest-unit-test.md`（2026-10-26 已搭 Vitest 流程，样例 `src/we/core/math/math.test.ts` 数学例子 4 测试通过；完整用例体系待人工补齐）。
+- 现状与样例：详见 `design/engineering/testing/phase3-vitest-unit-test.md`（2026-10-26 已搭 Vitest 流程，样例 `src/we/core/math/math.test.ts` 数学例子 4 测试通过；完整用例体系待人工补齐）。
 
 ### Phase 4 — Playwright 示例回归
 - 安装 `@playwright/test` + `playwright`。
@@ -60,7 +60,7 @@
 - `package.json`：`name:"we3d"`、升级 `version`、`type:module`、`main/module/types/exports`→`dist`、`files:["dist"]`、移除 `private`。
 - 处理 `@loaders.gl/*` 本地依赖：后期将相关 glTF 功能整体迁移到 `gltfTransform` 包，迁移完成后随旧依赖一并移除；**迁移前所有 `@loaders.gl` 相关问题不处理**。
 - 脚本 `build:lib` + `prepublishOnly`（lint+test+build+typedoc）。
-- **进度（2026-10-28）**：✅ 已完成。实施有修订：入口由 `src/we/export/main.ts` 改为新建 curated barrel `src/we/index.ts`（186 导出，value/type 分开）；lib 构建拆到独立 `vite.lib.config.ts`（避免破坏 examples dev）；`prepublishOnly` 改为 `lint+test+build:lib+check:exports`。详细方案见 `design/engineering/phase6-lib-packaging.md`，实施与验证见 `implementation-log.md §Phase 6`。
+- **进度（2026-10-28）**：✅ 已完成。实施有修订：入口由 `src/we/export/main.ts` 改为新建 curated barrel `src/we/index.ts`（186 导出，value/type 分开）；lib 构建拆到独立 `vite.lib.config.ts`（避免破坏 examples dev）；`prepublishOnly` 改为 `lint+test+build:lib+check:exports`。详细方案见 `design/engineering/packaging/phase6-lib-packaging.md`，实施与验证见 `implementation-log.md §Phase 6`。
 
 ### Phase 7 — CI（GitHub Actions）
 - `.github/workflows/ci.yml`：`npm ci` → `npm run ci:no-e2e`（云端门禁：lint + typecheck + test + check:exports + build:lib，不含文档，**云端不含 playwright**，用户 2026-10-28 决策）。
@@ -69,7 +69,7 @@
 - **发布手工进行**（用户 2026-10-28 决策，npm 2027-01 起强制 2FA、CI 仅能暂存）：本地 `npm login` + `npm run publish:if-new` 发布，版本号未变则跳过；**不创建 `.github/workflows/publish.yml`**。
 - 本地等价脚本 `npm run ci` / `ci:no-e2e` + `npm run publish:if-new`（`scripts/npm-publish-if-new.mjs`）；文档本地用 `npm run docs:build`（`scripts/docs-if-new.mjs`，版本未变则跳过）提交，或 tag 时 `release.yml` 重建。
 - 发布前置（已确认）：`@loaders.gl/draco`、`@loaders.gl/gltf` 从 `dependencies` 移到 `devDependencies`。
-- **进度（2026-10-28）**：✅ 已完成。本地完整 `npm run ci`（含 playwright e2e，3 passed）已跑通；后续细化：PR CI 去除文档步骤（改由 `release.yml` 在 tag 时重建）、`@loaders.gl/gltf` 用 `// @ts-ignore` 兜底 typecheck（其 `dist/` 未提交 git）。详细方案见 `design/engineering/phase7-ci-publish.md`，实施与验证见 `implementation-log.md §Phase 7`。
+- **进度（2026-10-28）**：✅ 已完成。本地完整 `npm run ci`（含 playwright e2e，3 passed）已跑通；后续细化：PR CI 去除文档步骤（改由 `release.yml` 在 tag 时重建）、`@loaders.gl/gltf` 用 `// @ts-ignore` 兜底 typecheck（其 `dist/` 未提交 git）。详细方案见 `design/engineering/ci-publish/phase7-ci-publish.md`，实施与验证见 `implementation-log.md §Phase 7`。
 
 ### Phase 8 — 错误修复落位（依托 Phase3/4 保护，分批）
 

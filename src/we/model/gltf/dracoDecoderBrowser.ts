@@ -22,10 +22,7 @@
  * 资源目录默认取自全局配置 `configureRuntimeAssets({ dracoDir })`（默认 `/draco/`），
  * 变更后解码器单例缓存自动失效，按新目录重新懒加载。
  */
-import {
-    getRuntimeAssetsConfig,
-    getRuntimeAssetsVersion,
-} from '../../core/config/runtimeAssets';
+import { getRuntimeAssetsConfig, getRuntimeAssetsVersion } from '../../core/config/runtimeAssets';
 
 export type T_DracoDecoderModule = Record<string, unknown>;
 
@@ -70,7 +67,9 @@ export function createBrowserDracoDecoder(): Promise<T_DracoDecoderModule> {
             await loadDecoderScript(dracoDir);
             const factory = window.DracoDecoderModule;
             if (!factory) {
-                throw new Error(`DracoDecoderModule 全局未定义，请确认 ${dracoDir} 下解码器脚本已加载`);
+                throw new Error(
+                    `DracoDecoderModule 全局未定义，请确认 ${dracoDir} 下解码器脚本已加载`,
+                );
             }
             return factory({ locateFile: (path: string) => dracoDir + path });
         })().catch((err) => {

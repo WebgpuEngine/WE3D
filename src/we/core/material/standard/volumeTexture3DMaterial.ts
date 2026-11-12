@@ -152,7 +152,7 @@ export class VolumeTextureMaterial extends BaseStandardMaterial {
         this._state = E_lifeState.destroyed;
     }
 
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.uniformVolumeGPUBuffer = this.device.createBuffer({
             size: this.sizeOfVolumeBuffer,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,

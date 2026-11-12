@@ -24,7 +24,7 @@ export interface shadowMapBox {
 }
 
 export class PointLight extends BaseLight {
-    async readyForGPU(): Promise<any> {}
+    async readyForGPU(): Promise<void> {}
     _destroy(): void {
         throw new Error('Method not implemented.');
     }

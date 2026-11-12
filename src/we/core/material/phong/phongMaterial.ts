@@ -237,7 +237,7 @@ export class PhongMaterial extends BaseStandardMaterial {
         // throw new Error("Method not implemented.");
         super._destroy();
     }
-    async readyForGPU(): Promise<any> {
+    async readyForGPU(): Promise<void> {
         this.createUniformPointer();
         this.defaultSampler = this.checkSampler(this.inputValues);
         this.textures[E_TextureType.color] = this.defaultTexture2D;

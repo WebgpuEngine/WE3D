@@ -293,7 +293,7 @@ albedo_uniform = textureSample(u_texture_albedo, u_sampler_albedo, uv_temp) * u_
 
 **排序理由**：零风险项先跑通门禁流程 → 数据层修复（D3）为后续缓存行为打底 → 两项「新增资产 + 新增基线」的渲染修复在流程熟练后做 → 架构级 D1 单独一批 → 语义级 D4 → D9 作为着色器层修复收尾，其官方资产 `MorphPrimitivesTest` 已在 D1 入库，仅需更新该基线。原「影响面最大的 D5 压轴」已按 2026-11-10 决策取消（收益/风险比不成立，见决策记录）。
 
-**每步收尾**：更新 `design/engineering/pending-work.md` §4 与 `gltf-transform-phase4-plan.md` §10.5 进度表；D5 的降级结论已登记在上述两份进度表与 `p4-1-d5-uint32-index-decision.md`，不再有 8-7 的完成标注。**不主动提交**，沿用「报告门禁结果 → 用户决定提交」的交互模式。
+**每步收尾**：更新 `design/engineering/meta/pending-work.md` §4 与 `gltf-transform-phase4-plan.md` §10.5 进度表；D5 的降级结论已登记在上述两份进度表与 `p4-1-d5-uint32-index-decision.md`，不再有 8-7 的完成标注。**不主动提交**，沿用「报告门禁结果 → 用户决定提交」的交互模式。
 
 ---
 

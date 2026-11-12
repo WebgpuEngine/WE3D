@@ -87,12 +87,12 @@ export interface I_drawModeIndexed {
     baseVertex?: number;
     firstInstance?: number;
 }
-export function isDrawModeIndexed(drawMode: any): drawMode is I_drawModeIndexed {
-    return 'indexCount' in drawMode;
+export function isDrawModeIndexed(drawMode: unknown): drawMode is I_drawModeIndexed {
+    return typeof drawMode === 'object' && drawMode !== null && 'indexCount' in drawMode;
 }
 
-export function isDrawModeVertex(drawMode: any): drawMode is I_drawMode {
-    return 'vertexCount' in drawMode;
+export function isDrawModeVertex(drawMode: unknown): drawMode is I_drawMode {
+    return typeof drawMode === 'object' && drawMode !== null && 'vertexCount' in drawMode;
 }
 
 export type T_drawMode = I_drawMode | I_drawModeIndexed | I_drawMode[] | I_drawModeIndexed[]; //| ((UUID: string, kind: E_renderForDC) => I_drawMode[] | I_drawModeIndexed[]);
@@ -147,8 +147,8 @@ export interface I_dynamicTextureEntryForExternal {
     label: string;
     binding: number;
     /**动态获取importExternalTexture的箭头函数 */
-    getResource: (scope: any) => GPUBindingResource;
-    scope: any;
+    getResource: (scope: unknown) => GPUBindingResource;
+    scope: unknown;
 }
 export function isDynamicTextureEntryForExternal(
     obj: unknown,

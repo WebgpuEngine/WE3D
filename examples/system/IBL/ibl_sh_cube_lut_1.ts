@@ -1,13 +1,4 @@
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-import { IBL } from "../../../src/we/core/ibl/ibl";
-import { AmbientLight } from "../../../src/we/core/light/ambientLight";
-import { DirectionalLight } from "../../../src/we/core/light/DirectionalLight";
-import { IV_PBRMaterial, PBRMaterial } from "../../../src/we/core/material/PBR/PBRMaterial";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-
+import { PerspectiveCamera, IV_MeshEntity, Mesh, SphereGeometry, IBL, AmbientLight, DirectionalLight, IV_PBRMaterial, PBRMaterial, IV_Scene, initScene } from '@we3d';
 
 declare global {
   interface Window {
@@ -60,7 +51,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
   direction: [0, 1, 0],
@@ -77,13 +67,11 @@ let ambientLight = new AmbientLight(
 )
 await scene.add(ambientLight);
 
-
 let geometry = new SphereGeometry({
   widthSegments: 128,
   heightSegments: 128,
 
 });
-
 
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]
@@ -111,4 +99,3 @@ let inputMesh: IV_MeshEntity = {
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-

@@ -222,5 +222,5 @@ expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.05 } },  // 允许 ≤5% 像�
 
 ## 9. 参考
 
-- 本仓库落地：`design/engineering/phase4-playwright-e2e.md`（方案）、`tests/e2e/`（env 自检 + 批量链）。
+- 本仓库落地：`design/engineering/testing/phase4-playwright-e2e.md`（方案）、`tests/e2e/`（env 自检 + 批量链）。
 - 已验证可用项目：`D:\tools\test\testCI`（`playwright.config.ts` + `tests/e2e/webgpu.spec.ts` + `设计/WebGPU测试说明.md`）。

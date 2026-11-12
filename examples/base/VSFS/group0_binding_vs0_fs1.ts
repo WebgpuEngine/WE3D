@@ -1,7 +1,4 @@
-import { I_uniformArrayBufferEntry } from "../../../src/we/core/command/base";
-import { DrawCommandGenerator, IV_DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { I_uniformArrayBufferEntry, DrawCommandGenerator, IV_DrawCommandGenerator, IV_DC, IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -58,8 +55,6 @@ data2F32A[1] = 1.0;
 data2F32A[2] = 0.0;
 data2F32A[3] = 1.0;
 
-
-
 let unifrom0: I_uniformArrayBufferEntry = {
   label: "uniform0",
   binding: 0,                                                    //******
@@ -73,8 +68,6 @@ let unifrom1: I_uniformArrayBufferEntry = {
   size: 4 * 4,
   data: data2
 }
-
-
 
 let uniform00Layout: GPUBindGroupLayoutEntry = {
   binding: 0,                                                     //******
@@ -90,7 +83,6 @@ let uniform01Layout: GPUBindGroupLayoutEntry = {
     type: "uniform"
   }
 }
-
 
 //====================================================
 

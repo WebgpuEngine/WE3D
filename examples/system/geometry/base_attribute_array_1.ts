@@ -1,8 +1,4 @@
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-
-
+import { BoxGeometry, IV_Scene, initScene } from '@we3d';
 
 declare global {
   interface Window {

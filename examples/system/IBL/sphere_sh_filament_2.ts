@@ -1,16 +1,4 @@
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-import { IBL } from "../../../src/we/core/ibl/ibl";
-import { AmbientLight } from "../../../src/we/core/light/ambientLight";
-import { DirectionalLight } from "../../../src/we/core/light/DirectionalLight";
-import { IV_PBRMaterial, PBRMaterial } from "../../../src/we/core/material/PBR/PBRMaterial";
-import { CubeTextureMaterial } from "../../../src/we/core/material/standard/cubeTextureMaterial";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { PrefilteredCubemap } from "../../../src/we/core/texture/prefilteredCubemap";
-
+import { PerspectiveCamera, IV_MeshEntity, Mesh, BoxGeometry, SphereGeometry, IBL, AmbientLight, DirectionalLight, IV_PBRMaterial, PBRMaterial, CubeTextureMaterial, IV_Scene, initScene, PrefilteredCubemap } from '@we3d';
 
 declare global {
   interface Window {
@@ -68,7 +56,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 // let onelight = new DirectionalLight({
 //   color: [1, 1, 1],
 //   direction: [0, 1, 0],
@@ -85,13 +72,11 @@ await scene.add(camera);
 // )
 // await scene.add(ambientLight);
 
-
 let sphereGeometry = new SphereGeometry({
   widthSegments: 128,
   heightSegments: 128,
 
 });
-
 
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]
@@ -119,8 +104,6 @@ let inputSphereMesh: IV_MeshEntity = {
 let sphereMesh = new Mesh(inputSphereMesh);
 // console.log(mesh);
 await scene.add(sphereMesh);
-
-
 
 let ktxTexture = new PrefilteredCubemap({
   source: "/IBL/pine_attic_2k/ktx1/output_skybox.ktx",

@@ -1,15 +1,4 @@
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-import { IBL } from "../../../src/we/core/ibl/ibl";
-import { AmbientLight } from "../../../src/we/core/light/ambientLight";
-import { DirectionalLight } from "../../../src/we/core/light/DirectionalLight";
-import { IV_PBRMaterial, PBRMaterial } from "../../../src/we/core/material/PBR/PBRMaterial";
-import { CubeTextureMaterial } from "../../../src/we/core/material/standard/cubeTextureMaterial";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-
+import { PerspectiveCamera, IV_MeshEntity, Mesh, BoxGeometry, SphereGeometry, IBL, AmbientLight, DirectionalLight, IV_PBRMaterial, PBRMaterial, CubeTextureMaterial, IV_Scene, initScene } from '@we3d';
 
 declare global {
   interface Window {
@@ -28,8 +17,6 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-
-
 let radius = 2;
 let Y = 0;
 let camera = new PerspectiveCamera({
@@ -42,7 +29,6 @@ let camera = new PerspectiveCamera({
   controlType: "orbit",
 });
 await scene.add(camera);
-
 
 let onelight = new DirectionalLight({
   color: [1, 1, 1],
@@ -60,13 +46,11 @@ let ambientLight = new AmbientLight(
 )
 await scene.add(ambientLight);
 
-
 let geometry = new SphereGeometry({
   widthSegments: 128,
   heightSegments: 128,
 
 });
-
 
 // let colorMaterial = new ColorMaterial({
 //   color: [0, 0.5, 0.5, 1]
@@ -120,7 +104,6 @@ let ibl = new IBL(scene, {
 await ibl.init();
 window.ibl = ibl;
 console.log(ibl);
-
 
 let textureMaterial = new CubeTextureMaterial({
   texture: "/IBL/CornellBox/CornellBox",

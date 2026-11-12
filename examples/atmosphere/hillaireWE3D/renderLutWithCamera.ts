@@ -1,11 +1,4 @@
-import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { AtmosphereHillaire } from "../../../src/we/core/atmosphere/hillaire/atmosphereHillaire";
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_PointsEntity, Points } from "../../../src/we/core/entity/mesh/points";
-
+import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall, initScene, Scene, E_renderPassName, AtmosphereHillaire, PerspectiveCamera, IV_PointsEntity, Points } from '@we3d';
 
 declare global {
   interface Window {
@@ -86,4 +79,3 @@ let oneCall: userDefineEventCall = {
 scene.addUserDefineEvent(oneCall);
 
 scene.run();
-

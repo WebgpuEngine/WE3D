@@ -3,6 +3,9 @@ node_modules/
 dist/
 coverage/
 
+# 运行期生成报告（脚本产物，非源码；不应参与 format 门禁）
+examples-console-report.json
+
 # 文档产物
 docs/
 doc/node_modules/

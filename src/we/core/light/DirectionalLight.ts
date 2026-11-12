@@ -16,7 +16,7 @@ export interface IV_DirectionalLight extends I_optionBaseLight {
 export class DirectionalLight extends BaseLight {
     declare _direction: Vec3;
     declare _intensity: number;
-    async readyForGPU(): Promise<any> {}
+    async readyForGPU(): Promise<void> {}
     _destroy(): void {
         throw new Error('Method not implemented.');
     }

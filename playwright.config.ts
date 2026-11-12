@@ -22,8 +22,11 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    // 并发 8：真实 GPU 硬件渲染，8 个 worker 并行比对软件基线。
-    workers: 8,
+    // 并发 4（第 4 期门禁固化）：真实 GPU 硬件渲染下 8 workers 会偶发页面加载超时
+    // 与截图差值（2026-11-12 连续 3 次复现，降至 4 后 85/85 稳定通过）。
+    // 方案 §二 早已把 --workers=4 定为超时类失败的复验口径，此处固化为默认值，
+    // 使 npm run ci 不再依赖人工复验。云端 ci:no-e2e 不含 e2e（无真实 GPU），不受影响。
+    workers: 4,
     reporter: 'list',
     use: {
         baseURL: 'http://localhost:5173',

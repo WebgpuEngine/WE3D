@@ -1,12 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
-import { E_AnimationTargetType, E_InterpolationModes, I_AnimationSampler } from "../../../src/we/core/animation/base";
-import { VertexColorMaterial } from "../../../src/we/core/material/standard/vertexColorMaterial";
-import { MorphTargetAnimation } from "../../../src/we/core/animation/morphTarget";
-import { LinesMorphTarget } from "../../../src/we/core/entity/animationEntity/linesOfMorphTarget";
+import { PerspectiveCamera, IV_Scene, initScene, IV_LinesEntity, Lines, E_AnimationTargetType, E_InterpolationModes, I_AnimationSampler, VertexColorMaterial, MorphTargetAnimation, LinesMorphTarget } from '@we3d';
 
 declare global {
   interface Window {
@@ -36,9 +28,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
 
 let colorMaterial = new VertexColorMaterial();
 // let colorMaterial = new ColorMaterial({
@@ -100,7 +89,6 @@ let sampler: I_AnimationSampler = {
   targetStride: 2
 }
 
-
 let morphAnimation = new MorphTargetAnimation(
   {
     parent: linesEntity,
@@ -113,4 +101,3 @@ window.morphAnimation = morphAnimation;
 morphAnimation.play("loop");
 
 window.entity = linesEntity;
-

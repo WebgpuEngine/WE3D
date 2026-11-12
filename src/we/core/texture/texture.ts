@@ -30,7 +30,7 @@ export class Texture extends BaseTexture {
         super(input, device, scene);
         this.inputValues = input;
     }
-    async initTextureAndLayout(_input: IV_Texture): Promise<any> {
+    async initTextureAndLayout(_input: IV_Texture): Promise<unknown> {
         const source = this.inputValues.source;
         //GPUTexture
         if (source instanceof GPUTexture) {
@@ -40,7 +40,10 @@ export class Texture extends BaseTexture {
         //GPUCopyExternalImageSource
         else {
             if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
-                this.texture = this.scene.resourcesGPU.get(source, E_resourceKind.textureOfString);
+                this.texture = this.scene.resourcesGPU.get(
+                    source,
+                    E_resourceKind.textureOfString,
+                ) as GPUTexture;
             } else {
                 if (typeof source == 'string') {
                     const urlName = source.split('/');

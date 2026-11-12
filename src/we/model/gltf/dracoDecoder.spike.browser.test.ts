@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { WebIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, KHRDracoMeshCompression } from '@gltf-transform/extensions';
-import {
-    getExtensionDependencyKeys,
-    resolveExtensionDependencies,
-} from './extensionDependencies';
+import { getExtensionDependencyKeys, resolveExtensionDependencies } from './extensionDependencies';
 
 /**
  * Phase 0A spike + 通用扩展依赖验证：

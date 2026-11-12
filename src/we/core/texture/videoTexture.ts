@@ -77,7 +77,7 @@ export class VideoTexture extends BaseTexture {
         }
     }
 
-    async initTextureAndLayout(_input: I_BaseTexture): Promise<any> {
+    async initTextureAndLayout(_input: I_BaseTexture): Promise<unknown> {
         const source = this.inputValues.source;
         this._state = E_lifeState.initializing;
 
@@ -93,7 +93,7 @@ export class VideoTexture extends BaseTexture {
                     this.texture = this.scene.resourcesGPU.get(
                         source,
                         E_resourceKind.textureOfString,
-                    );
+                    ) as GPUTexture;
                 } else {
                     await this.getVidoeTexture(source);
                     this.scene.resourcesGPU.set(

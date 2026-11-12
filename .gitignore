@@ -24,6 +24,9 @@ blob-report/
 # Vitest browser 模式自动生成的截图产物（非基线，不提交）
 __screenshots__/
 
+# examples 控制台验证脚本的瞬时报告（非基线，不提交）
+examples-console-report.json
+
 
 public/models/gltf/model
 # Phase 3：@loaders.gl fork 已从 git 移除；物理目录残留待人工删除

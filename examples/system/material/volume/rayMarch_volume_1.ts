@@ -1,14 +1,4 @@
-
-import { IV_Scene, E_ToneMappingType } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { weGetBinaryByUrl } from "../../../../src/we/core/base/file/getFile";
-import { Texture3D } from "../../../../src/we/core/texture/texture3D";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { VolumeShaderMaterial } from "../../../../src/we/core/material/standard/volumeMaterial";
-
+import { IV_Scene, E_ToneMappingType, initScene, weGetBinaryByUrl, Texture3D, BoxGeometry, IV_MeshEntity, Mesh, ColorMaterial, PerspectiveCamera, VolumeShaderMaterial } from '@we3d';
 
 declare global {
   interface Window {
@@ -161,7 +151,6 @@ let volumeMaterial = new VolumeShaderMaterial({
   shaderCodeFunction: shaderCodeFunction,
 });
 
-
 let boxGeometry = new BoxGeometry(
   {
     width: 2,
@@ -196,4 +185,3 @@ window.instanceMash = await scene.add({
   // rotate: [1, 0, 0, Math.PI],
 });
 volumeMaterial.setEntityWorldMatrix(window.instanceMash.matrixWorld);
-

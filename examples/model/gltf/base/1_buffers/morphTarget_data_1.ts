@@ -1,8 +1,5 @@
 import { quat, vec3 } from "wgpu-matrix";
-import { PerspectiveCamera } from "../../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../../src/we/core/scene/base";
-import { initScene } from "../../../../../src/we/core/scene/fn";
-import { createGLTFModel } from "../../../../../src/we/model/gltf/gltf";
+import { PerspectiveCamera, IV_Scene, initScene, createGLTFModel } from '@we3d';
 
 declare global {
     interface Window {
@@ -19,7 +16,6 @@ let scene = await initScene({
     initConfig: input,
 });
 window.scene = scene;
-
 
 let radius = 5;
 let Y = 0;
@@ -40,7 +36,6 @@ let camera = new PerspectiveCamera({
 
 });
 await scene.add(camera);
-
 
 let gltf = await createGLTFModel({
     scene: scene,
@@ -63,10 +58,7 @@ window.gltf = gltf;
 // console.log("========================================indices  ========================================");
 // gltf.printAccessorContent(0)
 
-
-
 await scene.add(gltf);
-
 
 // const q = quat.fromEuler(0,0, Math.PI/8,  'xyz'); // 角度（弧度）、旋转顺序
 // console.warn(q)

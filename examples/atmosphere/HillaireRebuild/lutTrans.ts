@@ -1,6 +1,4 @@
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { IV_ComputeCommand, ComputeCommand } from "../../../src/we/core/command/ComputeCommand";
+import { IV_Scene, initScene, IV_ComputeCommand, ComputeCommand } from '@we3d';
 
 import shaderLutTransOverride from "./output/lut_trans_override.wgsl?raw";
 import shaderLutTrans from "./output/lut_trans.wgsl?raw";

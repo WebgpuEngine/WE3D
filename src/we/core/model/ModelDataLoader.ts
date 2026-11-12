@@ -17,7 +17,7 @@ export abstract class ModelDataLoader {
      * @param index accessor的索引
      * @returns accessor的原始数据
      */
-    abstract getAccessorOfSource(index: number): any | undefined;
+    abstract getAccessorOfSource(index: number): GLTF.IAccessor | undefined;
     /**gltf accessor的数组数据
      * @param index accessor的索引
      * @param useFor accessor的使用场景
@@ -34,31 +34,31 @@ export abstract class ModelDataLoader {
      */
     abstract getAccessorArray(index: number, useFor: E_accessorUseFor): Promise<number[]>;
 
-    abstract getImages(): any[] | undefined;
+    abstract getImages(): GLTF.IImage[] | undefined;
     abstract getImage(index: number): Promise<ImageBitmap | undefined>;
 
-    abstract getSamplers(): any[] | undefined;
-    abstract getSampler(index: number): any | undefined;
+    abstract getSamplers(): GLTF.ISampler[] | undefined;
+    abstract getSampler(index: number): GLTF.ISampler | undefined;
 
-    abstract getTextures(): any[] | undefined;
-    abstract getTexture(index: number): any | undefined;
+    abstract getTextures(): GLTF.ITexture[] | undefined;
+    abstract getTexture(index: number): GLTF.ITexture | undefined;
 
-    abstract getMaterials(): any[] | undefined;
-    abstract getMaterial(index: number): any | undefined;
+    abstract getMaterials(): GLTF.IMaterial[] | undefined;
+    abstract getMaterial(index: number): GLTF.IMaterial | undefined;
 
-    abstract getMeshes(): any[] | undefined;
-    abstract getMesh(index: number): any | undefined;
+    abstract getMeshes(): GLTF.IMesh[] | undefined;
+    abstract getMesh(index: number): GLTF.IMesh | undefined;
 
-    abstract getNode(index: number): any | undefined;
-    abstract getNodes(): any[] | undefined;
+    abstract getNode(index: number): GLTF.INode | undefined;
+    abstract getNodes(): GLTF.INode[] | undefined;
 
-    abstract getScene(index?: number): any;
-    abstract getScenes(): any[] | undefined;
+    abstract getScene(index?: number): GLTF.IScene | undefined;
+    abstract getScenes(): GLTF.IScene[] | undefined;
 
     abstract getCurrentScene(): number;
 
-    abstract getSkin(index: number): any | undefined;
-    abstract getSkins(): any[] | undefined;
+    abstract getSkin(index: number): GLTF.ISkin | undefined;
+    abstract getSkins(): GLTF.ISkin[] | undefined;
 
     abstract detachData(): void;
 

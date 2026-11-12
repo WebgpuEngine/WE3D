@@ -34,11 +34,7 @@ import {
     type I_accessorFormat,
     type I_accessorLike,
 } from './accessorFormat';
-import {
-    KTX2_MIME_TYPE,
-    isKTX2Bytes,
-    resolveImageMimeType,
-} from './imageMimeType';
+import { KTX2_MIME_TYPE, isKTX2Bytes, resolveImageMimeType } from './imageMimeType';
 import { transcodeTexture } from './textureTranscoders';
 import {
     resolveExtensionDependencies,
@@ -124,7 +120,10 @@ export class GltfDataAtTransform extends ModelDataLoader {
                 );
             } catch (error) {
                 // 回退主线程解码：重新 readAsJSON（原 resources 已 detach）
-                console.warn('[GltfDataAtTransform] Draco Worker 预解码失败，回退主线程解码：', error);
+                console.warn(
+                    '[GltfDataAtTransform] Draco Worker 预解码失败，回退主线程解码：',
+                    error,
+                );
                 const fallbackT0 = performance.now();
                 const fallback = await io.readAsJSON(this.url);
                 this.gltfJson = fallback.json;
@@ -263,7 +262,11 @@ export class GltfDataAtTransform extends ModelDataLoader {
         if (hit) return hit;
         const raw = this.getRawArray(index);
         let out: Uint32Array | Int32Array | Float32Array;
-        if (raw instanceof Uint32Array || raw instanceof Int32Array || raw instanceof Float32Array) {
+        if (
+            raw instanceof Uint32Array ||
+            raw instanceof Int32Array ||
+            raw instanceof Float32Array
+        ) {
             out = raw;
         } else if (raw instanceof Int8Array || raw instanceof Int16Array) {
             out = new Int32Array(raw);
@@ -335,11 +338,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
      * @param Buffer 可选，指定要上传的 ArrayBuffer；默认使用 accessor 对应的 ArrayBuffer
      * @param useFor 可选，转换类索引用途使用独立缓存 key
      */
-    createGPUBuffer(
-        accessorID: number,
-        Buffer?: TypedArray,
-        useFor?: E_accessorUseFor,
-    ): GPUBuffer {
+    createGPUBuffer(accessorID: number, Buffer?: TypedArray, useFor?: E_accessorUseFor): GPUBuffer {
         let gpuBuffer: GPUBuffer;
         const accessor = this.getAccessorOfSource(accessorID);
         const name = accessor?.name || accessorID.toString();
@@ -516,9 +515,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
             }
         } else {
             return this.accessor.get(aliaseID) as
-                | TypedArray
-                | I_vsGPUBufferBundle
-                | I_indexGPUBufferBundle;
+                TypedArray | I_vsGPUBufferBundle | I_indexGPUBufferBundle;
         }
     }
 

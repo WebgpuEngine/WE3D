@@ -1,7 +1,6 @@
 import type { Testbed } from "../Testbed";
-import { EntityBundleMaterial } from "../../../../../src/we/core/entity/entityBundleMaterial";
-import { createGLTFModel } from "../../../../../src/we/model/gltf/gltf";
-import { Scene } from "../../../../../src/we/core/scene/scene";
+import { EntityBundleMaterial, createGLTFModel, Scene } from '@we3d';
+
 import { vec3 } from "wgpu-matrix";
 type RAPIER_API = typeof import("@dimforge/rapier3d");
 
@@ -61,8 +60,6 @@ export async function initWorld(RAPIER: RAPIER_API, testbed: Testbed) {
 
         }
     })
-
-
 
     let cameraPosition = {
         eye: { x: 10.0, y: 5.0, z: 10.0 },

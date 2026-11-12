@@ -1,9 +1,5 @@
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { OrthographicCamera } from "../../../src/we/core/camera/orthographicCamera";
+import { IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, OrthographicCamera } from '@we3d';
+
 import { vec3 } from "wgpu-matrix";
 
 declare global {
@@ -21,7 +17,6 @@ let scene = await initScene({
   initConfig: input,
 });
 window.scene = scene;
-
 
 let radius = 2;
 let Y = 0;
@@ -44,7 +39,6 @@ let orthCamera = new OrthographicCamera({
   },
 });
 await scene.add(orthCamera);
-
 
 let boxGeometry = new BoxGeometry();
 

@@ -1,8 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { eventOfScene, type IV_Scene, type userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, eventOfScene, type IV_Scene, type userDefineEventCall, initScene, E_renderPassName, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -33,7 +29,6 @@ let shader = `
          @location(1) color : vec3f
       ) -> OurVertexShaderOutput {
 
-
         var vsOutput: OurVertexShaderOutput;
         vsOutput.position = vec4f(position,  1.0);
         vsOutput.color = color;
@@ -57,14 +52,10 @@ const oneTriangleColorArray = [
 ];
 const oneTriangleVertexF32A = new Float32Array(oneTriangleVertexArray);
 
-
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene
 }
 let DCManager = new DrawCommandGenerator(inputDC);
-
-
-
 
 let valueDC: IV_DC = {
   label: "dc1",

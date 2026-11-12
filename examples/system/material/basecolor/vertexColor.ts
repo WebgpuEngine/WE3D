@@ -1,11 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { VertexColorMaterial } from "../../../../src/we/core/material/standard/vertexColorMaterial";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, VertexColorMaterial } from '@we3d';
 
 declare global {
   interface Window {
@@ -51,8 +44,6 @@ const oneTriangleColorArray = [
 ];
 const indices = [2, 0, 1, 1, 3, 2];
 
-
-
 let colorMaterial = new VertexColorMaterial();
 
 let inputMesh: IV_MeshEntity = {
@@ -75,4 +66,3 @@ let inputMesh: IV_MeshEntity = {
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 await scene.add(mesh);
-

@@ -35,43 +35,13 @@ import { I_bindGroupAndGroupLayout } from '../command/base';
 import { V_shadowMapSize, V_weShadowMapFormat } from '../base/coreDefine';
 import { Clock } from '../scene/clock';
 import { ECSManager } from '../organization/manager';
+import { ST_shadowMapMatrix_Size } from './lightsManagerTypes';
+import type { light_shadowMapMatrix } from './lightsManagerTypes';
 
-export interface IV_LightSManager {
-    scene: Scene;
-    lightCount: number;
-}
-/**
- * struct ST_shadowMapMatrix size
- */
-const ST_shadowMapMatrix_Size = 80;
-
-/**
- * 对应system.wgsl中的结构 ST_shadowMapMatrix的单体结构
- * struct ST_shadowMapMatrix in shader
- *
- * use:@group(0) @binding(2) var<uniform> U_shadowMapMatrix : array<ST_shadowMapMatrix,$shadowNumber>;
- */
-interface light_shadowMapMatrix {
-    light_id: number; //in shader ST_shadowMapMatrix.light_id
-    index: number; //在shadowMapTexture中的开始位置，队列中的全局位置（因为每个光源的shadowmap数量不一定一样）
-    matrix_count: number; //in shader ST_shadowMapMatrix.matrix_count; 数量：1 or 6,1=一个，6=cube
-    matrix_self_index: number; //in shader ST_shadowMapMatrix.matrix_self_index; //按照cube方式排列 right=0,left=1,up=2,down=3,back=4,front=5
-    MVP: Mat4; // JS:对应 shader ST_shadowMapMatrix.MVP 的JS内存数据
-    /**每个光源（有shadowmap）的MVP */
-    GPUBuffer: GPUBuffer; //in shader ST_shadowMapMatrix.MVP
-    /**每个光源（有shadowmap）的RPD */
-    RPD: GPURenderPassDescriptor; //JS:RPD
-}
-
-export function mergeLightUUID(UUID: string, matrixIndex: number) {
-    return `${UUID}__${matrixIndex}`;
-}
-
-export function splitLightUUID(UUID: string) {
-    const lightUUID = UUID.split('__');
-    const matrixIndex = parseInt(lightUUID[1]);
-    return { UUID: lightUUID[0], matrixIndex };
-}
+// 第 3 期巨型文件拆分（C1）：类型/常量/UUID 工具已迁至 lightsManagerTypes.ts，
+// 这里保留 re-export，确保 entityManager.ts 等原有深层 import 与导出集合不变。
+export { mergeLightUUID, splitLightUUID } from './lightsManagerTypes';
+export type { IV_LightSManager, light_shadowMapMatrix } from './lightsManagerTypes';
 
 export class LightsManager extends ECSManager<BaseLight> {
     ////////////////////////////////////////////////////////////////////////////////
@@ -883,137 +853,4 @@ export class LightsManager extends ECSManager<BaseLight> {
         }
         return false;
     }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //透明阴影
-
-    /**
-     * copy shadowMapTexture[i of light ] 的transparent depth texture(公用的临时copy depth texture)
-     *
-     * 1、每个light的transparent 都会copy一次
-     * 2、然后此纹理作为输入的depth 比较纹理
-     */
-    // shadowMapCopyTransparentDepthTexture: GPUTexture;
-
-    /**
-     * @group(0) @binding(5)  var U_shadowMap_transparent_depth_texture : texture_depth_2d_array;  
-     * @group(0) @binding(6)  var U_shadowMap_transparent_color_texture : texture_2d_array<f32>;  
-     * shadow map transparent texture，也都是 2d array 。数量是shadowMapTexture的透明层数的N(1-4)倍数
-     * 1、color和depth 作为透明阴影颜色的输入uniform
-     * 2、depth进行比较,然后根据层级与color，计算光的强度与颜色
-     */
-    // shadowMapTransparentTexture!: {
-    //     color: GPUTexture,
-    //     depth: GPUTexture
-    // };
-
-    // /**
-    //  * 获取光源shadowmap渲染的colorAttachmentTargets
-    //  * 1、按照mergeID获取光源的ID和matrixIndex
-    //  * 2、不透明阴影没有color target,返回透明的，但会由于没有FS，所以不会使用此调用
-    //  * @param mergeID 光源的mergeID
-    //  * @returns GPUColorTargetState[]
-    //  */
-    // getColorAttachmentTargetsByMergeID(mergeID: string): GPUColorTargetState[] {
-    //     let transparentLayer = this.shadowMapTransparentLayerTexture[mergeID];
-    //     if (transparentLayer) {
-    //         return transparentLayer.colorAttachmentTargets;
-    //     }
-    //     return [];
-    // }
-
-    // /**
-    // * shadowmap的transparent color texture texture_depth_2d_array
-    // * 动态的
-    // */
-    // shadowMapTransparentLayerTexture: {
-    //     [mergeID: string]: {
-    //         colorTexture: GPUTexture,
-    //         depthTexture: GPUTexture,
-    //         rpd: GPURenderPassDescriptor,
-    //         colorAttachmentTargets: GPUColorTargetState[]
-    //     }
-    // } = {};
-
-    // /**
-    //  * 为阴影的透明使用，创建相同层数的color和depth texture，但都用于ColorAttachment
-    //  * @param mergeID 光源的mergeID
-    //  */
-    // initRenderColorTargetTextureRPD(mergeID: string) {
-    //     if (this.shadowMapTransparentLayerTexture[mergeID]) {
-
-    //     }
-    //     const depthTextureDesc: GPUTextureDescriptor = {
-    //         label: "LightsManager create shadow map depth texture",
-    //         size: {
-    //             width: V_shadowMapSize,
-    //             height: V_shadowMapSize,
-    //             depthOrArrayLayers: V_layerOfShadowMapTransparnet,
-    //         },
-    //         format: "depth32float",
-    //         // format: "depth24plus-stencil8",
-    //         // format: this.scene.depthDefaultFormat,
-    //         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
-    //     };
-    //     let depthTexture = this.device.createTexture(depthTextureDesc);
-
-    //     const colorTextureDesc: GPUTextureDescriptor = {
-    //         label: "LightsManager create shadow map depth texture",
-    //         size: {
-    //             width: V_shadowMapSize,
-    //             height: V_shadowMapSize,
-    //             depthOrArrayLayers: V_layerOfShadowMapTransparnet,
-    //         },
-    //         format: V_weLinearFormat,
-    //         // format: "depth24plus-stencil8",
-    //         // format: this.scene.depthDefaultFormat,
-    //         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.TEXTURE_BINDING,
-    //     };
-    //     let colorTexture = this.device.createTexture(colorTextureDesc);
-
-    //     let colorAttachmentTargets: GPUColorTargetState[] = [];
-    //     let colorAttachments: GPURenderPassColorAttachment[] = [];
-    //     for (let i = 0; i < V_layerOfShadowMapTransparnet; i++) {
-    //         colorAttachmentTargets.push({ format: V_weLinearFormat });
-    //         colorAttachments.push({
-    //             view: colorTexture.createView({
-    //                 dimension: "2d",
-    //                 baseArrayLayer: i,
-    //                 arrayLayerCount: 1,
-    //             }),
-    //             resolveTarget: undefined,
-    //             loadOp: 'clear',
-    //             storeOp: 'store',
-    //         });
-    //     }
-    //     for (let i = 0; i < V_layerOfShadowMapTransparnet; i++) {
-    //         colorAttachmentTargets.push({ format: "depth32float" });
-    //         colorAttachments.push({
-    //             view: depthTexture.createView({
-    //                 dimension: "2d",
-    //                 baseArrayLayer: i,
-    //                 arrayLayerCount: 1,
-    //             }),
-    //             resolveTarget: undefined,
-    //             loadOp: 'clear',
-    //             storeOp: 'store',
-    //         });
-    //     }
-    //     const rpd: GPURenderPassDescriptor = {
-    //         colorAttachments: colorAttachments,
-    //         depthStencilAttachment: {
-    //             view: this.shadowMapCopyTransparentDepthTexture.createView(),
-    //             depthClearValue: 0,
-    //             depthLoadOp: 'clear',// depthLoadOp: 'load',
-    //             depthStoreOp: 'store',
-    //         },
-    //     };
-    //     this.shadowMapTransparentLayerTexture[mergeID] = {
-    //         colorTexture,
-    //         depthTexture,
-    //         rpd,
-    //         colorAttachmentTargets
-    //     }
-
-    // }
 }

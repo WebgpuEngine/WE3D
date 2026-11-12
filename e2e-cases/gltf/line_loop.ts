@@ -31,9 +31,7 @@ const camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-await scene.add(
-    new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }),
-);
+await scene.add(new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }));
 await scene.add(new AmbientLight({ color: [1, 1, 1], intensity: 0.2 }));
 
 // P4-1 D2：mode=2 (LINE_LOOP) 的 4 顶点闭合矩形，带 COLOR_0（mode 2 强制 vertexColor 材质）。

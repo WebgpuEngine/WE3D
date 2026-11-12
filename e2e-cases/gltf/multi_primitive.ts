@@ -31,9 +31,7 @@ const camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-await scene.add(
-    new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }),
-);
+await scene.add(new DirectionalLight({ color: [1, 1, 1], direction: [1, 1, 1], intensity: 3 }));
 await scene.add(new AmbientLight({ color: [1, 1, 1], intensity: 0.2 }));
 
 // P4-1 D1：单 mesh 多 primitive（红 / 蓝两个三角形左右错开），修复后两个 primitive 都应可见

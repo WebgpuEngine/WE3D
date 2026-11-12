@@ -1,16 +1,6 @@
 import RAPIER from "@dimforge/rapier3d";
 
-import { PerspectiveCamera } from "../../../../../src/we/core/camera/perspectiveCamera";
-import { eventOfScene, IV_Scene, userDefineEventCall } from "../../../../../src/we/core/scene/base";
-import { initScene } from "../../../../../src/we/core/scene/fn";
-import { IV_MeshEntity, Mesh } from "../../../../../src/we/core/entity/mesh/mesh";
-import { BoxGeometry } from "../../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../../src/we/core/material/standard/colorMaterial";
-import { PhongMaterial } from "../../../../../src/we/core/material/phong/phongMaterial";
-import { DirectionalLight } from "../../../../../src/we/core/light/DirectionalLight";
-import { AmbientLight } from "../../../../../src/we/core/light/ambientLight";
-import { PlaneGeometry } from "../../../../../src/we/core/geometry/planeGeomertry";
-import { Scene } from "../../../../../src/we/core/scene/scene";
+import { PerspectiveCamera, eventOfScene, IV_Scene, userDefineEventCall, initScene, IV_MeshEntity, Mesh, BoxGeometry, ColorMaterial, PhongMaterial, DirectionalLight, AmbientLight, PlaneGeometry, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -101,7 +91,6 @@ let groundMesh = new Mesh({
 });
 await scene.add(groundMesh);
 
-
 ///////////////////////////////////////rapier////////////////////////////////////////
 
 // Use the RAPIER module here.
@@ -137,7 +126,6 @@ let gameLoop = () => {
   let position = rigidBody.translation();
   instanceBox.Position = [position.x, position.y, position.z];
   // console.log("Rigid-body position: ", position.x, position.y, position.z,"collider position:",collider.translation());   //数据是相同的
-
 
   // 检查是否与地面相交，如果使用传感器
   // let onGround = false;

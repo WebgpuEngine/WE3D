@@ -44,10 +44,10 @@ export interface I_pointerStruct {
      * */
     rebuildTime: number;
 
-    owner?: any;
+    owner?: unknown;
 }
-export function isI_pointerStruct(obj: any): obj is I_pointerStruct {
-    return obj && typeof obj === 'object' && 'pointerID' in obj;
+export function isI_pointerStruct(obj: unknown): obj is I_pointerStruct {
+    return !!obj && typeof obj === 'object' && 'pointerID' in obj;
 }
 
 /** 指针数据参数 */
@@ -178,7 +178,7 @@ export class Pointers {
         return size;
     }
     /** 创建指针 */
-    createPointer(params: I_pointerCreateParams, owner?: any): I_pointerStruct {
+    createPointer(params: I_pointerCreateParams, owner?: unknown): I_pointerStruct {
         /**
          * 1、创建pointerID；
          * 2、分配内存

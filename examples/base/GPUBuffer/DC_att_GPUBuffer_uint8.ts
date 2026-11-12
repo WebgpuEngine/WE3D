@@ -1,7 +1,4 @@
-import { createVerticesBuffer } from "../../../src/we/core/command/baseFunction";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, I_vsGPUBufferBundle } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { createVerticesBuffer, DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, I_vsGPUBufferBundle, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -45,7 +42,6 @@ const oneTriangleVertexArray = [
   1, -1, 0, 1,
 ];
 const oneTriangleVertexF32A = new Uint8Array(oneTriangleVertexArray);
-
 
 let inputDC: IV_DrawCommandGenerator = {
   scene: scene

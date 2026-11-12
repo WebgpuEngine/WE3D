@@ -11,5 +11,5 @@ export abstract class BaseCommand {
         drawMode: I_drawMode | I_drawModeIndexed,
     ): void;
     abstract submit(): void;
-    abstract destroy(): any;
+    abstract destroy(): void;
 }

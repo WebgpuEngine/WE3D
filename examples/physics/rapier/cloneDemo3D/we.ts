@@ -1,9 +1,5 @@
-import { AmbientLight } from "../../../../src/we/core/light/ambientLight";
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { DirectionalLight } from "../../../../src/we/core/light/DirectionalLight";
-import { E_ToneMappingType, IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { PointLight } from "../../../../src/we/core/light/pointLight";
+import { AmbientLight, PerspectiveCamera, DirectionalLight, E_ToneMappingType, IV_Scene, initScene, PointLight } from '@we3d';
+
 import { vec3, vec4 } from "wgpu-matrix";
 
 export async function initWe() {
@@ -23,8 +19,6 @@ export async function initWe() {
     };
     let scene = await initScene({ initConfig: input, });
     window.scene = scene;
-
-
 
     let onelight = new DirectionalLight({
         color: [1, 1, 1],

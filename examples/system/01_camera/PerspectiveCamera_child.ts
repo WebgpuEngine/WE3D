@@ -1,11 +1,5 @@
 import { vec3 } from "wgpu-matrix";
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { NodeObject } from "../../../src/we/core/organization/nodeObject";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
+import { PerspectiveCamera, IV_Scene, initScene, NodeObject, IV_MeshEntity, Mesh, BoxGeometry, ColorMaterial } from '@we3d';
 
 declare global {
   interface Window {
@@ -71,5 +65,3 @@ let node_1 = new NodeObject({
 // console.log("node_1 world position:", vec3.transformMat4(node_1._position, node_1.matrixWorld), node_1._position, node_1.matrixWorld)
 await scene.add(node_1)
 await node_1.addChild(camera);
-
-

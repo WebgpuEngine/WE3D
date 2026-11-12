@@ -1,7 +1,4 @@
-import { createCommonGPUBuffer } from "../../../src/we/core/command/baseFunction";
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { createCommonGPUBuffer, DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {

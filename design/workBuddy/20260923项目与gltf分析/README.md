@@ -5,6 +5,8 @@
 >
 > ⚠️ **复核与修正（2026-10-29）**：本文档集（01–04）为 09-23 历史快照。工程化短板已被基本补齐（`tsc` 实测 0 错误、lint/单测/e2e 双配置/CI/发布/文档全链路就绪），但 **glTF 库迁移仍未启动**（`@loaders.gl` 本地 fork 仍在，gltf 示例未纳入 e2e 回归）。凡涉及"工程化 / 构建现状 / gltf 迁移状态"的结论，**以 [05-项目重新评估](./05-项目重新评估-20261029.md) 为准**，01–04 保留为历史记录。
 
+> **〔2026-11-11 复核〕**：文档集为 01–06 共 6 篇。项目现状以 [06 号重评](./06-项目重新评估-20261110.md) 为准（glTF 迁移完成、D1–D9 基本清零、e2e 回归闭环）；代码层质量治理的实证分析与分期方案已移入工程化文档目录，见 [代码层质量治理方案](../../engineering/代码层质量治理分析与方案-20261111.md)。另：06 号中「`format` 仍延后」为过时表述，`format` 已于 2026-10-30 执行完毕（详见该方案 §六）。01–05 及本页「一页结论」保留为历史快照。
+
 ## 文档索引
 
 | 序号 | 文档 | 内容 | 面向 |
@@ -14,6 +16,7 @@
 | 03 | [gltf 模块深度分析](./03-gltf模块深度分析.md) | `src/we/model/gltf` 逐文件剖析、数据流、能力矩阵、缺陷清单、`examples/model/gltf` 35 个示例图谱 | 引擎开发 |
 | 04 | [迁移到 glTF-Transform 方案](./04-迁移到glTF-Transform方案.md) | 用 `@gltf-transform/*` 取代 `@loaders.gl/*` 的可行性论证、API 映射表、分阶段计划、验收标准（**仅计划，未实施**） | 引擎开发 |
 | 05 | [项目重新评估（2026-10-29）](./05-项目重新评估-20261029.md) | **修正 + 重评**：工程化已补齐（`tsc` 0 错误、lint/单测/e2e/CI/文档全链路），但 glTF 迁移**仍未启动**、gltf 无 e2e 回归；含逐条修正清单与修正后评分卡/路线图 | 架构师 / 维护者 |
+| 06 | [项目重新评估（2026-11-10）](./06-项目重新评估-20261110.md) | **再修正 + 重评（含 1111 局部修订）**：glTF 迁移完成、fork 清理、D1–D9 基本清零、gltf 30 个 e2e 用例闭环；`format` 状态已修订 | 架构师 / 维护者 |
 
 ## 一页结论
 
@@ -41,7 +44,7 @@ WE3D 是一个功能面相当宽、自研程度很高的 WebGPU 原生 3D 引擎
 | 访问地址 | https://webgpuengine.github.io/WE3D/ |
 | 生成范围 | `src/we/**/*.ts`（根 `typedoc.json`），即完整覆盖核心引擎 |
 | **`tsc` 现状** | **〔2026-10-29 修正〕实测 `npx tsc --noEmit` = 0 错误**（`src/we` + `examples` 已清零）→ **`npm run build` / `build:lib` 全绿**。原"1991 错误导致 build 失败"已不成立 |
-| 工程化门禁 | `lint` + `typecheck` + `test`(vitest) + `check:exports` + `build:lib` + `test:e2e`(Playwright 双配置) + `ci`/`ci:no-e2e` + `publish:if-new` 全部就绪 |
+| 工程化门禁 | `lint` + `check:quality`（1111 新增代码质量 ratchet）+ `typecheck` + `test`(vitest) + `check:exports` + `build:lib` + `test:e2e`(Playwright 双配置) + `ci`/`ci:no-e2e` + `publish:if-new` 全部就绪 |
 | 版本 / 发布 | `0.0.2`，去 `private`，含 `exports`/`dist`；手工发布流程已约定（见 AGENTS.md §四） |
 
 **分工建议**：`docs/`（typedoc）是**逐符号的 API 参考**，`workBuddy/` 是**架构、用法与缺陷分析**。两者互补——typedoc 能回答"这个字段叫什么"，但回答不了"该插在 update 的哪一步"。改完内核后跑一次 `npm run make` 更新 `docs/`。

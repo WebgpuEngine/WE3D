@@ -1,14 +1,4 @@
-
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { IV_BOL } from "../../../src/we/core/bufferBlock/BOL";
-import { E_BOLBufferType } from "../../../src/we/core/bufferBlock/base";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, IV_BOL, E_BOLBufferType, SphereGeometry } from '@we3d';
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -30,7 +20,6 @@ let scene = await initScene({
 });
 window.scene = scene;
 
-
 let camera = new PerspectiveCamera({
   fov: (2 * Math.PI) / 5,
   aspect: scene.aspect,
@@ -42,7 +31,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 window.BPC = scene.BPC;
-
 
 ////////////////////////sphere/////////////////////////////////////////////
 let sphereGeometry = new SphereGeometry();
@@ -63,8 +51,6 @@ window.meshSphere = meshSphere;
 //   entity: meshSphere,
 //   position: [0, 3, 0],
 // });
-
-
 
 ////////////////////////box/////////////////////////////////////////////
 
@@ -114,7 +100,6 @@ await sleep(1000);
 //   ));
 // }
 
-
 // await sleep(1000);
 // console.warn("remove instances");
 // //remove
@@ -130,7 +115,6 @@ for (let i of window.instanceBox) {
 }
 
 // // scene.BPC.BOLs.storage.get(3)?.rebuild();
-
 
 // // debugger;
 // // scene.BPC.BOLs.storage.get(3)?.rebuild();

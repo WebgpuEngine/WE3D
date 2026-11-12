@@ -1,6 +1,4 @@
-import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformArrayBufferEntry, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type I_uniformArrayBufferEntry, type IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -126,7 +124,6 @@ let unifrom3: I_uniformArrayBufferEntry = {
   size: 4 * 4,
   data: data4
 }
-
 
 let uniform00Layout: GPUBindGroupLayoutEntry = {
   binding: 0,
@@ -275,7 +272,6 @@ let passEncoder = commandEncoder.beginRenderPass(scene.getRenderPassDescriptorFo
 //2.1 设置pipeline
 passEncoder.setPipeline(dc_1.pipeline);
 
-
 ////////////////////////////////DC1 数据
 //2.2 设置vertexBuffer
 passEncoder.setVertexBuffer(0, dc_1.vertexBuffers[0].gpuBufferView.buffer, dc_1.vertexBuffers[0].gpuBuffer.offset, dc_1.vertexBuffers[0].gpuBufferView.byteSize);
@@ -307,7 +303,6 @@ passEncoder.setBindGroup(3, dc_2.bindGroups[3]);
 passEncoder.drawIndexed(3, 1, 0, 0,);
 
 passEncoder.end();
-
 
 const commandBuffer = commandEncoder.finish();
 scene.device.queue.submit([commandBuffer]);

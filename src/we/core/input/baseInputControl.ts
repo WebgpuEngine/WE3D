@@ -9,10 +9,10 @@ import { InputManager } from './inputManager';
  * 可扩展多种子类，以扩展CameraControl，预计扩展多控制器（多路输入，双人游戏类的那种）
  */
 export abstract class BaseInputControl implements I_UUID {
-    _manager: any;
+    _manager: InputManager | undefined;
     _id: number;
 
-    inputValues: any;
+    inputValues!: unknown;
     type: string = '';
     kind: E_InputControlType;
     UUID: string;
@@ -84,7 +84,7 @@ export abstract class BaseInputControl implements I_UUID {
         this.manager.add(this); //添加到inputManager的list中,注册事件本身到ECS的list中
     }
 
-    abstract __destroy(): any;
+    abstract __destroy(): void;
     destroy(): void {
         this.manager.remove(this);
         this.__destroy();

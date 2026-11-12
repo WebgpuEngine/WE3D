@@ -1,18 +1,6 @@
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, NodeObject, weVec4, IV_LinesEntity, Lines, E_AnimationPlayType, E_AnimationTargetType, E_AnimationType, E_InterpolationModes, I_AnimationSampler, VertexColorMaterial, Interpolator, IV_Interpolator, LinesMorphTarget } from '@we3d';
 
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { NodeObject } from "../../../src/we/core/organization/root";
 import { Mat4, mat4, vec3 } from "wgpu-matrix";
-import { weVec4 } from "../../../src/we/core/base/coreDefine";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
-import { E_AnimationPlayType, E_AnimationTargetType, E_AnimationType, E_InterpolationModes, I_AnimationSampler } from "../../../src/we/core/animation/base";
-import { VertexColorMaterial } from "../../../src/we/core/material/standard/vertexColorMaterial";
-import { Interpolator, IV_Interpolator } from "../../../src/we/core/animation/interpolator";
-import { LinesMorphTarget } from "../../../src/we/core/entity/animationEntity/linesOfMorphTarget";
 
 declare global {
   interface Window {
@@ -42,9 +30,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
 
 let colorMaterial = new VertexColorMaterial();
 // let colorMaterial = new ColorMaterial({
@@ -92,8 +77,6 @@ let inputMesh: IV_LinesEntity = {
 }
 let lines = new LinesMorphTarget(inputMesh);
 
-
-
 let MorphtTargetCount = 2;
 lines.MorphtTargetCount = MorphtTargetCount;
 lines._animationType.add(E_AnimationType.morphTarget);
@@ -135,4 +118,3 @@ interpolationMorphTarget.play(
 );
 
 window.mesh = linesEntity;
-

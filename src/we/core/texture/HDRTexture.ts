@@ -86,7 +86,7 @@ export class HDRTexture extends BaseTexture {
     //         this.samplerLayout.type = 'filtering';
     //     }
     // }
-    async initTextureAndLayout(): Promise<any> {
+    async initTextureAndLayout(): Promise<unknown> {
         const source = this.inputValues.source;
         if (this.scene.resourcesGPU.textureOfString.has(source)) {
             this.texture = this.scene.resourcesGPU.textureOfString.get(source);

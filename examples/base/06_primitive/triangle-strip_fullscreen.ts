@@ -1,6 +1,4 @@
-import { DrawCommandGenerator,  IV_DrawCommandGenerator,   IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, IV_DrawCommandGenerator, IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -72,4 +70,3 @@ scene.BPC.update(scene.clock);
 scene.memoryBlockManager.update(scene.clock);
 dc0.submit()
 scene.renderToSurface();
-

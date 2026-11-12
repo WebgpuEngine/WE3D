@@ -1,16 +1,4 @@
-import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-import { AtmosphereHillaire } from "../../../src/we/core/atmosphere/hillaire/atmosphereHillaire";
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_MeshEntity, Mesh } from "../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../src/we/core/geometry/sphereGeometry";
-import { AmbientLight } from "../../../src/we/core/light/ambientLight";
-import { DirectionalLight } from "../../../src/we/core/light/DirectionalLight";
-import { IV_PBRMaterial, PBRMaterial } from "../../../src/we/core/material/PBR/PBRMaterial";
-import { PlaneGeometry } from "../../../src/we/core/geometry/planeGeomertry";
-
+import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall, initScene, Scene, E_renderPassName, AtmosphereHillaire, PerspectiveCamera, IV_MeshEntity, Mesh, SphereGeometry, AmbientLight, DirectionalLight, IV_PBRMaterial, PBRMaterial, PlaneGeometry } from '@we3d';
 
 declare global {
   interface Window {
@@ -43,7 +31,6 @@ let camera = new PerspectiveCamera({
   controlType: "wasd",
 });
 await scene.add(camera);
-
 
 //////////////////////////////////////////////////////////////////////
 // light
@@ -100,7 +87,6 @@ let groundEntity = await scene.add({
 });
 groundEntity.Name = "ground"
 
-
 // sphere
 let geometry = new SphereGeometry({
   widthSegments: 32,
@@ -140,7 +126,6 @@ await scene.add({
   scale: [2, 2, 2],
 });
 
-
 ////////////////////////////////////////////////////////////
 // atmosphere
 let atmosphereHillaire = new AtmosphereHillaire(
@@ -160,7 +145,4 @@ let atmosphereHillaire = new AtmosphereHillaire(
 console.log(atmosphereHillaire);
 window.atmosphereHillaire = atmosphereHillaire;
 
-
-
 scene.run();
-

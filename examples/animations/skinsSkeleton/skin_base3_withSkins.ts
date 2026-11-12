@@ -1,16 +1,6 @@
-import { KeyFrameAnimation } from "../../../src/we/core/animation/keyFrame";
-import { PerspectiveCamera } from "../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { ColorMaterial } from "../../../src/we/core/material/standard/colorMaterial";
-import {  NodeObject } from "../../../src/we/core/organization/nodeObject";
+import { KeyFrameAnimation, PerspectiveCamera, IV_Scene, initScene, ColorMaterial, NodeObject, IV_LinesEntity, Lines, E_AnimationPlayType, E_AnimationTargetType, E_AnimationType, E_InterpolationModes, I_AnimationSampler, Skeleton, SkinAnimation, AnimationGroup, LinesSkins } from '@we3d';
+
 import { Mat4, mat4, vec3 } from "wgpu-matrix";
-import { IV_LinesEntity, Lines } from "../../../src/we/core/entity/mesh/lines";
-import { E_AnimationPlayType, E_AnimationTargetType, E_AnimationType, E_InterpolationModes, I_AnimationSampler } from "../../../src/we/core/animation/base";
-import { Skeleton } from "../../../src/we/core/animation/skeleton";
-import { SkinAnimation } from "../../../src/we/core/animation/skin";
-import { AnimationGroup } from "../../../src/we/core/animation/animationGroup";
-import { LinesSkins } from "../../../src/we/core/entity/animationEntity/linesOfSkins";
 
 declare global {
   interface Window {
@@ -42,9 +32,6 @@ let camera = new PerspectiveCamera({
   controlType: "arcball",
 });
 await scene.add(camera);
-
-
-
 
 // let colorMaterial = new VertexColorMaterial();
 let colorMaterial = new ColorMaterial({
@@ -133,7 +120,6 @@ const numBones = 4;//只用到了前3个骨骼
 
 // }
 
-
 // //////////////////////基础参数///////////////////////////////
 // lines.JointsMatCount = numBones;                        //骨骼数量
 // lines.JointMatrixByteSize = 16 * 4 * numBones;          //每个骨骼矩阵大小
@@ -221,7 +207,6 @@ let keyFrame_3: KeyFrameAnimation = new KeyFrameAnimation({
   sampler: sampler,
 });
 
-
 ///////////////////////////////skeleton and  skins ///////////////////
 // 逆绑定矩阵
 let bonesJointsMatWorld = [
@@ -288,5 +273,3 @@ window.joint_0 = joint_0;
 window.joint_1 = joint_1;
 window.joint_2 = joint_2;
 window.joint_3 = joint_3;
-
-

@@ -23,7 +23,7 @@ export abstract class PhysicalModel extends BaseModel {
     loadJSON(_json: any): void {
         throw new Error('Method not implemented.');
     }
-    readyForGPU(): Promise<any> {
+    readyForGPU(): Promise<void> {
         throw new Error('Method not implemented.');
     }
     _destroy(): void {

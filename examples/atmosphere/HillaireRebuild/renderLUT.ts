@@ -1,12 +1,4 @@
-import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_ComputeCommand, ComputeCommand } from "../../../src/we/core/command/ComputeCommand";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
-
-
-
+import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall, initScene, IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_ComputeCommand, ComputeCommand, Scene, E_renderPassName } from '@we3d';
 
 import shader_aerial_perspective from "./output/common/aerial_perspective.wgsl?raw";
 import shader_const from "./output/common/const.wgsl?raw";
@@ -20,9 +12,7 @@ import shader_struct from "./output/common/struct.wgsl?raw";
 import shader_sun_disk from "./output/common/sun_disk.wgsl?raw";
 import shader_uv from "./output/common/uv.wgsl?raw";
 
-
 import shaderVS from "./vs/ndc_base_1.wgsl?raw";
-
 
 import shaderLutTransOverride from "./output/lut_trans_override.wgsl?raw";
 import shaderLutTrans from "./output/lut_trans.wgsl?raw";
@@ -837,8 +827,6 @@ let oneCall: userDefineEventCall = {
   call: (scope: Scene) => {
     timer += 0.016667;
 
-
-
     // st_uniform_toyViews.u_mouse_btn[0] = -2;
     // st_uniform_toyViews.u_mouse_xy[0] = 0;
     // st_uniform_toyViews.u_mouse_xy[1] = 0;
@@ -855,4 +843,3 @@ let oneCall: userDefineEventCall = {
 scene.addUserDefineEvent(oneCall);
 
 scene.run();
-

@@ -1,97 +1,88 @@
-
 import {
-  PerspectiveCamera,
-  IV_Scene,
-  initScene,
-  BoxGeometry,
-  ColorMaterial,
-  IV_MeshEntity,
-  Mesh,
-  IV_AnimationValue,
-  E_AnimationPlayType,
-  E_AnimationTargetType,
-  E_InterpolationModes,
-  I_AnimationSampler,
-  KeyFrameAnimation,
-} from "@we3d";
+    PerspectiveCamera,
+    IV_Scene,
+    initScene,
+    BoxGeometry,
+    ColorMaterial,
+    IV_MeshEntity,
+    Mesh,
+    IV_AnimationValue,
+    E_AnimationPlayType,
+    E_AnimationTargetType,
+    E_InterpolationModes,
+    I_AnimationSampler,
+    KeyFrameAnimation,
+} from '@we3d';
 
 declare global {
-  interface Window {
-    scene: any
-    DC: any
-    keyFrame: any
-  }
+    interface Window {
+        scene: any;
+        DC: any;
+        keyFrame: any;
+    }
 }
 let input: IV_Scene = {
-  canvas: "render",
-  backgroudColor: [0, 0, 0, 1],
-  // reversedZ:true,
+    canvas: 'render',
+    backgroudColor: [0, 0, 0, 1],
+    // reversedZ:true,
 };
 let scene = await initScene({
-  initConfig: input,
+    initConfig: input,
 });
 window.scene = scene;
 
 let radius = 2;
 let Y = 0;
 let camera = new PerspectiveCamera({
-  fov: (2 * Math.PI) / 5,
-  aspect: scene.aspect,
-  near: 0.01,
-  far: 100,
-  position: [0, 0, 10],
-  lookAt: [0, 0, 0],
-  controlType: "arcball",
+    fov: (2 * Math.PI) / 5,
+    aspect: scene.aspect,
+    near: 0.01,
+    far: 100,
+    position: [0, 0, 10],
+    lookAt: [0, 0, 0],
+    controlType: 'arcball',
 });
 await scene.add(camera);
-
-
-
-
 
 let boxGeometry = new BoxGeometry();
 
 let colorMaterial = new ColorMaterial({
-  color: [0, 0.1, 0.2, 1]
+    color: [0, 0.1, 0.2, 1],
 });
 
 let inputMesh: IV_MeshEntity = {
-  attributes: {
-    geometry: boxGeometry,
-  },
-  material: colorMaterial,
-  wireFrame: {
-    color: [1, 1, 1, 1],
-    enable: true,
-    // wireFrameOnly: true,
-  },
-  position: [0.5, 0, 0],
-}
+    attributes: {
+        geometry: boxGeometry,
+    },
+    material: colorMaterial,
+    wireFrame: {
+        color: [1, 1, 1, 1],
+        enable: true,
+        // wireFrameOnly: true,
+    },
+    position: [0.5, 0, 0],
+};
 let mesh = new Mesh(inputMesh);
 console.log(mesh);
 let meshEntity = await scene.add(mesh);
 
-
 let sampler: I_AnimationSampler = {
-  interpolation: E_InterpolationModes.linear,
-  frames: new Float32Array([0, 0.25, 0.5, 0.75, 1]),
-  values: new Float32Array([
-    0, 0, 0, 1,
-    0, 0, 0.7070000171661377, 0.7070000171661377,
-    0, 0, 1, 0,
-    0, 0, 0.7070000171661377, -0.7070000171661377,
-    0, 0, 0, 1
-  ]),
-  target: E_AnimationTargetType.quaternion,
-  targetStride: 4
-}
+    interpolation: E_InterpolationModes.linear,
+    frames: new Float32Array([0, 0.25, 0.5, 0.75, 1]),
+    values: new Float32Array([
+        0, 0, 0, 1, 0, 0, 0.7070000171661377, 0.7070000171661377, 0, 0, 1, 0, 0, 0,
+        0.7070000171661377, -0.7070000171661377, 0, 0, 0, 1,
+    ]),
+    target: E_AnimationTargetType.quaternion,
+    targetStride: 4,
+};
 let aniValue: IV_AnimationValue = {
-  parent: meshEntity,
-  sampler: sampler,
-}
+    parent: meshEntity,
+    sampler: sampler,
+};
 
 let keyFrame: KeyFrameAnimation = new KeyFrameAnimation(aniValue);
 window.keyFrame = keyFrame;
 
 // e2e 约定：固定播放 1 秒后停在当前帧，保证截图基线稳定
-keyFrame.play({ speed: 1, mode: { type: E_AnimationPlayType.time, time: 1 }, stopToFirst: false })
+keyFrame.play({ speed: 1, mode: { type: E_AnimationPlayType.time, time: 1 }, stopToFirst: false });

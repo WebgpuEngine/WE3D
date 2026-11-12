@@ -1,13 +1,4 @@
-
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-import { IV_Scene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { SphereGeometry } from "../../../../src/we/core/geometry/sphereGeometry";
-import { PlaneGeometry } from "../../../../src/we/core/geometry/planeGeomertry";
-import { E_TransparentType } from "../../../../src/we/core/material/base";
+import { PerspectiveCamera, IV_Scene, initScene, BoxGeometry, ColorMaterial, IV_MeshEntity, Mesh, SphereGeometry, PlaneGeometry, E_TransparentType } from '@we3d';
 
 declare global {
   interface Window {
@@ -40,7 +31,6 @@ let camera = new PerspectiveCamera({
 });
 await scene.add(camera);
 
-
 ////////////////////////////////////
 //plane
 let planeGeometry = new PlaneGeometry({
@@ -58,7 +48,6 @@ let colorMaterial1 = new ColorMaterial({
   }
 });
 
-
 let inputMesh1: IV_MeshEntity = {
   attributes: {
     geometry: planeGeometry,
@@ -70,8 +59,6 @@ let inputMesh1: IV_MeshEntity = {
 }
 let mesh1 = new Mesh(inputMesh1);
 await scene.add(mesh1);
-
-
 
 let colorMaterial2 = new ColorMaterial({
   color: [0, 1, 0, 1]
@@ -88,4 +75,3 @@ let inputMesh2: IV_MeshEntity = {
 }
 let mesh2 = new Mesh(inputMesh2);
 await scene.add(mesh2);
-

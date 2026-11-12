@@ -122,7 +122,7 @@ export class Pickup extends BaseInputControl {
     async update() {
         if (typeof this.input.action == 'function') {
             if (this._event != undefined) {
-                await (this.input.action as (scope: any, event: Event) => Promise<any>)(
+                await (this.input.action as (scope: any, event: Event) => Promise<void>)(
                     this,
                     this._event!,
                 );

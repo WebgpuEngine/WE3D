@@ -107,10 +107,10 @@ export abstract class BaseAnimation implements I_UUID {
         }
         this.parent.Animation.push(this);
     }
-    _manager: any;
+    _manager: AnimationManager | undefined;
     destroy(): void {
         this._isDestroy = true;
-        this.manager.remove(this as any);
+        this.manager.remove(this);
         if (this.interpolator != undefined) {
             this.interpolator.destroy();
         }

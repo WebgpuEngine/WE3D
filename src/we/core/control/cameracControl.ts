@@ -45,7 +45,7 @@ export interface InputForCamera {
     readonly pointer: PointerEvent | MouseEvent | TouchEvent | undefined;
     readonly key: KeyboardEvent | undefined;
 }
-export type InputHandlerForCamera = (this: any) => InputForCamera;
+export type InputHandlerForCamera = (this: void) => InputForCamera;
 
 export interface IV_CamreaControl {
     // window: Window,
@@ -78,7 +78,12 @@ export abstract class CamreaControl extends BaseInputControl {
     _pointer: PointerEvent | MouseEvent | TouchEvent | undefined;
     _key: KeyboardEvent | undefined;
 
-    event: Array<{ target: any; type: string; callback: (this: any) => void; option: any }> = [];
+    event: Array<{
+        target: EventTarget;
+        type: string;
+        callback: (this: void, event: Event) => void;
+        option?: boolean | AddEventListenerOptions;
+    }> = [];
 
     // inputHandler: InputHandlerForCamera;
 
@@ -105,7 +110,7 @@ export abstract class CamreaControl extends BaseInputControl {
         this.removeRegisterEvent(E_InputEvent.pointermove, E_InputPriority.broadcastEnd, this);
         this.removeRegisterEvent(E_InputEvent.wheel, E_InputPriority.broadcastEnd, this);
     }
-    _destroy(): any {
+    _destroy(): void {
         this.removeRegisterEvent(E_InputEvent.keydown, E_InputPriority.broadcastEnd, this);
         this.removeRegisterEvent(E_InputEvent.keyup, E_InputPriority.broadcastEnd, this);
         this.removeRegisterEvent(E_InputEvent.pointerdown, E_InputPriority.broadcastEnd, this);
@@ -348,7 +353,7 @@ export abstract class CamreaControl extends BaseInputControl {
         }
         return false;
     }
-    abstract init(): any;
+    abstract init(): void;
     abstract update(deltaTime: number): boolean;
 
     set camera(camera: BaseCamera) {

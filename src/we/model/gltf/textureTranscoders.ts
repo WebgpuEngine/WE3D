@@ -18,7 +18,8 @@ export type T_TextureTranscoder = (bytes: Uint8Array) => Promise<ImageBitmap>;
 
 /** 内置默认转码器：只带加载逻辑，不打包 wasm */
 const DEFAULT_TRANSCODERS: Record<string, T_TextureTranscoder> = {
-    [KTX2_MIME_TYPE]: async (bytes) => transcodeKTX2ToImageBitmap(bytes, await createBrowserBasisTranscoder()),
+    [KTX2_MIME_TYPE]: async (bytes) =>
+        transcodeKTX2ToImageBitmap(bytes, await createBrowserBasisTranscoder()),
 };
 
 const overrides = new Map<string, T_TextureTranscoder>();

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import type { Scene } from '../scene/scene';
 
 // node 环境缺失的全局：
 // 1) inputManager 导入链（→ scene → GPU 常量）在模块顶层引用 GPUTextureUsage 等；
@@ -23,19 +24,20 @@ beforeAll(() => {
     ]) {
         flags[k] = num;
     }
-    (globalThis as any).GPUTextureUsage = { ...flags };
-    (globalThis as any).GPUBufferUsage = { ...flags };
-    (globalThis as any).GPUMapMode = { READ: 1, WRITE: 2 };
-
-    (globalThis as any).document = { addEventListener: () => {} };
-    (globalThis as any).window = { addEventListener: () => {} };
+    Object.assign(globalThis, {
+        GPUTextureUsage: { ...flags },
+        GPUBufferUsage: { ...flags },
+        GPUMapMode: { READ: 1, WRITE: 2 },
+        document: { addEventListener: () => {} },
+        window: { addEventListener: () => {} },
+    });
 });
 
 function makeScene() {
     return {
         device: undefined,
         canvas: { addEventListener: () => {}, focus: () => {} },
-    } as any;
+    } as unknown as Scene;
 }
 
 describe('InputManager — P0-2 intercept 优先级', () => {

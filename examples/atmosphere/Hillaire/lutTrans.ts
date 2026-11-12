@@ -1,8 +1,6 @@
-import { IV_Scene } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
+import { IV_Scene, initScene, IV_ComputeCommand, ComputeCommand } from '@we3d';
 
 import shader from "./shader/lut/exp_lut_trans.wgsl?raw";
-import { IV_ComputeCommand, ComputeCommand } from "../../../src/we/core/command/ComputeCommand";
 
 declare global {
   interface Window {

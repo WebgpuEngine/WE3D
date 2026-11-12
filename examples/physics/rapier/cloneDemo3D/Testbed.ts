@@ -3,9 +3,7 @@ import { Gui } from "./Gui";
 import type { DebugInfos } from "./Gui";
 import { xxhash128 } from "hash-wasm";
 import type * as RAPIER from "@dimforge/rapier3d";
-import { Scene } from "../../../../src/we/core/scene/scene";
-import { eventOfScene, userDefineEventCall } from "../../../../src/we/core/scene/base";
-
+import { Scene, eventOfScene, userDefineEventCall } from '@we3d';
 
 type RAPIER_API = typeof import("@dimforge/rapier3d");
 
@@ -120,7 +118,6 @@ export class Testbed {
         // this.scene.defaultCamera.updateByPositionDirection(this.scene.defaultCamera.Position, this.scene.defaultCamera.LookAt, false);//这里需要是world position
         // this.scene.defaultCamera.directUpdateCameraPosition();
 
-
     }
 
     // 切换到指定的演示场景
@@ -225,7 +222,6 @@ export class Testbed {
 
         // requestAnimationFrame(() => this.run());
         setTimeout(() => this.run(), 16.667);
-
 
     }
 }

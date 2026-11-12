@@ -1,15 +1,11 @@
-import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall } from "../../../src/we/core/scene/base";
-import { initScene } from "../../../src/we/core/scene/fn";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import { IV_ComputeCommand, ComputeCommand } from "../../../src/we/core/command/ComputeCommand";
+import { E_ToneMappingType, eventOfScene, IV_Scene, userDefineEventCall, initScene, IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_ComputeCommand, ComputeCommand, Scene, E_renderPassName } from '@we3d';
+
 import shaderComputeTrans from "./shader/lut/exp_lut_trans.wgsl?raw";
 import shaderComputeMulitScatt from "./shader/lut/exp_lut_multipleScatter.wgsl?raw";
 import shaderComputeSkyview from "./shader/lut/exp_lut_skyview.wgsl?raw";
 import shaderComputeAP from "./shader/lut/exp_lut_ap.wgsl?raw";
 import shaderRenderRayMarch from "./shader/lut/renderRayMarching_renderOnly.wgsl?raw";
 import shaderVS from "./shader/ndc_base_1.wgsl?raw";
-import { Scene } from "../../../src/we/core/scene/scene";
-import { E_renderPassName } from "../../../src/we/core/scene/renderManager";
 
 declare global {
   interface Window {
@@ -772,8 +768,6 @@ let timer = 0;
 let oneCall: userDefineEventCall = {
   call: (scope: Scene) => {
     timer += 0.016667;
-
-
 
     // st_uniform_toyViews.u_mouse_btn[0] = -2;
     // st_uniform_toyViews.u_mouse_xy[0] = 0;

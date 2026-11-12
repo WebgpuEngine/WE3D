@@ -1,9 +1,7 @@
 /**
  * 使用 顶点属性中vertexStepMode的instance模式，绘制三个四边形
  */
-import { DrawCommandGenerator, uniformEntries, uniformGroup, type IV_DrawCommandGenerator, type IV_DC } from "../../../src/we/core/command/DrawCommandGenerator";
-import type { IV_Scene } from "../../../src/we/core/scene/base";
-import { Scene } from "../../../src/we/core/scene/scene";
+import { DrawCommandGenerator, type IV_DrawCommandGenerator, type IV_DC, type IV_Scene, Scene } from '@we3d';
 
 declare global {
   interface Window {
@@ -125,7 +123,6 @@ const oneTriangleColorArray = [
 // const oneTriangleIndexArray = [
 //   0, 1, 2, 3
 // ];
-
 
 let rpd = scene.getRenderPassDescriptorForNDC();
 let depthStencil = scene.depthStencil;

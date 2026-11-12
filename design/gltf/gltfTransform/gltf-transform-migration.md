@@ -2,7 +2,7 @@
 
 > 状态：✅ **迁移完成**（2026-11-06 Gate 0 数据级别替换验证全绿；§八 8 项决策全部收敛）；Phase 0A / 0B / 1 / 2 / 3 / 3B 全部完成：默认解析层为 gltf-transform、扩展运行时依赖通用自动解析、旧 loader 与 9 个 `@loaders.gl` 依赖已清、`e2e-cases/gltf/` 21 个用例与 GPU 截图基线已建、`npm run ci` 全绿。唯一遗留：`src/@loaders.gl/` / `public/@loaders.gl/` 物理目录因工作区安全删除机制拒绝未删除（已从 git 索引移除并加入 `.gitignore`），需人工清理，见 §七「Phase 3 / 3B 执行结果」
 > 日期：2026-11-05（2026-11-06 补充 Gate 0、落地文件命名、验证分层、数据来源、全部决策记录与 Gate 0 执行结果）
-> 关联：`design/engineering/pending-work.md` §1.4、`design/workBuddy/20260923项目与gltf分析/04-迁移到glTF-Transform方案.md`（下称「04 号文档」）、`03-gltf模块深度分析.md`、`AGENTS.md`
+> 关联：`design/engineering/meta/pending-work.md` §1.4、`design/workBuddy/20260923项目与gltf分析/04-迁移到glTF-Transform方案.md`（下称「04 号文档」）、`03-gltf模块深度分析.md`、`AGENTS.md`
 > 本文是 04 号文档的**实施级细化与勘误**，两份互补：04 号负责选型与阶段划分，本文负责「文件关系 + 每个函数怎么改 + 落地门禁」。
 > **两项用户决策（2026-11-06）**：① 方案必须先通过「gltf-transform 数据对齐测试」才能确认（§3.6 Gate 0）；② 落地方式为**新建 `src/we/model/gltf/gltfTransformLoaders.ts` + 新 class `GltfDataAtTransform`**，整体取代 `gltfAtLoaders.ts` 及 `GltfDataAtLoaders`（§3.2 / §四 / §五）。
 
@@ -476,7 +476,7 @@ async getImage(index: number) {
 | `examples/model/gltf/base/draco/LittlestTokyo.ts:71-77` | `beforeGltfInit` 里的注释代码写的是 `dataLoader.gltfJson...`，新 loader 保留 `gltfJson` 字段即可；若将来启用，建议改走 `dataLoader.gltfJSON()` |
 | `AGENTS.md` | Phase 3 后把「`src/@loaders.gl` 待废弃」「发布约定·external」相关描述更新 |
 | `design/gltf/gltfTransform/gltf-migration-visual-check.md` | **Phase 0B 新建**：迁移期人工视觉核对记录表（35 个示例逐项「结果 / 差异说明 / 日期 / 验证人」），属设计产出，放 `design/`；截图二进制不提交 |
-| `design/engineering/pending-work.md` | §1.4 状态 ⏸ → 🔵（本轮）→ ✅（**Phase 3B e2e 验证完成后**才关闭），§二 变更记录追加；迁移期 `ci:no-e2e` 的门禁偏差也在此登记 |
+| `design/engineering/meta/pending-work.md` | §1.4 状态 ⏸ → 🔵（本轮）→ ✅（**Phase 3B e2e 验证完成后**才关闭），§二 变更记录追加；迁移期 `ci:no-e2e` 的门禁偏差也在此登记 |
 
 **`src/we/index.ts` 在迁移期无改动，但在 Phase 3B 必须补一处**：glTF API 目前没进 curated barrel，而按 `AGENTS.md` §一.5 e2e 用例必须从 `@we3d` 导入；因此「迁移完成后 e2e 视觉验证」前要在 `src/we/index.ts` 显式追加 `createGLTFModel`（及需要的类型），并跑 `npm run check:exports` 兜底。新增的 `GltfDataAtTransform` 本身仍属于内部实现，不进 barrel。
 
@@ -514,7 +514,7 @@ async getImage(index: number) {
 
 **与 `AGENTS.md` §三.1 的衔接（临时偏差已由 §八 决策 6 同意）**：项目约定「涉及渲染 / e2e / 渲染路径改动，先 `test:baseline` 再 `npm run ci` 全绿后提交」。本次决策把 e2e 视觉验证后移到迁移完成后，故：
 
-- **迁移期中间提交**：以 `npm run ci:no-e2e`（= 云端 `ci.yml`：lint + typecheck + 单测 + browser test + check:exports + build:lib）为门禁，视觉由 2A 人工验证兜底。这是对 §三.1 的**临时偏差**，用户已同意；仍须在 `design/engineering/pending-work.md` 与提交信息中显式记录。
+- **迁移期中间提交**：以 `npm run ci:no-e2e`（= 云端 `ci.yml`：lint + typecheck + 单测 + browser test + check:exports + build:lib）为门禁，视觉由 2A 人工验证兜底。这是对 §三.1 的**临时偏差**，用户已同意；仍须在 `design/engineering/meta/pending-work.md` 与提交信息中显式记录。
 - **例外（不可延后）**：若 2A 人工核对发现任何渲染结果变化，该次提交必须立即按 §三.1 补 `npm run test:baseline` + `npm run ci`，不得等迁移完成。
 - **迁移完成的最终提交**：严格回到 §三.1 —— 建 e2e 用例 → GPU 基线 → `npm run ci` 全绿后提交，基线随代码同一次提交。
 
@@ -524,7 +524,7 @@ async getImage(index: number) {
 3. **新建 `gltfTransformLoaders.ts` 的「数据层版本」**（`GltfDataAtTransform`：`init()` + 18 个结构 getter + accessor 数值 + 图片 + 外提的 `getAccessorTypeForGPUVertexFormat` 纯函数），不改任何现有渲染代码。
 4. 写 `gltfTransformParity.browser.test.ts`（新旧 loader 同 URL 逐项对比）+ `accessorFormat.test.ts`（24 组映射）；首次运行由旧 `GltfDataAtLoaders` 生成 `tests/fixtures/gltf-parity/*.json` 并提交 git。
 5. 判定：`npm run test:run` + `npm run test:browser` 按 §3.6 F 的标准**必须 100% 通过**；未通过则输出差异表、修正 §3.3 / §四 映射后重跑。
-6. **全绿 → 方案确定**：更新本文状态为「已验证」、`design/engineering/pending-work.md` 记录；才允许进入 Phase 0B / Phase 1。此阶段**不改 `gltf.ts`、不切默认 loader、不删 fork、不建 e2e 用例、不生成 GPU 基线**。
+6. **全绿 → 方案确定**：更新本文状态为「已验证」、`design/engineering/meta/pending-work.md` 记录；才允许进入 Phase 0B / Phase 1。此阶段**不改 `gltf.ts`、不切默认 loader、不删 fork、不建 e2e 用例、不生成 GPU 基线**。
 
 ### Phase 0B · 迁移期人工视觉验证准备（**第 2 类 A，方案确认后**）
 1. 建人工核对记录表 `design/gltf/gltfTransform/gltf-migration-visual-check.md`：以 §3.7 清单为骨架，为 `public/models/gltf/base/**` **24 个示例每个单列一行**（含 `*.copy.gltf` 副本、`line/` 空目录登记），再为 `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态各列一行；并关联 `examples/model/gltf/` 中对应的展示页面（35 个）便于人工打开。记录表需按「已入库 / 本地 only」分列：引用 LittlestTokyo / ford / heart / hen 等未入库资产的页面只作本地人工参考，不进 CI 验收。
@@ -544,7 +544,7 @@ async getImage(index: number) {
 - 门禁：`npm run ci:no-e2e`；**若人工核对发现渲染变化，立即按 `AGENTS.md` §三.1 补基线并跑 `npm run ci`**。
 
 ### Phase 3 · 清理（单独 commit，唯一不可逆）
-- 删 `gltfAtLoaders.ts`、`src/@loaders.gl/**`、`public/@loaders.gl/**`、`src/loaders-gl.d.ts`、空文件 `PBR/gltfMeRoPBR.ts`；清 9 个 `@loaders.gl` 依赖与所有 exclude/ignore 配置；6 个示例换类；更新 `AGENTS.md` / `design/engineering/pending-work.md`。
+- 删 `gltfAtLoaders.ts`、`src/@loaders.gl/**`、`public/@loaders.gl/**`、`src/loaders-gl.d.ts`、空文件 `PBR/gltfMeRoPBR.ts`；清 9 个 `@loaders.gl` 依赖与所有 exclude/ignore 配置；6 个示例换类；更新 `AGENTS.md` / `design/engineering/meta/pending-work.md`。
 - 门禁：`npm run ci:no-e2e`（迁移期中间提交口径）；本阶段结束即视为**迁移完成**。
 
 ### Phase 3B · 迁移完成后的 e2e 视觉回归（**第 2 类 B，最终提交门禁**）
@@ -552,7 +552,7 @@ async getImage(index: number) {
 2. 按 §3.7 清单新增 `e2e-cases/gltf/*.html`：`gltf/base/**` 24 个示例 + `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态，用例从 `@we3d` 导入；资产只用两个基础目录内**已入库**的文件（不含 §3.7 ⑥ 列出的 Box 之外未入库资产），保证 CI 可复现；跑 `npm run e2e-index` 刷新索引。
 3. `npm run test:baseline`（**GPU 硬件版**产出截图基线）→ `git add tests/e2e/baseline/`；基线**与代码同一次提交**。
 4. `npm run ci`（含 `test:e2e`）全绿；可选 `npm run test:e2e:software` 做软件渲染回归。
-5. 更新 `design/engineering/pending-work.md` §1.4 为 ✅；至此第 2 类视觉验证闭环。
+5. 更新 `design/engineering/meta/pending-work.md` §1.4 为 ✅；至此第 2 类视觉验证闭环。
 
 ### Phase 4 · 增强 / 已排期的后期优化
 

@@ -37,7 +37,9 @@ export async function predecodeDracoViaWorker(jsonDoc: JSONDocument): Promise<JS
     const { dracoDir, dracoWorkerUrl } = getRuntimeAssetsConfig();
     const worker = new Worker(dracoWorkerUrl);
     try {
-        const transfer = Object.values(jsonDoc.resources).map((value) => value.buffer as ArrayBuffer);
+        const transfer = Object.values(jsonDoc.resources).map(
+            (value) => value.buffer as ArrayBuffer,
+        );
         const request: IDracoPredecodeRequest = {
             type: 'predecode',
             json: jsonDoc.json,
@@ -45,7 +47,8 @@ export async function predecodeDracoViaWorker(jsonDoc: JSONDocument): Promise<JS
             dracoDir,
         };
         const result = await new Promise<IWorkerOk | IWorkerError>((resolve) => {
-            worker.onmessage = (event: MessageEvent<IWorkerOk | IWorkerError>) => resolve(event.data);
+            worker.onmessage = (event: MessageEvent<IWorkerOk | IWorkerError>) =>
+                resolve(event.data);
             worker.onerror = (event) => resolve({ type: 'error', message: event.message });
             worker.postMessage(request, transfer);
         });

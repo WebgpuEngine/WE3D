@@ -1,17 +1,5 @@
 import { Mat4, mat4, Vec4, vec4 } from "wgpu-matrix";
-import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC } from "../../../../src/we/core/command/DrawCommandGenerator";
-import { IV_Scene, userDefineEventCall, eventOfScene } from "../../../../src/we/core/scene/base";
-import { initScene } from "../../../../src/we/core/scene/fn";
-import { E_renderPassName } from "../../../../src/we/core/scene/renderManager";
-import { Scene } from "../../../../src/we/core/scene/scene";
-import { weGetBinaryByUrl, weGetBinaryResourceFromGzip } from "../../../../src/we/core/base/file/getFile";
-import { Texture3D } from "../../../../src/we/core/texture/texture3D";
-import { VolumeTextureMaterial } from "../../../../src/we/core/material/standard/volumeTexture3DMaterial.ts";
-import { BoxGeometry } from "../../../../src/we/core/geometry/boxGeometry";
-import { IV_MeshEntity, Mesh } from "../../../../src/we/core/entity/mesh/mesh";
-import { ColorMaterial } from "../../../../src/we/core/material/standard/colorMaterial";
-import { PerspectiveCamera } from "../../../../src/we/core/camera/perspectiveCamera";
-
+import { IV_DrawCommandGenerator, DrawCommandGenerator, IV_DC, IV_Scene, userDefineEventCall, eventOfScene, initScene, E_renderPassName, Scene, weGetBinaryByUrl, weGetBinaryResourceFromGzip, Texture3D, VolumeTextureMaterial, BoxGeometry, IV_MeshEntity, Mesh, ColorMaterial, PerspectiveCamera } from '@we3d';
 
 declare global {
   interface Window {
@@ -66,7 +54,6 @@ let volumeMaterial = new VolumeTextureMaterial({
   maxSteps: 64,
 });
 
-
 let boxGeometry = new BoxGeometry(
   {
     width: 2,
@@ -101,4 +88,3 @@ window.instanceMash = await scene.add({
   rotate: [1, 0, 0, Math.PI],
 });
 volumeMaterial.setEntityWorldMatrix(window.instanceMash.matrixWorld);
-
