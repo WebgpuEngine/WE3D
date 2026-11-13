@@ -74,7 +74,7 @@ describe('NodeObject.update — P0-7 DirectInWorldSpace 节点进 scene.Box3s', 
     });
 });
 
-describe('newNode(parent) — 工厂创建新节点并继承父场景', () => {
+describe('newNode(parent, NodeObject) — DI 工厂创建新节点并继承父场景', () => {
     it('返回新 NodeObject 实例，Parent 指向 parent，scene 继承 parent.scene', async () => {
         const { NodeObject, newNode } = await import('./nodeObject');
 

@@ -45,7 +45,7 @@ for (let j = 1; j < primitives.length; j++) {
         T_ModelResKind.entity, `${meshID}_${j}`,
     )) as BaseEntity;
     if (!childEntity) continue;
-    const childNode = await newNode(oneNode);
+    const childNode = await newNode(oneNode, NodeObject);
     childNode.Name = `${oneNode.Name} ${j}`;
     await childNode.attachEntity(childEntity);
     await oneNode.addChild(childNode);
