@@ -107,6 +107,164 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     });
 });
 
+describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+    });
+
+    const mockDevice = {
+        createPipelineLayout: () => ({}),
+        createRenderPipeline: () => ({}),
+    } as unknown as GPUDevice;
+
+    function makeGenerator() {
+        const resources = { pipeline: new Map<string, unknown>() };
+        const scene = {
+            device: mockDevice,
+            resourcesGPU: resources,
+            MSAA: false,
+            clock: {},
+            pointers: {},
+            depthMode: {
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                },
+                depthStencilTT: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: false,
+                    depthCompare: 'less',
+                },
+                depthStencilMSAAinfo: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: false,
+                    depthCompare: 'less',
+                },
+                depthStencilMSAA: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                },
+            },
+        } as unknown as Scene;
+        const generator = new DrawCommandGenerator({ scene });
+        return { resources, generator };
+    }
+
+    const makeValue = (overrides: Record<string, unknown> = {}) => ({
+        label: 'p0-1',
+        data: {},
+        render: { vertex: { code: 'x', entryPoint: 'vs' }, ...overrides },
+    });
+
+    it('仅 bindGroupLayouts 不同 → 不复用，应创建两个 pipeline', () => {
+        const { resources, generator } = makeGenerator();
+        const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+        const fragment = { fs: undefined, name: 'fs-md5' };
+        generator.initPipeLine(makeValue(), vertex, fragment, [{ label: 'layout-A' }]);
+        generator.initPipeLine(makeValue(), vertex, fragment, [{ label: 'layout-B' }]);
+        expect(resources.pipeline.size).toBe(2);
+    });
+
+    it('仅 fragment.targets 不同 → 不复用，应创建两个 pipeline', () => {
+        const { resources, generator } = makeGenerator();
+        const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+        const fragmentA = {
+            fs: { module: {}, entryPoint: 'fs', targets: [{ format: 'bgra8unorm' }] },
+            name: 'fs-md5',
+        };
+        const fragmentB = {
+            fs: { module: {}, entryPoint: 'fs', targets: [{ format: 'rgba16float' }] },
+            name: 'fs-md5',
+        };
+        generator.initPipeLine(makeValue(), vertex, fragmentA, []);
+        generator.initPipeLine(makeValue(), vertex, fragmentB, []);
+        expect(resources.pipeline.size).toBe(2);
+    });
+
+    it('仅 vertex.buffers 不同 → 不复用，应创建两个 pipeline', () => {
+        const { resources, generator } = makeGenerator();
+        const vertexA = {
+            vs: {
+                module: {},
+                entryPoint: 'vs',
+                buffers: [{ arrayStride: 12, attributes: [] }],
+            },
+            name: 'vs-md5',
+        };
+        const vertexB = {
+            vs: {
+                module: {},
+                entryPoint: 'vs',
+                buffers: [{ arrayStride: 24, attributes: [] }],
+            },
+            name: 'vs-md5',
+        };
+        const fragment = { fs: undefined, name: 'fs-md5' };
+        generator.initPipeLine(makeValue(), vertexA, fragment, []);
+        generator.initPipeLine(makeValue(), vertexB, fragment, []);
+        expect(resources.pipeline.size).toBe(2);
+    });
+
+    it('仅 vertex.constants / vertex.entryPoint 不同 → 不复用', () => {
+        // constants 不同
+        {
+            const { resources, generator } = makeGenerator();
+            const vertexA = {
+                vs: { module: {}, entryPoint: 'vs', constants: { scale: 1 } },
+                name: 'vs-md5',
+            };
+            const vertexB = {
+                vs: { module: {}, entryPoint: 'vs', constants: { scale: 2 } },
+                name: 'vs-md5',
+            };
+            const fragment = { fs: undefined, name: 'fs-md5' };
+            generator.initPipeLine(makeValue(), vertexA, fragment, []);
+            generator.initPipeLine(makeValue(), vertexB, fragment, []);
+            expect(resources.pipeline.size).toBe(2);
+        }
+        // entryPoint 不同
+        {
+            const { resources, generator } = makeGenerator();
+            const vertexA = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+            const vertexB = { vs: { module: {}, entryPoint: 'vsAlt' }, name: 'vs-md5' };
+            const fragment = { fs: undefined, name: 'fs-md5' };
+            generator.initPipeLine(makeValue(), vertexA, fragment, []);
+            generator.initPipeLine(makeValue(), vertexB, fragment, []);
+            expect(resources.pipeline.size).toBe(2);
+        }
+    });
+
+    it('key 快照：完整 descriptor 稳定序列化结果固定（含 targets / buffers 等维度）', () => {
+        const { resources, generator } = makeGenerator();
+        const vertex = {
+            vs: {
+                module: {},
+                entryPoint: 'vs',
+                buffers: [{ arrayStride: 12, attributes: [] }],
+                constants: {},
+            },
+            name: 'vs-md5',
+        };
+        const fragment = {
+            fs: {
+                module: {},
+                entryPoint: 'fs',
+                targets: [{ format: 'bgra8unorm' }],
+                constants: {},
+            },
+            name: 'fs-md5',
+        };
+        generator.initPipeLine(makeValue({ depthStencil: false }), vertex, fragment, []);
+        expect([...resources.pipeline.keys()]).toEqual([
+            '{"bindGroupLayouts":[],"depthStencil":undefined,"fragment":{"code":"fs-md5","constants":{},"entryPoint":"fs","targets":[{"format":"bgra8unorm"}]},"multisample":undefined,"primitive":undefined,"vertex":{"buffers":[{"arrayStride":12,"attributes":[]}],"code":"vs-md5","constants":{},"entryPoint":"vs"}}',
+        ]);
+    });
+});
+
 /**
  * 第 3 期巨型文件拆分的行为特征基线（C0）：
  * C8 会把类型块 / stableStringify / WGSL 格式表 / initVertexPart 抽到 4 个新模块，

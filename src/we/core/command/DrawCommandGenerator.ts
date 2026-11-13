@@ -64,6 +64,10 @@ export class DrawCommandGenerator {
 
     clock: Clock;
 
+    /** pipeline 缓存 key 中 bindGroupLayout 的稳定标识：同一 GPUBindGroupLayout 对象 → 同一 id，不同对象 → 不同 id */
+    private bindGroupLayoutIds = new WeakMap<GPUBindGroupLayout, number>();
+    private bindGroupLayoutIdCounter = 0;
+
     constructor(inputValue: IV_DrawCommandGenerator) {
         this.device = inputValue.scene.device;
         this.scene = inputValue.scene;
@@ -686,96 +690,117 @@ export class DrawCommandGenerator {
         }
         return { vertex, fragment, vertexName: md5OfVScode, fragmentName: md5OfFScode };
     }
+    /**
+     * 为 GPUBindGroupLayout 分配稳定 id，作为 pipeline 缓存 key 的 layout 列表标识。
+     * 同一对象返回同一 id、不同对象返回不同 id（WeakMap 生命周期随 layout 对象，不阻止 GC）。
+     */
+    private getBindGroupLayoutId(layout: GPUBindGroupLayout): number {
+        let id = this.bindGroupLayoutIds.get(layout);
+        if (id === undefined) {
+            id = this.bindGroupLayoutIdCounter++;
+            this.bindGroupLayoutIds.set(layout, id);
+        }
+        return id;
+    }
     initPipeLine(
         values: IV_DC,
         vertex: { vs: GPUVertexState; name: string },
         fragment: { fs: GPUFragmentState | undefined; name: string },
         DC_bindGroupLayouts: GPUBindGroupLayout[],
     ): GPURenderPipeline {
-        //0、创建cacheFlag
-        let cacheFlag: string[] = [];
-        //1、创建GPURenderPipelineDescriptor
-        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: values.label,
-            // label: "PipelineLayout@" + this.clock.now + " " + values.label,
-            bindGroupLayouts: DC_bindGroupLayouts,
-        };
-        //2、创建GPUPipelineLayout
-        const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-        const descriptor: GPURenderPipelineDescriptor = {
-            label: values.label,
-            vertex: vertex.vs,
-            layout: pipelineLayout,
-        };
-        //3、GPURenderPipelineDescriptor.其他部分
-        if (fragment.fs) descriptor.fragment = fragment.fs;
-        if (values.render.primitive) descriptor.primitive = values.render.primitive;
+        //1、组装 descriptor 的可序列化状态（layout 依赖 GPUPipelineLayout，延迟到未命中时创建）
+        const fragmentState = fragment.fs;
+        const primitiveState = values.render.primitive;
+        let multisampleState: GPUMultisampleState | undefined;
         if (this.MSAA && values.system && values.system.MSAA == 'MSAA') {
-            descriptor.multisample = {
+            multisampleState = {
                 count: 4,
             };
         }
-        //4、TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        //2、TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        let depthStencilState: GPUDepthStencilState | undefined;
         if (values.render.depthStencil !== false) {
             //如果有depthStencil输入，就使用它
             if (values.render.depthStencil) {
-                descriptor.depthStencil = values.render.depthStencil;
+                depthStencilState = values.render.depthStencil;
             } else {
                 if (values.transparent) {
                     //透明渲染，使用透明模板
-                    descriptor.depthStencil = this.scene.depthMode.depthStencilTT;
+                    depthStencilState = this.scene.depthMode.depthStencilTT;
                 } else {
                     //MSAA渲染，分成两种情况
                     if (this.MSAA) {
                         //MSAAinfo 渲染，使用深度模板(开启测试，不写入)
                         if (values.system && values.system.MSAA == 'MSAAinfo') {
-                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAAinfo;
+                            depthStencilState = this.scene.depthMode.depthStencilMSAAinfo;
                         }
                         //MSAA 渲染，使用深度模板(开启测试，写入)
                         else if (values.system && values.system.MSAA == 'MSAA') {
-                            // descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;//20260419 MSAA可以不需要depth，关闭
+                            // 20260419 MSAA可以不需要depth，关闭
                         }
                         //shadowmap 等渲染，使用深度模板(开启测试，写入)
                         else {
-                            descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                            depthStencilState = this.scene.depthMode.depthStencil;
                         }
                     }
                     //非MSAA渲染，使用深度模板(开启测试，写入)
                     else {
-                        descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                        depthStencilState = this.scene.depthMode.depthStencil;
                     }
                 }
             }
         }
 
         /**
-         * 缓存标志：将 descriptor 的真实 depthStencil / multisample 状态序列化为稳定 key，
-         * 避免字面量字符串导致「不同状态误命中同一缓存」。
-         * stableStringify 为键排序 JSON 序列化，保证内容相同则 key 相同、内容不同则 key 不同。
+         * 缓存 key：对最终 descriptor 的稳定序列化（键排序）。
+         * 除 GPU 对象引用外，全部可序列化部分（entryPoint / buffers / targets / constants /
+         * primitive / depthStencil / multisample / bindGroupLayouts 列表标识）整体走 stableStringify，
+         * 保证内容相同则 key 相同、任一维度不同则 key 不同，且不会因 JSON 内含逗号而失射。
          */
-        const depthStencilFlag = descriptor.depthStencil
-            ? stableStringify(descriptor.depthStencil)
-            : 'none';
-        const multisampleFlag = descriptor.multisample
-            ? stableStringify(descriptor.multisample)
-            : 'none';
-        cacheFlag = [
-            vertex.name,
-            fragment.name,
-            //primitive
-            values.render.primitive?.topology as string,
-            values.render.primitive?.cullMode as string,
-            values.render.primitive?.stripIndexFormat as string,
-            values.render.primitive?.frontFace as string,
-            depthStencilFlag,
-            multisampleFlag,
-        ];
-        const nameOfCacheFlag = cacheFlag.toString();
-        if (this.resources.pipeline.has(nameOfCacheFlag)) {
-            return this.resources.pipeline.get(nameOfCacheFlag)!;
+        const keyObject = {
+            vertex: {
+                code: vertex.name,
+                entryPoint: vertex.vs.entryPoint,
+                buffers: vertex.vs.buffers,
+                constants: vertex.vs.constants,
+            },
+            fragment: fragmentState
+                ? {
+                      code: fragment.name,
+                      entryPoint: fragmentState.entryPoint,
+                      targets: fragmentState.targets,
+                      constants: fragmentState.constants,
+                  }
+                : null,
+            bindGroupLayouts: DC_bindGroupLayouts.map((layout) =>
+                layout === undefined ? null : this.getBindGroupLayoutId(layout),
+            ),
+            primitive: primitiveState,
+            depthStencil: depthStencilState,
+            multisample: multisampleState,
+        };
+        const nameOfCacheFlag = stableStringify(keyObject);
+        const cached = this.resources.pipeline.get(nameOfCacheFlag);
+        if (cached) {
+            return cached;
         }
 
-        //3.6 生产pipeline
+        //3、未命中：创建 GPUPipelineLayout 与 pipeline
+        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+            label: values.label,
+            bindGroupLayouts: DC_bindGroupLayouts,
+        };
+        const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
+        const descriptor: GPURenderPipelineDescriptor = {
+            label: values.label,
+            vertex: vertex.vs,
+            layout: pipelineLayout,
+        };
+        if (fragmentState) descriptor.fragment = fragmentState;
+        if (primitiveState) descriptor.primitive = primitiveState;
+        if (multisampleState) descriptor.multisample = multisampleState;
+        if (depthStencilState) descriptor.depthStencil = depthStencilState;
+
         const pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
         this.resources.pipeline.set(nameOfCacheFlag, pipeline);
         return pipeline;
