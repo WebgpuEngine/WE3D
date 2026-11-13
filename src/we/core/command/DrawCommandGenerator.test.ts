@@ -265,6 +265,87 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
     });
 });
 
+describe('DrawCommandGenerator.initShaderModule — P0-2 targets 拷贝与越界保护', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+    });
+
+    function makeGenerator() {
+        const resources = { shaderModuleOfString: new Map<string, unknown>() };
+        const scene = {
+            device: { createShaderModule: () => ({}) },
+            resourcesGPU: resources,
+            MSAA: false,
+            clock: {},
+            pointers: {},
+            depthMode: {},
+            finalTarget: { NDC: true },
+        } as unknown as Scene;
+        const generator = new DrawCommandGenerator({ scene });
+        return { generator };
+    }
+
+    const blendA = {
+        color: { srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add' },
+        alpha: { srcFactor: 'one', dstFactor: 'zero', operation: 'add' },
+    };
+    const blendB = {
+        color: { srcFactor: 'one', dstFactor: 'zero', operation: 'add' },
+        alpha: { srcFactor: 'one', dstFactor: 'zero', operation: 'add' },
+    };
+
+    it('传入同一 targets 数组、两次不同 transparent → 两次 fragment.targets 的 blend 互不影响', () => {
+        const { generator } = makeGenerator();
+        const sharedTargets = [{ format: 'bgra8unorm' }];
+        const makeValue = (transparent: unknown[]) => ({
+            label: 'p0-2',
+            data: {},
+            render: {
+                vertex: { code: 'vs', entryPoint: 'vs' },
+                fragment: {
+                    code: 'fs',
+                    entryPoint: 'fs',
+                    aliasName: 'fs',
+                    targets: sharedTargets,
+                },
+            },
+            transparent,
+        });
+
+        const r1 = generator.initShaderModule(makeValue([blendA]), [], [], []);
+        const r2 = generator.initShaderModule(makeValue([blendB]), [], [], []);
+
+        // 两次结果各自的 blend 不同
+        expect(r1.fragment.targets[0].blend).toBe(blendA);
+        expect(r2.fragment.targets[0].blend).toBe(blendB);
+        // 调用方原始 targets 未被污染（blend 未写入）
+        expect(sharedTargets[0]).not.toHaveProperty('blend');
+        // 返回的 targets 是拷贝，非调用方引用，且两次互不共享
+        expect(r1.fragment.targets).not.toBe(sharedTargets);
+        expect(r2.fragment.targets).not.toBe(sharedTargets);
+        expect(r1.fragment.targets).not.toBe(r2.fragment.targets);
+    });
+
+    it('transparent 长度超过 targets 长度 → 不越界抛错，仅处理 targets 长度内的项', () => {
+        const { generator } = makeGenerator();
+        const targets = [{ format: 'bgra8unorm' }];
+        const values = {
+            label: 'p0-2-overflow',
+            data: {},
+            render: {
+                vertex: { code: 'vs', entryPoint: 'vs' },
+                fragment: { code: 'fs', entryPoint: 'fs', aliasName: 'fs', targets },
+            },
+            transparent: [blendA, blendB],
+        };
+        const result = generator.initShaderModule(values, [], [], []);
+        expect(result.fragment.targets).toHaveLength(1);
+        expect(result.fragment.targets[0].blend).toBe(blendA);
+    });
+});
+
 /**
  * 第 3 期巨型文件拆分的行为特征基线（C0）：
  * C8 会把类型块 / stableStringify / WGSL 格式表 / initVertexPart 抽到 4 个新模块，

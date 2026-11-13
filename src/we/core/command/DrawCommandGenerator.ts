@@ -635,7 +635,8 @@ export class DrawCommandGenerator {
             let targets: GPUColorTargetState[] = [];
             //如果没有指定targets,则使用默认的targets
             if (values.render.fragment.targets) {
-                targets = values.render.fragment.targets; //使用传入参数
+                // 拷贝 targets，避免后续 transparent 写入 blend 时污染调用方对象
+                targets = values.render.fragment.targets.map((t) => ({ ...t }));
             }
             //如果没有指定targets,则使用默认的targets
             else if (values.system && values.render.fragment.targets == undefined) {
@@ -658,7 +659,9 @@ export class DrawCommandGenerator {
             }
             //3.4.3 透明处理,alpha blend
             if (values.transparent) {
-                for (let i = 0; i < values.transparent.length; i++) {
+                // 越界保护：transparent 多出的项忽略，避免 targets[i] 为 undefined 抛错
+                const blendCount = Math.min(values.transparent.length, targets.length);
+                for (let i = 0; i < blendCount; i++) {
                     targets[i].blend = values.transparent[i];
                 }
             }
