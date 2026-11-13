@@ -73,3 +73,25 @@ describe('NodeObject.update — P0-7 DirectInWorldSpace 节点进 scene.Box3s', 
         expect(scene.Box3s[0].max[2]).toBeCloseTo(6); // 1 + 5
     });
 });
+
+describe('newNode(parent) — 工厂创建新节点并继承父场景', () => {
+    it('返回新 NodeObject 实例，Parent 指向 parent，scene 继承 parent.scene', async () => {
+        const { NodeObject, newNode } = await import('./nodeObject');
+
+        const scene = {
+            Box3s: [] as boundingBox[],
+            device: {},
+            resourcesGPU: {},
+        } as unknown as Scene;
+
+        const parent = new NodeObject();
+        parent.scene = scene;
+
+        const child = await newNode(parent, NodeObject);
+
+        expect(child).toBeInstanceOf(NodeObject);
+        expect(child).not.toBe(parent);
+        expect(child.Parent).toBe(parent);
+        expect(child.scene).toBe(scene);
+    });
+});

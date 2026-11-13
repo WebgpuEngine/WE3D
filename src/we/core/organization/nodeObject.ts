@@ -7,7 +7,7 @@ import { AnimationGroup } from '../animation/animationGroup';
 import { BaseAnimation } from '../animation/BaseAnimation';
 import { SkinAnimation } from '../animation/skin';
 import { WeightMixAnimation } from '../animation/weightMixAnimation';
-import { weVec4, weVec3, weMat4, E_lifeState } from '../base/coreDefine';
+import { E_lifeState } from '../base/coreDefine';
 import { BaseCamera } from '../camera/baseCamera';
 import { BaseEntity } from '../entity/baseEntity';
 import { BaseLight } from '../light/baseLight';
@@ -18,101 +18,17 @@ import { E_renderPassName } from '../scene/renderManager';
 import { Scene } from '../scene/scene';
 import { IV_NodeSpace, NodeSpace } from './nodeSpace';
 import { PhysicBody } from '../physics/physicBody';
+import { E_BVHSpaceType } from './nodeObjectTypes';
+import type { IV_Node } from './nodeObjectTypes';
 
-/** 空间类型,需要Scene的BVH开启或物理引擎开启
- * 1、BVH使用instance Mesh 的AABB信息
- * 2、物理引擎驱动需要刚体和碰撞器的类型
- */
-export enum E_BVHSpaceType {
-    /** 无空间属性 ,非instance mesh 节点或可忽略*/
-    none = 'none',
-
-    /** 固定空间，不移动 。一般为：创建后就不改变位置的节点（WE和物理引擎都是）。
-     * 1、不考虑物理引擎，固定位置，只供BVH使用
-     * 2、WE空间中，固定位置，不会移动。
-     *     A、root ECS及自身将忽略位置更新；
-     *     B、如果有动画的（关键帧且与位置相关），则不能设置为fixed。
-     * 3、物理引擎中没有刚体，碰撞体类型为sensor。
-     */
-    fixed = 'fixed',
-
-    /** 动态空间位置。we程序驱动。一般为：从WE传递到物理引擎。
-     * 1、不考虑物理碰撞，位置可变。只供BVH使用。
-     * 2、WE空间中，动态移动，一般为程序控制或者动画控制。
-     * 3、物理引擎中没有刚体，碰撞体类型为sensor。
-     */
-    dynamic = 'dynamic',
-
-    /** 物理引擎驱动，位置受物理引擎控制。 一般为：从物理引擎传递到WE。
-     * 1、若具有物理引擎属性，则NodeObject的更新位置了信息，不受parent的影响（也不再使用parent的matrixWorld矩阵）。
-     * 2、NodeObject位置受物理引擎控制，同时必须具有physics属性。
-     * 3、初始化的position等信息为世界坐标下的。
-     */
-    physical = 'physical',
-}
-
-export interface NodeObjectJSON {
-    type: string;
-    name: string;
-    id: number;
-    // renderID: number,
-    UUID: string;
-    position: number[];
-    scale: number[] | undefined;
-    rotate:
-        | {
-              axis: number[];
-              angleInRadians: number;
-          }
-        | undefined;
-    quaternion: weVec4 | undefined;
-    enable: boolean;
-    visible: boolean;
-    matrix: number[];
-    matrixWorld: number[];
-    parent: number;
-    children: number[];
-}
-/**
- * model 空间属性附加参数
- * 1、默认空间类型为none，比如：空节点
- * 2、有entity的instance节点，必须设置为非none
- */
-export interface IV_AttachSpaceAttributeToNodeModel {
-    name?: string;
-    position?: weVec3;
-    scale?: weVec3;
-    rotate?: weVec4;
-    quaternion?: weVec4;
-    matrix?: weMat4;
-}
-
-//////////////////////////////////////////////////////////////NodeObject////////////////////////////////////////////////////////////////////////////////////////
-export interface IV_Node extends IV_NodeSpace {
-    /** 空间类型 ,默认none*/
-    spaceType?: E_BVHSpaceType;
-
-    entity?: BaseEntity;
-
-    physicalBody?: PhysicBody;
-
-    // /** 实例化的节点对象,延迟，目前没有必须要实现，
-    //  * 实例化nodeObject时，需要进行整体的clone和数据的深度copy。
-    //  */
-    // instanceNode?: NodeObject,
-
-    /**todo 实例化的相机对象(目前将相机作为节点的属性：非子对象) */
-    // camera?: BaseCamera,
-
-    /**todo  实例化的光源对象(目前将光源作为节点的属性，非子对象) */
-    // light?: BaseLight,
-
-    /**todo 实例化的粒子对象(目前将粒子作为节点的子对象) */
-    // particle?: BaseParticle,
-
-    /**todo 实例化的动画对象(目前将动画作为节点的属性) */
-    // animation?: BaseAnimation[],
-}
+// 再导出（保持 nodeObject.ts 对外可见，barrel 兼容）
+export { newNode } from './nodeObjectFactory';
+export { E_BVHSpaceType };
+export type {
+    NodeObjectJSON,
+    IV_Node,
+    IV_AttachSpaceAttributeToNodeModel,
+} from './nodeObjectTypes';
 /**
  * 节点对象
  * 1、导入导出需要实例化
@@ -893,169 +809,4 @@ export class NodeObject extends NodeSpace {
         this.needUpdateWorldMatrix = this.needUpdateLocalMatrix || flagParentMatrixWorld;
         return this.needUpdateWorldMatrix;
     }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * 输出JSON格式
-     * 需要每个继承类覆盖属性实现
-     */
-    // abstract saveJSON(): any;
-    /**
-     * 加载JSON格式数据
-     * @param json 输入的JSON格式数据
-     */
-    // abstract loadJSON(json: any): void;
-
-    // getBaseJSON(): NodeObjectJSON {
-    //     let outputJSON: NodeObjectJSON = {
-    //         type: this.type,
-    //         name: this._name,
-    //         id: this._id,
-    //         // renderID: this._renderID,
-    //         UUID: this.UUID,
-    //         position: [],// this._position,
-    //         scale: [],// this._scale,
-    //         rotate: {
-    //             axis: [],
-    //             angleInRadians: 0,
-    //         },
-    //         quaternion: undefined,
-    //         enable: this.enable,
-    //         visible: this.visible,
-    //         matrix: [],// this.matrix,
-    //         matrixWorld: [],//this.matrixWorld,
-    //         parent: 0,
-    //         children: []
-    //     };
-    //     for (let i of this._position)
-    //         outputJSON.position.push(i);
-
-    //     if (this._quaternion) {
-    //         for (let i of this._quaternion)
-    //             outputJSON.quaternion!.push(i);
-    //     }
-    //     else {
-    //         outputJSON.quaternion = undefined;
-    //     }
-    //     if (this._scale) {
-    //         for (let i of this._scale)
-    //             outputJSON.scale.push(i);
-    //     }
-    //     else {
-    //         outputJSON.scale = undefined;
-    //     }
-    //     if (this._rotate) {
-    //         for (let i of this._rotate.axis)
-    //             outputJSON.rotate!.axis.push(i);
-    //         outputJSON.rotate!.angleInRadians = this._rotate.angleInRadians;
-    //     }
-    //     else {
-    //         outputJSON.rotate = undefined;
-    //     }
-
-    //     if (this.matrix)
-    //         for (let i of this.matrix)
-    //             outputJSON.matrix.push(i);
-
-    //     if (this.matrixWorld)
-    //         for (let i of this.matrixWorld)
-    //             outputJSON.matrixWorld.push(i);
-    //     if (this.parent)
-    //         outputJSON.parent = this.parent.ID;
-    //     for (let i of this._children) {
-    //         outputJSON.children.push(i.ID);
-    //     }
-
-    //     return outputJSON
-    // }
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// NodeInstance and NodeInstanceModel
-
-// /**
-//  * 节点实例
-//  * 用于实例化节点对象
-//  */
-// export class NodeInstance extends NodeObject {
-//     _destroy(): void {
-//         // throw new Error("Method not implemented.");
-//     }
-//     //20260313，为了TTPF，明确ID，的临时测试代码
-//     // constructor(input?: IV_Node) {
-//     //     super(input);
-//     //     if (input.id !== undefined) {
-//     //         this.ID = input.id;
-//     //     }
-//     // }
-//     override type: string = "NodeInstance";
-
-//     saveJSON() {
-//         throw new Error("Method not implemented.");
-//     }
-//     loadJSON(json: any): void {
-//         throw new Error("Method not implemented.");
-//     }
-//     async readyForGPU(): Promise<void> {
-//         // throw new Error("Method not implemented.");
-
-//     }
-//     // _destroy(): void {
-//     //     if (this._isDestroy) return;
-//     //     // throw new Error("Method not implemented.");
-//     // }
-//     updateSelf(clock: Clock): void {
-//         // throw new Error("Method not implemented.");
-//     }
-// }
-// /**
-//  * 节点实例
-//  * 用于实例化节点对象
-//  */
-// export class NodeInstanceModel extends NodeObject {
-//     // override destroy(): void {
-//     //     if(this._children.length > 0) {
-//     //         for(let i of this._children) {
-//     //             i.destroy();
-//     //         }
-//     //     }
-//     //     super.destroy();
-//     // }
-//     _destroy(): void {
-//         // throw new Error("Method not implemented.");
-//     }
-//     /**
-//      *  模型来源 : 指向原始模型
-//      * 1、animation的数据来源使用modelOrigin
-//     */
-//     _modelOrigin!: BaseModel;
-//     override type: string = "NodeInstanceModel";
-//     saveJSON() {
-//         throw new Error("Method not implemented.");
-//     }
-//     loadJSON(json: any): void {
-//         throw new Error("Method not implemented.");
-//     }
-//     async readyForGPU(): Promise<void> {
-//         // throw new Error("Method not implemented.");
-
-//     }
-//     // _destroy(): void {
-//     //     // throw new Error("Method not implemented.");
-//     // }
-//     updateSelf(clock: Clock): void {
-//         // throw new Error("Method not implemented.");
-//     }
-// }
-
-/**
- * 创建一个新的空节点实例
- * @param scene 场景
- * @param parent 父节点
- * @returns 新的节点实例
- */
-export async function newNode(parent: NodeObject) {
-    const scene: Scene = parent.scene;
-    const node = new NodeObject();
-    await node.init(scene, parent);
-    return node;
 }

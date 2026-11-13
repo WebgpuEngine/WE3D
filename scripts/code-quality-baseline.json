@@ -4,10 +4,10 @@
     "metrics": {
         "explicitAny": 112,
         "typeEscapes": 0,
-        "giantFiles": 1,
+        "giantFiles": 0,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
-        "commentedCodeLines": 1043
+        "commentedCodeLines": 1018
     },
     "details": {
         "anyTopFiles": [
@@ -72,12 +72,7 @@
                 "count": 1
             }
         ],
-        "giantFiles": [
-            {
-                "file": "src/we/core/organization/nodeObject.ts",
-                "lines": 1062
-            }
-        ],
+        "giantFiles": [],
         "emptyStubFiles": [],
         "backupNamedFiles": [
             "public/models/gltf/base/morphTarget/MorphTarget copy.gltf",
