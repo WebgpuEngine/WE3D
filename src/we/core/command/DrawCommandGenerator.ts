@@ -52,6 +52,14 @@ export type {
     IV_DrawCommandGenerator,
 } from './drawCommandGeneratorTypes';
 
+/** initUniformPart 的 bindGroup 槽位编号（system 分支固定占用 0/1/2/3；slot3·IBL 非必须） */
+const UNIFORM_SLOT = {
+    system: 0,
+    entity: 1,
+    material: 2,
+    ibl: 3,
+} as const;
+
 export class DrawCommandGenerator {
     device: GPUDevice;
     scene: Scene;
@@ -233,10 +241,9 @@ export class DrawCommandGenerator {
         //bindgroup部分
         let DC_bindGroups: (GPUBindGroup | undefined)[] = new Array(4).fill(undefined);
         let DC_bindGroupLayouts: GPUBindGroupLayout[] = new Array(4).fill(undefined);
-        let layoutNumber = 0; //uniform的BindGroupLayout数量，最多4个
-        // 存在system。赋值bindgroup：0，1，2；
+        // 存在 system（摄像机/光源模式）：按固定槽位填充 slot0/1/2，slot3·IBL 视场景而定
         if (values.system) {
-            // DC_bindGroups[layoutNumber] = undefined;//在DC中动态绑定
+            // slot0 = system：摄像机/光源的 bindGroupLayout
             let bindGroupLayout: GPUBindGroupLayout;
             if (values.system.type == E_renderForDC.camera) {
                 bindGroupLayout = this.scene.getBindGroupLayoutZeroOfCamera();
@@ -245,17 +252,15 @@ export class DrawCommandGenerator {
             } else {
                 throw new Error('system type not support');
             }
-            // layoutNumber = 0
-            DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
-            // layoutNumber = 1
-            layoutNumber = 1;
+            DC_bindGroupLayouts[UNIFORM_SLOT.system] = bindGroupLayout;
 
+            // slot1 = entity：parent 的 bindGroupLayout
             if (values.system?.parent) {
                 const { bindGroupLayout } = values.system.parent.getBindGroupAndBindGroupLayout();
-                DC_bindGroups[layoutNumber] = undefined;
-                DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
+                DC_bindGroups[UNIFORM_SLOT.entity] = undefined;
+                DC_bindGroupLayouts[UNIFORM_SLOT.entity] = bindGroupLayout;
 
-                layoutNumber = 2;
+                // slot2 = material：仅摄像机 + material.type 定义时占用
                 if (values.system?.type == E_renderForDC.camera) {
                     if (values.system.material?.type == undefined) {
                         throw new Error('material type do not define');
@@ -265,30 +270,29 @@ export class DrawCommandGenerator {
                             const bindGroupLayout = (
                                 values.system?.parent as Mesh
                             )._materialWireframe.getBindGroupLayout(values.system.material.type);
-                            DC_bindGroups[layoutNumber] = undefined;
-                            DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
-                            // layoutNumber++;
+                            DC_bindGroups[UNIFORM_SLOT.material] = undefined;
+                            DC_bindGroupLayouts[UNIFORM_SLOT.material] = bindGroupLayout;
                         }
                     } else {
                         if ((values.system?.parent as EntityBundleMaterial)._material) {
                             const bindGroupLayout = (
                                 values.system?.parent as EntityBundleMaterial
                             )._material.getBindGroupLayout(values.system.material.type);
-                            DC_bindGroups[layoutNumber] = undefined;
-                            DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
-                            // layoutNumber++;
+                            DC_bindGroups[UNIFORM_SLOT.material] = undefined;
+                            DC_bindGroupLayouts[UNIFORM_SLOT.material] = bindGroupLayout;
                         }
                     }
                 }
             }
-            layoutNumber = 3;
+
+            // slot3 = IBL：非必须，有 IBL 且材质为 PBR 时才占用，否则保持空槽位
             if (
                 this.scene.IBL != undefined &&
                 values.system.material &&
                 values.system.material.owner instanceof PBRMaterial
             ) {
-                DC_bindGroupLayouts[layoutNumber] = this.scene.IBL!.bindGroupLayout();
-                DC_bindGroups[layoutNumber] = this.scene.IBL!.bindGroup();
+                DC_bindGroupLayouts[UNIFORM_SLOT.ibl] = this.scene.IBL!.bindGroupLayout();
+                DC_bindGroups[UNIFORM_SLOT.ibl] = this.scene.IBL!.bindGroup();
             }
         }
 
@@ -302,9 +306,11 @@ export class DrawCommandGenerator {
         else if (values.data.uniforms) {
             DC_bindGroups = [];
             DC_bindGroupLayouts = [];
+            // 已处理的 bindGroup 组数（独立计数，同时作为槽位索引与 label 序号，最多 4 组）
+            let groupCount = 0;
             for (const i in values.data.uniforms) {
                 //如果bindGroupLayout数量超过4个，就跳出循环
-                if (layoutNumber > 3) {
+                if (groupCount > 3) {
                     console.warn('uniforms 最多只能有4个BindGroup');
                     break;
                 }
@@ -343,8 +349,7 @@ export class DrawCommandGenerator {
                 let bindGroupLayout: GPUBindGroupLayout;
                 //BindGroup 的layout 描述，重点2->2.1
                 const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                    label: `BGLD(${i})(${layoutNumber}) ${values.label}@${this.clock.now}`,
-                    // label: values.label +" BGLD: "+ layoutNumber + " time:"+this.clock.now,
+                    label: `BGLD(${i})(${groupCount}) ${values.label}@${this.clock.now}`,
                     entries: [],
                 };
                 //BindGroup layout的数据入口  -->2.1.1
@@ -491,8 +496,7 @@ export class DrawCommandGenerator {
                     bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
                     //初始化BindGroup描述
                     bindGroupDesc = {
-                        // label: values.label + " BGD:" + layoutNumber + " time:"+this.clock.now,
-                        label: `BGD(${layoutNumber}) ${values.label}`,
+                        label: `BGD(${groupCount}) ${values.label}`,
                         layout: bindGroupLayout,
                         entries: bindGroupEntry,
                     };
@@ -505,7 +509,7 @@ export class DrawCommandGenerator {
                 }
                 DC_bindGroups.push(bindGroup);
                 DC_bindGroupLayouts.push(bindGroupLayout);
-                layoutNumber++;
+                groupCount++;
             } //end for values.data.uniforms
         }
         return { DC_bindGroups, DC_bindGroupLayouts };

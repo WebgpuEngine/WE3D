@@ -994,3 +994,182 @@ describe('generateDrawCommandAndTrack 释放凭证回传 — P0-3', () => {
         expect(valueDC.releaseTickets).toBeUndefined();
     });
 });
+
+describe('DrawCommandGenerator.initUniformPart 槽位快照 — §2.2（system / uniforms 两路径）', () => {
+    let DrawCommandGenerator: any;
+    let E_renderForDC: any;
+    let PBRMaterial: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+        ({ E_renderForDC } = await import('../base/coreDefine'));
+        ({ PBRMaterial } = await import('../material/PBR/PBRMaterial'));
+        // node 环境补齐 isGPUBindGroup / isGPUBindGroupLayout 所需的全局（仅 instanceof 判断）
+        (globalThis as any).GPUBindGroup = class MockGPUBindGroup {};
+        (globalThis as any).GPUBindGroupLayout = class MockGPUBindGroupLayout {};
+    });
+
+    function makeGenerator() {
+        const createdLayouts: any[] = [];
+        const createdGroups: any[] = [];
+        const device = {
+            createBindGroupLayout: (desc: any) => {
+                createdLayouts.push(desc);
+                return { __mockLayout: true, ...desc };
+            },
+            createBindGroup: (desc: any) => {
+                createdGroups.push(desc);
+                return { __mockGroup: true, ...desc };
+            },
+            createPipelineLayout: () => ({}),
+            createRenderPipeline: () => ({}),
+        };
+        const scene = {
+            device,
+            clock: { now: 12345 },
+            pointers: {},
+            MSAA: false,
+            getBindGroupLayoutZeroOfCamera: () => ({ __layout: 'camera0' }),
+            getBindGroupLayoutZeroOfLight: () => ({ __layout: 'light0' }),
+            IBL: undefined as any,
+        };
+        const generator = new DrawCommandGenerator({
+            scene,
+        } as unknown as ConstructorParameters<typeof DrawCommandGenerator>[0]);
+        return { generator, scene, createdLayouts, createdGroups };
+    }
+
+    function uniformValues(overrides: Record<string, unknown> = {}) {
+        return {
+            label: 'uniform',
+            data: {},
+            ...overrides,
+        } as unknown as Parameters<typeof DrawCommandGenerator.prototype.initUniformPart>[0];
+    }
+
+    it('system(camera + parent + material，无 IBL)：slot0/1/2 填充，slot3 为 undefined', () => {
+        const { generator } = makeGenerator();
+        const parent = {
+            getBindGroupAndBindGroupLayout: () => ({
+                bindGroup: undefined,
+                bindGroupLayout: { __layout: 'entity1' },
+            }),
+            _material: {
+                getBindGroupLayout: (type: string) => ({ __layout: 'material2:' + type }),
+            },
+        };
+        const r = generator.initUniformPart(
+            uniformValues({
+                system: {
+                    type: E_renderForDC.camera,
+                    parent,
+                    material: { owner: {}, type: 'pbr' }, // owner 非 PBRMaterial → 不占 IBL 槽位
+                },
+            }),
+        );
+
+        expect(r.DC_bindGroupLayouts).toEqual([
+            { __layout: 'camera0' },
+            { __layout: 'entity1' },
+            { __layout: 'material2:pbr' },
+            undefined, // IBL 非必须：无 IBL 时槽位保持空
+        ]);
+        expect(r.DC_bindGroups).toEqual([undefined, undefined, undefined, undefined]);
+    });
+
+    it('system(camera + IBL + PBRMaterial)：slot3 由 IBL 填充', () => {
+        const { generator, scene } = makeGenerator();
+        const ibl = {
+            bindGroupLayout: () => ({ __layout: 'ibl3' }),
+            bindGroup: () => ({ __bindGroup: 'ibl3' }),
+        };
+        scene.IBL = ibl;
+        const parent = {
+            getBindGroupAndBindGroupLayout: () => ({
+                bindGroup: undefined,
+                bindGroupLayout: { __layout: 'entity1' },
+            }),
+            _material: {
+                getBindGroupLayout: (type: string) => ({ __layout: 'material2:' + type }),
+            },
+        };
+        const r = generator.initUniformPart(
+            uniformValues({
+                system: {
+                    type: E_renderForDC.camera,
+                    parent,
+                    material: {
+                        owner: Object.create(PBRMaterial.prototype),
+                        type: 'pbr',
+                    },
+                },
+            }),
+        );
+
+        expect(r.DC_bindGroupLayouts[3]).toEqual({ __layout: 'ibl3' });
+        expect(r.DC_bindGroups[3]).toEqual({ __bindGroup: 'ibl3' });
+    });
+
+    it('system(light，无 parent)：仅 slot0 填充', () => {
+        const { generator } = makeGenerator();
+        const r = generator.initUniformPart(
+            uniformValues({ system: { type: E_renderForDC.light } }),
+        );
+
+        expect(r.DC_bindGroupLayouts).toEqual([
+            { __layout: 'light0' },
+            undefined,
+            undefined,
+            undefined,
+        ]);
+        expect(r.DC_bindGroups).toEqual([undefined, undefined, undefined, undefined]);
+    });
+
+    it('system type 不支持 → 抛错', () => {
+        const { generator } = makeGenerator();
+        expect(() =>
+            generator.initUniformPart(uniformValues({ system: { type: 'unknown' } })),
+        ).toThrow('system type not support');
+    });
+
+    it('uniforms（GPUBindGroup 直接使用）：最多保留 4 组', () => {
+        const { generator } = makeGenerator();
+        const GPUBindGroupCtor = (globalThis as any).GPUBindGroup;
+        const GPUBindGroupLayoutCtor = (globalThis as any).GPUBindGroupLayout;
+        const groups = [0, 1, 2, 3, 4].map(() => new GPUBindGroupCtor());
+        const layouts = [0, 1, 2, 3, 4].map(() => new GPUBindGroupLayoutCtor());
+
+        const r = generator.initUniformPart(
+            uniformValues({ data: { uniforms: groups, unifromLayout: layouts } }),
+        );
+
+        expect(r.DC_bindGroups).toHaveLength(4); // 第 5 组被 groupCount>3 上限拦截
+        expect(r.DC_bindGroupLayouts).toHaveLength(4);
+        expect(r.DC_bindGroups[0]).toBe(groups[0]);
+        expect(r.DC_bindGroupLayouts[0]).toBe(layouts[0]);
+        expect(r.DC_bindGroups[3]).toBe(groups[3]);
+    });
+
+    it('uniforms（创建分支）：label 序号随 groupCount 递增', () => {
+        const { generator, createdLayouts, createdGroups } = makeGenerator();
+        const r = generator.initUniformPart(
+            uniformValues({
+                data: {
+                    uniforms: [[{ binding: 0, resource: {} }], [{ binding: 0, resource: {} }]],
+                    unifromLayout: [
+                        [{ binding: 0, visibility: 1 }],
+                        [{ binding: 0, visibility: 1 }],
+                    ],
+                },
+            }),
+        );
+
+        expect(r.DC_bindGroups).toHaveLength(2);
+        expect(r.DC_bindGroupLayouts).toHaveLength(2);
+        expect(createdLayouts).toHaveLength(2);
+        expect(createdLayouts[0].label).toBe('BGLD(0)(0) uniform@12345');
+        expect(createdLayouts[1].label).toBe('BGLD(1)(1) uniform@12345');
+        expect(createdGroups[0].label).toBe('BGD(0) uniform');
+        expect(createdGroups[1].label).toBe('BGD(1) uniform');
+    });
+});
