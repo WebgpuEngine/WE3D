@@ -128,19 +128,12 @@ export class DrawCommandGenerator {
                 drawMode: values.render.drawMode,
                 pipeline,
                 vertexBuffers: DC_vertexBuffers,
-                //  indexBuffer: DC_indexBuffer,
                 bindGroups: DC_bindGroups,
             },
             baseInfo: {},
         };
         // viewport
         if (values.render.viewport) commandOption.drawInfo.viewport = values.render.viewport;
-        // else {
-        //     // let camera = this.getCamera(values);
-        //     // if (camera) {
-        //         commandOption.drawInfo.viewport = camera.viewport;
-        //     // }
-        // }
         // indexBuffer
         if (DC_indexBuffer) {
             commandOption.drawInfo.indexBuffer = DC_indexBuffer;
@@ -374,27 +367,7 @@ export class DrawCommandGenerator {
                             throw new Error('bindGroupLayout 不存在');
                         }
                     }
-                }
-                //20260320 ,基本不需要，每个mesh的uniform group是不同的。instance自己管理
-                // else if (!values.dynamic && this.resources.uniformGroupToBindGroup.has(perGroup)) {//已经存在bindgroup，比如：同一个mesh中
-                //     let bindGroupGet = this.resources.uniformGroupToBindGroup.get(perGroup);
-                //     if (bindGroupGet) {
-                //         bindGroup = bindGroupGet;
-                //         let bindGroupLayoutGet = this.resources.bindGroupToGroupLayout.get(bindGroup)!;//这里没有进行判断，稍后补上
-                //         if (bindGroupLayoutGet) {
-                //             bindGroupLayout = bindGroupLayoutGet;
-                //         }
-                //         else {
-                //             throw new Error("bindGroupLayout 不存在");
-                //             // console.error("bindGroupLayout 不存在");
-                //         }
-                //     }
-                //     else {
-                //         throw new Error("bindGroup 不存在");
-                //         // console.error("bindGroup 不存在");
-                //     }
-                // }
-                else {
+                } else {
                     //创建
                     for (const j in perGroup) {
                         //遍历每组group的每个entry
@@ -497,10 +470,6 @@ export class DrawCommandGenerator {
                     };
                     //创建BindGroup
                     bindGroup = this.device.createBindGroup(bindGroupDesc);
-                    ///////////////////
-                    //增加到资源
-                    // this.resources.uniformGroupToBindGroup.set(perGroup, bindGroup,);//20260320 ,基本不需要，每个mesh的uniform group是不同的。instance自己管理
-                    // this.resources.bindGroupToGroupLayout.set(bindGroup, bindGroupLayout);//20260320，如果是动态绑定的uniform资源，显示push到参数中。这个基本不需要
                 }
                 DC_bindGroups.push(bindGroup);
                 DC_bindGroupLayouts.push(bindGroupLayout);
@@ -635,19 +604,6 @@ export class DrawCommandGenerator {
                     targets[i].blend = values.transparent[i];
                 }
             }
-            // if (values.render.fragment.code) {
-            //     if (typeof values.render.fragment.code === "string") {
-            //         moduleFS = this.device.createShaderModule({
-            //             code: values.render.fragment.code,
-            //         })
-            //     }
-            //     else {
-            //         //todo moduleFS
-            //     }
-            // }
-            // else {
-            //     moduleFS = moduleVS;
-            // }
             let constansFS = {};
             //3.4.4 配置constants
             if (values.render.fragment?.constants) {

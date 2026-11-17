@@ -160,13 +160,11 @@ export function initVertexPart(
     let shaderLocation = 0; //最多16个
     let location_i = 0;
     if (values.data.vertices) {
-        // for (const [key, value] of values.data.vertices) {
         for (const key in values.data.vertices) {
             const value = values.data.vertices[key];
             let locationString: string = '';
             const lowKey = key.toLocaleLowerCase();
             let _GPUVertexBufferLayout: GPUVertexBufferLayout; //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-            // let vertexBuffer: GPUBufferBinding;
             let pointerOfVertex: I_pointerStruct;
             //20260114 增加interface I_VertexBufferEntry
             let vertexBufferEntry: I_pointerStruct | I_VertexBufferEntry;
@@ -469,14 +467,12 @@ export function initVertexPart(
                     ? 'Wireframe'
                     : 'Mesh';
                 let index: I_pointerStruct;
-                // let md5OfIndicesOfArray = MD5.hex(values.data.indices);
                 if (values.data.indices && values.data.indices.length > 0) {
                     const sysParent = values.system?.parent;
                     const vp = sysParent?.vertexPointers['index' + wireFrame];
                     if (sysParent && vp) {
                         index = vp.pointer!;
                     } else {
-                        // if (!this.resources.hasIndices(md5OfIndicesOfArray)) {
                         const pointerParams: I_pointerCreateParams = {
                             name: 'indices ' + values.label,
                             byteSize: values.data.indices.length * 4,

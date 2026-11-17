@@ -69,18 +69,5 @@ export function formatLocationStringOfAttribute(
     name: string,
     format: string,
 ): string {
-    //@location(4) @interpolate(flat) entityID : u32,
-    // if (values.system?.parent && values.system?.parent.locationInterpolate) {
-    //     if (values.system?.parent.locationInterpolate.all) {
-    //         return `@location(${location}) @interpolate(${values.system?.parent.locationInterpolate.all.type},${values.system?.parent.locationInterpolate.all.sampling}) ${name} : ${format} ,`;
-    //     }
-    //     else {
-    //         for (let key in values.system?.parent.locationInterpolate) {
-    //             if (key == name) {
-    //                 return `@location(${location}) @interpolate(${values.system?.parent.locationInterpolate[key].type},${values.system?.parent.locationInterpolate[key].sampling}) ${name} : ${format} ,`;
-    //             }
-    //         }
-    //     }
-    // }
     return `@location(${location}) ${name} : ${format} ,`;
 }
