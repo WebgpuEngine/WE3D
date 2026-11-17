@@ -500,12 +500,6 @@ export class DrawCommandGenerator {
         variantKey: string;
         reflectionSignature: string;
     } {
-        //VS location 输出插值模式
-        const _locationInterpolateString = '';
-        // if (values.system?.parent) {
-        //     locationInterpolateString = values.system?.parent.getStringOfLocationInterpolate();
-        // }
-
         // 3.1 反射顶点名称到shader code的顶点属性的占位符中
         //vertex shader
 

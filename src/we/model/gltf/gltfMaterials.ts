@@ -36,15 +36,6 @@ export async function initMaterials(scope: GLTFModel) {
     if (materials)
         for (const i in materials) {
             const perMaterialData = materials[i];
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //未实现
-            // 扩展未实现
-            const _extensions = perMaterialData.extensions;
-            // extras未实现
-            const _extras = perMaterialData.extras;
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            const _name = perMaterialData.name || i;
             const normalTextureData = perMaterialData.normalTexture;
             let normalForPbr: I_TextureForPBR | undefined = undefined;
             if (normalTextureData != undefined) {
