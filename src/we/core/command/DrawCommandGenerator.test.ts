@@ -620,7 +620,6 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
             'initShaderModule',
             'initPipeLine',
         ]);
-        expect(generator.inputDC).toEqual([values]);
         expect(command.label).toBe('c0-order');
         expect(command.pipeline).toBe(pipeline);
         expect(command.bindGroups).toBe(DC_bindGroups);

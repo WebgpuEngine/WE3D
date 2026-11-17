@@ -267,7 +267,7 @@ export interface IV_DC {
     /**
      * C5 释放凭证回传出参（可选）：DCG 在 acquire shaderModules/pipelines 时把 ticket 收集到此数组，
      * 由调用方（entity）取走后 track 到自身，销毁时统一 requestRelease。
-     * 调用方取走后必须置为 undefined，避免 IV_DC 被 inputDC 长期持有时连带 ticket 常驻。
+     * 调用方取走后置为 undefined，清理临时出参。
      */
     releaseTickets?: IV_ReleaseTicket[];
 }

@@ -66,9 +66,6 @@ export class DrawCommandGenerator {
     /** uniform entry → pointer 局部缓存（旧 uniformBuffer 下沉 DCG） */
     private uniformBuffer = new WeakMap<T_uniformEntries, I_pointerStruct>();
 
-    /**DrawCommand的输入参数数组 */
-    inputDC: IV_DC[] = [];
-
     clock: Clock;
 
     /** pipeline 缓存 key 中 bindGroupLayout 的稳定标识：同一 GPUBindGroupLayout 对象 → 同一 id，不同对象 → 不同 id */
@@ -89,7 +86,6 @@ export class DrawCommandGenerator {
      * @returns
      */
     generateDrawCommand(values: IV_DC): BaseDrawCommand {
-        this.inputDC.push(values); //保存每个DC的init参数，为了后续的更新uniform使用（如果其中有update选项）
         //1、buffer资源
         const {
             DC_vertexBuffers,

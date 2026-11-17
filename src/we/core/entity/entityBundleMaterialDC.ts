@@ -122,7 +122,7 @@ export function generateInputValueOfDC(
  * C5：生成 DrawCommand 并回传 derived 释放凭证到 entity 自身（ticket 生命周期闭环）。
  * DCG 在 acquire shaderModules/pipelines 时把 ticket 收集到 valueDC.releaseTickets，
  * 此处取走后 track 到 scope 自身（RootGPU._tickets），destroy 时统一 requestRelease；
- * 取走后置空，避免 IV_DC 被 inputDC 常驻时连带 ticket 常驻。
+ * 取走后置空，清理临时出参，避免外部后续误读。
  */
 export function generateDrawCommandAndTrack(
     scope: EntityBundleMaterial,
