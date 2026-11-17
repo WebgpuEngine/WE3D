@@ -626,6 +626,241 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
     });
 });
 
+describe('DrawCommandGenerator.initVertexPart 返回值快照 — §2.1（覆盖 6 组顶点分支）', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+        // node 环境补齐 isVSGPUBufferBundle 所需的 GPUBuffer 全局（仅 instanceof 判断）
+        (globalThis as any).GPUBuffer = class MockGPUBuffer {};
+    });
+
+    function makeGenerator() {
+        const calls: { params: any; owner: unknown }[] = [];
+        const createPointer = (params: any, owner?: unknown) => {
+            calls.push({ params, owner });
+            return {
+                name: params.name,
+                type: params.type,
+                viewType: params.viewType,
+                byteLength: params.byteSize,
+                owner,
+            };
+        };
+        const bufferCalls: any[] = [];
+        const device = {
+            createBuffer: (desc: any) => {
+                bufferCalls.push(desc);
+                return { __mockBuffer: true, ...desc };
+            },
+            queue: { writeBuffer: () => {} },
+        };
+        const scene = {
+            device,
+            MSAA: false,
+            clock: {},
+            pointers: { createPointer },
+            depthMode: {},
+            finalTarget: { NDC: false },
+        };
+        const generator = new DrawCommandGenerator({
+            scene,
+        } as unknown as ConstructorParameters<typeof DrawCommandGenerator>[0]);
+        return { generator, calls, bufferCalls };
+    }
+
+    function vertexValues(vertices: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+        return {
+            label: 'mesh',
+            data: { vertices, ...(extra.data ?? {}) },
+            ...extra,
+        } as unknown as Parameters<typeof DrawCommandGenerator.prototype.initVertexPart>[0];
+    }
+
+    it('分支2：Array.isArray(number[])', () => {
+        const { generator, calls } = makeGenerator();
+        const pos = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+        const r = generator.initVertexPart(vertexValues({ position: pos }));
+
+        expect(r.DC_vertexNames).toEqual(['position']);
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(r.DC_indexBuffer).toBeUndefined();
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params).toEqual({
+            name: 'position mesh',
+            byteSize: 36,
+            type: 'VS',
+            viewType: 'f32',
+            data: { sourceData: { data: pos } },
+        });
+        expect(calls[0].owner).toBeUndefined();
+        expect(r.DC_vertexBuffers[0]).toEqual({
+            name: 'position mesh',
+            type: 'VS',
+            viewType: 'f32',
+            byteLength: 36,
+            owner: undefined,
+        });
+    });
+
+    it('分支2：parent 存在时透传 owner 并复用 vertexPointers 缓存', () => {
+        const { generator, calls } = makeGenerator();
+        const parent = { vertexPointers: {} };
+        const pos = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+        const mk = () => vertexValues({ position: pos }, { system: { parent } });
+
+        const r1 = generator.initVertexPart(mk());
+        const r2 = generator.initVertexPart(mk());
+
+        expect(calls).toHaveLength(1); // 第二次命中缓存，不再 createPointer
+        expect(calls[0].owner).toBe(parent); // 分支2 是唯一透传 parent 的 pointer 分支
+        expect(r2.DC_vertexBuffers[0]).toBe(r1.DC_vertexBuffers[0]);
+    });
+
+    it('分支1：dynamic.vs 数组 → 直接建 GPUBuffer（不经过 pointer）', () => {
+        const { generator, calls, bufferCalls } = makeGenerator();
+        const r = generator.initVertexPart(
+            vertexValues({ position: [0, 0, 0, 1, 0, 0, 0, 1, 0] }, { dynamic: { vs: true } }),
+        );
+
+        expect(r.DC_vertexNames).toEqual(['position']);
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(0); // 动态分支不经过 createPointer
+        expect(bufferCalls).toHaveLength(1); // 走 createVerticesBuffer
+        expect(r.DC_vertexBuffers[0]).toMatchObject({ name: 'position' });
+    });
+
+    it('分支3：ArrayBuffer.isView → 按 typed array 推导 viewType/byteSize', () => {
+        const { generator, calls } = makeGenerator();
+        const data = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+        const r = generator.initVertexPart(vertexValues({ position: data }));
+
+        // 注意：分支3（ArrayBuffer.isView）当前不计算 locationString，DC_localtions 为空串，重构需保持该行为不变
+        expect(r.DC_localtions).toEqual(['']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params.viewType).toBe('f32');
+        expect(calls[0].params.byteSize).toBe(36);
+        expect(calls[0].params.data.sourceData.data).toBe(data);
+        expect(calls[0].owner).toBeUndefined(); // 分支3 不传 parent
+    });
+
+    it('分支3：joints 使用 Uint32Array → uint32x4', () => {
+        const { generator, calls } = makeGenerator();
+        const data = new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7]);
+        const r = generator.initVertexPart(vertexValues({ joints: data }));
+
+        expect(r.DC_localtions).toEqual(['']); // 分支3 不计算 locationString
+        expect(r.DC_verticesBufferLayout).toEqual([
+            { arrayStride: 16, attributes: [{ shaderLocation: 0, format: 'uint32x4', offset: 0 }] },
+        ]);
+        expect(calls[0].params.viewType).toBe('u32');
+        expect(calls[0].params.byteSize).toBe(32);
+    });
+
+    it('分支4：format + data 对象（I_vsAttribute）', () => {
+        const { generator, calls } = makeGenerator();
+        const data = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+        const r = generator.initVertexPart(
+            vertexValues({ position: { format: 'float32x3', data } }),
+        );
+
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params.byteSize).toBe(36);
+        expect(calls[0].params.viewType).toBe('f32');
+        expect(calls[0].params.data.sourceData.data).toBe(data);
+        expect(calls[0].owner).toBeUndefined();
+    });
+
+    it('分支5：I_vsAttributeMerge 合并属性', () => {
+        const { generator, calls } = makeGenerator();
+        const data = [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1];
+        const r = generator.initVertexPart(
+            vertexValues({
+                merged: {
+                    data,
+                    count: 2,
+                    arrayStride: 24,
+                    mergeAttribute: [
+                        { name: 'position', format: 'float32x3', offset: 0 },
+                        { name: 'normal', format: 'float32x3', offset: 12 },
+                    ],
+                },
+            }),
+        );
+
+        expect(r.DC_vertexNames).toEqual(['merged']);
+        expect(r.DC_localtions).toEqual([
+            ' @location(0) position : vec3f  , @location(1) normal : vec3f  ,',
+        ]);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 24,
+                attributes: [
+                    { shaderLocation: 0, format: 'float32x3', offset: 0 },
+                    { shaderLocation: 1, format: 'float32x3', offset: 12 },
+                ],
+            },
+        ]);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params.byteSize).toBe(48);
+        expect(calls[0].params.viewType).toBe('f32');
+        expect(calls[0].params.data.sourceData.data).toBe(data);
+        expect(calls[0].owner).toBeUndefined();
+    });
+
+    it('分支6：I_vsGPUBufferBundle（GPUBuffer）', () => {
+        const { generator, calls } = makeGenerator();
+        const GPUBufferCtor = (globalThis as any).GPUBuffer;
+        const buffer = new GPUBufferCtor();
+        const r = generator.initVertexPart(
+            vertexValues({
+                position: { format: 'float32x3', arrayStride: 12, offset: 0, byteSize: 36, buffer },
+            }),
+        );
+
+        expect(r.DC_vertexNames).toEqual(['position']);
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(0); // GPUBuffer 分支不经过 pointer
+        expect(r.DC_vertexBuffers[0]).toEqual({
+            name: 'position',
+            buffer,
+            offset: 0,
+            byteSize: 36,
+        });
+    });
+});
+
 describe('DrawCommandGenerator ticket 回传 — P0-3', () => {
     let DrawCommandGenerator: any;
 

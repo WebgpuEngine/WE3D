@@ -8,10 +8,124 @@ import type { DrawCommandGenerator as DCG } from './DrawCommandGenerator';
 
 /**
  * 第 3 期巨型文件拆分（C8）：initVertexPart。
- * 636 行逐字搬移、不重构；代码行 this. 改为 scope.；注释文本保持原样。
+ * C8 逐字搬移、不重构；代码行 this. 改为 scope.。P1-3（2026-11-17）已对 6 组顶点分支
+ * 做行为等价重构：抽 resolveLowKeyVertexFormat / resolveArrayBufferVertexFormat /
+ * resolveFormatArrayStride / getOrCreateVertexPointer / makeSingleAttributeLayout 五个查表与缓存辅助函数。
  * scope 用 import type 引入主类（编译后擦除，无运行时环），保留 scope.getWgslValueFormat()
  * / scope.formatLocationStringOfAttribute() 虚调用与 scope.pointers / scope.device 读写。
  */
+
+/** 顶点属性名(lowKey) → 默认 stride/format（number[] 与 dynamic 数组路径共用）。 */
+function resolveLowKeyVertexFormat(lowKey: string): {
+    arrayStride: number;
+    format: GPUVertexFormat;
+} {
+    switch (lowKey) {
+        case 'uv':
+            return { arrayStride: 4 * 2, format: 'float32x2' };
+        case 'joints':
+        case 'weights':
+            return { arrayStride: 4 * 4, format: 'float32x4' };
+        default:
+            return { arrayStride: 4 * 3, format: 'float32x3' };
+    }
+}
+
+/** ArrayBuffer.isView 路径的 stride/format（joints 用 uint32x4，default 告警）。 */
+function resolveArrayBufferVertexFormat(
+    lowKey: string,
+    arrayBuffertype: string | null,
+): { arrayStride: number; format: GPUVertexFormat } {
+    switch (lowKey) {
+        case 'uv':
+            return { arrayStride: 4 * 2, format: 'float32x2' };
+        case 'joints':
+            return { arrayStride: 4 * 4, format: 'uint32x4' };
+        case 'weights':
+            return { arrayStride: 4 * 4, format: 'float32x4' };
+        case 'position':
+        case 'normal':
+        case 'color':
+            return { arrayStride: 4 * 3, format: 'float32x3' };
+        default:
+            console.warn(
+                '顶点属性' + lowKey + '的类型' + arrayBuffertype + '未被支持.按照float32x3处理',
+            );
+            return { arrayStride: 4 * 3, format: 'float32x3' };
+    }
+}
+
+/** I_vsAttribute.format → arrayStride（4Byte 标量/向量 GPUVertexFormat）。 */
+function resolveFormatArrayStride(format: GPUVertexFormat): number {
+    switch (format) {
+        case 'float32':
+        case 'uint32':
+        case 'sint32':
+            return 4 * 1;
+        case 'float32x2':
+        case 'uint32x2':
+        case 'sint32x2':
+            return 4 * 2;
+        case 'float32x3':
+        case 'uint32x3':
+        case 'sint32x3':
+            return 4 * 3;
+        case 'float32x4':
+        case 'uint32x4':
+        case 'sint32x4':
+            return 4 * 4;
+        default:
+            return 4 * 3;
+    }
+}
+
+/** 统一「取缓存指针 / 创建并缓存」；withOwner 决定 createPointer 是否透传 values.system?.parent。 */
+function getOrCreateVertexPointer(
+    scope: DCG,
+    values: IV_DC,
+    lowKey: string,
+    params: I_pointerCreateParams,
+    withOwner: boolean,
+): I_pointerStruct {
+    const sysParent = values.system?.parent;
+    const vp = sysParent?.vertexPointers[lowKey];
+    if (sysParent && vp) {
+        return vp.pointer!;
+    }
+    const pointerOfVertex = scope.pointers.createPointer(
+        params,
+        withOwner ? values.system?.parent : undefined,
+    );
+    // parent保存顶点指针，用于后续更新顶点数据
+    if (values.system?.parent)
+        values.system.parent.vertexPointers[lowKey] = {
+            pointer: pointerOfVertex,
+        };
+    return pointerOfVertex;
+}
+
+/** 构造单属性 GPUVertexBufferLayout，并返回推进后的 shaderLocation。 */
+function makeSingleAttributeLayout(
+    arrayStride: number,
+    format: GPUVertexFormat,
+    shaderLocation: number,
+    offset: number,
+): { layout: GPUVertexBufferLayout; nextShaderLocation: number } {
+    return {
+        layout: {
+            arrayStride,
+            attributes: [
+                {
+                    shaderLocation,
+                    format,
+                    offset,
+                },
+            ],
+        },
+        nextShaderLocation: shaderLocation + 1,
+    };
+}
+
 export function initVertexPart(
     scope: DCG,
     values: IV_DC,
@@ -64,40 +178,7 @@ export function initVertexPart(
                         console.warn('顶点属性' + key + '数据为空');
                     }
                     const data = new Float32Array(value); //默认:float32
-                    let arrayStride = 4 * 3;
-                    let format: GPUVertexFormat = 'float32x3';
-                    switch (lowKey) {
-                        case 'position':
-                            arrayStride = 4 * 3;
-                            format = 'float32x3';
-                            break;
-                        case 'uv':
-                            // case "uv1":
-                            // case "uv2":
-                            arrayStride = 4 * 2;
-                            format = 'float32x2';
-                            break;
-                        case 'normal':
-                            arrayStride = 4 * 3;
-                            format = 'float32x3';
-                            break;
-                        case 'color':
-                            arrayStride = 4 * 3;
-                            format = 'float32x3';
-                            break;
-                        case 'joints':
-                            arrayStride = 4 * 4;
-                            format = 'float32x4';
-                            break;
-                        case 'weights':
-                            arrayStride = 4 * 4;
-                            format = 'float32x4';
-                            break;
-                        default:
-                            arrayStride = 4 * 3;
-                            format = 'float32x3';
-                            break;
-                    }
+                    const { arrayStride, format } = resolveLowKeyVertexFormat(lowKey);
                     const wgsl_value_format = scope.getWgslValueFormat(format);
                     locationString += scope.formatLocationStringOfAttribute(
                         values,
@@ -121,16 +202,14 @@ export function initVertexPart(
                         buffer: vertexBuffer,
                     };
                     //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                    _GPUVertexBufferLayout = {
-                        arrayStride: arrayStride,
-                        attributes: [
-                            {
-                                shaderLocation: shaderLocation++,
-                                format: format,
-                                offset: 0,
-                            },
-                        ],
-                    };
+                    const { layout, nextShaderLocation } = makeSingleAttributeLayout(
+                        arrayStride,
+                        format,
+                        shaderLocation,
+                        0,
+                    );
+                    shaderLocation = nextShaderLocation;
+                    _GPUVertexBufferLayout = layout;
                 } else throw new Error("动态顶点属性:'" + key + "'数据必须为数组形式");
             }
             //标准的数组格式，默认为position等
@@ -138,41 +217,7 @@ export function initVertexPart(
                 if (value.length == 0) {
                     console.warn('顶点属性' + key + '数据为空');
                 }
-                // let data = new Float32Array(value);//默认:float32
-                let arrayStride = 4 * 3;
-                let format: GPUVertexFormat = 'float32x3';
-                switch (lowKey) {
-                    case 'position':
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                    case 'uv':
-                        // case "uv1":
-                        // case "uv2":
-                        arrayStride = 4 * 2;
-                        format = 'float32x2';
-                        break;
-                    case 'normal':
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                    case 'color':
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                    case 'joints':
-                        arrayStride = 4 * 4;
-                        format = 'float32x4';
-                        break;
-                    case 'weights':
-                        arrayStride = 4 * 4;
-                        format = 'float32x4';
-                        break;
-                    default:
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                }
+                const { arrayStride, format } = resolveLowKeyVertexFormat(lowKey);
                 const wgsl_value_format = scope.getWgslValueFormat(format);
                 locationString += scope.formatLocationStringOfAttribute(
                     values,
@@ -181,12 +226,11 @@ export function initVertexPart(
                     wgsl_value_format,
                 );
 
-                const sysParent = values.system?.parent;
-                const vp = sysParent?.vertexPointers[lowKey];
-                if (sysParent && vp) {
-                    pointerOfVertex = vp.pointer!;
-                } else {
-                    const pointerParams: I_pointerCreateParams = {
+                pointerOfVertex = getOrCreateVertexPointer(
+                    scope,
+                    values,
+                    lowKey,
+                    {
                         name: lowKey + ' ' + values.label,
                         byteSize: value.length * 4,
                         type: E_BOLBufferType.VS,
@@ -194,41 +238,19 @@ export function initVertexPart(
                         data: {
                             sourceData: { data: value },
                         },
-                    };
-                    pointerOfVertex = scope.pointers.createPointer(
-                        pointerParams,
-                        values.system?.parent,
-                    );
-                    // parent保存顶点指针，用于后续更新顶点数据
-                    if (values.system?.parent)
-                        values.system.parent.vertexPointers[lowKey] = {
-                            pointer: pointerOfVertex,
-                        };
-                }
+                    },
+                    true,
+                );
                 vertexBufferEntry = pointerOfVertex;
-                // vertexBufferEntry = {
-                //     name: lowKey,
-                //     buffer: pointerOfVertex.gpuBufferView.buffer,
-                //     offset: pointerOfVertex.gpuBufferView.offset,
-                //     byteSize: pointerOfVertex.gpuBufferView.size,
-                // }
-                //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                _GPUVertexBufferLayout = {
-                    arrayStride: arrayStride,
-                    attributes: [
-                        {
-                            shaderLocation: shaderLocation++,
-                            format: format,
-                            offset: 0,
-                        },
-                    ],
-                };
+                const { layout, nextShaderLocation } = makeSingleAttributeLayout(
+                    arrayStride,
+                    format,
+                    shaderLocation,
+                    0,
+                );
+                shaderLocation = nextShaderLocation;
+                _GPUVertexBufferLayout = layout;
             } else if (ArrayBuffer.isView(value)) {
-                // let md5OfVertexOfArray = MD5.hex(value.buffer as ArrayBuffer);
-                let pointerOfVertex: I_pointerStruct;
-                let arrayStride = 4 * 3;
-                let format: GPUVertexFormat = 'float32x3';
-                // if (!this.resources.hasVertex(md5OfVertexOfArray)) {
                 const arrayBuffertype = getTypedArrayType(value);
                 let viewType: T_pointerDataType;
                 switch (arrayBuffertype) {
@@ -257,53 +279,16 @@ export function initVertexPart(
                         viewType = 'f32';
                         break;
                 }
-                const _arrayBufferType: T_pointerDataType = 'f32';
                 const arrarBufferUnitLength = 4;
-                switch (lowKey) {
-                    case 'position':
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                    case 'uv':
-                        // case "uv1":
-                        // case "uv2":
-                        arrayStride = 4 * 2;
-                        format = 'float32x2';
-                        break;
-                    case 'normal':
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                    case 'color':
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        break;
-                    case 'joints':
-                        arrayStride = 4 * 4;
-                        format = 'uint32x4';
-                        break;
-                    case 'weights':
-                        arrayStride = 4 * 4;
-                        format = 'float32x4';
-                        break;
-                    default:
-                        arrayStride = 4 * 3;
-                        format = 'float32x3';
-                        console.warn(
-                            '顶点属性' +
-                                lowKey +
-                                '的类型' +
-                                arrayBuffertype +
-                                '未被支持.按照float32x3处理',
-                        );
-                        break;
-                }
-                const sysParent = values.system?.parent;
-                const vp = sysParent?.vertexPointers[lowKey];
-                if (sysParent && vp) {
-                    pointerOfVertex = vp.pointer!;
-                } else {
-                    const pointerParams: I_pointerCreateParams = {
+                const { arrayStride, format } = resolveArrayBufferVertexFormat(
+                    lowKey,
+                    arrayBuffertype,
+                );
+                pointerOfVertex = getOrCreateVertexPointer(
+                    scope,
+                    values,
+                    lowKey,
+                    {
                         name: lowKey + ' ' + values.label,
                         byteSize: value.length * arrarBufferUnitLength,
                         type: E_BOLBufferType.VS,
@@ -311,94 +296,24 @@ export function initVertexPart(
                         data: {
                             sourceData: { data: value },
                         },
-                    };
-                    pointerOfVertex = scope.pointers.createPointer(pointerParams);
-                    if (values.system?.parent)
-                        values.system.parent.vertexPointers[lowKey] = {
-                            pointer: pointerOfVertex,
-                        };
-                }
+                    },
+                    false,
+                );
                 vertexBufferEntry = pointerOfVertex;
-                // vertexBufferEntry = {
-                //     name: lowKey,
-                //     buffer: pointerOfVertex.gpuBufferView.buffer,
-                //     offset: pointerOfVertex.gpuBufferView.offset,
-                //     byteSize: pointerOfVertex.gpuBufferView.size,
-                // }
-                //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                _GPUVertexBufferLayout = {
-                    arrayStride: arrayStride,
-                    attributes: [
-                        {
-                            shaderLocation: shaderLocation++,
-                            format: format,
-                            offset: 0,
-                        },
-                    ],
-                };
+                const { layout, nextShaderLocation } = makeSingleAttributeLayout(
+                    arrayStride,
+                    format,
+                    shaderLocation,
+                    0,
+                );
+                shaderLocation = nextShaderLocation;
+                _GPUVertexBufferLayout = layout;
             }
             //I_vsAttribute格式。有更多详细的数据说明，来约定顶点数据，例如format,arrayStride,offset等
             else if ('format' in value && 'data' in value) {
                 const format: GPUVertexFormat = value.format;
-                let _data; //默认:float32
                 const datakind: number = 4; //默认:float32|uint32|sint32
-                let arrayStride = 4 * 3;
-                switch (
-                    value.format //这里只匹配了几种数据，以后视情况而定
-                ) {
-                    case 'float32x3':
-                        arrayStride = 4 * 3;
-                        // data = new Float32Array(value.data);
-                        break;
-                    case 'float32x2':
-                        arrayStride = 4 * 2;
-                        // data = new Float32Array(value.data);
-                        break;
-                    case 'float32x4':
-                        arrayStride = 4 * 4;
-                        // data = new Float32Array(value.data);
-                        break;
-                    case 'float32':
-                        arrayStride = 4 * 1;
-                        // data = new Float32Array(value.data);
-                        break;
-                    case 'uint32':
-                        arrayStride = 4 * 1;
-                        // data = new Uint32Array(value.data);
-                        break;
-                    case 'uint32x2':
-                        arrayStride = 4 * 2;
-                        // data = new Uint32Array(value.data);
-                        break;
-                    case 'uint32x3':
-                        arrayStride = 4 * 3;
-                        // data = new Uint32Array(value.data);
-                        break;
-                    case 'uint32x4':
-                        arrayStride = 4 * 4;
-                        // data = new Uint32Array(value.data);
-                        break;
-                    case 'sint32':
-                        arrayStride = 4 * 1;
-                        // data = new Int32Array(value.data);
-                        break;
-                    case 'sint32x2':
-                        arrayStride = 4 * 2;
-                        // data = new Int32Array(value.data);
-                        break;
-                    case 'sint32x3':
-                        arrayStride = 4 * 3;
-                        // data = new Int32Array(value.data);
-                        break;
-                    case 'sint32x4':
-                        arrayStride = 4 * 4;
-                        // data = new Int32Array(value.data);
-                        break;
-                    default:
-                        arrayStride = 4 * 3;
-                        // data = new Float32Array(value.data);
-                        break;
-                }
+                const arrayStride = resolveFormatArrayStride(value.format);
                 const wgsl_value_format = scope.getWgslValueFormat(value.format);
                 locationString += scope.formatLocationStringOfAttribute(
                     values,
@@ -407,12 +322,11 @@ export function initVertexPart(
                     wgsl_value_format,
                 );
 
-                const sysParent = values.system?.parent;
-                const vp = sysParent?.vertexPointers[lowKey];
-                if (sysParent && vp) {
-                    pointerOfVertex = vp.pointer!;
-                } else {
-                    const pointerParams: I_pointerCreateParams = {
+                pointerOfVertex = getOrCreateVertexPointer(
+                    scope,
+                    values,
+                    lowKey,
+                    {
                         name: lowKey + ' ' + values.label,
                         byteSize: value.data.length * datakind,
                         type: E_BOLBufferType.VS,
@@ -420,37 +334,23 @@ export function initVertexPart(
                         data: {
                             sourceData: { data: value.data },
                         },
-                    };
-                    pointerOfVertex = scope.pointers.createPointer(pointerParams);
-                    if (values.system?.parent)
-                        values.system.parent.vertexPointers[lowKey] = {
-                            pointer: pointerOfVertex,
-                        };
-                }
+                    },
+                    false,
+                );
                 vertexBufferEntry = pointerOfVertex;
-                // vertexBufferEntry = {
-                //     name: lowKey,
-                //     buffer: pointerOfVertex.gpuBufferView.buffer,
-                //     offset: pointerOfVertex.gpuBufferView.offset,
-                //     byteSize: pointerOfVertex.gpuBufferView.size,
-                // }
-                //当前顶点属性的GBufferLayout，就是vertex.buffers[]之中的内容
-                _GPUVertexBufferLayout = {
-                    arrayStride: arrayStride,
-                    attributes: [
-                        {
-                            shaderLocation: shaderLocation++,
-                            format: format,
-                            offset: 0,
-                        },
-                    ],
-                };
+                const { layout, nextShaderLocation } = makeSingleAttributeLayout(
+                    arrayStride,
+                    format,
+                    shaderLocation,
+                    0,
+                );
+                shaderLocation = nextShaderLocation;
+                _GPUVertexBufferLayout = layout;
             }
             //I_vsAttributeMerge合并属性，例如position和normal合并到一个顶点属性中
             else if (isI_vsAttributeMerge(value)) {
                 const mergeAttribute = value.mergeAttribute;
                 const arrayStride = value.arrayStride;
-                // let data = new Float32Array(value.data);
                 const attributes: GPUVertexAttribute[] = [];
                 const stepMode = values.data.vertexStepMode?.[location_i] || undefined; //存储合并属性的stepMode，多个使用相同的stepMode
                 for (const i in mergeAttribute) {
@@ -464,12 +364,11 @@ export function initVertexPart(
                     locationString += ` @location(${location_i}) ${item.name.toLowerCase()} : ${wgsl_value_format}  ,`;
                     location_i++; //合并属性，每个属性都要增加一个location
                 }
-                const sysParent = values.system?.parent;
-                const vp = sysParent?.vertexPointers[lowKey];
-                if (sysParent && vp) {
-                    pointerOfVertex = vp.pointer!;
-                } else {
-                    const pointerParams: I_pointerCreateParams = {
+                pointerOfVertex = getOrCreateVertexPointer(
+                    scope,
+                    values,
+                    lowKey,
+                    {
                         name: lowKey + ' ' + values.label,
                         byteSize: value.data.length * 4,
                         type: E_BOLBufferType.VS,
@@ -477,21 +376,10 @@ export function initVertexPart(
                         data: {
                             sourceData: { data: value.data },
                         },
-                    };
-                    pointerOfVertex = scope.pointers.createPointer(pointerParams);
-                    if (values.system?.parent)
-                        values.system.parent.vertexPointers[lowKey] = {
-                            pointer: pointerOfVertex,
-                        };
-                    //合并属性没有办法绑定name，不支持动态更新vertex GPUBuffer
-                }
+                    },
+                    false,
+                );
                 vertexBufferEntry = pointerOfVertex;
-                // vertexBufferEntry = {
-                //     name: lowKey,
-                //     buffer: pointerOfVertex.gpuBufferView.buffer,
-                //     offset: pointerOfVertex.gpuBufferView.offset,
-                //     byteSize: pointerOfVertex.gpuBufferView.size,
-                // }
                 _GPUVertexBufferLayout = {
                     arrayStride: arrayStride,
                     attributes,
