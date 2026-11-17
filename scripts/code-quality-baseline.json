@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-11-12",
+    "generatedAt": "2026-11-17",
     "scope": "src/we 生产源码（排除 *.test.ts 与生成数据）+ 全仓备份命名文件",
     "metrics": {
         "explicitAny": 112,
@@ -7,7 +7,7 @@
         "giantFiles": 0,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
-        "commentedCodeLines": 1018
+        "commentedCodeLines": 1017
     },
     "details": {
         "anyTopFiles": [
