@@ -536,13 +536,10 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
 
     it('formatLocationStringOfAttribute 输出固定（含尾随逗号与空格）', () => {
         const { generator } = makeGenerator();
-        const values = {} as unknown as Parameters<
-            typeof generator.formatLocationStringOfAttribute
-        >[0];
-        expect(generator.formatLocationStringOfAttribute(values, 3, 'position', 'vec3f')).toBe(
+        expect(generator.formatLocationStringOfAttribute(3, 'position', 'vec3f')).toBe(
             '@location(3) position : vec3f ,',
         );
-        expect(generator.formatLocationStringOfAttribute(values, 0, 'entityID', 'u32')).toBe(
+        expect(generator.formatLocationStringOfAttribute(0, 'entityID', 'u32')).toBe(
             '@location(0) entityID : u32 ,',
         );
     });

@@ -181,7 +181,6 @@ export function initVertexPart(
                     const { arrayStride, format } = resolveLowKeyVertexFormat(lowKey);
                     const wgsl_value_format = scope.getWgslValueFormat(format);
                     locationString += scope.formatLocationStringOfAttribute(
-                        values,
                         location_i,
                         lowKey,
                         wgsl_value_format,
@@ -220,7 +219,6 @@ export function initVertexPart(
                 const { arrayStride, format } = resolveLowKeyVertexFormat(lowKey);
                 const wgsl_value_format = scope.getWgslValueFormat(format);
                 locationString += scope.formatLocationStringOfAttribute(
-                    values,
                     location_i,
                     lowKey,
                     wgsl_value_format,
@@ -316,7 +314,6 @@ export function initVertexPart(
                 const arrayStride = resolveFormatArrayStride(value.format);
                 const wgsl_value_format = scope.getWgslValueFormat(value.format);
                 locationString += scope.formatLocationStringOfAttribute(
-                    values,
                     location_i,
                     lowKey,
                     wgsl_value_format,
@@ -399,7 +396,6 @@ export function initVertexPart(
                 const arrayStride = value.arrayStride;
                 const wgsl_value_format = scope.getWgslValueFormat(format);
                 locationString += scope.formatLocationStringOfAttribute(
-                    values,
                     location_i,
                     lowKey,
                     wgsl_value_format,

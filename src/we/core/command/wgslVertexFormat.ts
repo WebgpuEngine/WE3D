@@ -1,5 +1,3 @@
-import type { IV_DC } from './drawCommandGeneratorTypes';
-
 /**
  * 第 3 期巨型文件拆分（C8）：WGSL 顶点格式映射表与 @location 字符串。
  * 两个纯函数无 this 依赖，逐字搬移；主类保留同名委托壳供 C0 快照断言与外部调用。
@@ -67,7 +65,6 @@ export function getWgslValueFormat(format: string) {
 }
 
 export function formatLocationStringOfAttribute(
-    values: IV_DC,
     location: number,
     name: string,
     format: string,

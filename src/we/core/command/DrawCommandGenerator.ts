@@ -190,13 +190,8 @@ export class DrawCommandGenerator {
         return wgsl.getWgslValueFormat(format);
     }
 
-    formatLocationStringOfAttribute(
-        values: IV_DC,
-        location: number,
-        name: string,
-        format: string,
-    ): string {
-        return wgsl.formatLocationStringOfAttribute(values, location, name, format);
+    formatLocationStringOfAttribute(location: number, name: string, format: string): string {
+        return wgsl.formatLocationStringOfAttribute(location, name, format);
     }
 
     /**
