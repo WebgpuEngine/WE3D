@@ -162,43 +162,13 @@ export class DrawCommandGenerator {
             return drawCommand;
         } else {
             //4、GPURenderPassDescriptor
-            const renderPassDescriptor = () => {
-                let renderPassDescriptor: GPURenderPassDescriptor;
-                //1、如果有rpd描述。
+            const renderPassDescriptor = (): GPURenderPassDescriptor => {
+                // 有显式传入的 rpd 则使用之
                 if (values.renderPassDescriptor != undefined) {
-                    renderPassDescriptor = values.renderPassDescriptor;
+                    return values.renderPassDescriptor;
                 }
-                // //2、如果有rpd函数。
-                // else if (values.renderPassDescriptor != undefined && typeof values.renderPassDescriptor == "function") {
-                //     renderPassDescriptor = values.renderPassDescriptor();
-                // }
-                //3\ 增加一个MSAA 的NDC
-                else if (this.scene.finalTarget.NDC == true && values.system?.MSAA) {
-                    // if (values.system?.MSAA)
-                    renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
-                }
-                // //4、如果没有rpd描述，且有system。
-                // else if (values.system && values.renderPassDescriptor == undefined) {
-                //     let UUID = this.checkUUID(values);
-                //     if (UUID) {
-                //         if (this.MSAA) {
-                //             // if (values.system.MSAA != undefined)
-                //             renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type, values.system.MSAA);
-                //             // else
-                //             //     throw new Error("MSAA渲染,需要在system中指定MSAA");
-                //         }
-                //         else
-                //             renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type);
-                //     }
-                //     else {
-                //         this.errorUUID();// throw new Error("获取UUID失败");
-                //     }
-                // }
-                //5、NDC，raw模式
-                else {
-                    renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
-                }
-                return renderPassDescriptor!;
+                // 否则使用 NDC / raw 模式的默认 RPD
+                return this.scene.getRenderPassDescriptorForNDC();
             };
             commandOption.drawInfo.renderPassDescriptor = renderPassDescriptor;
             //6 创建DC
