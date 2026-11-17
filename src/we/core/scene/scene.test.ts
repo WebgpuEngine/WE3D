@@ -134,6 +134,7 @@ describe('Scene.update — 帧更新顺序特征基线（C0）', () => {
                 calls.push('updateBVH');
                 return Promise.resolve();
             },
+            resourcesGPU: { tick: () => {} },
         });
         return calls;
     }
@@ -190,6 +191,7 @@ describe('Scene.update — 帧更新顺序特征基线（C0）', () => {
             generateBox: () => {},
             generateSphere: () => {},
             updateBVH: () => Promise.resolve(),
+            resourcesGPU: { tick: () => {} },
         });
 
         await scene.update();

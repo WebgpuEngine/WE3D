@@ -2,7 +2,8 @@ import { WeGenerateID } from '../math/baseFunction';
 import type { Scene } from '../scene/scene';
 import { E_lifeState, I_Update } from '../base/coreDefine';
 import { Clock } from '../scene/clock';
-import { ResourceManagerOfGPU } from '../resources/resourcesGPU';
+import type { ResourceManagerOfGPU } from '../resources/gpu/resourcesGPU';
+import type { IV_ReleaseTicket } from '../resources/gpu/types';
 import { ECSManager } from './manager';
 
 export interface I_UUID {
@@ -58,18 +59,17 @@ export abstract class RootGPU implements I_UUID {
 
     _manager: ECSManager<RootGPU> | undefined;
 
-    // /**
-    //  * 映射列表，用于存储映射关系，例如：[texture, bindGroupEntry]
-    //  * 例如：[texture, bindGroupEntry]
-    //  * destroy时需要删除映射关系
-    //  */
-    mapList: {
-        key: any; //key of map
-        type: string; //类型
-        map?: string; //明确的Map<>
-    }[] = [];
+    /**
+     * 释放凭证列表：派生类 acquire 资源后 track，destroy 时统一 requestRelease（C5）
+     */
+    _tickets: IV_ReleaseTicket[] = [];
 
     resourcesGPU!: ResourceManagerOfGPU;
+
+    /** 登记释放凭证（C5）：派生类 acquire 后调用，销毁时统一提交释放申请 */
+    track(ticket: IV_ReleaseTicket) {
+        this._tickets.push(ticket);
+    }
     /**
      * 是否用户自定义更新函数
      */
@@ -144,22 +144,14 @@ export abstract class RootGPU implements I_UUID {
         if (this._isDestroy) return;
         this._isDestroy = true;
         if (this.resourcesGPU) {
-            for (const i of this.mapList) {
+            for (const ticket of this._tickets) {
                 try {
-                    if (
-                        i.map &&
-                        this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)
-                    ) {
-                        const target = this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as
-                            Map<any, any> | undefined;
-                        target?.delete(i.key);
-                    } else {
-                        this.resourcesGPU.delete(i.key, i.type);
-                    }
+                    this.resourcesGPU.requestRelease(ticket);
                 } catch (e) {
-                    console.warn('[destroy] resource cleanup failed', i, e);
+                    console.warn('[destroy] resource release failed', e);
                 }
             }
+            this._tickets.length = 0;
         }
         try {
             this._destroy();

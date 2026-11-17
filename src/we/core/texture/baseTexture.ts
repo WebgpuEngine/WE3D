@@ -101,10 +101,9 @@ export abstract class BaseTexture extends RootGPU {
         }
     }
     _destroy(): void {
-        if (this.texture) {
-            this.texture.destroy();
-            this.texture = undefined;
-        }
+        // 缓存的纹理由 RootGPU.destroy() 的 requestRelease 统一裁决，这里不直接 destroy（C5）
+        this.texture = undefined;
+        this._state = E_lifeState.destroyed;
         this.scene.textureManager.remove(this);
     }
     /**
@@ -130,9 +129,9 @@ export abstract class BaseTexture extends RootGPU {
             this.scene = scene;
         }
         //默认的纹理
-        this.texture = this.scene.resourcesGPU.textureOfString.get('default');
+        this.texture = this.scene.resourcesGPU.defaults.defaultGPUTexture;
         //默认的采样器
-        this.sampler = this.scene.resourcesGPU.getSampler('linear');
+        this.sampler = this.scene.resourcesGPU.defaults.getSampler('linear');
 
         await super.init(scene);
         // this.initBindingLayoutSetting();
@@ -169,7 +168,7 @@ export abstract class BaseTexture extends RootGPU {
      * @param input I_BaseTexture 纹理的输入参数
      */
     async initSamplerAndLayout(input: I_BaseTexture) {
-        this.sampler = this.scene.resourcesGPU.getSampler('linear');
+        this.sampler = this.scene.resourcesGPU.defaults.getSampler('linear');
         if (input.sampler != undefined) {
             if (input.sampler instanceof GPUSampler) {
                 this.sampler = input.sampler;
@@ -177,7 +176,7 @@ export abstract class BaseTexture extends RootGPU {
                 typeof input.sampler == 'string' &&
                 (input.sampler == 'linear' || input.sampler == 'nearest')
             ) {
-                this.sampler = this.scene.resourcesGPU.getSampler(input.sampler);
+                this.sampler = this.scene.resourcesGPU.defaults.getSampler(input.sampler);
             } else if (isGPUSamplerDescriptor(input.sampler)) {
                 this.sampler = this.device.createSampler(input.sampler);
             }

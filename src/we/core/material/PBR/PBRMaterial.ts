@@ -26,7 +26,6 @@ import { I_pointerCreateParams } from '../../bufferBlock/pointer';
 import { E_BOLBufferType } from '../../bufferBlock/base';
 import { E_lifeState, weVec4 } from '../../base/coreDefine';
 import { T_uniformEntries } from '../../command/base';
-import { E_resourceKind } from '../../resources/resourcesGPU';
 import { Clock } from '../../scene/clock';
 import { E_TextureChannel, I_BaseTexture, isI_BaseTexture } from '../../texture/base';
 import { Texture } from '../../texture/texture';
@@ -725,18 +724,10 @@ export class PBRMaterial extends BaseMaterial {
         let textureInstace: Texture;
         let generate = false;
         if (typeof sourceUrl.source == 'string') {
-            if (this.scene.resourcesGPU.weTextureOfString.has(sourceUrl.source)) {
-                const result = this.scene.resourcesGPU.weTextureOfString.get(sourceUrl.source);
-                try {
-                    if (result == undefined) {
-                        throw new Error('texture not found');
-                    } else {
-                        textureInstace = result;
-                        generate = false;
-                    }
-                } catch (_error) {
-                    generate = true;
-                }
+            const cached = this.scene.resourcesGPU.assets.weTextures.peek(sourceUrl.source);
+            if (cached !== undefined) {
+                textureInstace = cached as Texture;
+                generate = false;
             } else {
                 generate = true;
             }
@@ -747,11 +738,12 @@ export class PBRMaterial extends BaseMaterial {
             textureInstace = new Texture(sourceUrl, this.device, this.scene);
             await textureInstace.init(this.scene);
             if (typeof sourceUrl.source == 'string') {
-                this.scene.resourcesGPU.weTextureOfString.set(sourceUrl.source, textureInstace);
-                this.mapList.push({
-                    key: sourceUrl.source,
-                    type: E_resourceKind.weTextureOfString,
-                });
+                const { value, ticket } = this.scene.resourcesGPU.assets.weTextures.acquire(
+                    sourceUrl.source,
+                    () => textureInstace,
+                );
+                textureInstace = value as Texture;
+                this.track(ticket);
             }
         }
         return textureInstace!;

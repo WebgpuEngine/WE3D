@@ -29,6 +29,26 @@ beforeAll(() => {
     });
 });
 
+/** 可观察 Store mock：背后用 Map 承接，暴露 peek/acquire，便于断言缓存 key 与命中数。 */
+function makeObservableStore<V = unknown>() {
+    const map = new Map<string, V>();
+    return {
+        map,
+        get size() {
+            return map.size;
+        },
+        peek: (key: string) => map.get(key),
+        acquire: (key: string, factory: () => V) => {
+            let value = map.get(key);
+            if (value === undefined) {
+                value = factory();
+                map.set(key, value);
+            }
+            return { value, ticket: { id: 0, released: false } };
+        },
+    };
+}
+
 describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     let DrawCommandGenerator: any;
 
@@ -42,10 +62,11 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     } as unknown as GPUDevice;
 
     function makeGenerator() {
-        const resources = { pipeline: new Map<string, unknown>() };
+        const pipelines = makeObservableStore();
+        const shaderModules = makeObservableStore();
         const scene = {
             device: mockDevice,
-            resourcesGPU: resources,
+            resourcesGPU: { derived: { pipelines, shaderModules } },
             MSAA: false,
             clock: {},
             pointers: {},
@@ -73,7 +94,7 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
             },
         } as unknown as Scene;
         const generator = new DrawCommandGenerator({ scene });
-        return { resources, generator };
+        return { pipelines, generator };
     }
 
     const vertex = { vs: {}, name: 'vs-md5' };
@@ -93,17 +114,17 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     });
 
     it('仅 depthWriteEnabled 不同 → 不误命中，应创建两个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         generator.initPipeLine(makeValue(true), vertex, fragment, []);
         generator.initPipeLine(makeValue(false), vertex, fragment, []);
-        expect(resources.pipeline.size).toBe(2);
+        expect(pipelines.size).toBe(2);
     });
 
     it('depthStencil 完全相同 → 命中缓存，只创建一个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         generator.initPipeLine(makeValue(true), vertex, fragment, []);
         generator.initPipeLine(makeValue(true), vertex, fragment, []);
-        expect(resources.pipeline.size).toBe(1);
+        expect(pipelines.size).toBe(1);
     });
 });
 
@@ -120,10 +141,11 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
     } as unknown as GPUDevice;
 
     function makeGenerator() {
-        const resources = { pipeline: new Map<string, unknown>() };
+        const pipelines = makeObservableStore();
+        const shaderModules = makeObservableStore();
         const scene = {
             device: mockDevice,
-            resourcesGPU: resources,
+            resourcesGPU: { derived: { pipelines, shaderModules } },
             MSAA: false,
             clock: {},
             pointers: {},
@@ -151,7 +173,7 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
             },
         } as unknown as Scene;
         const generator = new DrawCommandGenerator({ scene });
-        return { resources, generator };
+        return { pipelines, generator };
     }
 
     const makeValue = (overrides: Record<string, unknown> = {}) => ({
@@ -161,16 +183,16 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
     });
 
     it('仅 bindGroupLayouts 不同 → 不复用，应创建两个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
         const fragment = { fs: undefined, name: 'fs-md5' };
         generator.initPipeLine(makeValue(), vertex, fragment, [{ label: 'layout-A' }]);
         generator.initPipeLine(makeValue(), vertex, fragment, [{ label: 'layout-B' }]);
-        expect(resources.pipeline.size).toBe(2);
+        expect(pipelines.size).toBe(2);
     });
 
     it('仅 fragment.targets 不同 → 不复用，应创建两个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
         const fragmentA = {
             fs: { module: {}, entryPoint: 'fs', targets: [{ format: 'bgra8unorm' }] },
@@ -182,11 +204,11 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
         };
         generator.initPipeLine(makeValue(), vertex, fragmentA, []);
         generator.initPipeLine(makeValue(), vertex, fragmentB, []);
-        expect(resources.pipeline.size).toBe(2);
+        expect(pipelines.size).toBe(2);
     });
 
     it('仅 vertex.buffers 不同 → 不复用，应创建两个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         const vertexA = {
             vs: {
                 module: {},
@@ -206,13 +228,13 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
         const fragment = { fs: undefined, name: 'fs-md5' };
         generator.initPipeLine(makeValue(), vertexA, fragment, []);
         generator.initPipeLine(makeValue(), vertexB, fragment, []);
-        expect(resources.pipeline.size).toBe(2);
+        expect(pipelines.size).toBe(2);
     });
 
     it('仅 vertex.constants / vertex.entryPoint 不同 → 不复用', () => {
         // constants 不同
         {
-            const { resources, generator } = makeGenerator();
+            const { pipelines, generator } = makeGenerator();
             const vertexA = {
                 vs: { module: {}, entryPoint: 'vs', constants: { scale: 1 } },
                 name: 'vs-md5',
@@ -224,22 +246,22 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
             const fragment = { fs: undefined, name: 'fs-md5' };
             generator.initPipeLine(makeValue(), vertexA, fragment, []);
             generator.initPipeLine(makeValue(), vertexB, fragment, []);
-            expect(resources.pipeline.size).toBe(2);
+            expect(pipelines.size).toBe(2);
         }
         // entryPoint 不同
         {
-            const { resources, generator } = makeGenerator();
+            const { pipelines, generator } = makeGenerator();
             const vertexA = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
             const vertexB = { vs: { module: {}, entryPoint: 'vsAlt' }, name: 'vs-md5' };
             const fragment = { fs: undefined, name: 'fs-md5' };
             generator.initPipeLine(makeValue(), vertexA, fragment, []);
             generator.initPipeLine(makeValue(), vertexB, fragment, []);
-            expect(resources.pipeline.size).toBe(2);
+            expect(pipelines.size).toBe(2);
         }
     });
 
     it('key 快照：完整 descriptor 稳定序列化结果固定（含 targets / buffers 等维度）', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         const vertex = {
             vs: {
                 module: {},
@@ -259,9 +281,30 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', (
             name: 'fs-md5',
         };
         generator.initPipeLine(makeValue({ depthStencil: false }), vertex, fragment, []);
-        expect([...resources.pipeline.keys()]).toEqual([
-            '{"bindGroupLayouts":[],"depthStencil":undefined,"fragment":{"code":"fs-md5","constants":{},"entryPoint":"fs","targets":[{"format":"bgra8unorm"}]},"multisample":undefined,"primitive":undefined,"vertex":{"buffers":[{"arrayStride":12,"attributes":[]}],"code":"vs-md5","constants":{},"entryPoint":"vs"}}',
+        expect([...pipelines.map.keys()]).toEqual([
+            '{"bindGroupLayouts":[],"depthStencil":undefined,"fragment":{"code":"fs-md5","constants":{},"entryPoint":"fs","targets":[{"format":"bgra8unorm"}]},"multisample":undefined,"primitive":undefined,"reflectionSignature":"","variantKey":"","vertex":{"buffers":[{"arrayStride":12,"attributes":[]}],"code":"vs-md5","constants":{},"entryPoint":"vs"}}',
         ]);
+    });
+
+    it('§2.4 ② 元数据进入 keyObject 可读，且不改变命中语义', () => {
+        const { pipelines, generator } = makeGenerator();
+        const vertex = {
+            vs: { module: {}, entryPoint: 'vs', buffers: [], constants: {} },
+            name: 'vs-md5',
+            variantKey: 'material.pbr:variant-a',
+            reflectionSignature: '{"applied":true,"ndc":false}',
+        };
+        const fragment = { fs: undefined, name: '' };
+        const values = makeValue({ depthStencil: false });
+
+        generator.initPipeLine(values, vertex, fragment, []);
+        const key = [...pipelines.map.keys()][0];
+        expect(key).toContain('"variantKey":"material.pbr:variant-a"');
+        expect(key).toContain('"reflectionSignature":"{\\"applied\\":true,\\"ndc\\":false}"');
+
+        // 同一 descriptor + 同一元数据仍命中同一条目：命中分区未被元数据改变
+        generator.initPipeLine(values, vertex, fragment, []);
+        expect(pipelines.size).toBe(1);
     });
 });
 
@@ -273,10 +316,14 @@ describe('DrawCommandGenerator.initShaderModule — P0-2 targets 拷贝与越界
     });
 
     function makeGenerator() {
-        const resources = { shaderModuleOfString: new Map<string, unknown>() };
         const scene = {
             device: { createShaderModule: () => ({}) },
-            resourcesGPU: resources,
+            resourcesGPU: {
+                derived: {
+                    shaderModules: makeObservableStore(),
+                    pipelines: makeObservableStore(),
+                },
+            },
             MSAA: false,
             clock: {},
             pointers: {},
@@ -344,6 +391,39 @@ describe('DrawCommandGenerator.initShaderModule — P0-2 targets 拷贝与越界
         expect(result.fragment.targets).toHaveLength(1);
         expect(result.fragment.targets[0].blend).toBe(blendA);
     });
+
+    it('§2.4 ② 返回 variantKey / reflectionSignature 元数据（NDC 跳过反射）', () => {
+        const { generator } = makeGenerator();
+        const makeValues = (vsCode: string) => ({
+            label: 'meta',
+            data: {},
+            render: {
+                vertex: { code: vsCode, entryPoint: 'vs' },
+                fragment: {
+                    code: 'fs',
+                    entryPoint: 'fs',
+                    aliasName: 'material.color',
+                    targets: [{ format: 'bgra8unorm' }],
+                },
+            },
+        });
+        const args = ['position'];
+        const locations = ['@location(0) position'];
+
+        const a = generator.initShaderModule(makeValues('vs-A'), args, locations, []);
+        const b = generator.initShaderModule(makeValues('vs-B'), args, locations, []);
+        const a2 = generator.initShaderModule(makeValues('vs-A'), args, locations, []);
+
+        // 可读前缀 + 变种区分 + 稳定复现
+        expect(a.variantKey.startsWith('material.color:')).toBe(true);
+        expect(a.variantKey).not.toBe(b.variantKey);
+        expect(a2.variantKey).toBe(a.variantKey);
+        expect(a2.reflectionSignature).toBe(a.reflectionSignature);
+        // NDC === true → 跳过反射，applied=false 必须与 true 区分
+        expect(a.reflectionSignature).toContain('"applied":false');
+        expect(a.reflectionSignature).toContain('"ndc":true');
+        expect(a.reflectionSignature).toContain('"names":["position"]');
+    });
 });
 
 /**
@@ -398,10 +478,14 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
     };
 
     function makeGenerator() {
-        const resources = { pipeline: new Map<string, unknown>() };
         const scene = {
             device: { createPipelineLayout: () => ({}), createRenderPipeline: () => ({}) },
-            resourcesGPU: resources,
+            resourcesGPU: {
+                derived: {
+                    shaderModules: makeObservableStore(),
+                    pipelines: makeObservableStore(),
+                },
+            },
             MSAA: false,
             clock: {},
             pointers: {},
@@ -411,7 +495,7 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
         const generator = new DrawCommandGenerator({
             scene,
         } as unknown as ConstructorParameters<Ctor>[0]);
-        return { generator, resources };
+        return { generator };
     }
 
     it('getWgslValueFormat 全量格式映射表固定（35 项）', () => {

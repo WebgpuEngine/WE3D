@@ -10,11 +10,11 @@ import {
     isDynamicTextureEntryForView,
     isUniformBufferPart,
     type I_uniformArrayBufferEntry,
+    type T_uniformEntries,
 } from './base';
 import { isGPUBindGroup, isGPUBindGroupLayout } from './baseFunction';
 import { DrawCommand, IV_DrawCommand } from './DrawCommand';
 import { E_renderForDC } from '../base/coreDefine';
-import { ResourceManagerOfGPU } from '../resources/resourcesGPU';
 import { Clock } from '../scene/clock';
 import { BaseDrawCommand, I_VertexBufferEntry } from './BaseDrawCommand';
 import { I_pointerCreateParams, I_pointerStruct, Pointers } from '../bufferBlock/pointer';
@@ -31,6 +31,7 @@ import { MD5 } from '../../reExport/md5';
 import { PBRMaterial } from '../material/PBR/PBRMaterial';
 
 import { stableStringify } from './stableStringify';
+import { computeReflectionSignature, computeVariantKey } from '../resources/gpu/shaderVariantKey';
 import * as wgsl from './wgslVertexFormat';
 import * as vertex from './drawCommandGenerator.vertex';
 import type { IV_DC, IV_DrawCommandGenerator } from './drawCommandGeneratorTypes';
@@ -55,9 +56,15 @@ export class DrawCommandGenerator {
     device: GPUDevice;
     scene: Scene;
     parent: any; //BaseEntity;
-    resources: ResourceManagerOfGPU;
     MSAA: boolean;
     pointers: Pointers;
+
+    /** bindGroup → layout 局部缓存（旧 bindGroupToGroupLayout 下沉 DCG） */
+    private bindGroupToGroupLayout = new WeakMap<GPUBindGroup, GPUBindGroupLayout>();
+    /** uniform entry → 其 bindGroupLayoutEntry 局部缓存（旧 entriesToEntriesLayout 下沉 DCG） */
+    private entriesToEntriesLayout = new WeakMap<T_uniformEntries, GPUBindGroupLayoutEntry>();
+    /** uniform entry → pointer 局部缓存（旧 uniformBuffer 下沉 DCG） */
+    private uniformBuffer = new WeakMap<T_uniformEntries, I_pointerStruct>();
 
     /**DrawCommand的输入参数数组 */
     inputDC: IV_DC[] = [];
@@ -72,7 +79,6 @@ export class DrawCommandGenerator {
         this.device = inputValue.scene.device;
         this.scene = inputValue.scene;
         this.parent = inputValue.parent;
-        this.resources = this.scene.resourcesGPU;
         this.MSAA = this.scene.MSAA;
         this.clock = this.scene.clock;
         this.pointers = this.scene.pointers;
@@ -98,17 +104,13 @@ export class DrawCommandGenerator {
 
         //3、shaderModule 编译
 
-        const { vertex, fragment, vertexName, fragmentName } = this.initShaderModule(
-            values,
-            DC_vertexNames,
-            DC_localtions,
-            DC_verticesBufferLayout,
-        );
+        const { vertex, fragment, vertexName, fragmentName, variantKey, reflectionSignature } =
+            this.initShaderModule(values, DC_vertexNames, DC_localtions, DC_verticesBufferLayout);
 
         //4、pipeline 部分
         const pipeline = this.initPipeLine(
             values,
-            { vs: vertex, name: vertexName },
+            { vs: vertex, name: vertexName, variantKey, reflectionSignature },
             { fs: fragment, name: fragmentName },
             DC_bindGroupLayouts,
         );
@@ -395,8 +397,8 @@ export class DrawCommandGenerator {
                     }
                     //如果没有layout，就从resources中获取
                     else {
-                        if (this.resources.hasBindGroupLayout(bindGroup)) {
-                            const bindGroupLayoutGet = this.resources.getBindGroupLayout(bindGroup); //是否有对应的layout
+                        if (this.bindGroupToGroupLayout.has(bindGroup)) {
+                            const bindGroupLayoutGet = this.bindGroupToGroupLayout.get(bindGroup); //是否有对应的layout
                             if (bindGroupLayoutGet) {
                                 bindGroupLayout = bindGroupLayoutGet;
                             } else {
@@ -448,8 +450,9 @@ export class DrawCommandGenerator {
                             /**
                              * 获取perEntry的layout
                              */
-                            if (this.resources.hasEntrieLayout(perEntry)) {
-                                perBindGroupLayoutEntry = this.resources.getEntrieLayout(perEntry)!; //每个entry的layout
+                            if (this.entriesToEntriesLayout.has(perEntry)) {
+                                perBindGroupLayoutEntry =
+                                    this.entriesToEntriesLayout.get(perEntry)!; //每个entry的layout
                                 if (perBindGroupLayoutEntry) {
                                     bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
                                 } else {
@@ -465,9 +468,9 @@ export class DrawCommandGenerator {
                          * 其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                          */
                         if (isUniformBufferPart(perEntry)) {
-                            if (this.resources.hasUniform(perEntry)) {
+                            if (this.uniformBuffer.has(perEntry)) {
                                 //已有,直接获取，不创建
-                                const buffer = this.resources.getUniform(perEntry);
+                                const buffer = this.uniformBuffer.get(perEntry);
                                 if (buffer)
                                     bindGroupEntry.push({
                                         binding: perEntry.binding,
@@ -489,7 +492,7 @@ export class DrawCommandGenerator {
                                     },
                                 };
                                 const pointer = this.pointers.createPointer(pointerParams);
-                                this.resources.setUniform(perEntry, pointer);
+                                this.uniformBuffer.set(perEntry, pointer);
                                 bindGroupEntry.push({
                                     binding: perEntry.binding,
                                     resource: pointer.gpuBufferView,
@@ -560,6 +563,8 @@ export class DrawCommandGenerator {
         fragment: GPUFragmentState | undefined;
         vertexName: string;
         fragmentName: string;
+        variantKey: string;
+        reflectionSignature: string;
     } {
         //VS location 输出插值模式
         const _locationInterpolateString = '';
@@ -569,8 +574,6 @@ export class DrawCommandGenerator {
 
         // 3.1 反射顶点名称到shader code的顶点属性的占位符中
         //vertex shader
-        let moduleVS: GPUShaderModule;
-        // let vsCacheShaderModuleName = values.label;
 
         let shadercode: string;
         if (this.scene.finalTarget.NDC === true) {
@@ -583,18 +586,16 @@ export class DrawCommandGenerator {
             );
         const md5OfVScode = MD5(shadercode);
 
-        //3.2、VS shaderModule 编译
-        if (this.resources.shaderModuleOfString.has(md5OfVScode)) {
-            moduleVS = this.resources.shaderModuleOfString.get(md5OfVScode)!;
-        } else //可以缓存透明材质的VS shader model
-        {
-            moduleVS = this.device.createShaderModule({
-                // label: `vs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
-                label: values.label,
-                code: shadercode,
-            });
-            this.resources.shaderModuleOfString.set(md5OfVScode, moduleVS);
-        }
+        //3.2、VS shaderModule 编译（C4：stage + finalCodeHash 命中派生缓存）
+        const moduleVS: GPUShaderModule = this.scene.resourcesGPU.derived.shaderModules.acquire(
+            `vs:${md5OfVScode}`,
+            () =>
+                this.device.createShaderModule({
+                    // label: `vs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
+                    label: values.label,
+                    code: shadercode,
+                }),
+        ).value;
 
         //3.3 GPURenderPipelineDescriptor.vertex部分
         let constansVS = {};
@@ -616,20 +617,20 @@ export class DrawCommandGenerator {
             if (values.render.fragment.code == undefined) {
                 moduleFS = moduleVS;
             } else {
-                const codeFS: string = values.render.fragment.code;
+                const fragmentState = values.render.fragment;
+                const codeFS: string = fragmentState.code!;
                 md5OfFScode = MD5(codeFS);
 
-                if (this.resources.shaderModuleOfString.has(md5OfFScode)) {
-                    moduleFS = this.resources.shaderModuleOfString.get(md5OfFScode)!;
-                } else //可以缓存透明材质的FS shader model
-                {
-                    moduleFS = this.device.createShaderModule({
-                        // label: `fs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
-                        label: values.render.fragment.aliasName,
-                        code: codeFS,
-                    });
-                    this.resources.shaderModuleOfString.set(md5OfFScode, moduleFS);
-                }
+                //可以缓存透明材质的FS shader model（C4：stage + finalCodeHash 命中派生缓存）
+                moduleFS = this.scene.resourcesGPU.derived.shaderModules.acquire(
+                    `fs:${md5OfFScode}`,
+                    () =>
+                        this.device.createShaderModule({
+                            // label: `fs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
+                            label: fragmentState.aliasName,
+                            code: codeFS,
+                        }),
+                ).value;
             }
             //3.4.2 配置targets
             let targets: GPUColorTargetState[] = [];
@@ -691,7 +692,29 @@ export class DrawCommandGenerator {
                 constants: constansFS,
             };
         }
-        return { vertex, fragment, vertexName: md5OfVScode, fragmentName: md5OfFScode };
+        // §2.4 ② 元数据（进入 pipeline keyObject）：可读 / stats 按变种统计 / 按变种精确失效。
+        // 二者完全由已有命中维度派生（code hash、顶点布局、反射输入），只是冗余标签，
+        // 不改变命中分区；命中仍只依赖 stage + finalCodeHash（硬规则 ①）。
+        // DCG 拿不到 material 的 userCode / userCodeFunction，改用其等价物「注入后 code 的 hash」：
+        // userCode 变化必然改变 finalWGSL，故变种区分等价。
+        const ndc = this.scene.finalTarget.NDC === true;
+        const aliasName = values.render.fragment?.aliasName ?? values.render.vertex.entryPoint;
+        const variantKey = computeVariantKey(aliasName, md5OfVScode, md5OfFScode);
+        const reflectionSignature = computeReflectionSignature({
+            names: DC_vertexNames,
+            locations: DC_localtions,
+            buffers: DC_verticesBufferLayout,
+            ndc,
+            applied: !ndc,
+        });
+        return {
+            vertex,
+            fragment,
+            vertexName: md5OfVScode,
+            fragmentName: md5OfFScode,
+            variantKey,
+            reflectionSignature,
+        };
     }
     /**
      * 为 GPUBindGroupLayout 分配稳定 id，作为 pipeline 缓存 key 的 layout 列表标识。
@@ -707,7 +730,12 @@ export class DrawCommandGenerator {
     }
     initPipeLine(
         values: IV_DC,
-        vertex: { vs: GPUVertexState; name: string },
+        vertex: {
+            vs: GPUVertexState;
+            name: string;
+            variantKey?: string;
+            reflectionSignature?: string;
+        },
         fragment: { fs: GPUFragmentState | undefined; name: string },
         DC_bindGroupLayouts: GPUBindGroupLayout[],
     ): GPURenderPipeline {
@@ -759,6 +787,7 @@ export class DrawCommandGenerator {
          * 除 GPU 对象引用外，全部可序列化部分（entryPoint / buffers / targets / constants /
          * primitive / depthStencil / multisample / bindGroupLayouts 列表标识）整体走 stableStringify，
          * 保证内容相同则 key 相同、任一维度不同则 key 不同，且不会因 JSON 内含逗号而失射。
+         * 末尾两个 §2.4 ② 元数据字段由上述命中维度同源派生，不改变命中分区。
          */
         const keyObject = {
             vertex: {
@@ -781,9 +810,13 @@ export class DrawCommandGenerator {
             primitive: primitiveState,
             depthStencil: depthStencilState,
             multisample: multisampleState,
+            // §2.4 ② 元数据：可读标签（由 code hash / 顶点布局同源派生），命中仍只依赖 finalCodeHash
+            variantKey: vertex.variantKey ?? '',
+            reflectionSignature: vertex.reflectionSignature ?? '',
         };
         const nameOfCacheFlag = stableStringify(keyObject);
-        const cached = this.resources.pipeline.get(nameOfCacheFlag);
+        const cached = this.scene.resourcesGPU.derived.pipelines.peek(nameOfCacheFlag) as
+            GPURenderPipeline | undefined;
         if (cached) {
             return cached;
         }
@@ -804,8 +837,8 @@ export class DrawCommandGenerator {
         if (multisampleState) descriptor.multisample = multisampleState;
         if (depthStencilState) descriptor.depthStencil = depthStencilState;
 
-        const pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-        this.resources.pipeline.set(nameOfCacheFlag, pipeline);
-        return pipeline;
+        return this.scene.resourcesGPU.derived.pipelines.acquire(nameOfCacheFlag, () =>
+            this.device.createRenderPipeline(descriptor),
+        ).value as GPURenderPipeline;
     }
 }

@@ -302,10 +302,8 @@ export abstract class BaseMaterial extends RootGPU {
         if (this._state == E_lifeState.finished) return;
         this.scene = scene;
         // this.entity = entity;
-        this.defaultTexture2D = this.scene.resourcesGPU.weTextureOfString.get('default') as Texture;
-        this.defaultTexture3D = this.scene.resourcesGPU.weTextureOfString.get(
-            'defaultCube',
-        ) as CubeTexture;
+        this.defaultTexture2D = this.scene.resourcesGPU.defaults.defaultTexture as Texture;
+        this.defaultTexture3D = this.scene.resourcesGPU.defaults.defaultCubeTexture as CubeTexture;
         this.defaultSampler = this.checkSampler(this.inputValues);
         this.resourcesGPU = this.scene.resourcesGPU;
         this.createUniformCommonPointer();

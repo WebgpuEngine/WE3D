@@ -84,7 +84,7 @@ export class Texture2D extends BaseTexture {
                 typeof input.sampler == 'string' &&
                 (input.sampler == 'linear' || input.sampler == 'nearest')
             ) {
-                this.sampler = this.scene.resourcesGPU.getSampler(input.sampler);
+                this.sampler = this.scene.resourcesGPU.defaults.getSampler(input.sampler);
             } else if (isGPUSamplerDescriptor(input.sampler)) {
                 this.sampler = this.device.createSampler(input.sampler);
             }

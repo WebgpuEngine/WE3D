@@ -30,8 +30,9 @@ export class PrefilteredCubemap extends BaseTexture {
         const source = this.inputValues.source;
         let width = 256;
         let height = 256;
-        if (this.scene.resourcesGPU.textureOfString.has(source)) {
-            this.texture = this.scene.resourcesGPU.textureOfString.get(source);
+        const cached = this.scene.resourcesGPU.assets.textures.peek(source);
+        if (cached) {
+            this.texture = cached;
         } else {
             if (typeof source == 'string') {
                 // 1. 读取文件二进制
@@ -92,9 +93,13 @@ export class PrefilteredCubemap extends BaseTexture {
                     }
                 }
             }
-
-            this.scene.resourcesGPU.textureOfString.set(source, this.texture);
         }
+        const { value, ticket } = this.scene.resourcesGPU.assets.textures.acquire(
+            source,
+            () => this.texture,
+        );
+        this.texture = value;
+        this.track(ticket);
 
         return this._state;
     }

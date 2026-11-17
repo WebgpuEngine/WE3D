@@ -72,9 +72,16 @@ describe('ShaderRegister shader 合成', () => {
     });
 
     describe('#reflection', () => {
+        // 真实 WGSL 模板同时含三类占位符；占位符缺失按 §5.4 显式抛错
+        const fullTemplate = [
+            '#reflection location',
+            '#reflection attributes',
+            '#reflection morphTarget',
+        ].join('\n');
+
         it('location 反射注入', () => {
             const result = sr.reflection(
-                '#reflection location',
+                fullTemplate,
                 ['position'],
                 ['@location(0) position : vec3f ,'],
             );
@@ -82,20 +89,28 @@ describe('ShaderRegister shader 合成', () => {
             expect(result).not.toContain('#reflection location');
         });
         it('attributes 反射：有属性用 attributes.x，无属性用默认值', () => {
-            const result = sr.reflection('#reflection attributes', ['position'], []);
+            const result = sr.reflection(fullTemplate, ['position'], []);
             expect(result).toContain('attributes.position');
             expect(result).toContain('let normal= vec3f(0.0,0.0,0.0)');
             expect(result).not.toContain('attributes.normal');
         });
         it('morphTarget 反射动态生成 position_* 数组', () => {
             const result = sr.reflection(
-                '#reflection morphTarget',
+                fullTemplate,
                 ['position', 'position_1', 'position_2'],
                 [],
             );
             expect(result).toContain('array<vec3f,2>');
             expect(result).toContain('attributes.position_1');
             expect(result).toContain('attributes.position_2');
+        });
+        it('占位符缺失时显式抛错，避免静默返回未反射代码', () => {
+            expect(() => sr.reflection('#reflection location', ['position'], [])).toThrow(
+                '#reflection attributes',
+            );
+            expect(() => sr.reflection('#reflection attributes', ['position'], [])).toThrow(
+                '#reflection location',
+            );
         });
     });
 

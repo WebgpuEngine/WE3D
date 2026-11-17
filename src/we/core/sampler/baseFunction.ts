@@ -1,4 +1,3 @@
-import { E_resourceKind } from '../resources/resourcesGPU';
 import { Scene } from '../scene/scene';
 
 /**
@@ -20,24 +19,18 @@ export function getSampler(
 } {
     let sampler: GPUSampler;
     let samplerBindingType: GPUSamplerBindingType;
-    const _owner = false;
 
     if (input.samplerDescriptor) {
-        if (scene.resourcesGPU.has(input.samplerDescriptor, E_resourceKind.samplerOfString)) {
-            sampler = scene.resourcesGPU.get(
-                input.samplerDescriptor.label!,
-                E_resourceKind.samplerOfString,
-            ) as GPUSampler;
-        } else {
-            sampler = scene.device.createSampler(input.samplerDescriptor);
-        }
+        sampler = scene.resourcesGPU.assets.samplers.acquire(input.samplerDescriptor, () =>
+            scene.device.createSampler(input.samplerDescriptor),
+        ).value;
         samplerBindingType = input.samplerBindingType!;
     } else if (input.samplerFilter != undefined) {
-        sampler = scene.resourcesGPU.getSampler(input.samplerFilter) as GPUSampler;
+        sampler = scene.resourcesGPU.defaults.getSampler(input.samplerFilter) as GPUSampler;
         samplerBindingType =
             (input.samplerFilter as string) == 'filtering' ? 'filtering' : 'non-filtering';
     } else {
-        sampler = scene.resourcesGPU.getSampler('linear') as GPUSampler;
+        sampler = scene.resourcesGPU.defaults.getSampler('linear') as GPUSampler;
         samplerBindingType = 'filtering';
     }
     // else {

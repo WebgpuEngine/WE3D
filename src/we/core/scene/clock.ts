@@ -4,6 +4,7 @@ export class Clock {
     timeStart: number;
     _deltaTime: number;
     _deltaTimeMS: number;
+    frame: number = 0;
 
     constructor() {
         this.timeStart = Date.now();
@@ -50,5 +51,6 @@ export class Clock {
         this.timeNow = Date.now();
         this._deltaTimeMS = this.timeNow - this.timeLast;
         this._deltaTime = this._deltaTimeMS / 1000;
+        this.frame++;
     }
 }

@@ -24,19 +24,21 @@ export function normalizeKey(key: unknown): string {
 }
 
 /**
- * 释放（销毁）一个资源值。
- * - WE3D 纹理等带 `_destroy` 的对象：优先 `_destroy`（直接销毁底层 GPU 资源）。
+ * 释放（销毁）一个资源值（C2）。
+ * - WE3D 资源（Texture / Material 等带公开 `destroy()` 的 RootGPU 派生）：优先 `destroy()`，
+ *   走完整销毁流程（requestRelease 内部 ticket → _destroy → manager 注销）。
  * - 原生 `GPUTexture` / `GPUBuffer`：走 `destroy()`。
+ * - 仅有 `_destroy` 的轻量对象：兜底直调。
  * - `GPUShaderModule` / `GPUSampler`：无销毁 API，安全跳过。
  */
 export function disposeOf(value: unknown): void {
     if (value === null || value === undefined || typeof value !== 'object') return;
-    const candidate = value as { _destroy?: unknown; destroy?: unknown };
-    if (typeof candidate._destroy === 'function') {
-        candidate._destroy();
-        return;
-    }
+    const candidate = value as { destroy?: unknown; _destroy?: unknown };
     if (typeof candidate.destroy === 'function') {
         candidate.destroy();
+        return;
+    }
+    if (typeof candidate._destroy === 'function') {
+        candidate._destroy();
     }
 }

@@ -1,4 +1,3 @@
-import { E_lifeState } from '../base/coreDefine';
 import { Scene } from '../scene/scene';
 import { I_BaseTexture } from './base';
 import { BaseTexture } from './baseTexture';
@@ -32,10 +31,6 @@ export class HDRTexture extends BaseTexture {
 
     updateSelf(): void {
         // throw new Error("Method not implemented.");
-    }
-    _destroy(): void {
-        this.texture.destroy();
-        this._state = E_lifeState.destroyed;
     }
     constructor(input: I_HDRTexture, device: GPUDevice, scene?: Scene) {
         super(input, device, scene);
@@ -88,8 +83,9 @@ export class HDRTexture extends BaseTexture {
     // }
     async initTextureAndLayout(): Promise<unknown> {
         const source = this.inputValues.source;
-        if (this.scene.resourcesGPU.textureOfString.has(source)) {
-            this.texture = this.scene.resourcesGPU.textureOfString.get(source);
+        const cached = this.scene.resourcesGPU.assets.textures.peek(source);
+        if (cached) {
+            this.texture = cached;
         } else {
             if (typeof source == 'string') {
                 let image: HdrifyImage;
@@ -143,23 +139,23 @@ export class HDRTexture extends BaseTexture {
                     { width: image.width, height: image.height },
                 );
             }
-
-            this.scene.resourcesGPU.textureOfString.set(source, this.texture);
-            // this.mapList.push({
-            //     key: source,
-            //     type: E_resourceKind.textureOfString,
-            // });
         }
+        const { value, ticket } = this.scene.resourcesGPU.assets.textures.acquire(
+            source,
+            () => this.texture,
+        );
+        this.texture = value;
+        this.track(ticket);
 
         return this._state;
     }
     override async initSamplerAndLayout(_input: I_BaseTexture) {
         if (this.scene.webGPUFeaturesSupported.includes('float32-filterable')) {
             this.samplerLayout.type = 'filtering';
-            this.sampler = this.scene.resourcesGPU.getSampler('linear');
+            this.sampler = this.scene.resourcesGPU.defaults.getSampler('linear');
         } else {
             this.samplerLayout.type = 'non-filtering';
-            this.sampler = this.scene.resourcesGPU.getSampler('nearest');
+            this.sampler = this.scene.resourcesGPU.defaults.getSampler('nearest');
         }
         // if (input.sampler != undefined) {
         //     if (input.sampler instanceof GPUSampler) {

@@ -467,7 +467,7 @@ export class NodeObject extends NodeSpace {
             } else if (child.type == 'Light') {
                 //这里不能使用 instanceof BaseLight，会遇到 “暂时性死区 Uncaught ReferenceError: Cannot access 'NodeOrigin' before initialization” 问题，应该是BaseLight的在NodeObject解析完成之前进行了初始化;可以使用type 导入，麻烦点
                 this.scene.lightsManager.add(child as BaseLight);
-                this.scene.resourcesGPU.cleanSystemUniform(); //shadowmap 数量会变化，清除system的map
+                this.scene.resourcesGPU.system.invalidate(); //shadowmap 数量会变化，清除system的map
                 if ((child as BaseLight).Shadow)
                     this.scene.renderManager.RC[E_renderPassName.transparent][child.UUID] = [];
                 childNode = child;

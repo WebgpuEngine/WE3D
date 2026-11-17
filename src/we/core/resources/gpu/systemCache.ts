@@ -37,6 +37,12 @@ export class SystemCache implements I_ReleasableStore {
         this.shadowmap.clean();
     }
 
+    /** 系统缓存精确失效（`cleanSystemUniform()` 演化版）：清空 systemGroup / shadowmap 分区 */
+    invalidate(): void {
+        this.systemGroup.clean();
+        this.shadowmap.clean();
+    }
+
     stats(): { size: number; totalRefs: number } {
         const a = this.systemGroup.stats();
         const b = this.shadowmap.stats();

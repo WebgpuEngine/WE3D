@@ -1,6 +1,5 @@
 import { E_lifeState } from '../base/coreDefine';
 import { I_VideoOption, weGetVidoeByUrl } from '../base/file/getFile';
-import { E_resourceKind } from '../resources/resourcesGPU';
 import { Scene } from '../scene/scene';
 import { I_BaseSampler, I_BaseTexture, numMipLevels } from './base';
 import { BaseTexture } from './baseTexture';
@@ -89,23 +88,18 @@ export class VideoTexture extends BaseTexture {
                 //external模式 不cache GPU相关
                 await this.getVidoeTexture(source);
             } else {
-                if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
-                    this.texture = this.scene.resourcesGPU.get(
-                        source,
-                        E_resourceKind.textureOfString,
-                    ) as GPUTexture;
+                const cached = this.scene.resourcesGPU.assets.textures.peek(source);
+                if (cached) {
+                    this.texture = cached;
                 } else {
                     await this.getVidoeTexture(source);
-                    this.scene.resourcesGPU.set(
-                        source,
-                        this.texture,
-                        E_resourceKind.textureOfString,
-                    );
-                    this.mapList.push({
-                        key: source,
-                        type: E_resourceKind.textureOfString,
-                    });
                 }
+                const { value, ticket } = this.scene.resourcesGPU.assets.textures.acquire(
+                    source,
+                    () => this.texture as GPUTexture,
+                );
+                this.texture = value;
+                this.track(ticket);
             }
         }
         return this._state;

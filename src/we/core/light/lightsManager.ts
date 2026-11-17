@@ -728,12 +728,7 @@ export class LightsManager extends ECSManager<BaseLight> {
      * @returns   GPUBindGroup,  GPUBindGroupLayout
      */
     getLightBindGroupAndBindGroupLayoutByMergeID(mergeID: string): I_bindGroupAndGroupLayout {
-        if (this.scene.resourcesGPU.shadowmapOfID2BindGroup.has(mergeID)) {
-            const bindGroup = this.scene.resourcesGPU.shadowmapOfID2BindGroup.get(mergeID)!; //未验证，
-            const bindGroupLayout =
-                this.scene.resourcesGPU.shadowmapOfBindGroup2Layout.get(bindGroup)!; //未验证
-            return { bindGroup, bindGroupLayout };
-        } else {
+        {
             const { id, matrixIndex } = this.getIdAndMatrixIndexByMergeID(mergeID);
 
             // let lightId = mergeID.split("__");
