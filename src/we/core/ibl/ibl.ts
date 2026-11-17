@@ -115,7 +115,7 @@ export class IBL {
                 usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
                 dimension: '2d',
             });
-            this._brdfLutSampler = this.scene.resourcesGPU.getSampler('nearest');
+            this._brdfLutSampler = this.scene.resourcesGPU.defaults.getSampler('nearest');
         }
         if (this._prefilteredCubeMap == undefined) {
             this._prefilteredCubeMap = this.device.createTexture({
@@ -126,7 +126,7 @@ export class IBL {
                 dimension: '2d',
                 // mipLevelCount: 5,
             });
-            this._prefilteredCubeMapSampler = this.scene.resourcesGPU.getSampler('cube');
+            this._prefilteredCubeMapSampler = this.scene.resourcesGPU.defaults.getSampler('cube');
         }
         this.initBindGroup();
     }

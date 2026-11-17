@@ -1,6 +1,5 @@
 import { E_renderForDC, weColor4 } from '../../base/coreDefine';
 import { I_drawModeIndexed } from '../../command/base';
-import { DrawCommand } from '../../command/DrawCommand';
 import { IV_DC } from '../../command/DrawCommandGenerator';
 import { I_materialBundleOutput } from '../../material/base';
 import { BaseMaterial } from '../../material/baseMaterial';
@@ -9,6 +8,7 @@ import { E_renderPassName } from '../../scene/renderManager';
 
 import { E_entityType, IV_BaseEntity } from '../base';
 import { EntityBundleMaterial } from '../entityBundleMaterial';
+import { generateDrawCommandAndTrack } from '../entityBundleMaterialDC';
 
 /**mesh的顶点结构与材质，各有一个，一一对应 */
 export interface IV_MeshEntity extends IV_BaseEntity {
@@ -253,6 +253,7 @@ export class Mesh extends EntityBundleMaterial {
                 code: bundle.fs.code,
                 entryPoint: bundle.fs.entryPoint || 'fs',
                 aliasName: bundle.fs.aliasName,
+                variantKey: bundle.fs.variantKey,
             };
         }
         const valueDC: IV_DC = {
@@ -319,7 +320,7 @@ export class Mesh extends EntityBundleMaterial {
                 vs: { code: vsCode },
                 fs,
             });
-            const dcOfWireFrame = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+            const dcOfWireFrame = generateDrawCommandAndTrack(this, valueDC);
             this.renderPassArray[E_renderPassName.forward].push(dcOfWireFrame);
         }
     }

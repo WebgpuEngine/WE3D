@@ -10,11 +10,11 @@ import {
     isDynamicTextureEntryForView,
     isUniformBufferPart,
     type I_uniformArrayBufferEntry,
+    type T_uniformEntries,
 } from './base';
 import { isGPUBindGroup, isGPUBindGroupLayout } from './baseFunction';
 import { DrawCommand, IV_DrawCommand } from './DrawCommand';
 import { E_renderForDC } from '../base/coreDefine';
-import { ResourceManagerOfGPU } from '../resources/resourcesGPU';
 import { Clock } from '../scene/clock';
 import { BaseDrawCommand, I_VertexBufferEntry } from './BaseDrawCommand';
 import { I_pointerCreateParams, I_pointerStruct, Pointers } from '../bufferBlock/pointer';
@@ -31,6 +31,7 @@ import { MD5 } from '../../reExport/md5';
 import { PBRMaterial } from '../material/PBR/PBRMaterial';
 
 import { stableStringify } from './stableStringify';
+import { computeReflectionSignature, computeVariantKey } from '../resources/gpu/shaderVariantKey';
 import * as wgsl from './wgslVertexFormat';
 import * as vertex from './drawCommandGenerator.vertex';
 import type { IV_DC, IV_DrawCommandGenerator } from './drawCommandGeneratorTypes';
@@ -51,24 +52,38 @@ export type {
     IV_DrawCommandGenerator,
 } from './drawCommandGeneratorTypes';
 
+/** initUniformPart 的 bindGroup 槽位编号（system 分支固定占用 0/1/2/3；slot3·IBL 非必须） */
+const UNIFORM_SLOT = {
+    system: 0,
+    entity: 1,
+    material: 2,
+    ibl: 3,
+} as const;
+
 export class DrawCommandGenerator {
     device: GPUDevice;
     scene: Scene;
     parent: any; //BaseEntity;
-    resources: ResourceManagerOfGPU;
     MSAA: boolean;
     pointers: Pointers;
 
-    /**DrawCommand的输入参数数组 */
-    inputDC: IV_DC[] = [];
+    /** bindGroup → layout 局部缓存（旧 bindGroupToGroupLayout 下沉 DCG） */
+    private bindGroupToGroupLayout = new WeakMap<GPUBindGroup, GPUBindGroupLayout>();
+    /** uniform entry → 其 bindGroupLayoutEntry 局部缓存（旧 entriesToEntriesLayout 下沉 DCG） */
+    private entriesToEntriesLayout = new WeakMap<T_uniformEntries, GPUBindGroupLayoutEntry>();
+    /** uniform entry → pointer 局部缓存（旧 uniformBuffer 下沉 DCG） */
+    private uniformBuffer = new WeakMap<T_uniformEntries, I_pointerStruct>();
 
     clock: Clock;
+
+    /** pipeline 缓存 key 中 bindGroupLayout 的稳定标识：同一 GPUBindGroupLayout 对象 → 同一 id，不同对象 → 不同 id */
+    private bindGroupLayoutIds = new WeakMap<GPUBindGroupLayout, number>();
+    private bindGroupLayoutIdCounter = 0;
 
     constructor(inputValue: IV_DrawCommandGenerator) {
         this.device = inputValue.scene.device;
         this.scene = inputValue.scene;
         this.parent = inputValue.parent;
-        this.resources = this.scene.resourcesGPU;
         this.MSAA = this.scene.MSAA;
         this.clock = this.scene.clock;
         this.pointers = this.scene.pointers;
@@ -79,7 +94,6 @@ export class DrawCommandGenerator {
      * @returns
      */
     generateDrawCommand(values: IV_DC): BaseDrawCommand {
-        this.inputDC.push(values); //保存每个DC的init参数，为了后续的更新uniform使用（如果其中有update选项）
         //1、buffer资源
         const {
             DC_vertexBuffers,
@@ -94,17 +108,13 @@ export class DrawCommandGenerator {
 
         //3、shaderModule 编译
 
-        const { vertex, fragment, vertexName, fragmentName } = this.initShaderModule(
-            values,
-            DC_vertexNames,
-            DC_localtions,
-            DC_verticesBufferLayout,
-        );
+        const { vertex, fragment, vertexName, fragmentName, variantKey, reflectionSignature } =
+            this.initShaderModule(values, DC_vertexNames, DC_localtions, DC_verticesBufferLayout);
 
         //4、pipeline 部分
         const pipeline = this.initPipeLine(
             values,
-            { vs: vertex, name: vertexName },
+            { vs: vertex, name: vertexName, variantKey, reflectionSignature },
             { fs: fragment, name: fragmentName },
             DC_bindGroupLayouts,
         );
@@ -118,19 +128,12 @@ export class DrawCommandGenerator {
                 drawMode: values.render.drawMode,
                 pipeline,
                 vertexBuffers: DC_vertexBuffers,
-                //  indexBuffer: DC_indexBuffer,
                 bindGroups: DC_bindGroups,
             },
             baseInfo: {},
         };
         // viewport
         if (values.render.viewport) commandOption.drawInfo.viewport = values.render.viewport;
-        // else {
-        //     // let camera = this.getCamera(values);
-        //     // if (camera) {
-        //         commandOption.drawInfo.viewport = camera.viewport;
-        //     // }
-        // }
         // indexBuffer
         if (DC_indexBuffer) {
             commandOption.drawInfo.indexBuffer = DC_indexBuffer;
@@ -156,43 +159,13 @@ export class DrawCommandGenerator {
             return drawCommand;
         } else {
             //4、GPURenderPassDescriptor
-            const renderPassDescriptor = () => {
-                let renderPassDescriptor: GPURenderPassDescriptor;
-                //1、如果有rpd描述。
+            const renderPassDescriptor = (): GPURenderPassDescriptor => {
+                // 有显式传入的 rpd 则使用之
                 if (values.renderPassDescriptor != undefined) {
-                    renderPassDescriptor = values.renderPassDescriptor;
+                    return values.renderPassDescriptor;
                 }
-                // //2、如果有rpd函数。
-                // else if (values.renderPassDescriptor != undefined && typeof values.renderPassDescriptor == "function") {
-                //     renderPassDescriptor = values.renderPassDescriptor();
-                // }
-                //3\ 增加一个MSAA 的NDC
-                else if (this.scene.finalTarget.NDC == true && values.system?.MSAA) {
-                    // if (values.system?.MSAA)
-                    renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
-                }
-                // //4、如果没有rpd描述，且有system。
-                // else if (values.system && values.renderPassDescriptor == undefined) {
-                //     let UUID = this.checkUUID(values);
-                //     if (UUID) {
-                //         if (this.MSAA) {
-                //             // if (values.system.MSAA != undefined)
-                //             renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type, values.system.MSAA);
-                //             // else
-                //             //     throw new Error("MSAA渲染,需要在system中指定MSAA");
-                //         }
-                //         else
-                //             renderPassDescriptor = this.scene.getRenderPassDescriptor(UUID, values.system.type);
-                //     }
-                //     else {
-                //         this.errorUUID();// throw new Error("获取UUID失败");
-                //     }
-                // }
-                //5、NDC，raw模式
-                else {
-                    renderPassDescriptor = this.scene.getRenderPassDescriptorForNDC();
-                }
-                return renderPassDescriptor!;
+                // 否则使用 NDC / raw 模式的默认 RPD
+                return this.scene.getRenderPassDescriptorForNDC();
             };
             commandOption.drawInfo.renderPassDescriptor = renderPassDescriptor;
             //6 创建DC
@@ -210,13 +183,8 @@ export class DrawCommandGenerator {
         return wgsl.getWgslValueFormat(format);
     }
 
-    formatLocationStringOfAttribute(
-        values: IV_DC,
-        location: number,
-        name: string,
-        format: string,
-    ): string {
-        return wgsl.formatLocationStringOfAttribute(values, location, name, format);
+    formatLocationStringOfAttribute(location: number, name: string, format: string): string {
+        return wgsl.formatLocationStringOfAttribute(location, name, format);
     }
 
     /**
@@ -261,10 +229,9 @@ export class DrawCommandGenerator {
         //bindgroup部分
         let DC_bindGroups: (GPUBindGroup | undefined)[] = new Array(4).fill(undefined);
         let DC_bindGroupLayouts: GPUBindGroupLayout[] = new Array(4).fill(undefined);
-        let layoutNumber = 0; //uniform的BindGroupLayout数量，最多4个
-        // 存在system。赋值bindgroup：0，1，2；
+        // 存在 system（摄像机/光源模式）：按固定槽位填充 slot0/1/2，slot3·IBL 视场景而定
         if (values.system) {
-            // DC_bindGroups[layoutNumber] = undefined;//在DC中动态绑定
+            // slot0 = system：摄像机/光源的 bindGroupLayout
             let bindGroupLayout: GPUBindGroupLayout;
             if (values.system.type == E_renderForDC.camera) {
                 bindGroupLayout = this.scene.getBindGroupLayoutZeroOfCamera();
@@ -273,17 +240,15 @@ export class DrawCommandGenerator {
             } else {
                 throw new Error('system type not support');
             }
-            // layoutNumber = 0
-            DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
-            // layoutNumber = 1
-            layoutNumber = 1;
+            DC_bindGroupLayouts[UNIFORM_SLOT.system] = bindGroupLayout;
 
+            // slot1 = entity：parent 的 bindGroupLayout
             if (values.system?.parent) {
                 const { bindGroupLayout } = values.system.parent.getBindGroupAndBindGroupLayout();
-                DC_bindGroups[layoutNumber] = undefined;
-                DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
+                DC_bindGroups[UNIFORM_SLOT.entity] = undefined;
+                DC_bindGroupLayouts[UNIFORM_SLOT.entity] = bindGroupLayout;
 
-                layoutNumber = 2;
+                // slot2 = material：仅摄像机 + material.type 定义时占用
                 if (values.system?.type == E_renderForDC.camera) {
                     if (values.system.material?.type == undefined) {
                         throw new Error('material type do not define');
@@ -293,30 +258,29 @@ export class DrawCommandGenerator {
                             const bindGroupLayout = (
                                 values.system?.parent as Mesh
                             )._materialWireframe.getBindGroupLayout(values.system.material.type);
-                            DC_bindGroups[layoutNumber] = undefined;
-                            DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
-                            // layoutNumber++;
+                            DC_bindGroups[UNIFORM_SLOT.material] = undefined;
+                            DC_bindGroupLayouts[UNIFORM_SLOT.material] = bindGroupLayout;
                         }
                     } else {
                         if ((values.system?.parent as EntityBundleMaterial)._material) {
                             const bindGroupLayout = (
                                 values.system?.parent as EntityBundleMaterial
                             )._material.getBindGroupLayout(values.system.material.type);
-                            DC_bindGroups[layoutNumber] = undefined;
-                            DC_bindGroupLayouts[layoutNumber] = bindGroupLayout;
-                            // layoutNumber++;
+                            DC_bindGroups[UNIFORM_SLOT.material] = undefined;
+                            DC_bindGroupLayouts[UNIFORM_SLOT.material] = bindGroupLayout;
                         }
                     }
                 }
             }
-            layoutNumber = 3;
+
+            // slot3 = IBL：非必须，有 IBL 且材质为 PBR 时才占用，否则保持空槽位
             if (
                 this.scene.IBL != undefined &&
                 values.system.material &&
                 values.system.material.owner instanceof PBRMaterial
             ) {
-                DC_bindGroupLayouts[layoutNumber] = this.scene.IBL!.bindGroupLayout();
-                DC_bindGroups[layoutNumber] = this.scene.IBL!.bindGroup();
+                DC_bindGroupLayouts[UNIFORM_SLOT.ibl] = this.scene.IBL!.bindGroupLayout();
+                DC_bindGroups[UNIFORM_SLOT.ibl] = this.scene.IBL!.bindGroup();
             }
         }
 
@@ -330,9 +294,11 @@ export class DrawCommandGenerator {
         else if (values.data.uniforms) {
             DC_bindGroups = [];
             DC_bindGroupLayouts = [];
+            // 已处理的 bindGroup 组数（独立计数，同时作为槽位索引与 label 序号，最多 4 组）
+            let groupCount = 0;
             for (const i in values.data.uniforms) {
                 //如果bindGroupLayout数量超过4个，就跳出循环
-                if (layoutNumber > 3) {
+                if (groupCount > 3) {
                     console.warn('uniforms 最多只能有4个BindGroup');
                     break;
                 }
@@ -371,8 +337,7 @@ export class DrawCommandGenerator {
                 let bindGroupLayout: GPUBindGroupLayout;
                 //BindGroup 的layout 描述，重点2->2.1
                 const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-                    label: `BGLD(${i})(${layoutNumber}) ${values.label}@${this.clock.now}`,
-                    // label: values.label +" BGLD: "+ layoutNumber + " time:"+this.clock.now,
+                    label: `BGLD(${i})(${groupCount}) ${values.label}@${this.clock.now}`,
                     entries: [],
                 };
                 //BindGroup layout的数据入口  -->2.1.1
@@ -391,8 +356,8 @@ export class DrawCommandGenerator {
                     }
                     //如果没有layout，就从resources中获取
                     else {
-                        if (this.resources.hasBindGroupLayout(bindGroup)) {
-                            const bindGroupLayoutGet = this.resources.getBindGroupLayout(bindGroup); //是否有对应的layout
+                        if (this.bindGroupToGroupLayout.has(bindGroup)) {
+                            const bindGroupLayoutGet = this.bindGroupToGroupLayout.get(bindGroup); //是否有对应的layout
                             if (bindGroupLayoutGet) {
                                 bindGroupLayout = bindGroupLayoutGet;
                             } else {
@@ -402,27 +367,7 @@ export class DrawCommandGenerator {
                             throw new Error('bindGroupLayout 不存在');
                         }
                     }
-                }
-                //20260320 ,基本不需要，每个mesh的uniform group是不同的。instance自己管理
-                // else if (!values.dynamic && this.resources.uniformGroupToBindGroup.has(perGroup)) {//已经存在bindgroup，比如：同一个mesh中
-                //     let bindGroupGet = this.resources.uniformGroupToBindGroup.get(perGroup);
-                //     if (bindGroupGet) {
-                //         bindGroup = bindGroupGet;
-                //         let bindGroupLayoutGet = this.resources.bindGroupToGroupLayout.get(bindGroup)!;//这里没有进行判断，稍后补上
-                //         if (bindGroupLayoutGet) {
-                //             bindGroupLayout = bindGroupLayoutGet;
-                //         }
-                //         else {
-                //             throw new Error("bindGroupLayout 不存在");
-                //             // console.error("bindGroupLayout 不存在");
-                //         }
-                //     }
-                //     else {
-                //         throw new Error("bindGroup 不存在");
-                //         // console.error("bindGroup 不存在");
-                //     }
-                // }
-                else {
+                } else {
                     //创建
                     for (const j in perGroup) {
                         //遍历每组group的每个entry
@@ -444,8 +389,9 @@ export class DrawCommandGenerator {
                             /**
                              * 获取perEntry的layout
                              */
-                            if (this.resources.hasEntrieLayout(perEntry)) {
-                                perBindGroupLayoutEntry = this.resources.getEntrieLayout(perEntry)!; //每个entry的layout
+                            if (this.entriesToEntriesLayout.has(perEntry)) {
+                                perBindGroupLayoutEntry =
+                                    this.entriesToEntriesLayout.get(perEntry)!; //每个entry的layout
                                 if (perBindGroupLayoutEntry) {
                                     bindGroupLayoutEntry.push(perBindGroupLayoutEntry);
                                 } else {
@@ -461,9 +407,9 @@ export class DrawCommandGenerator {
                          * 其他非uniform传入ArrayBuffer的，直接push，不Map（在其他的owner保存）
                          */
                         if (isUniformBufferPart(perEntry)) {
-                            if (this.resources.hasUniform(perEntry)) {
+                            if (this.uniformBuffer.has(perEntry)) {
                                 //已有,直接获取，不创建
-                                const buffer = this.resources.getUniform(perEntry);
+                                const buffer = this.uniformBuffer.get(perEntry);
                                 if (buffer)
                                     bindGroupEntry.push({
                                         binding: perEntry.binding,
@@ -485,7 +431,7 @@ export class DrawCommandGenerator {
                                     },
                                 };
                                 const pointer = this.pointers.createPointer(pointerParams);
-                                this.resources.setUniform(perEntry, pointer);
+                                this.uniformBuffer.set(perEntry, pointer);
                                 bindGroupEntry.push({
                                     binding: perEntry.binding,
                                     resource: pointer.gpuBufferView,
@@ -518,21 +464,16 @@ export class DrawCommandGenerator {
                     bindGroupLayout = this.device.createBindGroupLayout(bindGroupLayoutDescriptor);
                     //初始化BindGroup描述
                     bindGroupDesc = {
-                        // label: values.label + " BGD:" + layoutNumber + " time:"+this.clock.now,
-                        label: `BGD(${layoutNumber}) ${values.label}`,
+                        label: `BGD(${groupCount}) ${values.label}`,
                         layout: bindGroupLayout,
                         entries: bindGroupEntry,
                     };
                     //创建BindGroup
                     bindGroup = this.device.createBindGroup(bindGroupDesc);
-                    ///////////////////
-                    //增加到资源
-                    // this.resources.uniformGroupToBindGroup.set(perGroup, bindGroup,);//20260320 ,基本不需要，每个mesh的uniform group是不同的。instance自己管理
-                    // this.resources.bindGroupToGroupLayout.set(bindGroup, bindGroupLayout);//20260320，如果是动态绑定的uniform资源，显示push到参数中。这个基本不需要
                 }
                 DC_bindGroups.push(bindGroup);
                 DC_bindGroupLayouts.push(bindGroupLayout);
-                layoutNumber++;
+                groupCount++;
             } //end for values.data.uniforms
         }
         return { DC_bindGroups, DC_bindGroupLayouts };
@@ -556,17 +497,11 @@ export class DrawCommandGenerator {
         fragment: GPUFragmentState | undefined;
         vertexName: string;
         fragmentName: string;
+        variantKey: string;
+        reflectionSignature: string;
     } {
-        //VS location 输出插值模式
-        const _locationInterpolateString = '';
-        // if (values.system?.parent) {
-        //     locationInterpolateString = values.system?.parent.getStringOfLocationInterpolate();
-        // }
-
         // 3.1 反射顶点名称到shader code的顶点属性的占位符中
         //vertex shader
-        let moduleVS: GPUShaderModule;
-        // let vsCacheShaderModuleName = values.label;
 
         let shadercode: string;
         if (this.scene.finalTarget.NDC === true) {
@@ -579,18 +514,18 @@ export class DrawCommandGenerator {
             );
         const md5OfVScode = MD5(shadercode);
 
-        //3.2、VS shaderModule 编译
-        if (this.resources.shaderModuleOfString.has(md5OfVScode)) {
-            moduleVS = this.resources.shaderModuleOfString.get(md5OfVScode)!;
-        } else //可以缓存透明材质的VS shader model
-        {
-            moduleVS = this.device.createShaderModule({
-                // label: `vs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
-                label: values.label,
-                code: shadercode,
-            });
-            this.resources.shaderModuleOfString.set(md5OfVScode, moduleVS);
-        }
+        //3.2、VS shaderModule 编译（C4：stage + finalCodeHash 命中派生缓存）
+        const acquireVS = this.scene.resourcesGPU.derived.shaderModules.acquire(
+            `vs:${md5OfVScode}`,
+            () =>
+                this.device.createShaderModule({
+                    // label: `vs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
+                    label: values.label,
+                    code: shadercode,
+                }),
+        );
+        const moduleVS: GPUShaderModule = acquireVS.value;
+        values.releaseTickets?.push(acquireVS.ticket);
 
         //3.3 GPURenderPipelineDescriptor.vertex部分
         let constansVS = {};
@@ -612,26 +547,29 @@ export class DrawCommandGenerator {
             if (values.render.fragment.code == undefined) {
                 moduleFS = moduleVS;
             } else {
-                const codeFS: string = values.render.fragment.code;
+                const fragmentState = values.render.fragment;
+                const codeFS: string = fragmentState.code!;
                 md5OfFScode = MD5(codeFS);
 
-                if (this.resources.shaderModuleOfString.has(md5OfFScode)) {
-                    moduleFS = this.resources.shaderModuleOfString.get(md5OfFScode)!;
-                } else //可以缓存透明材质的FS shader model
-                {
-                    moduleFS = this.device.createShaderModule({
-                        // label: `fs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
-                        label: values.render.fragment.aliasName,
-                        code: codeFS,
-                    });
-                    this.resources.shaderModuleOfString.set(md5OfFScode, moduleFS);
-                }
+                //可以缓存透明材质的FS shader model（C4：stage + finalCodeHash 命中派生缓存）
+                const acquireFS = this.scene.resourcesGPU.derived.shaderModules.acquire(
+                    `fs:${md5OfFScode}`,
+                    () =>
+                        this.device.createShaderModule({
+                            // label: `fs ${this.parent?.Name || values.IDS?.ID}`, //@${this.clock.now}
+                            label: fragmentState.aliasName,
+                            code: codeFS,
+                        }),
+                );
+                moduleFS = acquireFS.value;
+                values.releaseTickets?.push(acquireFS.ticket);
             }
             //3.4.2 配置targets
             let targets: GPUColorTargetState[] = [];
             //如果没有指定targets,则使用默认的targets
             if (values.render.fragment.targets) {
-                targets = values.render.fragment.targets; //使用传入参数
+                // 拷贝 targets，避免后续 transparent 写入 blend 时污染调用方对象
+                targets = values.render.fragment.targets.map((t) => ({ ...t }));
             }
             //如果没有指定targets,则使用默认的targets
             else if (values.system && values.render.fragment.targets == undefined) {
@@ -654,23 +592,12 @@ export class DrawCommandGenerator {
             }
             //3.4.3 透明处理,alpha blend
             if (values.transparent) {
-                for (let i = 0; i < values.transparent.length; i++) {
+                // 越界保护：transparent 多出的项忽略，避免 targets[i] 为 undefined 抛错
+                const blendCount = Math.min(values.transparent.length, targets.length);
+                for (let i = 0; i < blendCount; i++) {
                     targets[i].blend = values.transparent[i];
                 }
             }
-            // if (values.render.fragment.code) {
-            //     if (typeof values.render.fragment.code === "string") {
-            //         moduleFS = this.device.createShaderModule({
-            //             code: values.render.fragment.code,
-            //         })
-            //     }
-            //     else {
-            //         //todo moduleFS
-            //     }
-            // }
-            // else {
-            //     moduleFS = moduleVS;
-            // }
             let constansFS = {};
             //3.4.4 配置constants
             if (values.render.fragment?.constants) {
@@ -684,100 +611,165 @@ export class DrawCommandGenerator {
                 constants: constansFS,
             };
         }
-        return { vertex, fragment, vertexName: md5OfVScode, fragmentName: md5OfFScode };
+        // §2.4 ② 元数据（进入 pipeline keyObject 并写入条目）：可读 / stats 按变种统计 / 按变种精确失效。
+        // 二者完全由已有命中维度派生（code hash、顶点布局、反射输入），只是冗余标签，
+        // 不改变命中分区；命中仍只依赖 stage + finalCodeHash（硬规则 ①）。
+        const ndc = this.scene.finalTarget.NDC === true;
+        const aliasName = values.render.fragment?.aliasName ?? values.render.vertex.entryPoint;
+        // §2.4 ② 优先采用 material 层按定义（MD5(userCode + '\0' + userCodeFunction)）算好的变种标识；
+        // 非 material 链路（postprocess / atmosphere 等）不透传，退回「注入后 code hash」等价兜底。
+        const variantKey =
+            values.render.fragment?.variantKey ??
+            computeVariantKey(aliasName, md5OfVScode, md5OfFScode);
+        const reflectionSignature = computeReflectionSignature({
+            names: DC_vertexNames,
+            locations: DC_localtions,
+            buffers: DC_verticesBufferLayout,
+            ndc,
+            applied: !ndc,
+        });
+        return {
+            vertex,
+            fragment,
+            vertexName: md5OfVScode,
+            fragmentName: md5OfFScode,
+            variantKey,
+            reflectionSignature,
+        };
+    }
+    /**
+     * 为 GPUBindGroupLayout 分配稳定 id，作为 pipeline 缓存 key 的 layout 列表标识。
+     * 同一对象返回同一 id、不同对象返回不同 id（WeakMap 生命周期随 layout 对象，不阻止 GC）。
+     */
+    private getBindGroupLayoutId(layout: GPUBindGroupLayout): number {
+        let id = this.bindGroupLayoutIds.get(layout);
+        if (id === undefined) {
+            id = this.bindGroupLayoutIdCounter++;
+            this.bindGroupLayoutIds.set(layout, id);
+        }
+        return id;
     }
     initPipeLine(
         values: IV_DC,
-        vertex: { vs: GPUVertexState; name: string },
+        vertex: {
+            vs: GPUVertexState;
+            name: string;
+            variantKey?: string;
+            reflectionSignature?: string;
+        },
         fragment: { fs: GPUFragmentState | undefined; name: string },
         DC_bindGroupLayouts: GPUBindGroupLayout[],
     ): GPURenderPipeline {
-        //0、创建cacheFlag
-        let cacheFlag: string[] = [];
-        //1、创建GPURenderPipelineDescriptor
-        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: values.label,
-            // label: "PipelineLayout@" + this.clock.now + " " + values.label,
-            bindGroupLayouts: DC_bindGroupLayouts,
-        };
-        //2、创建GPUPipelineLayout
-        const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-        const descriptor: GPURenderPipelineDescriptor = {
-            label: values.label,
-            vertex: vertex.vs,
-            layout: pipelineLayout,
-        };
-        //3、GPURenderPipelineDescriptor.其他部分
-        if (fragment.fs) descriptor.fragment = fragment.fs;
-        if (values.render.primitive) descriptor.primitive = values.render.primitive;
+        //1、组装 descriptor 的可序列化状态（layout 依赖 GPUPipelineLayout，延迟到未命中时创建）
+        const fragmentState = fragment.fs;
+        const primitiveState = values.render.primitive;
+        let multisampleState: GPUMultisampleState | undefined;
         if (this.MSAA && values.system && values.system.MSAA == 'MSAA') {
-            descriptor.multisample = {
+            multisampleState = {
                 count: 4,
             };
         }
-        //4、TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        //2、TTP 没有使用depth，因为需要copy深度纹理或多一个深度纹理；TTPF,目前不使用depthStencil
+        let depthStencilState: GPUDepthStencilState | undefined;
         if (values.render.depthStencil !== false) {
             //如果有depthStencil输入，就使用它
             if (values.render.depthStencil) {
-                descriptor.depthStencil = values.render.depthStencil;
+                depthStencilState = values.render.depthStencil;
             } else {
                 if (values.transparent) {
                     //透明渲染，使用透明模板
-                    descriptor.depthStencil = this.scene.depthMode.depthStencilTT;
+                    depthStencilState = this.scene.depthMode.depthStencilTT;
                 } else {
                     //MSAA渲染，分成两种情况
                     if (this.MSAA) {
                         //MSAAinfo 渲染，使用深度模板(开启测试，不写入)
                         if (values.system && values.system.MSAA == 'MSAAinfo') {
-                            descriptor.depthStencil = this.scene.depthMode.depthStencilMSAAinfo;
+                            depthStencilState = this.scene.depthMode.depthStencilMSAAinfo;
                         }
                         //MSAA 渲染，使用深度模板(开启测试，写入)
                         else if (values.system && values.system.MSAA == 'MSAA') {
-                            // descriptor.depthStencil = this.scene.depthMode.depthStencilMSAA;//20260419 MSAA可以不需要depth，关闭
+                            // 20260419 MSAA可以不需要depth，关闭
                         }
                         //shadowmap 等渲染，使用深度模板(开启测试，写入)
                         else {
-                            descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                            depthStencilState = this.scene.depthMode.depthStencil;
                         }
                     }
                     //非MSAA渲染，使用深度模板(开启测试，写入)
                     else {
-                        descriptor.depthStencil = this.scene.depthMode.depthStencil;
+                        depthStencilState = this.scene.depthMode.depthStencil;
                     }
                 }
             }
         }
 
         /**
-         * 缓存标志：将 descriptor 的真实 depthStencil / multisample 状态序列化为稳定 key，
-         * 避免字面量字符串导致「不同状态误命中同一缓存」。
-         * stableStringify 为键排序 JSON 序列化，保证内容相同则 key 相同、内容不同则 key 不同。
+         * 缓存 key：对最终 descriptor 的稳定序列化（键排序）。
+         * 除 GPU 对象引用外，全部可序列化部分（entryPoint / buffers / targets / constants /
+         * primitive / depthStencil / multisample / bindGroupLayouts 列表标识）整体走 stableStringify，
+         * 保证内容相同则 key 相同、任一维度不同则 key 不同，且不会因 JSON 内含逗号而失射。
+         * 末尾两个 §2.4 ② 元数据字段由上述命中维度同源派生，不改变命中分区。
          */
-        const depthStencilFlag = descriptor.depthStencil
-            ? stableStringify(descriptor.depthStencil)
-            : 'none';
-        const multisampleFlag = descriptor.multisample
-            ? stableStringify(descriptor.multisample)
-            : 'none';
-        cacheFlag = [
-            vertex.name,
-            fragment.name,
-            //primitive
-            values.render.primitive?.topology as string,
-            values.render.primitive?.cullMode as string,
-            values.render.primitive?.stripIndexFormat as string,
-            values.render.primitive?.frontFace as string,
-            depthStencilFlag,
-            multisampleFlag,
-        ];
-        const nameOfCacheFlag = cacheFlag.toString();
-        if (this.resources.pipeline.has(nameOfCacheFlag)) {
-            return this.resources.pipeline.get(nameOfCacheFlag)!;
+        const keyObject = {
+            vertex: {
+                code: vertex.name,
+                entryPoint: vertex.vs.entryPoint,
+                buffers: vertex.vs.buffers,
+                constants: vertex.vs.constants,
+            },
+            fragment: fragmentState
+                ? {
+                      code: fragment.name,
+                      entryPoint: fragmentState.entryPoint,
+                      targets: fragmentState.targets,
+                      constants: fragmentState.constants,
+                  }
+                : null,
+            bindGroupLayouts: DC_bindGroupLayouts.map((layout) =>
+                layout === undefined ? null : this.getBindGroupLayoutId(layout),
+            ),
+            primitive: primitiveState,
+            depthStencil: depthStencilState,
+            multisample: multisampleState,
+            // §2.4 ② 元数据：可读标签（由 code hash / 顶点布局同源派生），命中仍只依赖 finalCodeHash
+            variantKey: vertex.variantKey ?? '',
+            reflectionSignature: vertex.reflectionSignature ?? '',
+        };
+        const nameOfCacheFlag = stableStringify(keyObject);
+        // C5：entity 链路（带 releaseTickets 出参）统一走 acquire，命中也持票并撤销 pending；
+        // 非 entity 链路（postprocess / atmosphere 等，无 releaseTickets）维持 peek 快路径不变。
+        const releaseTickets = values.releaseTickets;
+        if (!releaseTickets) {
+            const cached = this.scene.resourcesGPU.derived.pipelines.peek(nameOfCacheFlag) as
+                GPURenderPipeline | undefined;
+            if (cached) {
+                return cached;
+            }
         }
 
-        //3.6 生产pipeline
-        const pipeline: GPURenderPipeline = this.device.createRenderPipeline(descriptor);
-        this.resources.pipeline.set(nameOfCacheFlag, pipeline);
-        return pipeline;
+        //3、未命中（或 entity 链路统一 acquire）：创建 GPUPipelineLayout 与 pipeline
+        const acquireResult = this.scene.resourcesGPU.derived.pipelines.acquire(
+            nameOfCacheFlag,
+            () => {
+                const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+                    label: values.label,
+                    bindGroupLayouts: DC_bindGroupLayouts,
+                };
+                const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
+                const descriptor: GPURenderPipelineDescriptor = {
+                    label: values.label,
+                    vertex: vertex.vs,
+                    layout: pipelineLayout,
+                };
+                if (fragmentState) descriptor.fragment = fragmentState;
+                if (primitiveState) descriptor.primitive = primitiveState;
+                if (multisampleState) descriptor.multisample = multisampleState;
+                if (depthStencilState) descriptor.depthStencil = depthStencilState;
+                return this.device.createRenderPipeline(descriptor);
+            },
+            { variantKey: vertex.variantKey, reflectionSignature: vertex.reflectionSignature },
+        );
+        releaseTickets?.push(acquireResult.ticket);
+        return acquireResult.value as GPURenderPipeline;
     }
 }

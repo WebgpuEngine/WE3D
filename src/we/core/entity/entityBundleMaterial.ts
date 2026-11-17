@@ -27,7 +27,7 @@ import { E_renderPassName } from '../scene/renderManager';
 import { I_EntityAttributes, IV_BaseEntity, E_entityType } from './base';
 import { BaseEntity } from './baseEntity';
 import { createIndexBuffer, createVerticesBuffer } from '../command/baseFunction';
-import { generateInputValueOfDC } from './entityBundleMaterialDC';
+import { generateDrawCommandAndTrack, generateInputValueOfDC } from './entityBundleMaterialDC';
 import type { I_bundleForInputValueOfDC } from './entityBundleMaterialDC';
 
 import {
@@ -134,7 +134,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 console.warn('Mesh constructor: normal is not array');
             }
         }
-        super.init(scene);
+        // 必须 await：否则异步 GPU 链与 destroy 竞态，readyForGPU 会访问已清空的 _material
+        await super.init(scene);
     }
     override _destroy(): void {
         super._destroy();
@@ -145,7 +146,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * 覆写 Root的function,因为材料类需要GPUDevice
      */
     async readyForGPU() {
+        if (this._isDestroy || this._material == undefined) return;
         await this._material.init(this.scene);
+        if (this._isDestroy || this._material == undefined) return; // await 期间可能已被销毁
         if (this._material.getTransparent() === true) {
             this._cullMode = 'none'; //透明具有双面性
         }
@@ -194,7 +197,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @returns  boolean
      */
     getTransparent(): boolean {
-        return this._material.getTransparent();
+        // 销毁后 _material 会被置为 undefined（见 _destroy），此时按不透明处理，
+        // 避免渲染已销毁实体时访问 undefined._material 抛出 pageerror。
+        return this._material ? this._material.getTransparent() : false;
     }
     /** 生成原始包围盒，基于当前entity的原始包围盒，不涉及变换 */
     override generateBox(position?: number[]): boundingBox | undefined {
@@ -701,7 +706,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     this,
                 );
                 valueDC.system!.MSAA = 'MSAA';
-                dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+                dc = generateDrawCommandAndTrack(this, valueDC);
                 // this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
                 this.renderPassArray[E_renderPassName.MSAA].push(dc);
             }
@@ -714,7 +719,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     this,
                 );
                 valueDC.system!.MSAA = 'MSAAinfo';
-                dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+                dc = generateDrawCommandAndTrack(this, valueDC);
             }
         } else {
             //正常的前向渲染输出,只输出一个DC（defer 或  forward）
@@ -733,7 +738,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     false,
                     this,
                 );
-                dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+                dc = generateDrawCommandAndTrack(this, valueDC);
             }
         }
         return dc;
@@ -778,7 +783,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             true,
         );
         valueDC.label = 'shadowmap:' + valueDC.label;
-        const dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dc = generateDrawCommandAndTrack(this, valueDC);
         this.renderPassArray[E_renderPassName.shadowmapOpaque]!.push(dc);
     }
     createShadowMapTransparentDC(): void {
@@ -809,7 +814,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         valueDC.transparent = this.getBlend(); //材质的透明混合参数
         valueDC.label = 'TT mesh:' + this.Name || this.ID.toString();
         // valueDC.label = this.ID.toString();
-        const dcTT: DrawCommand = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dcTT: DrawCommand = generateDrawCommandAndTrack(this, valueDC);
         this.renderPassArray[E_renderPassName.transparent]!.push(dcTT);
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

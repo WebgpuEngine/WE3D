@@ -1,6 +1,5 @@
 import { E_lifeState } from '../base/coreDefine';
 import { weGetImagesByUrl } from '../base/file/getFile';
-import { E_resourceKind } from '../resources/resourcesGPU';
 import { Scene } from '../scene/scene';
 import { I_BaseTexture } from './base';
 import { IV_CubeTexture } from './cubeTexxture';
@@ -27,11 +26,9 @@ export class CubeArrayTexture extends Texture {
 
     async readyForGPU(): Promise<unknown> {
         const source = this.inputValues.source;
-        if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
-            this.texture = this.scene.resourcesGPU.get(
-                source,
-                E_resourceKind.textureOfString,
-            ) as GPUTexture;
+        const cached = this.scene.resourcesGPU.assets.textures.peek(source);
+        if (cached) {
+            this.texture = cached;
         } else {
             const allImages: ImageBitmap[] = await weGetImagesByUrl([
                 source + '_px.jpg',
@@ -81,12 +78,13 @@ export class CubeArrayTexture extends Texture {
             if (this.texture.mipLevelCount > 1) {
                 this.generateMips(this.texture);
             }
-            this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
-            this.mapList.push({
-                key: source,
-                type: E_resourceKind.textureOfString,
-            });
         }
+        const { value, ticket } = this.scene.resourcesGPU.assets.textures.acquire(
+            source,
+            () => this.texture,
+        );
+        this.texture = value;
+        this.track(ticket);
         this.setTextureLayoutsampleType('float');
         this.setTextureLayoutDimension('cube');
         this._state = E_lifeState.finished;

@@ -34,7 +34,7 @@ export async function addNode(
         gltf.meshAndSkinBundle.push({ meshID: node.mesh, skinID: node.skin, nodeID: nodeID });
     }
 
-    const oneNode = await newNode(parent);
+    const oneNode = await newNode(parent, NodeObject);
     oneNode.Name = node.name || String(nodeID);
     // console.log(oneNode.ID, oneNode.Name);
     ////////////////////////////////////////////////
@@ -71,7 +71,7 @@ export async function addNode(
                 `${meshID}_${j}`,
             )) as BaseEntity;
             if (!childEntity) continue;
-            const childNode = await newNode(oneNode);
+            const childNode = await newNode(oneNode, NodeObject);
             childNode.Name = `${oneNode.Name} ${j}`;
             await childNode.attachEntity(childEntity);
             await oneNode.addChild(childNode);

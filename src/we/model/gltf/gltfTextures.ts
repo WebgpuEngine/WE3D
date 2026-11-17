@@ -15,7 +15,7 @@ import type { GLTFModel } from './gltf';
  * 2、按照gltf的sampler，初始化采样器
  */
 export function initSamplers(scope: GLTFModel) {
-    const defaultSampler = scope.scene.resourcesGPU.getSampler('linear');
+    const defaultSampler = scope.scene.resourcesGPU.defaults.getSampler('linear');
     scope.modelRes.sampler.set('default', defaultSampler);
     const samplers = scope.DataLoader.getSamplers();
 
@@ -124,7 +124,7 @@ export function initSamplers(scope: GLTFModel) {
 }
 
 export async function initGPUTextures(scope: GLTFModel) {
-    const defaultGPUTexture = scope.scene.resourcesGPU.textureOfString.get('default');
+    const defaultGPUTexture = scope.scene.resourcesGPU.defaults.defaultGPUTexture;
     scope.modelRes.GPUTexture.set('default', defaultGPUTexture);
     // let images = this.DataLoader.getImages();
     // if (images) {
@@ -197,7 +197,7 @@ export async function getGPUTexture(
  * 1、按照gltf的texture，初始化纹理
  */
 export async function initTextures(scope: GLTFModel) {
-    const defaultTexture = scope.scene.resourcesGPU.weTextureOfString.get('default');
+    const defaultTexture = scope.scene.resourcesGPU.defaults.defaultTexture;
     scope.modelRes.texture.set('default', defaultTexture);
     // let textures = this.DataLoader.getTextures();
     // if (textures)

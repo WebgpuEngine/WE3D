@@ -13,7 +13,7 @@ import type { boundingBox } from '../math/Box';
 import type { boundingSphere } from '../math/sphere';
 import { pickupManager } from '../pickup/pickupManager';
 import { PostProcessManager } from '../postprocess/postProcessManager';
-import { ResourceManagerOfGPU } from '../resources/resourcesGPU';
+import { ResourceManagerOfGPU } from '../resources/gpu/resourcesGPU';
 import {
     eventOfScene,
     IV_Scene,
@@ -529,7 +529,6 @@ export class Scene {
         this.BPC = new BlockPointerCoordinator(this);
         this.pointers = this.BPC.pointers;
         this.renderManager = new RenderManager(this); //需要在entityManager等需要push DC 的ECS之前初始化
-        // this.commonResource = new CommonResource(device);
         this.resourcesGPU = new ResourceManagerOfGPU(this);
 
         this.animationManager = new AnimationManager(this);
@@ -547,25 +546,13 @@ export class Scene {
         this.IBL = new IBL(this);
     }
     getResourceDefaultPBR() {
-        const one = this.resourcesGPU.weMaterialOfString.get('defaultPBR');
-        if (one) return one;
-        else {
-            throw new Error('default defaultPBR 不存在');
-        }
+        return this.resourcesGPU.defaults.defaultPBR;
     }
     getResourceDefaultTexture(): Texture {
-        const one = this.resourcesGPU.weTextureOfString.get('default');
-        if (one) return one;
-        else {
-            throw new Error('default Texture 不存在');
-        }
+        return this.resourcesGPU.defaults.defaultTexture;
     }
     getResourceDefaultGPUTexture(): GPUTexture {
-        const one = this.resourcesGPU.textureOfString.get('default');
-        if (one) return one;
-        else {
-            throw new Error('default GPUTexture 不存在');
-        }
+        return this.resourcesGPU.defaults.defaultGPUTexture;
     }
     /**
      * 用途：为entity的storay buffer占位使用，//2026040，entity细分之后，不再使用
@@ -826,6 +813,7 @@ export class Scene {
         this.generateSphere();
         //更新BVH
         this.updateBVH();
+        this.resourcesGPU.tick(this.clock);
     }
     /**每帧循环 onBeforeRender */
     async onBeforeRender() {

@@ -1,13 +1,13 @@
 {
-    "generatedAt": "2026-11-12",
+    "generatedAt": "2026-11-17",
     "scope": "src/we 生产源码（排除 *.test.ts 与生成数据）+ 全仓备份命名文件",
     "metrics": {
-        "explicitAny": 112,
+        "explicitAny": 104,
         "typeEscapes": 0,
-        "giantFiles": 1,
+        "giantFiles": 0,
         "emptyStubFiles": 0,
         "backupNamedFiles": 3,
-        "commentedCodeLines": 1043
+        "commentedCodeLines": 966
     },
     "details": {
         "anyTopFiles": [
@@ -16,15 +16,7 @@
                 "count": 31
             },
             {
-                "file": "src/we/core/resources/resourcesGPU.ts",
-                "count": 5
-            },
-            {
                 "file": "src/we/core/base/coreDefine.ts",
-                "count": 4
-            },
-            {
-                "file": "src/we/core/organization/root.ts",
                 "count": 4
             },
             {
@@ -70,14 +62,17 @@
             {
                 "file": "src/we/core/animation/animationGroup.ts",
                 "count": 1
-            }
-        ],
-        "giantFiles": [
+            },
             {
-                "file": "src/we/core/organization/nodeObject.ts",
-                "lines": 1062
+                "file": "src/we/core/animation/base.ts",
+                "count": 1
+            },
+            {
+                "file": "src/we/core/animation/skin.ts",
+                "count": 1
             }
         ],
+        "giantFiles": [],
         "emptyStubFiles": [],
         "backupNamedFiles": [
             "public/models/gltf/base/morphTarget/MorphTarget copy.gltf",

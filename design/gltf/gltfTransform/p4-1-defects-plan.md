@@ -115,7 +115,7 @@
 **正式改动**：
 
 1. `gltf.ts:1297`：key 由 `Number(i)` 改为 `${i}_${j}`，同时保留 `entity.set(Number(i), <首个 primitive>)` 作为兼容项（供 `getRes` 与 skin/morph 单 Entity 假设使用）；`modelRes.entity` 值类型由 `BaseEntity` 扩为 `BaseEntity | BaseEntity[]`（`gltf.ts:126`）。
-2. `function.ts:43-66`：取到 entity 列表后，第 1 个 `oneNode.attachEntity(...)`；第 2..N 个各 `await newNode(oneNode)` → `child.attachEntity(...)` → `await oneNode.addChild(child)`。子节点的 `Name` 沿用 `mesh.name + ' ' + j`，TRS 由父节点继承，**不写入 `instanceNodes.nodes`**（避免污染 node 索引映射）。
+2. `function.ts:43-66`：取到 entity 列表后，第 1 个 `oneNode.attachEntity(...)`；第 2..N 个各 `await newNode(oneNode, NodeObject)` → `child.attachEntity(...)` → `await oneNode.addChild(child)`。子节点的 `Name` 沿用 `mesh.name + ' ' + j`，TRS 由父节点继承，**不写入 `instanceNodes.nodes`**（避免污染 node 索引映射）。
 3. `gltf.ts:547-548` `getRes(entity, ...)`：兼容单值返回，未命中仍 `return false`（`:566-567`）。
 4. 资产与用例按 §六 的 `MultiPrimitive` / `multi_primitive`。
 

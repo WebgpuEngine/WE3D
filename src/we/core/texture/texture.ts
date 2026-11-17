@@ -1,6 +1,5 @@
 import { E_lifeState } from '../base/coreDefine';
 import { weGetImageByUrl } from '../base/file/getFile';
-import { E_resourceKind } from '../resources/resourcesGPU';
 import { Scene } from '../scene/scene';
 import { I_BaseSampler, I_BaseTexture, numMipLevels, T_textureSourceType } from './base';
 import { BaseTexture } from './baseTexture';
@@ -11,12 +10,6 @@ export interface IV_Texture extends I_BaseTexture {
 }
 
 export class Texture extends BaseTexture {
-    _destroy(): void {
-        // throw new Error("Method not implemented.");
-        this.texture.destroy();
-        this._state = E_lifeState.destroyed;
-    }
-
     saveJSON() {
         throw new Error('Method not implemented.');
     }
@@ -37,13 +30,11 @@ export class Texture extends BaseTexture {
             this.texture = source;
             this._state = E_lifeState.finished;
         }
-        //GPUCopyExternalImageSource
+        //GPUCopyExternalImageSource / URL：按 source 共享缓存纹理
         else {
-            if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
-                this.texture = this.scene.resourcesGPU.get(
-                    source,
-                    E_resourceKind.textureOfString,
-                ) as GPUTexture;
+            const cached = this.scene.resourcesGPU.assets.textures.peek(source);
+            if (cached) {
+                this.texture = cached;
             } else {
                 if (typeof source == 'string') {
                     const urlName = source.split('/');
@@ -60,12 +51,13 @@ export class Texture extends BaseTexture {
                 ) {
                     await this.generateTextureByImageSource(source);
                 }
-                this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
-                this.mapList.push({
-                    key: source,
-                    type: E_resourceKind.textureOfString,
-                });
             }
+            const { value, ticket } = this.scene.resourcesGPU.assets.textures.acquire(
+                source,
+                () => this.texture,
+            );
+            this.texture = value;
+            this.track(ticket);
         }
         return this._state;
     }

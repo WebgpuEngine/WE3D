@@ -29,6 +29,26 @@ beforeAll(() => {
     });
 });
 
+/** 可观察 Store mock：背后用 Map 承接，暴露 peek/acquire，便于断言缓存 key 与命中数。 */
+function makeObservableStore<V = unknown>() {
+    const map = new Map<string, V>();
+    return {
+        map,
+        get size() {
+            return map.size;
+        },
+        peek: (key: string) => map.get(key),
+        acquire: (key: string, factory: () => V) => {
+            let value = map.get(key);
+            if (value === undefined) {
+                value = factory();
+                map.set(key, value);
+            }
+            return { value, ticket: { id: 0, released: false } };
+        },
+    };
+}
+
 describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     let DrawCommandGenerator: any;
 
@@ -42,10 +62,11 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     } as unknown as GPUDevice;
 
     function makeGenerator() {
-        const resources = { pipeline: new Map<string, unknown>() };
+        const pipelines = makeObservableStore();
+        const shaderModules = makeObservableStore();
         const scene = {
             device: mockDevice,
-            resourcesGPU: resources,
+            resourcesGPU: { derived: { pipelines, shaderModules } },
             MSAA: false,
             clock: {},
             pointers: {},
@@ -73,7 +94,7 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
             },
         } as unknown as Scene;
         const generator = new DrawCommandGenerator({ scene });
-        return { resources, generator };
+        return { pipelines, generator };
     }
 
     const vertex = { vs: {}, name: 'vs-md5' };
@@ -93,17 +114,340 @@ describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-3', () => {
     });
 
     it('仅 depthWriteEnabled 不同 → 不误命中，应创建两个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         generator.initPipeLine(makeValue(true), vertex, fragment, []);
         generator.initPipeLine(makeValue(false), vertex, fragment, []);
-        expect(resources.pipeline.size).toBe(2);
+        expect(pipelines.size).toBe(2);
     });
 
     it('depthStencil 完全相同 → 命中缓存，只创建一个 pipeline', () => {
-        const { resources, generator } = makeGenerator();
+        const { pipelines, generator } = makeGenerator();
         generator.initPipeLine(makeValue(true), vertex, fragment, []);
         generator.initPipeLine(makeValue(true), vertex, fragment, []);
-        expect(resources.pipeline.size).toBe(1);
+        expect(pipelines.size).toBe(1);
+    });
+});
+
+describe('DrawCommandGenerator.initPipeLine 缓存 key — P0-1 维度补全', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+    });
+
+    const mockDevice = {
+        createPipelineLayout: () => ({}),
+        createRenderPipeline: () => ({}),
+    } as unknown as GPUDevice;
+
+    function makeGenerator() {
+        const pipelines = makeObservableStore();
+        const shaderModules = makeObservableStore();
+        const scene = {
+            device: mockDevice,
+            resourcesGPU: { derived: { pipelines, shaderModules } },
+            MSAA: false,
+            clock: {},
+            pointers: {},
+            depthMode: {
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                },
+                depthStencilTT: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: false,
+                    depthCompare: 'less',
+                },
+                depthStencilMSAAinfo: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: false,
+                    depthCompare: 'less',
+                },
+                depthStencilMSAA: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                },
+            },
+        } as unknown as Scene;
+        const generator = new DrawCommandGenerator({ scene });
+        return { pipelines, generator };
+    }
+
+    const makeValue = (overrides: Record<string, unknown> = {}) => ({
+        label: 'p0-1',
+        data: {},
+        render: { vertex: { code: 'x', entryPoint: 'vs' }, ...overrides },
+    });
+
+    it('仅 bindGroupLayouts 不同 → 不复用，应创建两个 pipeline', () => {
+        const { pipelines, generator } = makeGenerator();
+        const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+        const fragment = { fs: undefined, name: 'fs-md5' };
+        generator.initPipeLine(makeValue(), vertex, fragment, [{ label: 'layout-A' }]);
+        generator.initPipeLine(makeValue(), vertex, fragment, [{ label: 'layout-B' }]);
+        expect(pipelines.size).toBe(2);
+    });
+
+    it('仅 fragment.targets 不同 → 不复用，应创建两个 pipeline', () => {
+        const { pipelines, generator } = makeGenerator();
+        const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+        const fragmentA = {
+            fs: { module: {}, entryPoint: 'fs', targets: [{ format: 'bgra8unorm' }] },
+            name: 'fs-md5',
+        };
+        const fragmentB = {
+            fs: { module: {}, entryPoint: 'fs', targets: [{ format: 'rgba16float' }] },
+            name: 'fs-md5',
+        };
+        generator.initPipeLine(makeValue(), vertex, fragmentA, []);
+        generator.initPipeLine(makeValue(), vertex, fragmentB, []);
+        expect(pipelines.size).toBe(2);
+    });
+
+    it('仅 vertex.buffers 不同 → 不复用，应创建两个 pipeline', () => {
+        const { pipelines, generator } = makeGenerator();
+        const vertexA = {
+            vs: {
+                module: {},
+                entryPoint: 'vs',
+                buffers: [{ arrayStride: 12, attributes: [] }],
+            },
+            name: 'vs-md5',
+        };
+        const vertexB = {
+            vs: {
+                module: {},
+                entryPoint: 'vs',
+                buffers: [{ arrayStride: 24, attributes: [] }],
+            },
+            name: 'vs-md5',
+        };
+        const fragment = { fs: undefined, name: 'fs-md5' };
+        generator.initPipeLine(makeValue(), vertexA, fragment, []);
+        generator.initPipeLine(makeValue(), vertexB, fragment, []);
+        expect(pipelines.size).toBe(2);
+    });
+
+    it('仅 vertex.constants / vertex.entryPoint 不同 → 不复用', () => {
+        // constants 不同
+        {
+            const { pipelines, generator } = makeGenerator();
+            const vertexA = {
+                vs: { module: {}, entryPoint: 'vs', constants: { scale: 1 } },
+                name: 'vs-md5',
+            };
+            const vertexB = {
+                vs: { module: {}, entryPoint: 'vs', constants: { scale: 2 } },
+                name: 'vs-md5',
+            };
+            const fragment = { fs: undefined, name: 'fs-md5' };
+            generator.initPipeLine(makeValue(), vertexA, fragment, []);
+            generator.initPipeLine(makeValue(), vertexB, fragment, []);
+            expect(pipelines.size).toBe(2);
+        }
+        // entryPoint 不同
+        {
+            const { pipelines, generator } = makeGenerator();
+            const vertexA = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+            const vertexB = { vs: { module: {}, entryPoint: 'vsAlt' }, name: 'vs-md5' };
+            const fragment = { fs: undefined, name: 'fs-md5' };
+            generator.initPipeLine(makeValue(), vertexA, fragment, []);
+            generator.initPipeLine(makeValue(), vertexB, fragment, []);
+            expect(pipelines.size).toBe(2);
+        }
+    });
+
+    it('key 快照：完整 descriptor 稳定序列化结果固定（含 targets / buffers 等维度）', () => {
+        const { pipelines, generator } = makeGenerator();
+        const vertex = {
+            vs: {
+                module: {},
+                entryPoint: 'vs',
+                buffers: [{ arrayStride: 12, attributes: [] }],
+                constants: {},
+            },
+            name: 'vs-md5',
+        };
+        const fragment = {
+            fs: {
+                module: {},
+                entryPoint: 'fs',
+                targets: [{ format: 'bgra8unorm' }],
+                constants: {},
+            },
+            name: 'fs-md5',
+        };
+        generator.initPipeLine(makeValue({ depthStencil: false }), vertex, fragment, []);
+        expect([...pipelines.map.keys()]).toEqual([
+            '{"bindGroupLayouts":[],"depthStencil":undefined,"fragment":{"code":"fs-md5","constants":{},"entryPoint":"fs","targets":[{"format":"bgra8unorm"}]},"multisample":undefined,"primitive":undefined,"reflectionSignature":"","variantKey":"","vertex":{"buffers":[{"arrayStride":12,"attributes":[]}],"code":"vs-md5","constants":{},"entryPoint":"vs"}}',
+        ]);
+    });
+
+    it('§2.4 ② 元数据进入 keyObject 可读，且不改变命中语义', () => {
+        const { pipelines, generator } = makeGenerator();
+        const vertex = {
+            vs: { module: {}, entryPoint: 'vs', buffers: [], constants: {} },
+            name: 'vs-md5',
+            variantKey: 'material.pbr:variant-a',
+            reflectionSignature: '{"applied":true,"ndc":false}',
+        };
+        const fragment = { fs: undefined, name: '' };
+        const values = makeValue({ depthStencil: false });
+
+        generator.initPipeLine(values, vertex, fragment, []);
+        const key = [...pipelines.map.keys()][0];
+        expect(key).toContain('"variantKey":"material.pbr:variant-a"');
+        expect(key).toContain('"reflectionSignature":"{\\"applied\\":true,\\"ndc\\":false}"');
+
+        // 同一 descriptor + 同一元数据仍命中同一条目：命中分区未被元数据改变
+        generator.initPipeLine(values, vertex, fragment, []);
+        expect(pipelines.size).toBe(1);
+    });
+});
+
+describe('DrawCommandGenerator.initShaderModule — P0-2 targets 拷贝与越界保护', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+    });
+
+    function makeGenerator() {
+        const scene = {
+            device: { createShaderModule: () => ({}) },
+            resourcesGPU: {
+                derived: {
+                    shaderModules: makeObservableStore(),
+                    pipelines: makeObservableStore(),
+                },
+            },
+            MSAA: false,
+            clock: {},
+            pointers: {},
+            depthMode: {},
+            finalTarget: { NDC: true },
+        } as unknown as Scene;
+        const generator = new DrawCommandGenerator({ scene });
+        return { generator };
+    }
+
+    const blendA = {
+        color: { srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add' },
+        alpha: { srcFactor: 'one', dstFactor: 'zero', operation: 'add' },
+    };
+    const blendB = {
+        color: { srcFactor: 'one', dstFactor: 'zero', operation: 'add' },
+        alpha: { srcFactor: 'one', dstFactor: 'zero', operation: 'add' },
+    };
+
+    it('传入同一 targets 数组、两次不同 transparent → 两次 fragment.targets 的 blend 互不影响', () => {
+        const { generator } = makeGenerator();
+        const sharedTargets = [{ format: 'bgra8unorm' }];
+        const makeValue = (transparent: unknown[]) => ({
+            label: 'p0-2',
+            data: {},
+            render: {
+                vertex: { code: 'vs', entryPoint: 'vs' },
+                fragment: {
+                    code: 'fs',
+                    entryPoint: 'fs',
+                    aliasName: 'fs',
+                    targets: sharedTargets,
+                },
+            },
+            transparent,
+        });
+
+        const r1 = generator.initShaderModule(makeValue([blendA]), [], [], []);
+        const r2 = generator.initShaderModule(makeValue([blendB]), [], [], []);
+
+        // 两次结果各自的 blend 不同
+        expect(r1.fragment.targets[0].blend).toBe(blendA);
+        expect(r2.fragment.targets[0].blend).toBe(blendB);
+        // 调用方原始 targets 未被污染（blend 未写入）
+        expect(sharedTargets[0]).not.toHaveProperty('blend');
+        // 返回的 targets 是拷贝，非调用方引用，且两次互不共享
+        expect(r1.fragment.targets).not.toBe(sharedTargets);
+        expect(r2.fragment.targets).not.toBe(sharedTargets);
+        expect(r1.fragment.targets).not.toBe(r2.fragment.targets);
+    });
+
+    it('transparent 长度超过 targets 长度 → 不越界抛错，仅处理 targets 长度内的项', () => {
+        const { generator } = makeGenerator();
+        const targets = [{ format: 'bgra8unorm' }];
+        const values = {
+            label: 'p0-2-overflow',
+            data: {},
+            render: {
+                vertex: { code: 'vs', entryPoint: 'vs' },
+                fragment: { code: 'fs', entryPoint: 'fs', aliasName: 'fs', targets },
+            },
+            transparent: [blendA, blendB],
+        };
+        const result = generator.initShaderModule(values, [], [], []);
+        expect(result.fragment.targets).toHaveLength(1);
+        expect(result.fragment.targets[0].blend).toBe(blendA);
+    });
+
+    it('§2.4 ② 返回 variantKey / reflectionSignature 元数据（NDC 跳过反射）', () => {
+        const { generator } = makeGenerator();
+        const makeValues = (vsCode: string) => ({
+            label: 'meta',
+            data: {},
+            render: {
+                vertex: { code: vsCode, entryPoint: 'vs' },
+                fragment: {
+                    code: 'fs',
+                    entryPoint: 'fs',
+                    aliasName: 'material.color',
+                    targets: [{ format: 'bgra8unorm' }],
+                },
+            },
+        });
+        const args = ['position'];
+        const locations = ['@location(0) position'];
+
+        const a = generator.initShaderModule(makeValues('vs-A'), args, locations, []);
+        const b = generator.initShaderModule(makeValues('vs-B'), args, locations, []);
+        const a2 = generator.initShaderModule(makeValues('vs-A'), args, locations, []);
+
+        // 可读前缀 + 变种区分 + 稳定复现
+        expect(a.variantKey.startsWith('material.color:')).toBe(true);
+        expect(a.variantKey).not.toBe(b.variantKey);
+        expect(a2.variantKey).toBe(a.variantKey);
+        expect(a2.reflectionSignature).toBe(a.reflectionSignature);
+        // NDC === true → 跳过反射，applied=false 必须与 true 区分
+        expect(a.reflectionSignature).toContain('"applied":false');
+        expect(a.reflectionSignature).toContain('"ndc":true');
+        expect(a.reflectionSignature).toContain('"names":["position"]');
+    });
+
+    it('§2.4 ② material 透传的 variantKey 优先于兜底 hash', () => {
+        const { generator } = makeGenerator();
+        const values = {
+            label: 'meta',
+            data: {},
+            render: {
+                vertex: { code: 'vs-A', entryPoint: 'vs' },
+                fragment: {
+                    code: 'fs',
+                    entryPoint: 'fs',
+                    aliasName: 'material.color',
+                    variantKey: 'material.color:deadbeef',
+                    targets: [{ format: 'bgra8unorm' }],
+                },
+            },
+        };
+        const result = generator.initShaderModule(
+            values,
+            ['position'],
+            ['@location(0) position'],
+            [],
+        );
+        expect(result.variantKey).toBe('material.color:deadbeef');
     });
 });
 
@@ -159,10 +503,14 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
     };
 
     function makeGenerator() {
-        const resources = { pipeline: new Map<string, unknown>() };
         const scene = {
             device: { createPipelineLayout: () => ({}), createRenderPipeline: () => ({}) },
-            resourcesGPU: resources,
+            resourcesGPU: {
+                derived: {
+                    shaderModules: makeObservableStore(),
+                    pipelines: makeObservableStore(),
+                },
+            },
             MSAA: false,
             clock: {},
             pointers: {},
@@ -172,7 +520,7 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
         const generator = new DrawCommandGenerator({
             scene,
         } as unknown as ConstructorParameters<Ctor>[0]);
-        return { generator, resources };
+        return { generator };
     }
 
     it('getWgslValueFormat 全量格式映射表固定（35 项）', () => {
@@ -188,13 +536,10 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
 
     it('formatLocationStringOfAttribute 输出固定（含尾随逗号与空格）', () => {
         const { generator } = makeGenerator();
-        const values = {} as unknown as Parameters<
-            typeof generator.formatLocationStringOfAttribute
-        >[0];
-        expect(generator.formatLocationStringOfAttribute(values, 3, 'position', 'vec3f')).toBe(
+        expect(generator.formatLocationStringOfAttribute(3, 'position', 'vec3f')).toBe(
             '@location(3) position : vec3f ,',
         );
-        expect(generator.formatLocationStringOfAttribute(values, 0, 'entityID', 'u32')).toBe(
+        expect(generator.formatLocationStringOfAttribute(0, 'entityID', 'u32')).toBe(
             '@location(0) entityID : u32 ,',
         );
     });
@@ -272,9 +617,556 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
             'initShaderModule',
             'initPipeLine',
         ]);
-        expect(generator.inputDC).toEqual([values]);
         expect(command.label).toBe('c0-order');
         expect(command.pipeline).toBe(pipeline);
         expect(command.bindGroups).toBe(DC_bindGroups);
+    });
+});
+
+describe('DrawCommandGenerator.initVertexPart 返回值快照 — §2.1（覆盖 6 组顶点分支）', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+        // node 环境补齐 isVSGPUBufferBundle 所需的 GPUBuffer 全局（仅 instanceof 判断）
+        (globalThis as any).GPUBuffer = class MockGPUBuffer {};
+    });
+
+    function makeGenerator() {
+        const calls: { params: any; owner: unknown }[] = [];
+        const createPointer = (params: any, owner?: unknown) => {
+            calls.push({ params, owner });
+            return {
+                name: params.name,
+                type: params.type,
+                viewType: params.viewType,
+                byteLength: params.byteSize,
+                owner,
+            };
+        };
+        const bufferCalls: any[] = [];
+        const device = {
+            createBuffer: (desc: any) => {
+                bufferCalls.push(desc);
+                return { __mockBuffer: true, ...desc };
+            },
+            queue: { writeBuffer: () => {} },
+        };
+        const scene = {
+            device,
+            MSAA: false,
+            clock: {},
+            pointers: { createPointer },
+            depthMode: {},
+            finalTarget: { NDC: false },
+        };
+        const generator = new DrawCommandGenerator({
+            scene,
+        } as unknown as ConstructorParameters<typeof DrawCommandGenerator>[0]);
+        return { generator, calls, bufferCalls };
+    }
+
+    function vertexValues(vertices: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+        return {
+            label: 'mesh',
+            data: { vertices, ...(extra.data ?? {}) },
+            ...extra,
+        } as unknown as Parameters<typeof DrawCommandGenerator.prototype.initVertexPart>[0];
+    }
+
+    it('分支2：Array.isArray(number[])', () => {
+        const { generator, calls } = makeGenerator();
+        const pos = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+        const r = generator.initVertexPart(vertexValues({ position: pos }));
+
+        expect(r.DC_vertexNames).toEqual(['position']);
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(r.DC_indexBuffer).toBeUndefined();
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params).toEqual({
+            name: 'position mesh',
+            byteSize: 36,
+            type: 'VS',
+            viewType: 'f32',
+            data: { sourceData: { data: pos } },
+        });
+        expect(calls[0].owner).toBeUndefined();
+        expect(r.DC_vertexBuffers[0]).toEqual({
+            name: 'position mesh',
+            type: 'VS',
+            viewType: 'f32',
+            byteLength: 36,
+            owner: undefined,
+        });
+    });
+
+    it('分支2：parent 存在时透传 owner 并复用 vertexPointers 缓存', () => {
+        const { generator, calls } = makeGenerator();
+        const parent = { vertexPointers: {} };
+        const pos = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+        const mk = () => vertexValues({ position: pos }, { system: { parent } });
+
+        const r1 = generator.initVertexPart(mk());
+        const r2 = generator.initVertexPart(mk());
+
+        expect(calls).toHaveLength(1); // 第二次命中缓存，不再 createPointer
+        expect(calls[0].owner).toBe(parent); // 分支2 是唯一透传 parent 的 pointer 分支
+        expect(r2.DC_vertexBuffers[0]).toBe(r1.DC_vertexBuffers[0]);
+    });
+
+    it('分支1：dynamic.vs 数组 → 直接建 GPUBuffer（不经过 pointer）', () => {
+        const { generator, calls, bufferCalls } = makeGenerator();
+        const r = generator.initVertexPart(
+            vertexValues({ position: [0, 0, 0, 1, 0, 0, 0, 1, 0] }, { dynamic: { vs: true } }),
+        );
+
+        expect(r.DC_vertexNames).toEqual(['position']);
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(0); // 动态分支不经过 createPointer
+        expect(bufferCalls).toHaveLength(1); // 走 createVerticesBuffer
+        expect(r.DC_vertexBuffers[0]).toMatchObject({ name: 'position' });
+    });
+
+    it('分支3：ArrayBuffer.isView → 按 typed array 推导 viewType/byteSize', () => {
+        const { generator, calls } = makeGenerator();
+        const data = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+        const r = generator.initVertexPart(vertexValues({ position: data }));
+
+        // 注意：分支3（ArrayBuffer.isView）当前不计算 locationString，DC_localtions 为空串，重构需保持该行为不变
+        expect(r.DC_localtions).toEqual(['']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params.viewType).toBe('f32');
+        expect(calls[0].params.byteSize).toBe(36);
+        expect(calls[0].params.data.sourceData.data).toBe(data);
+        expect(calls[0].owner).toBeUndefined(); // 分支3 不传 parent
+    });
+
+    it('分支3：joints 使用 Uint32Array → uint32x4', () => {
+        const { generator, calls } = makeGenerator();
+        const data = new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7]);
+        const r = generator.initVertexPart(vertexValues({ joints: data }));
+
+        expect(r.DC_localtions).toEqual(['']); // 分支3 不计算 locationString
+        expect(r.DC_verticesBufferLayout).toEqual([
+            { arrayStride: 16, attributes: [{ shaderLocation: 0, format: 'uint32x4', offset: 0 }] },
+        ]);
+        expect(calls[0].params.viewType).toBe('u32');
+        expect(calls[0].params.byteSize).toBe(32);
+    });
+
+    it('分支4：format + data 对象（I_vsAttribute）', () => {
+        const { generator, calls } = makeGenerator();
+        const data = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+        const r = generator.initVertexPart(
+            vertexValues({ position: { format: 'float32x3', data } }),
+        );
+
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params.byteSize).toBe(36);
+        expect(calls[0].params.viewType).toBe('f32');
+        expect(calls[0].params.data.sourceData.data).toBe(data);
+        expect(calls[0].owner).toBeUndefined();
+    });
+
+    it('分支5：I_vsAttributeMerge 合并属性', () => {
+        const { generator, calls } = makeGenerator();
+        const data = [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1];
+        const r = generator.initVertexPart(
+            vertexValues({
+                merged: {
+                    data,
+                    count: 2,
+                    arrayStride: 24,
+                    mergeAttribute: [
+                        { name: 'position', format: 'float32x3', offset: 0 },
+                        { name: 'normal', format: 'float32x3', offset: 12 },
+                    ],
+                },
+            }),
+        );
+
+        expect(r.DC_vertexNames).toEqual(['merged']);
+        expect(r.DC_localtions).toEqual([
+            ' @location(0) position : vec3f  , @location(1) normal : vec3f  ,',
+        ]);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 24,
+                attributes: [
+                    { shaderLocation: 0, format: 'float32x3', offset: 0 },
+                    { shaderLocation: 1, format: 'float32x3', offset: 12 },
+                ],
+            },
+        ]);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].params.byteSize).toBe(48);
+        expect(calls[0].params.viewType).toBe('f32');
+        expect(calls[0].params.data.sourceData.data).toBe(data);
+        expect(calls[0].owner).toBeUndefined();
+    });
+
+    it('分支6：I_vsGPUBufferBundle（GPUBuffer）', () => {
+        const { generator, calls } = makeGenerator();
+        const GPUBufferCtor = (globalThis as any).GPUBuffer;
+        const buffer = new GPUBufferCtor();
+        const r = generator.initVertexPart(
+            vertexValues({
+                position: { format: 'float32x3', arrayStride: 12, offset: 0, byteSize: 36, buffer },
+            }),
+        );
+
+        expect(r.DC_vertexNames).toEqual(['position']);
+        expect(r.DC_localtions).toEqual(['@location(0) position : vec3f ,']);
+        expect(r.DC_verticesBufferLayout).toEqual([
+            {
+                arrayStride: 12,
+                attributes: [{ shaderLocation: 0, format: 'float32x3', offset: 0 }],
+            },
+        ]);
+        expect(calls).toHaveLength(0); // GPUBuffer 分支不经过 pointer
+        expect(r.DC_vertexBuffers[0]).toEqual({
+            name: 'position',
+            buffer,
+            offset: 0,
+            byteSize: 36,
+        });
+    });
+});
+
+describe('DrawCommandGenerator ticket 回传 — P0-3', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+    });
+
+    function makeTicketStore() {
+        const map = new Map<string, unknown>();
+        let ticketId = 0;
+        return {
+            map,
+            peek: (key: string) => map.get(key),
+            acquire: (key: string, factory: () => unknown) => {
+                let value = map.get(key);
+                if (value === undefined) {
+                    value = factory();
+                    map.set(key, value);
+                }
+                return { value, ticket: { id: ++ticketId, released: false } };
+            },
+        };
+    }
+
+    function makeGenerator() {
+        const shaderModules = makeTicketStore();
+        const pipelines = makeTicketStore();
+        const scene = {
+            device: {
+                createShaderModule: () => ({}),
+                createPipelineLayout: () => ({}),
+                createRenderPipeline: () => ({}),
+            },
+            resourcesGPU: { derived: { shaderModules, pipelines } },
+            MSAA: false,
+            clock: {},
+            pointers: {},
+            depthMode: {},
+            finalTarget: { NDC: true },
+        } as unknown as Scene;
+        const generator = new DrawCommandGenerator({ scene });
+        return { shaderModules, pipelines, generator };
+    }
+
+    const makeShaderValues = (tickets?: { id: number; released: boolean }[]) => ({
+        label: 'ticket',
+        data: {},
+        render: {
+            vertex: { code: 'vs-code', entryPoint: 'vs' },
+            fragment: {
+                code: 'fs-code',
+                entryPoint: 'fs',
+                aliasName: 'fs',
+                targets: [{ format: 'bgra8unorm' }],
+            },
+        },
+        ...(tickets ? { releaseTickets: tickets } : {}),
+    });
+
+    const makePipelineValues = (tickets?: { id: number; released: boolean }[]) => ({
+        label: 'ticket',
+        data: {},
+        render: { vertex: { code: 'x', entryPoint: 'vs' }, depthStencil: false },
+        ...(tickets ? { releaseTickets: tickets } : {}),
+    });
+
+    const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+    const fragment = { fs: undefined, name: 'fs-md5' };
+
+    it('initShaderModule 回传 VS/FS 两个 ticket', () => {
+        const { generator } = makeGenerator();
+        const tickets: { id: number; released: boolean }[] = [];
+        generator.initShaderModule(makeShaderValues(tickets), [], [], []);
+        expect(tickets).toHaveLength(2);
+        expect(tickets[0].id).toBe(1);
+        expect(tickets[1].id).toBe(2);
+    });
+
+    it('initShaderModule 无 releaseTickets 不回传', () => {
+        const { generator } = makeGenerator();
+        const values = makeShaderValues();
+        generator.initShaderModule(values, [], [], []);
+        expect(values).not.toHaveProperty('releaseTickets');
+    });
+
+    it('initPipeLine entity 链路命中仍 acquire 并回传 ticket', () => {
+        const { generator, pipelines } = makeGenerator();
+        const tickets: { id: number; released: boolean }[] = [];
+        generator.initPipeLine(makePipelineValues(tickets), vertex, fragment, []);
+        generator.initPipeLine(makePipelineValues(tickets), vertex, fragment, []);
+        expect(pipelines.map.size).toBe(1);
+        expect(tickets).toHaveLength(2);
+    });
+
+    it('initPipeLine 无 releaseTickets 命中走 peek 不回传', () => {
+        const { generator, pipelines } = makeGenerator();
+        const values = makePipelineValues();
+        generator.initPipeLine(values, vertex, fragment, []);
+        generator.initPipeLine(values, vertex, fragment, []);
+        expect(pipelines.map.size).toBe(1);
+        expect(values).not.toHaveProperty('releaseTickets');
+    });
+});
+
+describe('generateDrawCommandAndTrack 释放凭证回传 — P0-3', () => {
+    let generateDrawCommandAndTrack: any;
+
+    beforeAll(async () => {
+        ({ generateDrawCommandAndTrack } = await import('../entity/entityBundleMaterialDC'));
+    });
+
+    it('取走 ticket 并 track，随后置空 releaseTickets', () => {
+        const tracked: { id: number; released: boolean }[] = [];
+        const scope = {
+            DCG: {
+                generateDrawCommand: (v: {
+                    releaseTickets: { id: number; released: boolean }[];
+                }) => {
+                    v.releaseTickets.push({ id: 7, released: false });
+                    return { label: 'dc' };
+                },
+            },
+            track: (ticket: { id: number; released: boolean }) => {
+                tracked.push(ticket);
+            },
+        };
+        const valueDC: { releaseTickets?: { id: number; released: boolean }[] } = {};
+        const dc = generateDrawCommandAndTrack(scope, valueDC);
+        expect(dc).toEqual({ label: 'dc' });
+        expect(tracked).toEqual([{ id: 7, released: false }]);
+        expect(valueDC.releaseTickets).toBeUndefined();
+    });
+});
+
+describe('DrawCommandGenerator.initUniformPart 槽位快照 — §2.2（system / uniforms 两路径）', () => {
+    let DrawCommandGenerator: any;
+    let E_renderForDC: any;
+    let PBRMaterial: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+        ({ E_renderForDC } = await import('../base/coreDefine'));
+        ({ PBRMaterial } = await import('../material/PBR/PBRMaterial'));
+        // node 环境补齐 isGPUBindGroup / isGPUBindGroupLayout 所需的全局（仅 instanceof 判断）
+        (globalThis as any).GPUBindGroup = class MockGPUBindGroup {};
+        (globalThis as any).GPUBindGroupLayout = class MockGPUBindGroupLayout {};
+    });
+
+    function makeGenerator() {
+        const createdLayouts: any[] = [];
+        const createdGroups: any[] = [];
+        const device = {
+            createBindGroupLayout: (desc: any) => {
+                createdLayouts.push(desc);
+                return { __mockLayout: true, ...desc };
+            },
+            createBindGroup: (desc: any) => {
+                createdGroups.push(desc);
+                return { __mockGroup: true, ...desc };
+            },
+            createPipelineLayout: () => ({}),
+            createRenderPipeline: () => ({}),
+        };
+        const scene = {
+            device,
+            clock: { now: 12345 },
+            pointers: {},
+            MSAA: false,
+            getBindGroupLayoutZeroOfCamera: () => ({ __layout: 'camera0' }),
+            getBindGroupLayoutZeroOfLight: () => ({ __layout: 'light0' }),
+            IBL: undefined as any,
+        };
+        const generator = new DrawCommandGenerator({
+            scene,
+        } as unknown as ConstructorParameters<typeof DrawCommandGenerator>[0]);
+        return { generator, scene, createdLayouts, createdGroups };
+    }
+
+    function uniformValues(overrides: Record<string, unknown> = {}) {
+        return {
+            label: 'uniform',
+            data: {},
+            ...overrides,
+        } as unknown as Parameters<typeof DrawCommandGenerator.prototype.initUniformPart>[0];
+    }
+
+    it('system(camera + parent + material，无 IBL)：slot0/1/2 填充，slot3 为 undefined', () => {
+        const { generator } = makeGenerator();
+        const parent = {
+            getBindGroupAndBindGroupLayout: () => ({
+                bindGroup: undefined,
+                bindGroupLayout: { __layout: 'entity1' },
+            }),
+            _material: {
+                getBindGroupLayout: (type: string) => ({ __layout: 'material2:' + type }),
+            },
+        };
+        const r = generator.initUniformPart(
+            uniformValues({
+                system: {
+                    type: E_renderForDC.camera,
+                    parent,
+                    material: { owner: {}, type: 'pbr' }, // owner 非 PBRMaterial → 不占 IBL 槽位
+                },
+            }),
+        );
+
+        expect(r.DC_bindGroupLayouts).toEqual([
+            { __layout: 'camera0' },
+            { __layout: 'entity1' },
+            { __layout: 'material2:pbr' },
+            undefined, // IBL 非必须：无 IBL 时槽位保持空
+        ]);
+        expect(r.DC_bindGroups).toEqual([undefined, undefined, undefined, undefined]);
+    });
+
+    it('system(camera + IBL + PBRMaterial)：slot3 由 IBL 填充', () => {
+        const { generator, scene } = makeGenerator();
+        const ibl = {
+            bindGroupLayout: () => ({ __layout: 'ibl3' }),
+            bindGroup: () => ({ __bindGroup: 'ibl3' }),
+        };
+        scene.IBL = ibl;
+        const parent = {
+            getBindGroupAndBindGroupLayout: () => ({
+                bindGroup: undefined,
+                bindGroupLayout: { __layout: 'entity1' },
+            }),
+            _material: {
+                getBindGroupLayout: (type: string) => ({ __layout: 'material2:' + type }),
+            },
+        };
+        const r = generator.initUniformPart(
+            uniformValues({
+                system: {
+                    type: E_renderForDC.camera,
+                    parent,
+                    material: {
+                        owner: Object.create(PBRMaterial.prototype),
+                        type: 'pbr',
+                    },
+                },
+            }),
+        );
+
+        expect(r.DC_bindGroupLayouts[3]).toEqual({ __layout: 'ibl3' });
+        expect(r.DC_bindGroups[3]).toEqual({ __bindGroup: 'ibl3' });
+    });
+
+    it('system(light，无 parent)：仅 slot0 填充', () => {
+        const { generator } = makeGenerator();
+        const r = generator.initUniformPart(
+            uniformValues({ system: { type: E_renderForDC.light } }),
+        );
+
+        expect(r.DC_bindGroupLayouts).toEqual([
+            { __layout: 'light0' },
+            undefined,
+            undefined,
+            undefined,
+        ]);
+        expect(r.DC_bindGroups).toEqual([undefined, undefined, undefined, undefined]);
+    });
+
+    it('system type 不支持 → 抛错', () => {
+        const { generator } = makeGenerator();
+        expect(() =>
+            generator.initUniformPart(uniformValues({ system: { type: 'unknown' } })),
+        ).toThrow('system type not support');
+    });
+
+    it('uniforms（GPUBindGroup 直接使用）：最多保留 4 组', () => {
+        const { generator } = makeGenerator();
+        const GPUBindGroupCtor = (globalThis as any).GPUBindGroup;
+        const GPUBindGroupLayoutCtor = (globalThis as any).GPUBindGroupLayout;
+        const groups = [0, 1, 2, 3, 4].map(() => new GPUBindGroupCtor());
+        const layouts = [0, 1, 2, 3, 4].map(() => new GPUBindGroupLayoutCtor());
+
+        const r = generator.initUniformPart(
+            uniformValues({ data: { uniforms: groups, unifromLayout: layouts } }),
+        );
+
+        expect(r.DC_bindGroups).toHaveLength(4); // 第 5 组被 groupCount>3 上限拦截
+        expect(r.DC_bindGroupLayouts).toHaveLength(4);
+        expect(r.DC_bindGroups[0]).toBe(groups[0]);
+        expect(r.DC_bindGroupLayouts[0]).toBe(layouts[0]);
+        expect(r.DC_bindGroups[3]).toBe(groups[3]);
+    });
+
+    it('uniforms（创建分支）：label 序号随 groupCount 递增', () => {
+        const { generator, createdLayouts, createdGroups } = makeGenerator();
+        const r = generator.initUniformPart(
+            uniformValues({
+                data: {
+                    uniforms: [[{ binding: 0, resource: {} }], [{ binding: 0, resource: {} }]],
+                    unifromLayout: [
+                        [{ binding: 0, visibility: 1 }],
+                        [{ binding: 0, visibility: 1 }],
+                    ],
+                },
+            }),
+        );
+
+        expect(r.DC_bindGroups).toHaveLength(2);
+        expect(r.DC_bindGroupLayouts).toHaveLength(2);
+        expect(createdLayouts).toHaveLength(2);
+        expect(createdLayouts[0].label).toBe('BGLD(0)(0) uniform@12345');
+        expect(createdLayouts[1].label).toBe('BGLD(1)(1) uniform@12345');
+        expect(createdGroups[0].label).toBe('BGD(0) uniform');
+        expect(createdGroups[1].label).toBe('BGD(1) uniform');
     });
 });

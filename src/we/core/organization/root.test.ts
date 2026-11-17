@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RootGPU } from './root';
+import type { IV_ReleaseTicket } from '../resources/gpu/types';
 
 class TestRoot extends RootGPU {
     async readyForGPU(): Promise<any> {
@@ -13,75 +14,62 @@ class TestRoot extends RootGPU {
     }
 }
 
-describe('RootGPU.destroy — P0-1 显存回收', () => {
-    it('带 map 字段的资源按 i.key 删除（而非 Map 名字符串）', () => {
-        const deletedKeys: any[] = [];
-        const fakeMap = {
-            delete: (k: any) => {
-                deletedKeys.push(k);
-                return true;
-            },
-        };
+function makeTicket(id: number): IV_ReleaseTicket {
+    return { id, released: false };
+}
+
+describe('RootGPU.destroy — P0-1 显存回收（ticket 释放申请）', () => {
+    it('destroy() 对每个 track 的 ticket 提交一次释放申请', () => {
+        const released: number[] = [];
         const resourcesGPU: any = {
-            // map 字段指向的 Map 名（真实属性）
-            textureOfString: fakeMap,
-            getProperty: (k: string) => resourcesGPU[k],
-            delete: () => {
-                /* else 分支，本用例不触发 */
+            requestRelease: (ticket: IV_ReleaseTicket) => {
+                released.push(ticket.id);
             },
         };
 
         const root = new TestRoot();
         root.resourcesGPU = resourcesGPU;
-        // 注册一条带 map 的资源：key=真实资源键，map=Map 名
-        root.mapList = [{ key: 'realResKey', type: 'textureOfString', map: 'textureOfString' }];
+        root.track(makeTicket(1));
+        root.track(makeTicket(2));
 
         root.destroy();
 
-        // 必须按真实资源键命中删除，而不是用 Map 名字符串空删（修复前会误删 "textureOfString"）
-        expect(deletedKeys).toContain('realResKey');
-        expect(deletedKeys).not.toContain('textureOfString');
+        expect(released).toEqual([1, 2]);
     });
 
-    it('无 map 字段的资源走 else 分支按 key+type 删除', () => {
-        let deleteArgs: any[] = [];
+    it('destroy() 后清空凭证，不再持有引用', () => {
+        const released: number[] = [];
         const resourcesGPU: any = {
-            getProperty: () => undefined,
-            delete: (key: any, type: any) => {
-                deleteArgs = [key, type];
+            requestRelease: (ticket: IV_ReleaseTicket) => {
+                released.push(ticket.id);
             },
         };
 
         const root = new TestRoot();
         root.resourcesGPU = resourcesGPU;
-        root.mapList = [{ key: 'k1', type: 'vertices' }];
+        root.track(makeTicket(1));
 
         root.destroy();
 
-        expect(deleteArgs).toEqual(['k1', 'vertices']);
+        expect(released).toHaveLength(1);
+        expect(root._tickets).toHaveLength(0);
     });
 
-    it('destroy() 幂等：重复调用不二次删除', () => {
-        const deletedKeys: any[] = [];
-        const fakeMap = {
-            delete: (k: any) => {
-                deletedKeys.push(k);
-                return true;
-            },
-        };
+    it('destroy() 幂等：重复调用不二次提交释放', () => {
+        const released: number[] = [];
         const resourcesGPU: any = {
-            textureOfString: fakeMap,
-            getProperty: (k: string) => resourcesGPU[k],
-            delete: () => {},
+            requestRelease: (ticket: IV_ReleaseTicket) => {
+                released.push(ticket.id);
+            },
         };
 
         const root = new TestRoot();
         root.resourcesGPU = resourcesGPU;
-        root.mapList = [{ key: 'realResKey', type: 'textureOfString', map: 'textureOfString' }];
+        root.track(makeTicket(1));
 
         root.destroy();
         root.destroy();
 
-        expect(deletedKeys.filter((k) => k === 'realResKey')).toHaveLength(1);
+        expect(released).toHaveLength(1);
     });
 });

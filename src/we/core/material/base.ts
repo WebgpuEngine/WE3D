@@ -249,6 +249,8 @@ export interface I_materialBundleOutput {
     code: string;
     entryPoint?: string;
     aliasName: string;
+    /** §2.4 ② 变种标识（material 层就地 MD5 化，向下只透传紧凑串，不透传完整 userCode） */
+    variantKey?: string;
 }
 export interface I_BundleOfMaterialForMSAA {
     MSAA: I_materialBundleOutput;

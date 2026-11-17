@@ -11,6 +11,7 @@ import type {
 import type { I_VertexBufferEntry } from './BaseDrawCommand';
 import type { I_DrawInputValueMaterial } from './DrawCommand';
 import type { Scene } from '../scene/scene';
+import type { IV_ReleaseTicket } from '../resources/gpu/types';
 
 /**
  * 第 3 期巨型文件拆分（C8）：DrawCommandGenerator 的类型与守卫函数。
@@ -212,6 +213,8 @@ export interface IV_DC {
             code?: string; //| I_ShaderTemplate_Final,
             /**alias name of fragment shader */
             aliasName: string;
+            /**§2.4 ② 变种标识（material 层 MD5 化后透传） */
+            variantKey?: string;
             /**默认："fs" */
             entryPoint: string;
             constants?: Record<string, number>;
@@ -261,4 +264,10 @@ export interface IV_DC {
      *  B、没有，则去scene中获取NDC的RPD
      */
     renderPassDescriptor?: GPURenderPassDescriptor; // | (() => GPURenderPassDescriptor),
+    /**
+     * C5 释放凭证回传出参（可选）：DCG 在 acquire shaderModules/pipelines 时把 ticket 收集到此数组，
+     * 由调用方（entity）取走后 track 到自身，销毁时统一 requestRelease。
+     * 调用方取走后置为 undefined，清理临时出参。
+     */
+    releaseTickets?: IV_ReleaseTicket[];
 }
