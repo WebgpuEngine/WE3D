@@ -147,9 +147,36 @@ export class ResourceManagerOfGPU {
     //texture
     /**string 可以是URL或texture的名称等 */
     textureOfString: Map<string, GPUTexture> = new Map();
+    /**
+     * 共享 GPUTexture 的引用计数，key 与 textureOfString 一致（source）。
+     * 多个 Texture 实例按同一 source 复用同一 GPUTexture，引用归零才真正销毁，
+     * 避免销毁其中一个材质时连带失效其它仍在使用的材质（B1 场景）。
+     */
+    textureRefCount: Map<unknown, number> = new Map();
     textureToBindGroupLayoutEntry: Map<GPUTexture, GPUTextureBindingLayout> = new Map();
     weTextureOfString: Map<string, Texture> = new Map();
     weMaterialOfString: Map<string, BaseMaterial> = new Map();
+
+    /**登记一个共享纹理引用（Texture 复用或首次创建缓存纹理时调用）*/
+    acquireTexture(source: unknown): void {
+        this.textureRefCount.set(source, (this.textureRefCount.get(source) ?? 0) + 1);
+    }
+
+    /**
+     * 释放一个共享纹理引用。
+     * @returns true 表示引用归零，调用方应销毁底层 GPUTexture；false 表示仍有其它使用者
+     */
+    releaseTexture(source: unknown): boolean {
+        const count = this.textureRefCount.get(source) ?? 0;
+        if (count <= 1) {
+            this.textureRefCount.delete(source);
+            this.textureOfString.delete(source as string);
+            return true;
+        }
+        this.textureRefCount.set(source, count - 1);
+        return false;
+    }
+
     createDefaultTexture() {
         const textureDefault = new DefaultTexture(this.device);
         this.textureOfString.set('default', textureDefault.texture);

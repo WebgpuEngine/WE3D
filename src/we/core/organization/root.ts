@@ -145,14 +145,29 @@ export abstract class RootGPU implements I_UUID {
         this._isDestroy = true;
         if (this.resourcesGPU) {
             for (const i of this.mapList) {
-                if (i.map && this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)) {
-                    (
-                        this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as Map<any, any>
-                    ).delete(i.key);
-                } else this.resourcesGPU.delete(i.key, i.type);
+                try {
+                    if (
+                        i.map &&
+                        this.resourcesGPU.getProperty(i.map as keyof ResourceManagerOfGPU)
+                    ) {
+                        const target = this.resourcesGPU[i.map as keyof ResourceManagerOfGPU] as
+                            Map<any, any> | undefined;
+                        target?.delete(i.key);
+                    } else {
+                        this.resourcesGPU.delete(i.key, i.type);
+                    }
+                } catch (e) {
+                    console.warn('[destroy] resource cleanup failed', i, e);
+                }
             }
         }
-        this._destroy();
+        try {
+            this._destroy();
+        } catch (e) {
+            console.warn('[destroy] _destroy failed', e);
+        }
+        // 无论资源清理 / _destroy 是否抛错，都必须把自身从 manager 移除，
+        // 否则被销毁的实体会残留在渲染列表中（表现为“应被销毁的网格仍然显示”）。
         if (this._manager) {
             this._manager.remove(this);
         }

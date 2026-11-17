@@ -2,10 +2,12 @@
  * §3.3 B1：共享 GPUTexture 不提前销毁
  *
  * 两个 TextureMaterial 使用同一 URL，命中 textureOfString 后共享同一 GPUTexture。
- * 只销毁左侧材质：旧实现 Texture._destroy() 会无条件 texture.destroy()，
- * 导致右侧材质引用的共享对象失效；新实现由释放申请 + 策略裁决，右侧应保持正常显示。
+ * 销毁左侧 mesh（从画面移除）与 material（触发共享纹理释放）：
+ * 旧实现 Texture._destroy() 会无条件 texture.destroy()，导致右侧材质引用的共享对象失效；
+ * 新实现由释放申请 + 策略裁决，右侧应保持正常显示。
  *
- * 画面判读：左右两个带纹理的盒子。左侧被销毁后，右侧仍应完整显示贴图。
+ * 画面判读：左右两个带纹理的盒子。左侧被销毁后从画面移除；
+ * 旧实现下右侧纹理随左侧销毁而失效（本用例暴露的差异），新实现下右侧应完整显示贴图。
  */
 import {
     PerspectiveCamera,
@@ -57,5 +59,6 @@ const meshB = new Mesh({
 await scene.add({ entity: meshA, position: [-0.75, 0, 0] });
 await scene.add({ entity: meshB, position: [0.75, 0, 0] });
 
-// 两个材质完成 init 后，只销毁 A：检验共享资源是否被连带释放
+// 两个材质完成 init 后，销毁左侧：meshA 从画面移除 + materialA 触发共享纹理释放
+meshA.destroy();
 materialA.destroy();

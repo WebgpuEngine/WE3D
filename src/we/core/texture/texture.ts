@@ -11,9 +11,19 @@ export interface IV_Texture extends I_BaseTexture {
 }
 
 export class Texture extends BaseTexture {
+    /**是否按 source 共享缓存纹理；仅此类纹理走引用计数释放 */
+    private _sharedBySource: unknown = undefined;
+
     _destroy(): void {
-        // throw new Error("Method not implemented.");
-        this.texture.destroy();
+        // 共享缓存纹理：释放引用，仅归零时销毁底层 GPUTexture，
+        // 避免销毁一个材质时连带失效仍在使用同一 GPUTexture 的其它材质。
+        if (this._sharedBySource !== undefined) {
+            if (this.scene.resourcesGPU.releaseTexture(this._sharedBySource)) {
+                this.texture.destroy();
+            }
+        } else if (this.texture) {
+            this.texture.destroy();
+        }
         this._state = E_lifeState.destroyed;
     }
 
@@ -37,13 +47,15 @@ export class Texture extends BaseTexture {
             this.texture = source;
             this._state = E_lifeState.finished;
         }
-        //GPUCopyExternalImageSource
+        //GPUCopyExternalImageSource / URL：按 source 共享缓存纹理
         else {
+            this._sharedBySource = source;
             if (this.scene.resourcesGPU.has(source, E_resourceKind.textureOfString)) {
                 this.texture = this.scene.resourcesGPU.get(
                     source,
                     E_resourceKind.textureOfString,
                 ) as GPUTexture;
+                this.scene.resourcesGPU.acquireTexture(source);
             } else {
                 if (typeof source == 'string') {
                     const urlName = source.split('/');
@@ -61,10 +73,7 @@ export class Texture extends BaseTexture {
                     await this.generateTextureByImageSource(source);
                 }
                 this.scene.resourcesGPU.set(source, this.texture, E_resourceKind.textureOfString);
-                this.mapList.push({
-                    key: source,
-                    type: E_resourceKind.textureOfString,
-                });
+                this.scene.resourcesGPU.acquireTexture(source);
             }
         }
         return this._state;

@@ -134,7 +134,8 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                 console.warn('Mesh constructor: normal is not array');
             }
         }
-        super.init(scene);
+        // 必须 await：否则异步 GPU 链与 destroy 竞态，readyForGPU 会访问已清空的 _material
+        await super.init(scene);
     }
     override _destroy(): void {
         super._destroy();
@@ -145,7 +146,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * 覆写 Root的function,因为材料类需要GPUDevice
      */
     async readyForGPU() {
+        if (this._isDestroy || this._material == undefined) return;
         await this._material.init(this.scene);
+        if (this._isDestroy || this._material == undefined) return; // await 期间可能已被销毁
         if (this._material.getTransparent() === true) {
             this._cullMode = 'none'; //透明具有双面性
         }
@@ -194,7 +197,9 @@ export abstract class EntityBundleMaterial extends BaseEntity {
      * @returns  boolean
      */
     getTransparent(): boolean {
-        return this._material.getTransparent();
+        // 销毁后 _material 会被置为 undefined（见 _destroy），此时按不透明处理，
+        // 避免渲染已销毁实体时访问 undefined._material 抛出 pageerror。
+        return this._material ? this._material.getTransparent() : false;
     }
     /** 生成原始包围盒，基于当前entity的原始包围盒，不涉及变换 */
     override generateBox(position?: number[]): boundingBox | undefined {
