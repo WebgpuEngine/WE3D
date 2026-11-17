@@ -4,133 +4,66 @@ import type { IV_DC } from './drawCommandGeneratorTypes';
  * 第 3 期巨型文件拆分（C8）：WGSL 顶点格式映射表与 @location 字符串。
  * 两个纯函数无 this 依赖，逐字搬移；主类保留同名委托壳供 C0 快照断言与外部调用。
  */
+/**
+ * WGSL 顶点格式静态映射表（35 项）。
+ * 原为 35 项纯 switch 逐条映射，改为模块级查表：O(1) 返回，新增格式只改此处。
+ * 未知格式由 getWgslValueFormat 兜底抛错（保留原 default 分支行为）。
+ */
+const WGSL_FORMAT_TABLE: Record<string, string> = {
+    // f32
+    float32: 'f32',
+    float32x2: 'vec2f',
+    float32x3: 'vec3f',
+    float32x4: 'vec4f',
+    // u32
+    uint32: 'u32',
+    uint32x2: 'vec2u',
+    uint32x3: 'vec3u',
+    uint32x4: 'vec4u',
+    // u16
+    uint16: 'u16',
+    uint16x2: 'vec2u',
+    uint16x4: 'vec4u',
+    // u8
+    uint8: 'u32',
+    uint8x2: 'vec2u',
+    uint8x4: 'vec4u',
+    // i32
+    sint32: 'i32',
+    sint32x2: 'vec2i',
+    sint32x3: 'vec3i',
+    sint32x4: 'vec4i',
+    // i16
+    sint16: 'i16',
+    sint16x2: 'vec2i',
+    sint16x4: 'vec4i',
+    // i8
+    sint8: 'i32',
+    sint8x2: 'vec2i',
+    sint8x4: 'vec4i',
+    // unorm16
+    unorm16: 'f32',
+    unorm16x2: 'vec2f',
+    unorm16x4: 'vec4f',
+    // snorm16
+    snorm16: 'f32',
+    snorm16x2: 'vec2f',
+    snorm16x4: 'vec4f',
+    // unorm10-10-10-2
+    'unorm10-10-10-2': 'vec4f',
+    // unorm8x4-bgra
+    'unorm8x4-bgra': 'vec4f',
+    // f16
+    float16: 'f16',
+    float16x2: 'vec2f',
+    float16x4: 'vec4f',
+};
+
 export function getWgslValueFormat(format: string) {
-    let wgsl_value_format = '';
-    switch (format) {
-        /////////////////////////////////////////f32
-        case 'float32':
-            wgsl_value_format = 'f32';
-            break;
-        case 'float32x2':
-            wgsl_value_format = 'vec2f';
-            break;
-        case 'float32x3':
-            wgsl_value_format = 'vec3f';
-            break;
-        case 'float32x4':
-            wgsl_value_format = 'vec4f';
-            break;
-        /////////////////////////////////////////u32
-        case 'uint32':
-            wgsl_value_format = 'u32';
-            break;
-        case 'uint32x2':
-            wgsl_value_format = 'vec2u';
-            break;
-        case 'uint32x3':
-            wgsl_value_format = 'vec3u';
-            break;
-        case 'uint32x4':
-            wgsl_value_format = 'vec4u';
-            break;
-        /////////////////////////////////////////u16
-        case 'uint16':
-            wgsl_value_format = 'u16';
-            break;
-        case 'uint16x2':
-            wgsl_value_format = 'vec2u';
-            break;
-        case 'uint16x4':
-            wgsl_value_format = 'vec4u';
-            break;
-        /////////////////////////////////////////i8
-        case 'uint8':
-            wgsl_value_format = 'u32';
-            break;
-        case 'uint8x2':
-            wgsl_value_format = 'vec2u';
-            break;
-        case 'uint8x4':
-            wgsl_value_format = 'vec4u';
-            break;
-        /////////////////////////////////////////i32
-        case 'sint32':
-            wgsl_value_format = 'i32';
-            break;
-        case 'sint32x2':
-            wgsl_value_format = 'vec2i';
-            break;
-        case 'sint32x3':
-            wgsl_value_format = 'vec3i';
-            break;
-        case 'sint32x4':
-            wgsl_value_format = 'vec4i';
-            break;
-        /////////////////////////////////////////i16
-        case 'sint16':
-            wgsl_value_format = 'i16';
-            break;
-        case 'sint16x2':
-            wgsl_value_format = 'vec2i';
-            break;
-        case 'sint16x4':
-            wgsl_value_format = 'vec4i';
-            break;
-        /////////////////////////////////////////i8
-        case 'sint8':
-            wgsl_value_format = 'i32';
-            break;
-        case 'sint8x2':
-            wgsl_value_format = 'vec2i';
-            break;
-        case 'sint8x4':
-            wgsl_value_format = 'vec4i';
-            break;
-        /////////////////////////////////////////unorm16
-        case 'unorm16':
-            wgsl_value_format = 'f32';
-            break;
-        case 'unorm16x2':
-            wgsl_value_format = 'vec2f';
-            break;
-        case 'unorm16x4':
-            wgsl_value_format = 'vec4f';
-            break;
-        /////////////////////////////////////////snorm16
-        case 'snorm16':
-            wgsl_value_format = 'f32';
-            break;
-        case 'snorm16x2':
-            wgsl_value_format = 'vec2f';
-            break;
-        case 'snorm16x4':
-            wgsl_value_format = 'vec4f';
-            break;
-        /////////////////////////////////////////unorm10-10-10-2
-        case 'unorm10-10-10-2':
-            wgsl_value_format = 'vec4f';
-            break;
-        /////////////////////////////////////////unorm8x4-bgra
-        case 'unorm8x4-bgra':
-            wgsl_value_format = 'vec4f';
-            break;
-        /////////////////////////////////////////f16
-        case 'float16':
-            wgsl_value_format = 'f16';
-            break;
-        case 'float16x2':
-            wgsl_value_format = 'vec2f';
-            break;
-        case 'float16x4':
-            wgsl_value_format = 'vec4f';
-            break;
-
-        default:
-            throw new Error('顶点属性格式不能匹配数据');
-            break;
+    if (!Object.prototype.hasOwnProperty.call(WGSL_FORMAT_TABLE, format)) {
+        throw new Error('顶点属性格式不能匹配数据');
     }
-
-    return wgsl_value_format;
+    return WGSL_FORMAT_TABLE[format];
 }
 
 export function formatLocationStringOfAttribute(
