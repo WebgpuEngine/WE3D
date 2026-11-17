@@ -15,9 +15,11 @@ import { disposeOf, normalizeKey } from './resourceKeys';
 import { RefCountPolicy } from './releasePolicy';
 import type {
     I_AcquireResult,
+    I_CompiledMetadata,
     I_FrameClock,
     I_InternalReleaseTicket,
     I_ReleasableStore,
+    I_StoreStats,
     IV_ReleasePolicy,
     IV_ReleaseTicket,
     IV_ResourceEntry,
@@ -53,8 +55,8 @@ export class AssetStore<V> implements I_ReleasableStore {
         return this.entries.size;
     }
 
-    /** 命中或创建；命中已标记释放的条目时撤销申请（§2.6 ②） */
-    acquire(source: unknown, factory: () => V): I_AcquireResult<V> {
+    /** 命中或创建；命中已标记释放的条目时撤销申请（§2.6 ②）；metadata 供 §2.4 ② 写入条目 */
+    acquire(source: unknown, factory: () => V, metadata?: I_CompiledMetadata): I_AcquireResult<V> {
         const key = normalizeKey(source);
         let entry = this.entries.get(key);
         if (!entry) {
@@ -64,8 +66,12 @@ export class AssetStore<V> implements I_ReleasableStore {
                 refCount: 0,
                 releasable: false,
                 lastUsedFrame: this.lastClockFrame,
+                metadata,
             };
             this.entries.set(key, entry);
+        } else if (metadata) {
+            // 命中时刷新元数据（同源幂等）
+            entry.metadata = metadata;
         }
         if (this.counted) entry.refCount++;
         entry.releasable = false;
@@ -94,6 +100,20 @@ export class AssetStore<V> implements I_ReleasableStore {
             this.entries.delete(key);
         }
         this.pending.delete(key);
+    }
+
+    /** §2.4 ② 按变种精确失效：删除所有 metadata.variantKey 匹配的条目，返回删除数 */
+    invalidateByVariant(variantKey: string): number {
+        let removed = 0;
+        for (const [key, entry] of this.entries) {
+            if (entry.metadata?.variantKey === variantKey) {
+                disposeOf(entry.value);
+                this.entries.delete(key);
+                this.pending.delete(key);
+                removed++;
+            }
+        }
+        return removed;
     }
 
     /** 只登记释放申请，绝不立即销毁（幂等，§2.5） */
@@ -147,12 +167,15 @@ export class AssetStore<V> implements I_ReleasableStore {
         this.tickets.clear();
     }
 
-    stats(): { size: number; totalRefs: number } {
+    stats(): I_StoreStats {
         let totalRefs = 0;
+        const variants: Record<string, number> = {};
         for (const entry of this.entries.values()) {
             totalRefs += entry.refCount;
+            const variantKey = entry.metadata?.variantKey;
+            if (variantKey) variants[variantKey] = (variants[variantKey] ?? 0) + 1;
         }
-        return { size: this.entries.size, totalRefs };
+        return { size: this.entries.size, totalRefs, variants };
     }
 
     private createTicket(key: string): IV_ReleaseTicket {

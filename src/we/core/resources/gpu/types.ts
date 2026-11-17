@@ -28,6 +28,21 @@ export interface IV_ResourceEntry<V> {
     refCount: number;
     releasable: boolean;
     lastUsedFrame: number;
+    /** §2.4 ② 编译产物元数据（仅 shaderModules / pipelines 条目写入） */
+    metadata?: I_CompiledMetadata;
+}
+
+/** §2.4 ② 编译产物元数据：变种标识 + 反射签名（可读 / 按变种统计 / 精确失效） */
+export interface I_CompiledMetadata {
+    variantKey?: string;
+    reflectionSignature?: string;
+}
+
+/** 分区统计：size / totalRefs 恒有；variants 仅编译产物分区按变种统计 */
+export interface I_StoreStats {
+    size: number;
+    totalRefs: number;
+    variants?: Record<string, number>;
 }
 
 /** 帧号时钟：`tick` / `shouldRelease` 仅需帧号（确定性、便于单测） */
@@ -49,7 +64,7 @@ export interface I_ReleasableStore {
     requestRelease(ticket: IV_ReleaseTicket): void;
     tick(clock: I_FrameClock): number;
     clean(): void;
-    stats(): { size: number; totalRefs: number };
+    stats(): I_StoreStats;
 }
 
 /** 内部释放凭证：携带所属分区与 key，使 `requestRelease(ticket)` 可无歧义路由 */

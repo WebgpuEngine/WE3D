@@ -59,6 +59,24 @@ describe('AssetStore 分区读写与去重', () => {
         expect(derived.shaderModules.has('vs:a')).toBe(true);
         expect(system.systemGroup.has('camera:0')).toBe(true);
     });
+
+    it('§2.4 ② metadata 写入条目、命中刷新、stats 按变种统计、invalidateByVariant', () => {
+        const store = new AssetStore<{ id: number }>('t');
+        store.acquire('a', () => ({ id: 1 }), {
+            variantKey: 'pbr:v1',
+            reflectionSignature: '{"ndc":true}',
+        });
+        // 命中刷新 metadata（同源幂等，不重复创建）
+        store.acquire('a', () => ({ id: 2 }), { variantKey: 'pbr:v1' });
+        store.acquire('b', () => ({ id: 3 }), { variantKey: 'pbr:v2' });
+
+        expect(store.stats().variants).toEqual({ 'pbr:v1': 1, 'pbr:v2': 1 });
+
+        expect(store.invalidateByVariant('pbr:v1')).toBe(1);
+        expect(store.has('a')).toBe(false);
+        expect(store.has('b')).toBe(true);
+        expect(store.invalidateByVariant('pbr:none')).toBe(0);
+    });
 });
 
 describe('ResourceManagerOfGPU（stub device）', () => {
@@ -109,6 +127,23 @@ describe('ResourceManagerOfGPU（stub device）', () => {
         expect(s.assets.size).toBe(2);
         expect(s.assets.totalRefs).toBe(2); // counted=true，各 1 引用
         expect(s.derived.size).toBe(1);
+    });
+
+    it('§2.4 ② stats.derived.variants 按变种统计 + invalidateByVariant 精确失效', () => {
+        const mgr = makeMgr();
+        mgr.derived.pipelines.acquire('pipe:a', mockPipeline, { variantKey: 'material.pbr:v1' });
+        mgr.derived.pipelines.acquire('pipe:b', mockPipeline, { variantKey: 'material.pbr:v1' });
+        mgr.derived.pipelines.acquire('pipe:c', mockPipeline, { variantKey: 'material.color:v2' });
+
+        expect(mgr.stats().derived.variants).toEqual({
+            'material.pbr:v1': 2,
+            'material.color:v2': 1,
+        });
+
+        expect(mgr.invalidateByVariant('material.pbr:v1')).toBe(2);
+        expect(mgr.derived.pipelines.has('pipe:a')).toBe(false);
+        expect(mgr.derived.pipelines.has('pipe:b')).toBe(false);
+        expect(mgr.derived.pipelines.has('pipe:c')).toBe(true);
     });
 
     it('clean() 清空所有分区', () => {

@@ -692,14 +692,16 @@ export class DrawCommandGenerator {
                 constants: constansFS,
             };
         }
-        // §2.4 ② 元数据（进入 pipeline keyObject）：可读 / stats 按变种统计 / 按变种精确失效。
+        // §2.4 ② 元数据（进入 pipeline keyObject 并写入条目）：可读 / stats 按变种统计 / 按变种精确失效。
         // 二者完全由已有命中维度派生（code hash、顶点布局、反射输入），只是冗余标签，
         // 不改变命中分区；命中仍只依赖 stage + finalCodeHash（硬规则 ①）。
-        // DCG 拿不到 material 的 userCode / userCodeFunction，改用其等价物「注入后 code 的 hash」：
-        // userCode 变化必然改变 finalWGSL，故变种区分等价。
         const ndc = this.scene.finalTarget.NDC === true;
         const aliasName = values.render.fragment?.aliasName ?? values.render.vertex.entryPoint;
-        const variantKey = computeVariantKey(aliasName, md5OfVScode, md5OfFScode);
+        // §2.4 ② 优先采用 material 层按定义（MD5(userCode + '\0' + userCodeFunction)）算好的变种标识；
+        // 非 material 链路（postprocess / atmosphere 等）不透传，退回「注入后 code hash」等价兜底。
+        const variantKey =
+            values.render.fragment?.variantKey ??
+            computeVariantKey(aliasName, md5OfVScode, md5OfFScode);
         const reflectionSignature = computeReflectionSignature({
             names: DC_vertexNames,
             locations: DC_localtions,
@@ -837,8 +839,10 @@ export class DrawCommandGenerator {
         if (multisampleState) descriptor.multisample = multisampleState;
         if (depthStencilState) descriptor.depthStencil = depthStencilState;
 
-        return this.scene.resourcesGPU.derived.pipelines.acquire(nameOfCacheFlag, () =>
-            this.device.createRenderPipeline(descriptor),
+        return this.scene.resourcesGPU.derived.pipelines.acquire(
+            nameOfCacheFlag,
+            () => this.device.createRenderPipeline(descriptor),
+            { variantKey: vertex.variantKey, reflectionSignature: vertex.reflectionSignature },
         ).value as GPURenderPipeline;
     }
 }

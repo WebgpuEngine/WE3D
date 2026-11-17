@@ -212,6 +212,8 @@ export interface IV_DC {
             code?: string; //| I_ShaderTemplate_Final,
             /**alias name of fragment shader */
             aliasName: string;
+            /**§2.4 ② 变种标识（material 层 MD5 化后透传） */
+            variantKey?: string;
             /**默认："fs" */
             entryPoint: string;
             constants?: Record<string, number>;

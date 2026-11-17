@@ -27,6 +27,7 @@ import { I_pointerCreateParams, I_pointerStruct } from '../bufferBlock/pointer';
 import { E_renderPassName } from '../scene/renderManager';
 import { E_BOLBufferType } from '../bufferBlock/base';
 import { E_shaderRegisterAlianName } from '../SHR/include';
+import { computeVariantKey } from '../resources/gpu/shaderVariantKey';
 
 export abstract class BaseMaterial extends RootGPU {
     ///////////////////////////////////////////////////////////////////
@@ -641,17 +642,17 @@ export abstract class BaseMaterial extends RootGPU {
         materialType: E_materialTypeForBindGroup = E_materialTypeForBindGroup.opacityForward,
     ): I_materialBundleOutput {
         const groupAndBindingString: string = this.getGroupAndBindingString(materialType);
+        const userCode = this.getUserCode();
+        const userCodeFunction = this.getUserCodeFunction();
         const code: string =
             groupAndBindingString +
-            this.scene.shaderRegister.getAliasShaderName(
-                aliasName,
-                this.getUserCode(),
-                this.getUserCodeFunction(),
-            );
+            this.scene.shaderRegister.getAliasShaderName(aliasName, userCode, userCodeFunction);
         const output: I_materialBundleOutput = {
             materialType,
             code,
             aliasName,
+            // §2.4 ② 变种标识：material 层就地 MD5 化，向下只透传紧凑串（不透传完整 userCode）
+            variantKey: computeVariantKey(aliasName, userCode, userCodeFunction),
         };
         return output;
     }

@@ -424,6 +424,31 @@ describe('DrawCommandGenerator.initShaderModule — P0-2 targets 拷贝与越界
         expect(a.reflectionSignature).toContain('"ndc":true');
         expect(a.reflectionSignature).toContain('"names":["position"]');
     });
+
+    it('§2.4 ② material 透传的 variantKey 优先于兜底 hash', () => {
+        const { generator } = makeGenerator();
+        const values = {
+            label: 'meta',
+            data: {},
+            render: {
+                vertex: { code: 'vs-A', entryPoint: 'vs' },
+                fragment: {
+                    code: 'fs',
+                    entryPoint: 'fs',
+                    aliasName: 'material.color',
+                    variantKey: 'material.color:deadbeef',
+                    targets: [{ format: 'bgra8unorm' }],
+                },
+            },
+        };
+        const result = generator.initShaderModule(
+            values,
+            ['position'],
+            ['@location(0) position'],
+            [],
+        );
+        expect(result.variantKey).toBe('material.color:deadbeef');
+    });
 });
 
 /**

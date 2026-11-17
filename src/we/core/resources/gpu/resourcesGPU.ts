@@ -16,12 +16,18 @@ import { AssetCache } from './assetCache';
 import { DefaultResources } from './defaultResources';
 import { DerivedCache } from './derivedCache';
 import { SystemCache } from './systemCache';
-import type { I_FrameClock, I_InternalReleaseTicket, IV_ReleaseTicket, T_cacheId } from './types';
+import type {
+    I_FrameClock,
+    I_InternalReleaseTicket,
+    I_StoreStats,
+    IV_ReleaseTicket,
+    T_cacheId,
+} from './types';
 
 export interface I_ResourcesGPUStats {
-    assets: { size: number; totalRefs: number };
-    derived: { size: number; totalRefs: number };
-    system: { size: number; totalRefs: number };
+    assets: I_StoreStats;
+    derived: I_StoreStats;
+    system: I_StoreStats;
 }
 
 export class ResourceManagerOfGPU {
@@ -73,6 +79,11 @@ export class ResourceManagerOfGPU {
                 this.assets.materials.invalidate(key);
                 break;
         }
+    }
+
+    /** §2.4 ② 按变种精确失效：删除变种对应的 pipeline 条目，返回删除数 */
+    invalidateByVariant(variantKey: string): number {
+        return this.derived.pipelines.invalidateByVariant(variantKey);
     }
 
     /** 全量清空：仅「退出」或「显式强制清空」调用（§2.6 ⑤） */

@@ -12,6 +12,7 @@ import type {
     I_FrameClock,
     I_InternalReleaseTicket,
     I_ReleasableStore,
+    I_StoreStats,
     IV_ReleaseTicket,
 } from './types';
 
@@ -45,9 +46,11 @@ export class DerivedCache implements I_ReleasableStore {
         this.pipelines.clean();
     }
 
-    stats(): { size: number; totalRefs: number } {
+    stats(): I_StoreStats {
         const a = this.shaderModules.stats();
         const b = this.pipelines.stats();
-        return { size: a.size + b.size, totalRefs: a.totalRefs + b.totalRefs };
+        // §2.4 ② 变种统计：pipeline 条目带 variantKey，shaderModule 不带（恒空）
+        const variants: Record<string, number> = { ...(b.variants ?? {}) };
+        return { size: a.size + b.size, totalRefs: a.totalRefs + b.totalRefs, variants };
     }
 }

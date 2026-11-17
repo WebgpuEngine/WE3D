@@ -253,6 +253,7 @@ export class Mesh extends EntityBundleMaterial {
                 code: bundle.fs.code,
                 entryPoint: bundle.fs.entryPoint || 'fs',
                 aliasName: bundle.fs.aliasName,
+                variantKey: bundle.fs.variantKey,
             };
         }
         const valueDC: IV_DC = {
