@@ -6,6 +6,7 @@ import { E_renderPassName } from '../../scene/renderManager';
 
 import { E_entityType, IV_BaseEntity } from '../base';
 import { EntityBundleMaterial } from '../entityBundleMaterial';
+import { generateDrawCommandAndTrack } from '../entityBundleMaterialDC';
 
 /**mesh的顶点结构与材质，各有一个，一一对应 */
 export interface IV_PointsEntity extends IV_BaseEntity {
@@ -251,7 +252,7 @@ export class Points extends EntityBundleMaterial {
                 cullMode: this._cullMode,
             };
         }
-        const dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dc = generateDrawCommandAndTrack(this, valueDC);
         this.renderPassArray[E_renderPassName.shadowmapOpaque].push(dc);
     }
     createShadowMapTransparentDC(): void {

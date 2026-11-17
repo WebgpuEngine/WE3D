@@ -27,7 +27,7 @@ import { E_renderPassName } from '../scene/renderManager';
 import { I_EntityAttributes, IV_BaseEntity, E_entityType } from './base';
 import { BaseEntity } from './baseEntity';
 import { createIndexBuffer, createVerticesBuffer } from '../command/baseFunction';
-import { generateInputValueOfDC } from './entityBundleMaterialDC';
+import { generateDrawCommandAndTrack, generateInputValueOfDC } from './entityBundleMaterialDC';
 import type { I_bundleForInputValueOfDC } from './entityBundleMaterialDC';
 
 import {
@@ -706,7 +706,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     this,
                 );
                 valueDC.system!.MSAA = 'MSAA';
-                dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+                dc = generateDrawCommandAndTrack(this, valueDC);
                 // this.cameraDC[UUID][E_renderPassName.MSAA].push(dc);
                 this.renderPassArray[E_renderPassName.MSAA].push(dc);
             }
@@ -719,7 +719,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     this,
                 );
                 valueDC.system!.MSAA = 'MSAAinfo';
-                dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+                dc = generateDrawCommandAndTrack(this, valueDC);
             }
         } else {
             //正常的前向渲染输出,只输出一个DC（defer 或  forward）
@@ -738,7 +738,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
                     false,
                     this,
                 );
-                dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+                dc = generateDrawCommandAndTrack(this, valueDC);
             }
         }
         return dc;
@@ -783,7 +783,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
             true,
         );
         valueDC.label = 'shadowmap:' + valueDC.label;
-        const dc = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dc = generateDrawCommandAndTrack(this, valueDC);
         this.renderPassArray[E_renderPassName.shadowmapOpaque]!.push(dc);
     }
     createShadowMapTransparentDC(): void {
@@ -814,7 +814,7 @@ export abstract class EntityBundleMaterial extends BaseEntity {
         valueDC.transparent = this.getBlend(); //材质的透明混合参数
         valueDC.label = 'TT mesh:' + this.Name || this.ID.toString();
         // valueDC.label = this.ID.toString();
-        const dcTT: DrawCommand = this.DCG.generateDrawCommand(valueDC) as DrawCommand;
+        const dcTT: DrawCommand = generateDrawCommandAndTrack(this, valueDC);
         this.renderPassArray[E_renderPassName.transparent]!.push(dcTT);
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

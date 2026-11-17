@@ -626,3 +626,137 @@ describe('DrawCommandGenerator 生成结果特征基线（C0）', () => {
         expect(command.bindGroups).toBe(DC_bindGroups);
     });
 });
+
+describe('DrawCommandGenerator ticket 回传 — P0-3', () => {
+    let DrawCommandGenerator: any;
+
+    beforeAll(async () => {
+        ({ DrawCommandGenerator } = await import('./DrawCommandGenerator'));
+    });
+
+    function makeTicketStore() {
+        const map = new Map<string, unknown>();
+        let ticketId = 0;
+        return {
+            map,
+            peek: (key: string) => map.get(key),
+            acquire: (key: string, factory: () => unknown) => {
+                let value = map.get(key);
+                if (value === undefined) {
+                    value = factory();
+                    map.set(key, value);
+                }
+                return { value, ticket: { id: ++ticketId, released: false } };
+            },
+        };
+    }
+
+    function makeGenerator() {
+        const shaderModules = makeTicketStore();
+        const pipelines = makeTicketStore();
+        const scene = {
+            device: {
+                createShaderModule: () => ({}),
+                createPipelineLayout: () => ({}),
+                createRenderPipeline: () => ({}),
+            },
+            resourcesGPU: { derived: { shaderModules, pipelines } },
+            MSAA: false,
+            clock: {},
+            pointers: {},
+            depthMode: {},
+            finalTarget: { NDC: true },
+        } as unknown as Scene;
+        const generator = new DrawCommandGenerator({ scene });
+        return { shaderModules, pipelines, generator };
+    }
+
+    const makeShaderValues = (tickets?: { id: number; released: boolean }[]) => ({
+        label: 'ticket',
+        data: {},
+        render: {
+            vertex: { code: 'vs-code', entryPoint: 'vs' },
+            fragment: {
+                code: 'fs-code',
+                entryPoint: 'fs',
+                aliasName: 'fs',
+                targets: [{ format: 'bgra8unorm' }],
+            },
+        },
+        ...(tickets ? { releaseTickets: tickets } : {}),
+    });
+
+    const makePipelineValues = (tickets?: { id: number; released: boolean }[]) => ({
+        label: 'ticket',
+        data: {},
+        render: { vertex: { code: 'x', entryPoint: 'vs' }, depthStencil: false },
+        ...(tickets ? { releaseTickets: tickets } : {}),
+    });
+
+    const vertex = { vs: { module: {}, entryPoint: 'vs' }, name: 'vs-md5' };
+    const fragment = { fs: undefined, name: 'fs-md5' };
+
+    it('initShaderModule 回传 VS/FS 两个 ticket', () => {
+        const { generator } = makeGenerator();
+        const tickets: { id: number; released: boolean }[] = [];
+        generator.initShaderModule(makeShaderValues(tickets), [], [], []);
+        expect(tickets).toHaveLength(2);
+        expect(tickets[0].id).toBe(1);
+        expect(tickets[1].id).toBe(2);
+    });
+
+    it('initShaderModule 无 releaseTickets 不回传', () => {
+        const { generator } = makeGenerator();
+        const values = makeShaderValues();
+        generator.initShaderModule(values, [], [], []);
+        expect(values).not.toHaveProperty('releaseTickets');
+    });
+
+    it('initPipeLine entity 链路命中仍 acquire 并回传 ticket', () => {
+        const { generator, pipelines } = makeGenerator();
+        const tickets: { id: number; released: boolean }[] = [];
+        generator.initPipeLine(makePipelineValues(tickets), vertex, fragment, []);
+        generator.initPipeLine(makePipelineValues(tickets), vertex, fragment, []);
+        expect(pipelines.map.size).toBe(1);
+        expect(tickets).toHaveLength(2);
+    });
+
+    it('initPipeLine 无 releaseTickets 命中走 peek 不回传', () => {
+        const { generator, pipelines } = makeGenerator();
+        const values = makePipelineValues();
+        generator.initPipeLine(values, vertex, fragment, []);
+        generator.initPipeLine(values, vertex, fragment, []);
+        expect(pipelines.map.size).toBe(1);
+        expect(values).not.toHaveProperty('releaseTickets');
+    });
+});
+
+describe('generateDrawCommandAndTrack 释放凭证回传 — P0-3', () => {
+    let generateDrawCommandAndTrack: any;
+
+    beforeAll(async () => {
+        ({ generateDrawCommandAndTrack } = await import('../entity/entityBundleMaterialDC'));
+    });
+
+    it('取走 ticket 并 track，随后置空 releaseTickets', () => {
+        const tracked: { id: number; released: boolean }[] = [];
+        const scope = {
+            DCG: {
+                generateDrawCommand: (v: {
+                    releaseTickets: { id: number; released: boolean }[];
+                }) => {
+                    v.releaseTickets.push({ id: 7, released: false });
+                    return { label: 'dc' };
+                },
+            },
+            track: (ticket: { id: number; released: boolean }) => {
+                tracked.push(ticket);
+            },
+        };
+        const valueDC: { releaseTickets?: { id: number; released: boolean }[] } = {};
+        const dc = generateDrawCommandAndTrack(scope, valueDC);
+        expect(dc).toEqual({ label: 'dc' });
+        expect(tracked).toEqual([{ id: 7, released: false }]);
+        expect(valueDC.releaseTickets).toBeUndefined();
+    });
+});

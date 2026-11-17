@@ -587,7 +587,7 @@ export class DrawCommandGenerator {
         const md5OfVScode = MD5(shadercode);
 
         //3.2、VS shaderModule 编译（C4：stage + finalCodeHash 命中派生缓存）
-        const moduleVS: GPUShaderModule = this.scene.resourcesGPU.derived.shaderModules.acquire(
+        const acquireVS = this.scene.resourcesGPU.derived.shaderModules.acquire(
             `vs:${md5OfVScode}`,
             () =>
                 this.device.createShaderModule({
@@ -595,7 +595,9 @@ export class DrawCommandGenerator {
                     label: values.label,
                     code: shadercode,
                 }),
-        ).value;
+        );
+        const moduleVS: GPUShaderModule = acquireVS.value;
+        values.releaseTickets?.push(acquireVS.ticket);
 
         //3.3 GPURenderPipelineDescriptor.vertex部分
         let constansVS = {};
@@ -622,7 +624,7 @@ export class DrawCommandGenerator {
                 md5OfFScode = MD5(codeFS);
 
                 //可以缓存透明材质的FS shader model（C4：stage + finalCodeHash 命中派生缓存）
-                moduleFS = this.scene.resourcesGPU.derived.shaderModules.acquire(
+                const acquireFS = this.scene.resourcesGPU.derived.shaderModules.acquire(
                     `fs:${md5OfFScode}`,
                     () =>
                         this.device.createShaderModule({
@@ -630,7 +632,9 @@ export class DrawCommandGenerator {
                             label: fragmentState.aliasName,
                             code: codeFS,
                         }),
-                ).value;
+                );
+                moduleFS = acquireFS.value;
+                values.releaseTickets?.push(acquireFS.ticket);
             }
             //3.4.2 配置targets
             let targets: GPUColorTargetState[] = [];
@@ -817,32 +821,40 @@ export class DrawCommandGenerator {
             reflectionSignature: vertex.reflectionSignature ?? '',
         };
         const nameOfCacheFlag = stableStringify(keyObject);
-        const cached = this.scene.resourcesGPU.derived.pipelines.peek(nameOfCacheFlag) as
-            GPURenderPipeline | undefined;
-        if (cached) {
-            return cached;
+        // C5：entity 链路（带 releaseTickets 出参）统一走 acquire，命中也持票并撤销 pending；
+        // 非 entity 链路（postprocess / atmosphere 等，无 releaseTickets）维持 peek 快路径不变。
+        const releaseTickets = values.releaseTickets;
+        if (!releaseTickets) {
+            const cached = this.scene.resourcesGPU.derived.pipelines.peek(nameOfCacheFlag) as
+                GPURenderPipeline | undefined;
+            if (cached) {
+                return cached;
+            }
         }
 
-        //3、未命中：创建 GPUPipelineLayout 与 pipeline
-        const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
-            label: values.label,
-            bindGroupLayouts: DC_bindGroupLayouts,
-        };
-        const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
-        const descriptor: GPURenderPipelineDescriptor = {
-            label: values.label,
-            vertex: vertex.vs,
-            layout: pipelineLayout,
-        };
-        if (fragmentState) descriptor.fragment = fragmentState;
-        if (primitiveState) descriptor.primitive = primitiveState;
-        if (multisampleState) descriptor.multisample = multisampleState;
-        if (depthStencilState) descriptor.depthStencil = depthStencilState;
-
-        return this.scene.resourcesGPU.derived.pipelines.acquire(
+        //3、未命中（或 entity 链路统一 acquire）：创建 GPUPipelineLayout 与 pipeline
+        const acquireResult = this.scene.resourcesGPU.derived.pipelines.acquire(
             nameOfCacheFlag,
-            () => this.device.createRenderPipeline(descriptor),
+            () => {
+                const pipelineLayoutDescriptor: GPUPipelineLayoutDescriptor = {
+                    label: values.label,
+                    bindGroupLayouts: DC_bindGroupLayouts,
+                };
+                const pipelineLayout = this.device.createPipelineLayout(pipelineLayoutDescriptor);
+                const descriptor: GPURenderPipelineDescriptor = {
+                    label: values.label,
+                    vertex: vertex.vs,
+                    layout: pipelineLayout,
+                };
+                if (fragmentState) descriptor.fragment = fragmentState;
+                if (primitiveState) descriptor.primitive = primitiveState;
+                if (multisampleState) descriptor.multisample = multisampleState;
+                if (depthStencilState) descriptor.depthStencil = depthStencilState;
+                return this.device.createRenderPipeline(descriptor);
+            },
             { variantKey: vertex.variantKey, reflectionSignature: vertex.reflectionSignature },
-        ).value as GPURenderPipeline;
+        );
+        releaseTickets?.push(acquireResult.ticket);
+        return acquireResult.value as GPURenderPipeline;
     }
 }

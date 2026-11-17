@@ -1,4 +1,5 @@
 import type { E_renderForDC } from '../base/coreDefine';
+import type { DrawCommand } from '../command/DrawCommand';
 import type { IV_DC } from '../command/DrawCommandGenerator';
 import type { I_materialBundleOutput } from '../material/base';
 import { E_entityType } from './base';
@@ -115,4 +116,26 @@ export function generateInputValueOfDC(
         valueDC.label += ' vsOnly';
     }
     return valueDC;
+}
+
+/**
+ * C5：生成 DrawCommand 并回传 derived 释放凭证到 entity 自身（ticket 生命周期闭环）。
+ * DCG 在 acquire shaderModules/pipelines 时把 ticket 收集到 valueDC.releaseTickets，
+ * 此处取走后 track 到 scope 自身（RootGPU._tickets），destroy 时统一 requestRelease；
+ * 取走后置空，避免 IV_DC 被 inputDC 常驻时连带 ticket 常驻。
+ */
+export function generateDrawCommandAndTrack(
+    scope: EntityBundleMaterial,
+    valueDC: IV_DC,
+): DrawCommand {
+    valueDC.releaseTickets = [];
+    const dc = scope.DCG.generateDrawCommand(valueDC) as DrawCommand;
+    const tickets = valueDC.releaseTickets;
+    if (tickets && tickets.length > 0) {
+        for (const ticket of tickets) {
+            scope.track(ticket);
+        }
+    }
+    valueDC.releaseTickets = undefined;
+    return dc;
 }
