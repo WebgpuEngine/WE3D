@@ -32,10 +32,10 @@
 | 1 | `animation/simpleAnimation.gltf` | 关键帧 sampler / 四元数 | `base/1_buffers/animation_data_test1.ts`、`base/keyframe/keyFrameRotation_1.ts` | 已入库 | | | | |
 | 2 | `material/simpleMaterial.gltf` | 基础材质字段 | 无专属页 | 已入库 | | | | |
 | 3 | `morphTarget/MorphTarget.gltf` | targets / weights | `base/1_buffers/morphTarget_data_1.ts`、`base/morphTarget/triangle_morphTarget.ts` | 已入库 | | | | |
-| 4 | `morphTarget/MorphTarget copy.gltf` | targets / weights（副本） | 无专属页 | 已入库 | | | | |
+| 4 | `morphTarget/MorphTargetNodeWeights.gltf` | node.weights 覆盖 mesh.weights | 无专属页 | 已入库 | | | | |
 | 5 | `point/PointCloudWithPropertyAttributes.gltf` | POINTS、COLOR_0、外部 `.bin`、`EXT_mesh_features` | 无专属页 | 已入库 | | | | |
 | 6 | `point/PointCloudWithRGBColors.gltf` | POINTS、COLOR_0、外部 `.bin` | `base/primative/points_1.ts` | 已入库 | | | | |
-| 7 | `point/PointCloudWithRGBColors copy.gltf` | POINTS、COLOR_0（副本） | 无专属页 | 已入库 | | | | |
+| 7 | `point/PointCloudWithRGBColorsWithMaterial.gltf` | POINTS、COLOR_0、primitive 显式绑定 material | 无专属页 | 已入库 | | | | |
 | 8 | `skin/simpleSkin.gltf` | joints / inverseBindMatrices | `base/1_buffers/skin.ts`、`base/skin/base_skin.ts` | 已入库 | | | | |
 | 9 | `skin/simpleSkin_nodeModefy.gltf` | joints / inverseBindMatrices | 无专属页 | 已入库 | | | | |
 | 10 | `skin/test2.gltf` | joints / inverseBindMatrices | 无专属页 | 已入库 | | | | |
@@ -43,7 +43,7 @@
 | 12 | `texture/BoxTexturedBufferView.gltf` | bufferView 图片 | `base/1_buffers/images_BufferView.ts` | 已入库 | | | | |
 | 13 | `texture/testTexture.gltf` | 外部 URI 图片 | `base/mesh/images_uv.ts`、`atLoader.gl/material_test1.ts`（旧 loader） | 已入库 | | | | |
 | 14 | `triangle/triangle.gltf` | 基础索引 | `base/1_buffers/triangle_test_1.ts`、`base/primative/triangle_1.ts`、`atLoader.gl/test_1.ts`（旧 loader） | 已入库 | | | | |
-| 15 | `triangle/triangle copy.gltf` | 基础索引（副本） | 无专属页 | 已入库 | | | | |
+| 15 | `triangle/triangleDuplicate.gltf` | 基础索引（与 triangle.gltf 逐字节相同，保留满足 24 资产清单） | 无专属页 | 已入库 | | | | |
 | 16 | `triangle/triangleMatrix.gltf` | matrix | `base/primative/triangle_1_matrix.ts` | 已入库 | | | | |
 | 17 | `triangle/triangleRotate.gltf` | rotation | `base/primative/triangle_1_rotation.ts` | 已入库 | | | | |
 | 18 | `triangle/triangleScale.gltf` | scale | `base/primative/triangle_1_scale.ts` | 已入库 | | | | |

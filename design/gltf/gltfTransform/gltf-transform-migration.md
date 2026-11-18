@@ -280,23 +280,23 @@ return this.document;                              // createGLTFModel 忽略返�
 
 **② function 级别验证以 `gltf` 目录为主**：`src/we/model/gltf/function.ts` 的基础函数（`addNode` 场景树、`convertTriangleIndexFanToList` / `convertLineIndexLoopToList`、`computeNormalsFrom*`、`writeArayBufferViewForSparse`）以及 `ModelDataLoader` 各结构 getter，输入样本一律取 `public/models/gltf/**`，不取 `glb/` 下的独立模型。
 
-**③ `gltf/base/` 是基础结构，每个示例都必须验证**：以下 **24 个 `.gltf`**（含 `*.copy.gltf` 副本）逐条纳入 Gate 0 数据对比、人工核对表与最终 e2e，**不抽样、不合并**；`base/line/` 当前为空目录，需登记为「无资产」而非跳过。
+**③ `gltf/base/` 是基础结构，每个示例都必须验证**：以下 **24 个 `.gltf`**（含 3 个按内容差异改名的同源变体，见下表）逐条纳入 Gate 0 数据对比、人工核对表与最终 e2e，**不抽样、不合并**；`base/line/` 当前为空目录，需登记为「无资产」而非跳过。
 
 | 子目录 | 资产 | 覆盖点 |
 | --- | --- | --- |
 | `animation/` | `simpleAnimation.gltf` | 关键帧 sampler / 四元数 |
 | `material/` | `simpleMaterial.gltf` | 基础材质字段 |
-| `morphTarget/` | `MorphTarget.gltf`、`MorphTarget copy.gltf` | targets / weights |
-| `point/` | `PointCloudWithPropertyAttributes.gltf`（+`.bin`）、`PointCloudWithRGBColors.gltf`（+`.bin`）、`PointCloudWithRGBColors copy.gltf` | POINTS、COLOR_0、外部 `.bin`、`EXT_mesh_features` |
+| `morphTarget/` | `MorphTarget.gltf`、`MorphTargetNodeWeights.gltf` | targets / weights；后者 node.weights 覆盖 mesh.weights |
+| `point/` | `PointCloudWithPropertyAttributes.gltf`（+`.bin`）、`PointCloudWithRGBColors.gltf`（+`.bin`）、`PointCloudWithRGBColorsWithMaterial.gltf` | POINTS、COLOR_0、外部 `.bin`、`EXT_mesh_features`；后者 primitive 显式绑定 material |
 | `skin/` | `simpleSkin.gltf`、`simpleSkin_nodeModefy.gltf`、`test2.gltf` | joints / inverseBindMatrices |
 | `texture/` | `BoxTextured.gltf`、`BoxTexturedBufferView.gltf`、`testTexture.gltf`（+`testTexture.png`） | data-URI / bufferView / 外部 URI 三种图片形态 |
-| `triangle/` | `triangle.gltf`、`triangle copy.gltf`、`triangleMatrix.gltf`、`triangleRotate.gltf`、`triangleScale.gltf`、`triangleTranslate.gltf`、`twoTriangle.gltf`、`sparse.gltf` | TRS / matrix、基础索引、sparse 合并 |
+| `triangle/` | `triangle.gltf`、`triangleDuplicate.gltf`、`triangleMatrix.gltf`、`triangleRotate.gltf`、`triangleScale.gltf`、`triangleTranslate.gltf`、`twoTriangle.gltf`、`sparse.gltf` | TRS / matrix、基础索引、sparse 合并；`triangleDuplicate.gltf` 与 `triangle.gltf` 逐字节相同，仅用于满足 24 资产清单 |
 | `triangle/TriangleFan/` | `TriangleFan.gltf`（+`.bin`） | mode 6 → triangle-list 转换 |
 | `triangle/TriangleStrip/` | `TriangleStrip.gltf`（+`.bin`） | mode 5、stripIndexFormat |
 | `triangle/TriangleWithoutIndices/` | `TriangleWithoutIndices.gltf`（+`.bin`、`screenshot/`） | 无索引绘制、法线自动计算 |
 | `line/` | （空） | 登记为无资产 |
 
-> 副本（`*.copy.gltf`）虽与主文件同源，仍按「每个示例都验证」的要求各自跑一遍；golden 快照按资产路径分别存档。
+> 同源变体虽与主文件相似，仍按「每个示例都验证」的要求各自跑一遍；golden 快照按资产路径分别存档。2026-11-18 三个原 `*.copy.gltf` 已按内容差异改名（A–E 分类中的 D 类处置），路径同步到 `gltfTransformContract.browser.test.ts` 的 `ASSETS` 与人工核对表。
 
 **④ 容器 / 格式类验证用 `public/models/gltf/model/Box/` 的四种发布形态**（用户 2026-11-06 二次确认：`public/models/glb/box/` 是表述错误，**以实际目录为准**；不再新建目录、不复制资产）：同一 Box 模型的四种发布形态，逐种验证并做**同源一致性**断言。
 
@@ -527,7 +527,7 @@ async getImage(index: number) {
 6. **全绿 → 方案确定**：更新本文状态为「已验证」、`design/engineering/meta/pending-work.md` 记录；才允许进入 Phase 0B / Phase 1。此阶段**不改 `gltf.ts`、不切默认 loader、不删 fork、不建 e2e 用例、不生成 GPU 基线**。
 
 ### Phase 0B · 迁移期人工视觉验证准备（**第 2 类 A，方案确认后**）
-1. 建人工核对记录表 `design/gltf/gltfTransform/gltf-migration-visual-check.md`：以 §3.7 清单为骨架，为 `public/models/gltf/base/**` **24 个示例每个单列一行**（含 `*.copy.gltf` 副本、`line/` 空目录登记），再为 `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态各列一行；并关联 `examples/model/gltf/` 中对应的展示页面（35 个）便于人工打开。记录表需按「已入库 / 本地 only」分列：引用 LittlestTokyo / ford / heart / hen 等未入库资产的页面只作本地人工参考，不进 CI 验收。
+1. 建人工核对记录表 `design/gltf/gltfTransform/gltf-migration-visual-check.md`：以 §3.7 清单为骨架，为 `public/models/gltf/base/**` **24 个示例每个单列一行**（含 3 个同源变体按改名后路径登记、`line/` 空目录登记），再为 `public/models/gltf/model/Box/` 的 glTF / GLB / Draco / Embedded 四种形态各列一行；并关联 `examples/model/gltf/` 中对应的展示页面（35 个）便于人工打开。记录表需按「已入库 / 本地 only」分列：引用 LittlestTokyo / ford / heart / hen 等未入库资产的页面只作本地人工参考，不进 CI 验收。
 2. 借助 Phase 1 的 `input.loader` 双轨开关，在本地 `npm run dev` 中分别以 `'loaders'` / `'transform'` 各跑一遍，人工并排比对；截图存本机（不提交二进制），记录表只写「用例 / 结果 / 差异说明 / 日期 / 验证人」。
 3. 数值基准复用 Gate 0 的 golden 快照，不另建一套；人工发现数值异常先回 §3.6 定位，不靠肉眼放行。
 4. **本阶段不新增 `e2e-cases/gltf/`、不跑 `npm run e2e-index`、不跑 `npm run test:baseline`**。

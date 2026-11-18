@@ -43,10 +43,12 @@ const ASSETS: string[] = [
     `${BASE}animation/CubicSpline.gltf`,
     `${BASE}material/simpleMaterial.gltf`,
     `${BASE}morphTarget/MorphTarget.gltf`,
-    `${BASE}morphTarget/MorphTarget copy.gltf`,
+    // 与 MorphTarget.gltf 同源，差异在 node.weights=[0,1] 覆盖 mesh.weights=[0.5,0.5]
+    `${BASE}morphTarget/MorphTargetNodeWeights.gltf`,
     `${BASE}point/PointCloudWithPropertyAttributes.gltf`,
     `${BASE}point/PointCloudWithRGBColors.gltf`,
-    `${BASE}point/PointCloudWithRGBColors copy.gltf`,
+    // 与 PointCloudWithRGBColors.gltf 同源，差异在 primitive 显式绑定 material:0
+    `${BASE}point/PointCloudWithRGBColorsWithMaterial.gltf`,
     `${BASE}skin/simpleSkin.gltf`,
     `${BASE}skin/simpleSkin_nodeModefy.gltf`,
     `${BASE}skin/test2.gltf`,
@@ -61,7 +63,8 @@ const ASSETS: string[] = [
     `${BASE}texture/ktx2/BoxTexturedETC1S.gltf`,
     `${BASE}texture/ktx2/BoxTexturedUASTC.gltf`,
     `${BASE}triangle/triangle.gltf`,
-    `${BASE}triangle/triangle copy.gltf`,
+    // 与 triangle.gltf 逐字节相同，保留以满足 Gate 0「24 个 base 示例逐个验证」清单
+    `${BASE}triangle/triangleDuplicate.gltf`,
     `${BASE}triangle/triangleMatrix.gltf`,
     `${BASE}triangle/triangleRotate.gltf`,
     `${BASE}triangle/triangleScale.gltf`,
