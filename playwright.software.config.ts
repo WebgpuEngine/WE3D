@@ -15,6 +15,8 @@ export default defineConfig({
     snapshotDir: './tests/e2e/baseline',
     // 跨平台：去掉 Playwright 默认拼上的 -<项目名>-<平台> 后缀，使同一基线可在 win/linux/darwin 间共享。
     snapshotPathTemplate: '{snapshotDir}/{testFilePath}-snapshots/{arg}{ext}',
+    // 本配置只读比对、不生成/覆写基线：缺失即硬失败（基线仅由 GPU 硬件版 test:baseline 产出）。
+    updateSnapshots: 'none',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,

@@ -1,6 +1,4 @@
 import { test, expect, chromium } from '@playwright/test';
-import { existsSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { e2eTargets, type E2ETarget } from './examples-e2e';
 
 /**
@@ -9,7 +7,8 @@ import { e2eTargets, type E2ETarget } from './examples-e2e';
  * - 按一级目录（节点）分组；url = /e2e-cases/<目录>/<文件>.html
  * - WebGPU 策略（事项4）：headless 优先 → 不可用降级 headed → 仍失败显式报错
  * - 正确性以 e2e 截图基线比对为准（console 无报错仅为必要非充分条件，不能作为渲染正确性判断）
- * - 缺失基线时自动生成（首次运行即产出基线，不报错）
+ * - 缺失基线时硬失败（基线须由 `npm run test:baseline` 显式生成，首次运行不会静默通过）
+ * - console error 一律硬失败（不再按目录降级为告警）
  */
 
 const FLAGS = [
@@ -64,9 +63,7 @@ for (const t of e2eTargets) {
 for (const [dir, targets] of byDir) {
     test.describe(dir, () => {
         for (const t of targets) {
-            // B4（compute pipeline 缓存）覆盖的是新实现才有的能力，切换到新实现后再测（方案 §3.3.1）
-            const register = dir === 'resourcesGPU' && t.name === 'b4_compute_cache' ? test.skip : test;
-            register(`${t.name} (${t.url})`, async ({ page }, testInfo) => {
+            test(`${t.name} (${t.url})`, async ({ page }) => {
                 let activePage = page;
                 let headedBrowser: import('@playwright/test').Browser | null = null;
 
@@ -86,28 +83,14 @@ for (const [dir, targets] of byDir) {
                 }
 
                 // console 无报错（必要非充分，不能作为渲染正确性判断）
-                // 例外：resourcesGPU 用例专门探测旧实现的已知差异行为（B1 共享销毁 / B5 反射维度等），
-                // 这些差异在切换前的旧实现下会以 console/validation error 形式暴露，属预期现象，
-                // 若硬断言会导致旧基线无法生成。故该目录降级为软警告，仍以截图比对为核心判据。
-                if (dir === 'resourcesGPU') {
-                    if (r.errors.length > 0) {
-                        console.warn(
-                            `[resourcesGPU] ${t.url} 存在 console error（探测旧实现差异的预期现象，仅警告）：\n  ${r.errors.join('\n  ')}`,
-                        );
-                    }
-                } else {
-                    expect(r.errors, `console errors: ${r.errors.join(' | ')}`).toEqual([]);
-                }
+                // 新 GPU 资源管理器已替换旧实现，resourcesGPU 用例不再有预期 console error，全部硬失败。
+                expect(r.errors, `console errors: ${r.errors.join(' | ')}`).toEqual([]);
 
-                // e2e 截图基线：缺失自动生成；存在则视觉比对（渲染正确性的核心判据）
-                const name = snapName(t.url);
-                const snapshotPath = testInfo.snapshotPath(name);
-                if (!existsSync(snapshotPath)) {
-                    mkdirSync(dirname(snapshotPath), { recursive: true });
-                    await activePage.screenshot({ path: snapshotPath, animations: 'disabled' });
-                } else {
-                    await expect(activePage).toHaveScreenshot(name, { maxDiffPixelRatio: 0.05, timeout: 30000 });
-                }
+                // e2e 截图基线：缺失时硬失败（updateSnapshots:'none'），存在则视觉比对（渲染正确性的核心判据）
+                await expect(activePage).toHaveScreenshot(snapName(t.url), {
+                    maxDiffPixelRatio: 0.05,
+                    timeout: 30000,
+                });
 
                 if (headedBrowser) await headedBrowser.close();
             });
