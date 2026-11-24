@@ -34,6 +34,7 @@ import { BaseLight, E_lightType, lightStructSize } from './baseLight';
 import { I_bindGroupAndGroupLayout } from '../command/base';
 import { V_shadowMapSize, V_weShadowMapFormat } from '../base/coreDefine';
 import { Clock } from '../scene/clock';
+import { frameStats } from '../profile/frameStats';
 import { ECSManager } from '../organization/manager';
 import { ST_shadowMapMatrix_Size } from './lightsManagerTypes';
 import type { light_shadowMapMatrix } from './lightsManagerTypes';
@@ -439,6 +440,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             bufferFloat32Array.byteOffset,
             bufferFloat32Array.byteLength,
         );
+        frameStats.addLightsUploadBytes(bufferFloat32Array.byteLength);
         return this.lightsUniformGPUBuffer;
     }
 
@@ -499,6 +501,7 @@ export class LightsManager extends ECSManager<BaseLight> {
             buffer.byteOffset,
             buffer.byteLength,
         );
+        frameStats.addShadowUploadBytes(buffer.byteLength);
         return this.ShadowMapUniformGPUBuffer;
     }
 

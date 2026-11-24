@@ -16,6 +16,7 @@ import { isGPUBindGroup, isGPUBindGroupLayout } from './baseFunction';
 import { DrawCommand, IV_DrawCommand } from './DrawCommand';
 import { E_renderForDC } from '../base/coreDefine';
 import { Clock } from '../scene/clock';
+import { frameStats } from '../profile/frameStats';
 import { BaseDrawCommand, I_VertexBufferEntry } from './BaseDrawCommand';
 import { I_pointerCreateParams, I_pointerStruct, Pointers } from '../bufferBlock/pointer';
 import { E_BOLBufferType } from '../bufferBlock/base';
@@ -513,6 +514,7 @@ export class DrawCommandGenerator {
                 DC_localtions,
             );
         const md5OfVScode = MD5(shadercode);
+        frameStats.incWGSLMD5();
 
         //3.2、VS shaderModule 编译（C4：stage + finalCodeHash 命中派生缓存）
         const acquireVS = this.scene.resourcesGPU.derived.shaderModules.acquire(
@@ -550,6 +552,7 @@ export class DrawCommandGenerator {
                 const fragmentState = values.render.fragment;
                 const codeFS: string = fragmentState.code!;
                 md5OfFScode = MD5(codeFS);
+                frameStats.incWGSLMD5();
 
                 //可以缓存透明材质的FS shader model（C4：stage + finalCodeHash 命中派生缓存）
                 const acquireFS = this.scene.resourcesGPU.derived.shaderModules.acquire(

@@ -31,6 +31,7 @@ import { SkinsManager } from '../animation/skinsManager';
 import { RootManager } from './rootManager';
 import { TextureManager } from '../texture/textureManager';
 import { DrawCommandGenerator } from '../command/DrawCommandGenerator';
+import { frameStats } from '../profile/frameStats';
 import { MemoryBlockManager } from '../bufferBlock/MBM';
 import { Pointers } from '../bufferBlock/pointer';
 import { BlockPointerCoordinator } from '../bufferBlock/BPC';
@@ -840,8 +841,8 @@ export class Scene {
             if (this.flags.realTimeRender) {
                 //是否开启实时更新
                 //时间更新
-                const timerNow = Date.now();
-                const _timerLast = timerNow;
+                const timerNow = performance.now();
+                frameStats.beginFrame(this.clock.frame);
                 this.clock.update();
                 await this.onBeforeUpdate();
                 await this.pickup(); //pickup 在当前帧的update开始之前
@@ -854,6 +855,7 @@ export class Scene {
                 await this.showGBuffersVisualize();
                 await this.renderToSurface();
                 await this.cleanUp();
+                frameStats.endFrame(performance.now() - timerNow);
                 requestAnimationFrame(perFrameRun);
             }
         };

@@ -1,6 +1,7 @@
 import { isUniformBufferPart, T_uniformEntries } from './base';
 import { I_uniformArrayBufferEntry } from './base';
 import { createUniformBuffer } from './baseFunction';
+import { frameStats } from '../profile/frameStats';
 
 export interface I_ComputePipelineInitValues {
     shader: {
@@ -255,6 +256,7 @@ export class ComputeCommand {
         }
         const [x = 1, y = 1, z = 1] = [...this.inputValues.computeInfo.dispatchCount];
         passEncoder.dispatchWorkgroups(x, y, z);
+        frameStats.incComputeDispatch();
     }
 
     async submit() {

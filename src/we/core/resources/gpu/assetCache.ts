@@ -13,6 +13,7 @@
 
 import { disposeOf, normalizeKey } from './resourceKeys';
 import { RefCountPolicy } from './releasePolicy';
+import { frameStats } from '../../profile/frameStats';
 import type {
     I_AcquireResult,
     I_CompiledMetadata,
@@ -60,6 +61,7 @@ export class AssetStore<V> implements I_ReleasableStore {
         const key = normalizeKey(source);
         let entry = this.entries.get(key);
         if (!entry) {
+            frameStats.incCacheMiss();
             const value = factory();
             entry = {
                 value,
@@ -69,9 +71,12 @@ export class AssetStore<V> implements I_ReleasableStore {
                 metadata,
             };
             this.entries.set(key, entry);
-        } else if (metadata) {
-            // 命中时刷新元数据（同源幂等）
-            entry.metadata = metadata;
+        } else {
+            frameStats.incCacheHit();
+            if (metadata) {
+                // 命中时刷新元数据（同源幂等）
+                entry.metadata = metadata;
+            }
         }
         if (this.counted) entry.refCount++;
         entry.releasable = false;

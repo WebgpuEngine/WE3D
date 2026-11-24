@@ -2,6 +2,7 @@ import { I_pointerStruct, isI_pointerStruct } from '../bufferBlock/pointer';
 import { E_renderPassName } from '../scene/renderManager';
 import { I_drawMode, I_drawModeIndexed, I_viewport, T_drawMode } from './base';
 import { BaseCommand } from './BaseCommand';
+import { frameStats } from '../profile/frameStats';
 
 /**绘制调用选项
  * 1、passEncoder：渲染pass编码器
@@ -243,6 +244,7 @@ export class BaseDrawCommand extends BaseCommand {
     }
     /** 绘制实例 :单个instance*/
     drawInstacnce(passEncoder: GPURenderPassEncoder, drawMode: I_drawMode | I_drawModeIndexed) {
+        frameStats.incDrawcall();
         if ('vertexCount' in drawMode) {
             const count = drawMode.vertexCount;
             let instanceCount = 1;

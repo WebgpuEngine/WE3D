@@ -9,6 +9,7 @@ import {
 import { BaseCommand } from './BaseCommand';
 import { I_VertexBufferEntry } from './BaseDrawCommand';
 import { createUniformBuffer, createVerticesBuffer } from './baseFunction';
+import { frameStats } from '../profile/frameStats';
 
 /**
  * 简单绘制命令的uniform组条目类型,只由uniform data 和GPUBindGroupEntry
@@ -397,6 +398,7 @@ export class SimpleDrawCommand extends BaseCommand {
         this.drawInstacnce(passEncoder, this.drawMode as I_drawMode | I_drawModeIndexed);
     }
     drawInstacnce(passEncoder: GPURenderPassEncoder, drawMode: I_drawMode | I_drawModeIndexed) {
+        frameStats.incDrawcall();
         if ('vertexCount' in drawMode) {
             const count = drawMode.vertexCount;
             let instanceCount = 1;
