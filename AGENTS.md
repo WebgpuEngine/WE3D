@@ -103,6 +103,6 @@
 
 ## 六、Git 提交约定
 
-- **commit 信息格式**：`月日 具体内容`（例：`1022 修复 GBuffers 导入不存在符号导致 tsc 报错`）。月日取两位月 + 两位日（`MMDD`）。
+- **commit 信息格式**：遵循 Conventional Commits：`<type>(<scope>): <简短描述>`，如 `feat(gltf): 新增 Draco 解码器浏览器注入`、`fix(gbuffer): 修正法线格式截断导致的分层`。`type` 用 `feat` / `fix` / `docs` / `refactor` / `perf` / `test` / `build` / `ci` / `chore` / `style` / `revert`；`scope` 可选（模块名如 `gltf` / `gbuffer` / `e2e`）；破坏性变更加 `!`（`feat(api)!: ...`）。标题用简短中文、动词开头、不加句号、尽量不超过 72 字符，正文 / 脚注按需补充；日期由 Git 记录，**不再使用 `MMDD` 前缀**。
 - **提交前必须先完成 §三.1 本地门禁**（涉及渲染须含 `test:baseline` 更新基线 + e2e），未通过不得提交 / 推送。
 - **不主动合并分支**：AI / 工具**不得自动执行分支合并**；分支合并（如 feature → main）一律由人工**手动**进行。
