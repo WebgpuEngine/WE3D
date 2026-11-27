@@ -123,7 +123,7 @@ export class PerfHarness {
 ## 6. resolve / read 挂载
 
 - `resolve(encoder)`：`renderManager.ts:365` 的 `queue.submit([this.commandEncoder.finish()])` **之前**。
-- `collect()`（含 `await gpu.read()` + 窗口到点 emit）：`scene.ts:858`（`frameStats.endFrame` 之后）、`requestAnimationFrame` 之前 —— 此时主 submit 已发出，GPU 可执行，CPU 帧时间也已记录。
+- `collect()`（发起非阻塞 `gpu.read()` + 窗口到点 emit）：`scene.ts:858`（`frameStats.endFrame` 之后）、`requestAnimationFrame` 之前 —— 此时主 submit 已发出，GPU 可执行，CPU 帧时间也已记录。双缓冲下 `read()` 只发起异步 `mapAsync`，不等待结果；下一帧通过 `sampleVersion` 消费已完成的采样。
 - `renderToSurface` 的第二次 submit 只是 `copyTextureToTexture`，无 timestamp，不处理。
 
 ## 7. 输出
@@ -136,7 +136,7 @@ export class PerfHarness {
 ## 8. 关键实现要点与风险
 
 1. **零副作用**：`stamp*` 在未 enable 时返回原描述符；`perf.enabled=false` 时不创建 `PerfHarness`，链路里 `scene.perfHarness?.xxx` 全部短路。既有 90 张 GPU 基线不重出。
-2. **读回时序（单缓冲 vs 双缓冲）**：现有 `GpuProfiler` 单 `readBuffer`，`read()` 是 `mapAsync` 异步。MVP 直接 `await gpu.read()`（诊断场景可接受，mapAsync 通常 <1ms）；进阶再做双缓冲（本帧 resolve、下帧读上一帧）避免阻塞 `requestAnimationFrame`。方案建议 **MVP 用单缓冲**，双缓冲列入后续。
+2. **读回时序（单缓冲 vs 双缓冲）**：MVP 采用单 `readBuffer` + `await gpu.read()`；**双缓冲连续采样已实施**（2026-11-27，提交 `a0665c2`，详见 `perf-harness-implementation.md` §8）。两个独立 slot（各自 `querySet`/`resolveBuffer`/`readBuffer`）按帧交替，本帧 resolve、下帧读上一帧；`collect()` 只发起 `read()` 不等待，`sampleVersion` 去重消费，避免阻塞 `requestAnimationFrame`。
 3. **maxPass 容量**：querySet 预分配不可动态扩。默认 256（512 个 query）；多光源 shadowmap 仍可能超，`stampRenderPass` 超容量时已有静默跳过保护。
 4. **feature 降级**：device 无 `timestamp-query` 时 `enable()` 返回 false，`gpuEnabled=false`，`render.gpu` 为空、`render.cpu` 与 `nonRender` 照常；全程 no-op。
 
@@ -144,12 +144,13 @@ export class PerfHarness {
 
 按依赖顺序分四步，每步可独立验证：
 
-1. **骨架**：`base.ts` 加 `IV_Scene.perf`；新增 `perfHarness.ts`（报告结构 + 复用单缓冲 GpuProfiler + console/callback 输出）；`scene.ts` 创建/挂载 `beginFrame`/`collect`。此时无 stamp，可输出 `render.cpu`（复用 frameStats）与空 `render.gpu`。
+1. **骨架**：`base.ts` 加 `IV_Scene.perf`；新增 `perfHarness.ts`（报告结构 + 复用 GpuProfiler + console/callback 输出）；`scene.ts` 创建/挂载 `beginFrame`/`collect`。此时无 stamp，可输出 `render.cpu`（复用 frameStats）与空 `render.gpu`。
 2. **render stamp**：`renderManager.ts`（A 类 stamp×3 + `listCommandType` 改通道名 + `doCommand`/`renderComplexQuad` 启用 `_renderPassName` + resolve）；`SimpleDrawCommand`/`BaseDrawCommand`/`ComputeCommand`（加 `passName?` + stamp）。打通 `render.gpu.passAvg`。
 3. **nonRender**：新增 `gpuBufferStats.ts`；`BOL.ts`/`pointer.ts`/`gltfTransformLoaders.ts`/`gltfPrimitive.ts` 计数点。补 `nonRender` 段。
 4. **验证**：`examples/perf-harness/` 用例 + 门禁回归（§10/§11）。
 
-- 后续（非本轮）：GpuProfiler 双缓冲、NDC 分支、`generateMips`、纹理内存、BOL 碎片率曲线。
+- 后续（非本轮）：NDC 分支、`generateMips`、纹理内存、BOL 碎片率曲线。
+- 已补做（原列为后续）：`GpuProfiler` 双缓冲连续采样（2026-11-27，提交 `a0665c2`，详见 `perf-harness-implementation.md` §8）。
 
 ## 10. 验证（真实运行，无 mock）
 
