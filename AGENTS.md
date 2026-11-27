@@ -30,9 +30,9 @@
 ## 三、开发流程约定
 
 1. **提交前本地门禁（必须，未通过不得提交 / 推送）**：任何提交前必须先跑本地门禁，全绿后再提交。
-   - **修改了源代码（`src/we/` 下任何文件）→ 必须跑完整 CI：`npm run ci`（= `ci:no-e2e` + `test:e2e`），e2e 全绿后方可提交**；其中涉及渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）还需先更新受影响用例的基线（`npm run test:baseline`，仅受影响用例）并与代码同一次提交。
-   - 仅改动非源代码（`examples/`、`design/`、`docs/`、`*.md`、`package*.json` 等不影响引擎渲染的文件）→ 跑 `npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + check:quality + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）即可。
-   - 分步等价：`npm run lint` → `npm run check:quality` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
+   - **修改了源代码（`src/we/` 下任何文件）→ 必须跑完整 CI：`npm run ci`（= `ci:no-e2e` + `test:e2e`），e2e 全绿后方可提交**；涉及渲染结果变更时按 §三.3 更新基线。
+   - 仅改动非源代码（`examples/`、`design/`、`docs/`、`*.md`、`package*.json` 等不影响引擎渲染的文件）→ 跑 `npm run ci:no-e2e`（= 云端 `ci.yml`：lint + format:check + check:quality + typecheck + test:run + test:browser + check:exports + build:lib，不含 e2e）即可。
+   - 分步等价：`npm run lint` → `npm run format:check` → `npm run check:quality` → `npm run typecheck` → `npm run test:run` → `npm run test:browser` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
 2. **错误修复顺序**：先让构建变绿 → 建回归基线 → 加单测 → 再修错误（不盲改）。
 3. **Playwright e2e 回归**：测试对象已迁移到 `e2e-cases/`（按子目录组织，用例从 `@we3d` 导入），不再来自 `examples/`。
    - 跑全部（GPU 硬件版）：`npm run test:e2e`（= `playwright test`，默认 GPU 配置），GPU 渲染结果与 GPU 基线逐帧比对做差值检测，不生成基线。
@@ -42,7 +42,7 @@
    - **批量适配 e2e 用例（新增 / 删除 / 改名）后必须跑 `npm run e2e-index` 刷新 `e2e-cases/index.html` 索引入口**，否则索引页与目录实际用例不一致（详见 `design/e2e-cases-convention.md` §三·适配收尾）。
    - 双配置：默认 `playwright.config.ts` = GPU 硬件版（真实 GPU、**headless:true**、8 workers，参考 testCI 无头真实 GPU）；`playwright.software.config.ts` = 软件 SwiftShader 版（headless:true、2 workers），二者共用快照目录 `tests/e2e/baseline/`。软件版需 `--enable-unsafe-webgpu` + SwiftShader；GPU 版需 `--enable-unsafe-webgpu` + 真实 GPU（headless 即可，无需显示环境）。
 4. **云端工作流（GitHub Actions，云端专有；本地无同名文件，用 npm 脚本镜像）**：
-   - `.github/workflows/ci.yml`：push/PR 到 `project`/`main` 时跑 `ci:no-e2e`（无 e2e、无文档）。本地提交前用 `ci:no-e2e`（或 `ci`）自测即等价。
+   - `.github/workflows/ci.yml`：push/PR 到 `project`/`main` 时跑 `ci:no-e2e`（不含 e2e）。本地提交前用 `ci:no-e2e`（或 `ci`）自测即等价。
    - `.github/workflows/release.yml`：打 `v*` tag 时跑 `build:lib` + `docs:build:force` 并回写 `docs/`（文档安全网）。
    - 注：workflow 里的 `run: npm ci` 是干净装依赖（clean install），**不是** `npm run ci`，不跑 e2e。
 
@@ -52,7 +52,7 @@
 - 形态：lib 形式（ESM + `.d.ts`），**不做 web app 打包**。
 - 着色器通过 Vite `?raw` 引入，由 Vite `build.lib` 模式在打包时内联，源码零改动。
 - 依赖全部 external 化，只打包 `src/we` 源码。
-- `prepublishOnly` 自动跑 lint + check:quality + test + build:lib + check:exports（发布兜底）。
+- `prepublishOnly` 自动跑 lint + check:quality + test:run + build:lib + check:exports（发布兜底）。
 
 ### 发布流程（本地命令，手动模式）
 
@@ -70,7 +70,7 @@
 
 | 云端 workflow | 触发 | 云端动作 | 本地等价命令 |
 | --- | --- | --- | --- |
-| `.github/workflows/ci.yml` | push/PR | `ci:no-e2e`（lint+check:quality+typecheck+test+check:exports+build:lib，无 e2e/文档） | `npm run ci:no-e2e`（自测）/ `npm run ci`（含 e2e） |
+| `.github/workflows/ci.yml` | push/PR | `ci:no-e2e`（lint+format:check+check:quality+typecheck+test:run+test:browser+check:exports+build:lib，无 e2e） | `npm run ci:no-e2e`（自测）/ `npm run ci`（含 e2e） |
 | `.github/workflows/release.yml` | `v*` tag | `build:lib` + `docs:build:force` + 回写 `docs/` | 步骤 2（`docs:build` 本地提交）+ 步骤 4（tag 触发云端重建） |
 
 ## 五、脚本速查
@@ -92,18 +92,18 @@
 | `npm run coverage` | vitest 单测 + 覆盖率报告 |
 | `npm run test:e2e` | Playwright e2e（默认 **GPU 硬件版**，与 GPU 基线比对差值，8 workers） |
 | `npm run test:e2e:software` | Playwright e2e（软件 SwiftShader 版，与 GPU 基线比对差值） |
-| `npm run test:baseline` | GPU 硬件版生成 / 更新 Playwright 截图基线（提交 git） |
+| `npm run test:baseline` | GPU 硬件版**全量**生成 / 更新 Playwright 截图基线（**手动执行**，提交 git） |
 | `npm run docs:build` | 重建 `docs/`（typedoc；版本未变则跳过，`scripts/docs-if-new.mjs`） |
 | `npm run docs:build:force` | 强制重建 `docs/`（typedoc，云端 `release.yml` 用） |
 | `npm run docs:build:watch` | 监听模式重建 `docs/`（typedoc `--watch`） |
 | `npm run examples:generate` | 重新生成 `examples/files.json` 索引 |
 | `npm run e2e-index` | 重新生成 `e2e-cases/index.html` 索引（扫描 `e2e-cases` 一级目录下 `*.html`） |
-| `npm run ci` | 本地完整门禁：lint + check:quality + typecheck + test + check:exports + build:lib + **test:e2e** |
-| `npm run ci:no-e2e` | 云端 `ci.yml` 等价：同上但 **不含 e2e / 文档**（含 `test:browser`） |
+| `npm run ci` | 本地完整门禁：lint + format:check + check:quality + typecheck + test:run + test:browser + check:exports + build:lib + **test:e2e** |
+| `npm run ci:no-e2e` | 云端 `ci.yml` 等价：同上但**不含 test:e2e**（= lint + format:check + check:quality + typecheck + test:run + test:browser + check:exports + build:lib） |
 | `npm run publish:if-new` | 手工发布：版本未变跳过，变更则 `npm publish`（发布前自动 `prepublishOnly`） |
 
 ## 六、Git 提交约定
 
 - **commit 信息格式**：遵循 Conventional Commits：`<type>(<scope>): <简短描述>`，如 `feat(gltf): 新增 Draco 解码器浏览器注入`、`fix(gbuffer): 修正法线格式截断导致的分层`。`type` 用 `feat` / `fix` / `docs` / `refactor` / `perf` / `test` / `build` / `ci` / `chore` / `style` / `revert`；`scope` 可选（模块名如 `gltf` / `gbuffer` / `e2e`）；破坏性变更加 `!`（`feat(api)!: ...`）。标题用简短中文、动词开头、不加句号、尽量不超过 72 字符，正文 / 脚注按需补充；日期由 Git 记录，**不再使用 `MMDD` 前缀**。
-- **提交前必须先完成 §三.1 本地门禁**（涉及渲染须含 `test:baseline` 更新基线 + e2e），未通过不得提交 / 推送。
+- **提交前必须先完成 §三.1 本地门禁**，未通过不得提交 / 推送。
 - **不主动合并分支**：AI / 工具**不得自动执行分支合并**；分支合并（如 feature → main）一律由人工**手动**进行。
