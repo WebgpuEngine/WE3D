@@ -27,12 +27,10 @@ WE3D包括基础引擎和编辑器两大部分。（目前WE3D处于初期开发
     npm 安装： 
 
          npm i we3d
-         npm i webgpu-we3d
 
-    npm发布地址：
+         npm发布地址：
 
-        https://www.npmjs.com/package/we3d
-        https://www.npmjs.com/package/webgpu-we3d
+         https://www.npmjs.com/package/we3d
 
     npm发布版本文档 ：     
         https://webgpuengine.github.io/doc

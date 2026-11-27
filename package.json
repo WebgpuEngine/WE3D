@@ -15,7 +15,9 @@
     "dist",
     "public/draco",
     "public/basis",
-    "public/IBL/brdfLut/dfg_lut_128.hdr"
+    "public/IBL/brdfLut/dfg_lut_128.hdr",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "dev": "vite",

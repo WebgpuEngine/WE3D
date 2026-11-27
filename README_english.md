@@ -25,10 +25,8 @@ Current development version docs: https://WebgpuEngine.github.io/WE3D
 2. npm packages
     Install via npm:
          npm i we3d
-         npm i webgpu-we3d
     npm publish addresses:
         https://www.npmjs.com/package/we3d
-        https://www.npmjs.com/package/webgpu-we3d
     npm published version docs: https://webgpuengine.github.io/doc
 3. doing, example code: https://github.com/WebgpuEngine/example
 4. doing, demo: https://github.com/WebgpuEngine/demo
