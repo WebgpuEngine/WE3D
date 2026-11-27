@@ -103,6 +103,69 @@ describe('S0-A1 GpuProfiler — 真实 device', () => {
         profiler.destroy();
     });
 
+    it('双缓冲：连续帧采样不跳帧，sampleVersion 逐帧递增', async () => {
+        if (!deviceWithTS.features.has('timestamp-query')) return;
+        const profiler = new GpuProfiler(deviceWithTS);
+        expect(profiler.enable()).toBe(true);
+
+        const versions: number[] = [];
+        for (const name of ['slot-0', 'slot-1', 'slot-2']) {
+            const sample = recordClearPass(deviceWithTS, profiler, name);
+            await sample.submitAndRead();
+            versions.push(profiler.sampleVersion);
+        }
+        expect(versions).toEqual([1, 2, 3]);
+        const report = profiler.report();
+        expect(report.passTimings.length).toBe(1);
+        expect(report.passTimings[0].name).toBe('slot-2');
+        profiler.destroy();
+    });
+
+    it('双缓冲：帧末只发起 read 不等待时，仍可逐帧拿到新采样', async () => {
+        if (!deviceWithTS.features.has('timestamp-query')) return;
+        const profiler = new GpuProfiler(deviceWithTS);
+        expect(profiler.enable()).toBe(true);
+
+        const makeFrame = (name: string) => {
+            const texture = deviceWithTS.createTexture({
+                size: [1, 1],
+                format: 'rgba8unorm',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+            const encoder = deviceWithTS.createCommandEncoder();
+            profiler.beginFrame();
+            const rpd = profiler.stampRenderPass(
+                {
+                    colorAttachments: [
+                        {
+                            view: texture.createView(),
+                            clearValue: { r: 0, g: 0, b: 0, a: 1 },
+                            loadOp: 'clear',
+                            storeOp: 'store',
+                        },
+                    ],
+                },
+                name,
+            );
+            const pass = encoder.beginRenderPass(rpd);
+            pass.end();
+            profiler.resolve(encoder);
+            deviceWithTS.queue.submit([encoder.finish()]);
+            return texture;
+        };
+
+        const t0 = makeFrame('async-0');
+        const read0 = profiler.read();
+        const t1 = makeFrame('async-1');
+        const read1 = profiler.read();
+        await Promise.all([read0, read1]);
+        expect(profiler.sampleVersion).toBe(2);
+        expect(profiler.report().passTimings[0].name).toBe('async-1');
+        t0.destroy();
+        t1.destroy();
+        profiler.destroy();
+    });
+
     it('S0-A3 perf harness 骨架：CPU/DC 统计与 GPU 报告可同时产出（无阈值）', async () => {
         const stats = new FrameStats();
         const profiler = new GpuProfiler(deviceWithTS);

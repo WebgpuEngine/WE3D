@@ -10,7 +10,8 @@
  * 1、`enabled=false` 时不创建 PerfHarness，链路里 `scene.perfHarness?.xxx` 全部短路；
  * 2、CPU / nonRender 采集为整数自增，零渲染副作用；GPU 采集仅在显式 enable 且
  *    device 支持 'timestamp-query' 时注入 timestampWrites；
- * 3、MVP 直接 `await gpu.read()`（诊断场景可接受），不做双缓冲。
+ * 3、GpuProfiler 采用双缓冲连续采样：帧末只发起读回不等待，通过 sampleVersion
+ *    消费已完成的采样，避免阻塞 requestAnimationFrame。
  */
 import { frameStats, I_FrameStatsReport } from './frameStats';
 import { GpuProfiler, I_GpuPassTiming } from './gpuProfiler';
@@ -79,6 +80,7 @@ export class PerfHarness {
     private gpuHistory: I_GpuPassTiming[][] = [];
     private totalHistory: number[] = [];
     private lastPassTimings: I_GpuPassTiming[] = [];
+    private lastGpuSampleVersion = 0;
     private frameCount = 0;
     private lastReportValue: I_PerfHarnessReport | null = null;
 
@@ -121,14 +123,22 @@ export class PerfHarness {
         this.profiler.resolve(encoder);
     }
 
-    /** 帧结束：读回 GPU 采样并在窗口到点后 emit 报告。 */
+    /**
+     * 帧结束：发起本帧 GPU 读回（不等待，避免阻塞 requestAnimationFrame），
+     * 只在出现新采样版本时消费一次，并在窗口到点后 emit 报告。
+     */
     async collect(): Promise<void> {
         if (this.gpuEnabled) {
-            const gpuReport = await this.profiler.read();
-            if (gpuReport.passTimings.length > 0) {
-                this.lastPassTimings = gpuReport.passTimings;
-                this.gpuHistory.push(gpuReport.passTimings);
-                this.totalHistory.push(gpuReport.totalMS);
+            void this.profiler.read();
+            const version = this.profiler.sampleVersion;
+            if (version > this.lastGpuSampleVersion) {
+                this.lastGpuSampleVersion = version;
+                const gpuReport = this.profiler.report();
+                if (gpuReport.passTimings.length > 0) {
+                    this.lastPassTimings = gpuReport.passTimings;
+                    this.gpuHistory.push(gpuReport.passTimings);
+                    this.totalHistory.push(gpuReport.totalMS);
+                }
             }
         }
         this.frameCount += 1;
