@@ -30,15 +30,15 @@
 ## 三、开发流程约定
 
 1. **提交前本地门禁（必须，未通过不得提交 / 推送）**：任何提交前必须先跑本地门禁，全绿后再提交。
-   - **修改了源代码（`src/we/` 下任何文件）→ 必须跑完整 CI：`npm run ci`（= `ci:no-e2e` + `test:e2e`），e2e 全绿后方可提交**；其中涉及渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）还需先 `npm run test:baseline` 更新基线并与代码同一次提交。
+   - **修改了源代码（`src/we/` 下任何文件）→ 必须跑完整 CI：`npm run ci`（= `ci:no-e2e` + `test:e2e`），e2e 全绿后方可提交**；其中涉及渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）还需先更新受影响用例的基线（`npm run test:baseline`，仅受影响用例）并与代码同一次提交。
    - 仅改动非源代码（`examples/`、`design/`、`docs/`、`*.md`、`package*.json` 等不影响引擎渲染的文件）→ 跑 `npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + check:quality + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）即可。
    - 分步等价：`npm run lint` → `npm run check:quality` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
 2. **错误修复顺序**：先让构建变绿 → 建回归基线 → 加单测 → 再修错误（不盲改）。
 3. **Playwright e2e 回归**：测试对象已迁移到 `e2e-cases/`（按子目录组织，用例从 `@we3d` 导入），不再来自 `examples/`。
    - 跑全部（GPU 硬件版）：`npm run test:e2e`（= `playwright test`，默认 GPU 配置），GPU 渲染结果与 GPU 基线逐帧比对做差值检测，不生成基线。
    - 软件版回归：`npm run test:e2e:software`（`playwright.software.config.ts`），软件渲染结果与 GPU 基线比对差值。
-   - 生成 / 更新基线：`npm run test:baseline`（= GPU 硬件版 `--update-snapshots`），**基线由 GPU 硬件版产出**，基线 **提交 git**。
-   - **渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）必须用 GPU 硬件版同步更新基线，并与代码同一次提交**，否则 `test:e2e` 截图比对会失败。
+   - 生成 / 更新基线：`npm run test:baseline`（= GPU 硬件版 `--update-snapshots`），**基线由 GPU 硬件版产出**，基线 **提交 git**。**基线不需要每次更新**：仅当新增 e2e 用例时，只为新用例生成基线（局部更新）；**全量更新基线需手动执行**，不随常规提交自动进行。
+   - **渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）必须用 GPU 硬件版同步更新受影响用例的基线，并与代码同一次提交**，否则 `test:e2e` 截图比对会失败；同样只更新受影响用例，不做全量。
    - **批量适配 e2e 用例（新增 / 删除 / 改名）后必须跑 `npm run e2e-index` 刷新 `e2e-cases/index.html` 索引入口**，否则索引页与目录实际用例不一致（详见 `design/e2e-cases-convention.md` §三·适配收尾）。
    - 双配置：默认 `playwright.config.ts` = GPU 硬件版（真实 GPU、**headless:true**、8 workers，参考 testCI 无头真实 GPU）；`playwright.software.config.ts` = 软件 SwiftShader 版（headless:true、2 workers），二者共用快照目录 `tests/e2e/baseline/`。软件版需 `--enable-unsafe-webgpu` + SwiftShader；GPU 版需 `--enable-unsafe-webgpu` + 真实 GPU（headless 即可，无需显示环境）。
 4. **云端工作流（GitHub Actions，云端专有；本地无同名文件，用 npm 脚本镜像）**：
