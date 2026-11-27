@@ -3,6 +3,7 @@ import { WeGenerateUUID } from '../math/baseFunction';
 import { I_UUID } from '../organization/root';
 import { Clock } from '../scene/clock';
 import { Scene } from '../scene/scene';
+import { gpuBufferStats } from '../profile/gpuBufferStats';
 import { E_BOLState, V_BolStrideSizeOfUpdate, E_BOLBufferType } from './base';
 import { BlockPointerCoordinator } from './BPC';
 import { Pointers } from './pointer';
@@ -241,6 +242,7 @@ export class BlockOffsetLength implements I_UUID {
     }
 
     destroy(): boolean {
+        gpuBufferStats.decBol(this.type, this.inputValues.size);
         this.gpuBuffer.destroy();
         this.cpuBuffer = null!;
         this._isDestroy = true;
@@ -265,6 +267,7 @@ export class BlockOffsetLength implements I_UUID {
             this.inputValues.size,
             label,
         );
+        gpuBufferStats.incBol(this.type, this.inputValues.size);
         if (this.inputValues.data) {
             this.device.queue.writeBuffer(this.gpuBuffer, 0, this.inputValues.data.buffer);
         }
@@ -336,6 +339,7 @@ export class BlockOffsetLength implements I_UUID {
             this.lastOffset = offset;
         }
         this.state = E_BOLState.open;
+        gpuBufferStats.incRebuild(this.size.total);
         // this.rebuildTime = this.clock.now;
     }
     /** 生成更新偏移量和长度的映射表
@@ -425,12 +429,14 @@ export class BlockOffsetLength implements I_UUID {
 
             if (this.flagWriteAll === true) {
                 this.device.queue.writeBuffer(this.gpuBuffer, 0, this.cpuBuffer);
+                gpuBufferStats.addGpuUpload(this.cpuBuffer.byteLength);
                 this.flagWriteAll = false;
                 // console.log(this.type);
             } else {
                 this.generateUpdateOffsetAndLenght(clock);
                 for (const i of this.updateOffsetAndLenght) {
                     this.device.queue.writeBuffer(this.gpuBuffer, i[0], this.cpuBuffer, i[0], i[1]);
+                    gpuBufferStats.addGpuUpload(i[1]);
                     // console.log(this.type,i[0],i[1]);
                 }
             }

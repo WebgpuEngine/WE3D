@@ -27,6 +27,7 @@ import type {
 import { E_accessorUseFor } from './base';
 import * as BaseFunction from './function';
 import { createCommonGPUBuffer } from '../../core/command/baseFunction';
+import { gpuBufferStats } from '../../core/profile/gpuBufferStats';
 import { weVec3 } from '../../core/base/coreDefine';
 import type { GLTFModel } from './gltf';
 import {
@@ -340,9 +341,11 @@ export class GltfDataAtTransform extends ModelDataLoader {
      */
     createGPUBuffer(accessorID: number, Buffer?: TypedArray, useFor?: E_accessorUseFor): GPUBuffer {
         let gpuBuffer: GPUBuffer;
+        let bytes = 0;
         const accessor = this.getAccessorOfSource(accessorID);
         const name = accessor?.name || accessorID.toString();
         if (Buffer != undefined) {
+            bytes = Buffer.byteLength;
             gpuBuffer = createCommonGPUBuffer(
                 this.device,
                 name,
@@ -352,6 +355,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
             );
         } else {
             const accessorArray = this.getAccessorForByte(accessorID);
+            bytes = accessorArray.byteLength;
             gpuBuffer = createCommonGPUBuffer(
                 this.device,
                 name,
@@ -361,6 +365,7 @@ export class GltfDataAtTransform extends ModelDataLoader {
             );
         }
         this.GPUBuffers.set(this.getGPUBufferKey(accessorID, useFor), gpuBuffer);
+        gpuBufferStats.incGltf(bytes);
         return gpuBuffer;
     }
 

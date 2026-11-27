@@ -311,8 +311,14 @@ export class RenderManager {
             this.commandEncoder = this.device.createCommandEncoder({ label: 'RenderManager' });
 
             //compute ,texture ,material ,renderTarget
-            for (const onePass of this.listCommandType) {
-                this.doCommand(onePass, E_renderPassName.renderTarget);
+            const listCommandName = [
+                E_renderPassName.compute,
+                E_renderPassName.texture,
+                E_renderPassName.material,
+                E_renderPassName.renderTarget,
+            ];
+            for (let i = 0; i < this.listCommandType.length; i++) {
+                this.doCommand(this.listCommandType[i], listCommandName[i]);
             }
 
             //不透明shadowmap
@@ -362,6 +368,7 @@ export class RenderManager {
             // await this.doCommand(this.RC[E_renderPassName.stage2]);
             // //ui
             // await this.doCommand(this.RC[E_renderPassName.ui]);
+            this.scene.perfHarness?.resolve(this.commandEncoder);
             this.device.queue.submit([this.commandEncoder.finish()]);
         }
     }
@@ -419,6 +426,7 @@ export class RenderManager {
             // debugger;
 
             //2 生成 passEncoder
+            rpd = this.scene.perfHarness?.stampRenderPass(rpd, renderPassName) ?? rpd;
             const passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
             // console.warn(`renderForwaredDC: ${mergeID},loadOp: ${rpd.colorAttachments[0]!.loadOp}`);
             // debugger;
@@ -446,7 +454,7 @@ export class RenderManager {
             if (this.scene.MSAA) {
                 if (renderPassName == E_renderPassName.MSAA) {
                     // 启动 resolve 渲染通道：仅配置附件，不绑定管线、不绘制
-                    const resolvePass = this.commandEncoder.beginRenderPass({
+                    let resolveRPD: GPURenderPassDescriptor = {
                         // 颜色 resolve：输入 MSAA 颜色，输出到单样本颜色
                         colorAttachments: [
                             {
@@ -462,7 +470,13 @@ export class RenderManager {
                                 storeOp: 'discard', // 解析后可丢弃 MSAA 样本（若后续不再使用）
                             },
                         ],
-                    });
+                    };
+                    resolveRPD =
+                        this.scene.perfHarness?.stampRenderPass(
+                            resolveRPD,
+                            `${renderPassName}-resolve`,
+                        ) ?? resolveRPD;
+                    const resolvePass = this.commandEncoder.beginRenderPass(resolveRPD);
                     // 无需调用 draw()！GPU 自动执行 resolve 操作
                     resolvePass.end(); // 结束通道，触发 resolve 数据写入
                 }
@@ -500,6 +514,7 @@ export class RenderManager {
                 this.autoChangeRPDloadOP(rpd, mergeID + '_' + E_renderPassName.forward);
             }
             //2 生成 passEncoder
+            rpd = this.scene.perfHarness?.stampRenderPass(rpd, renderPassName) ?? rpd;
             const passEncoder: GPURenderPassEncoder = this.commandEncoder.beginRenderPass(rpd);
             //3 排序，按距离从远到近
             list.sort((a, b) => b.distance - a.distance);
@@ -547,7 +562,7 @@ export class RenderManager {
      * @param list I_renderDrawOfQuad  有camera聚合的命令的列表
      * @param renderPassName E_renderPassName
      */
-    renderComplexQuad(list: I_renderDrawOfQuad, _renderPassName: E_renderPassName) {
+    renderComplexQuad(list: I_renderDrawOfQuad, renderPassName: E_renderPassName) {
         for (const id in list) {
             const perSetOfCommand = list[id];
             // let rpd: GPURenderPassDescriptor = this.scene.getRenderPassDescriptor(id, E_renderForDC.camera);
@@ -556,9 +571,9 @@ export class RenderManager {
                     perCommand instanceof SimpleDrawCommand ||
                     perCommand instanceof BaseDrawCommand
                 ) {
-                    perCommand.doWithRPD(this.commandEncoder);
+                    perCommand.doWithRPD(this.commandEncoder, renderPassName);
                 } else if (perCommand instanceof ComputeCommand) {
-                    perCommand.doWithComputePass(this.commandEncoder);
+                    perCommand.doWithComputePass(this.commandEncoder, renderPassName);
                 } else if (perCommand instanceof CopyCommand) {
                     perCommand.copy(this.commandEncoder);
                 }
@@ -584,18 +599,18 @@ export class RenderManager {
     /** 执行命令集合
      * 1、命令集合为数组
      */
-    doCommand(list: commmandType[], _renderPassName: E_renderPassName) {
+    doCommand(list: commmandType[], renderPassName: E_renderPassName) {
         for (const perCommand of list) {
             if (perCommand instanceof SimpleDrawCommand) {
-                perCommand.doWithRPD(this.commandEncoder);
+                perCommand.doWithRPD(this.commandEncoder, renderPassName);
             } else if (perCommand instanceof BaseDrawCommand) {
-                perCommand.doWithRPD(this.commandEncoder);
+                perCommand.doWithRPD(this.commandEncoder, renderPassName);
             }
             // else if (perCommand instanceof DrawCommand) {
             //     perCommand.doWithRPD(this.commandEncoder);
             // }
             else if (perCommand instanceof ComputeCommand) {
-                perCommand.doWithComputePass(this.commandEncoder);
+                perCommand.doWithComputePass(this.commandEncoder, renderPassName);
             } else if (perCommand instanceof CopyCommandT2T) {
                 perCommand.copy(this.commandEncoder);
             } else {

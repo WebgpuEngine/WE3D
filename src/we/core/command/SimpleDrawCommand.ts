@@ -364,12 +364,15 @@ export class SimpleDrawCommand extends BaseCommand {
         }
     }
 
-    doWithRPD(commandEncoder: GPUCommandEncoder) {
+    doWithRPD(commandEncoder: GPUCommandEncoder, passName?: string) {
         if (this.renderPassDescriptor !== undefined) {
-            let passEncoder: GPURenderPassEncoder;
-            if (typeof this.renderPassDescriptor === 'function')
-                passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor());
-            else passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor);
+            let rpd: GPURenderPassDescriptor;
+            if (typeof this.renderPassDescriptor === 'function') rpd = this.renderPassDescriptor();
+            else rpd = this.renderPassDescriptor;
+            if (passName) {
+                rpd = this.scene.perfHarness?.stampRenderPass(rpd, passName) ?? rpd;
+            }
+            const passEncoder: GPURenderPassEncoder = commandEncoder.beginRenderPass(rpd);
             this.doWithPipeline(passEncoder);
             passEncoder.end();
         }

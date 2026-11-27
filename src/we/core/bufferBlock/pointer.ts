@@ -1,6 +1,7 @@
 import { TypedArray } from '../base/coreDefine';
 import { getTypedArrayType, isArrayBuffer } from '../command/baseFunction';
 import { Clock } from '../scene/clock';
+import { gpuBufferStats } from '../profile/gpuBufferStats';
 import { E_BOLBufferType } from './base';
 import { BlockPointerCoordinator } from './BPC';
 
@@ -422,6 +423,10 @@ export class Pointers {
                     return false;
                 }
             }
+            const cpuWriteBytes =
+                params.byteLengthOfWriteToPointer ??
+                pointer.byteLength - (params.offsetByteOfWriteToPointer || 0);
+            gpuBufferStats.addCpuWrite(cpuWriteBytes);
             pointer.writeTime = this.clock.now;
         } else {
             console.error('指针不存在');

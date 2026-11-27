@@ -32,6 +32,8 @@ import { RootManager } from './rootManager';
 import { TextureManager } from '../texture/textureManager';
 import { DrawCommandGenerator } from '../command/DrawCommandGenerator';
 import { frameStats } from '../profile/frameStats';
+import { gpuBufferStats } from '../profile/gpuBufferStats';
+import { PerfHarness } from '../profile/perfHarness';
 import { MemoryBlockManager } from '../bufferBlock/MBM';
 import { Pointers } from '../bufferBlock/pointer';
 import { BlockPointerCoordinator } from '../bufferBlock/BPC';
@@ -296,6 +298,8 @@ export class Scene {
     resourcesGPU!: ResourceManagerOfGPU;
     /**渲染管理器 */
     renderManager!: RenderManager;
+    /**perf-harness 主控（enabled 时才创建） */
+    perfHarness?: PerfHarness;
     /**相机管理器
      * 1、TTPF的buffer管理
      * 2、todo：20260313，迁移cameraManager的公共性质的资源
@@ -504,6 +508,10 @@ export class Scene {
 
         if (!device) throw new Error("Couldn't request WebGPU device.");
         this.device = device;
+
+        if (this.inputValue.perf?.enabled) {
+            this.perfHarness = new PerfHarness(this.device, this.inputValue.perf);
+        }
 
         this.canvas = document.getElementById(this.inputValue.canvas) as HTMLCanvasElement;
         // 焦点
@@ -843,6 +851,8 @@ export class Scene {
                 //时间更新
                 const timerNow = performance.now();
                 frameStats.beginFrame(this.clock.frame);
+                gpuBufferStats.beginFrame();
+                this.perfHarness?.beginFrame();
                 this.clock.update();
                 await this.onBeforeUpdate();
                 await this.pickup(); //pickup 在当前帧的update开始之前
@@ -856,6 +866,7 @@ export class Scene {
                 await this.renderToSurface();
                 await this.cleanUp();
                 frameStats.endFrame(performance.now() - timerNow);
+                await this.perfHarness?.collect();
                 requestAnimationFrame(perFrameRun);
             }
         };

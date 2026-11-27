@@ -1,6 +1,7 @@
 import { I_BolRebulidPercent, I_BolSize, I_BolStrideSizeOfUpdate } from '../bufferBlock/base';
 import { commmandType } from '../command/base';
 import { IV_DirectionalLight } from '../light/DirectionalLight';
+import type { IV_PerfHarnessOptions } from '../profile/perfHarness';
 import { Scene } from './scene';
 /**场景单位 */
 export interface I_SceneBaseUnit {
@@ -55,6 +56,8 @@ export interface IV_Scene {
     useDevicePixelRatio?: boolean;
     /** 场景单位 */
     baseUnit?: I_SceneBaseUnit;
+    /** perf-harness 配置（S0 性能诊断）；enabled=false 时不创建 PerfHarness */
+    perf?: IV_PerfHarnessOptions;
 }
 
 /**

@@ -2,6 +2,7 @@ import { isUniformBufferPart, T_uniformEntries } from './base';
 import { I_uniformArrayBufferEntry } from './base';
 import { createUniformBuffer } from './baseFunction';
 import { frameStats } from '../profile/frameStats';
+import { getActivePerfHarness } from '../profile/perfHarness';
 
 export interface I_ComputePipelineInitValues {
     shader: {
@@ -224,10 +225,14 @@ export class ComputeCommand {
 
         return commandBuffer;
     }
-    doWithComputePass(encoder: GPUCommandEncoder) {
-        const passEncoder: GPUComputePassEncoder = encoder.beginComputePass({
+    doWithComputePass(encoder: GPUCommandEncoder, passName?: string) {
+        let passDesc: GPUComputePassDescriptor = {
             label: 'compute  pass' + this.label,
-        });
+        };
+        if (passName) {
+            passDesc = getActivePerfHarness()?.stampComputePass(passDesc, passName) ?? passDesc;
+        }
+        const passEncoder: GPUComputePassEncoder = encoder.beginComputePass(passDesc);
         this.doWithPipeline(passEncoder);
         passEncoder.end();
     }

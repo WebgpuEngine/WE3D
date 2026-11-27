@@ -254,6 +254,10 @@ export type {
 } from './core/profile/gpuProfiler';
 export { FrameStats, frameStats } from './core/profile/frameStats';
 export type { I_FrameStatsSnapshot, I_FrameStatsReport } from './core/profile/frameStats';
+export { GpuBufferStats, gpuBufferStats } from './core/profile/gpuBufferStats';
+export type { I_GpuBufferStats, I_GpuBufferStatsBolType } from './core/profile/gpuBufferStats';
+export { PerfHarness, getActivePerfHarness } from './core/profile/perfHarness';
+export type { I_PerfHarnessReport, IV_PerfHarnessOptions } from './core/profile/perfHarness';
 
 // texture
 export { E_TextureChannel } from './core/texture/base';

@@ -463,6 +463,12 @@
     "performance/GPU/GPUBuffer_lotsof_small",
     "performance/GPU/GPUBuffer_lotsof_small_uniform"
   ],
+  "性能测试 / perf-harness": [
+    "performance/perf-harness/perfHarness"
+  ],
+  "indexClaude": [
+    "indexClaude"
+  ],
   "ShaderToy / base": [
     "shaderToy/base/ndc_base_1",
     "shaderToy/base/ndc_base_cube_rayMarch"

@@ -39,6 +39,12 @@
                 * 1、GPUBuffer(静态资源),单次写入大约60ms,内核CPU占满<br>
                 * 2、只适合静态资源（初始化）,不适合动态资源的大规模写入。<br>
             </a></li>
+        <li><a href="./perf-harness/index.html">perf-harness: <br>
+                * GPU timestamp 采样（forward / toneMapping pass 耗时）<br>
+                * 每帧更新 9 个动态 box（uniform 上传统计）<br>
+                * 加载 gltf（显存 / buffer 统计）<br>
+                * 每 60 帧聚合输出 console，并经 window.__WE3D_PERF__ 暴露<br>
+            </a></li>
         <li><a href=""></a></li>
         <li><a href=""></a></li>
     </ul>

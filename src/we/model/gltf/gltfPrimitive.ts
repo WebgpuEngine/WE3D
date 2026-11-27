@@ -1,4 +1,5 @@
 import { createCommonGPUBuffer } from '../../core/command/baseFunction';
+import { gpuBufferStats } from '../../core/profile/gpuBufferStats';
 import { I_drawMode, I_drawModeIndexed } from '../../core/command/base';
 import {
     I_indexGPUBufferBundle,
@@ -116,6 +117,7 @@ export async function getVerticesOfPrimitive(
                     0,
                     normals.byteLength,
                 );
+                gpuBufferStats.incGltf(normals.byteLength);
                 normalAccessorBufferSource = {
                     buffer: gpuBuffer,
                     format: 'float32x3',
@@ -140,6 +142,7 @@ export async function getVerticesOfPrimitive(
                     0,
                     normals.byteLength,
                 );
+                gpuBufferStats.incGltf(normals.byteLength);
                 normalAccessorBufferSource = {
                     buffer: gpuBuffer,
                     format: 'float32x3',

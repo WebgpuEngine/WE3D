@@ -3,6 +3,7 @@ import { E_renderPassName } from '../scene/renderManager';
 import { I_drawMode, I_drawModeIndexed, I_viewport, T_drawMode } from './base';
 import { BaseCommand } from './BaseCommand';
 import { frameStats } from '../profile/frameStats';
+import { getActivePerfHarness } from '../profile/perfHarness';
 
 /**绘制调用选项
  * 1、passEncoder：渲染pass编码器
@@ -153,12 +154,15 @@ export class BaseDrawCommand extends BaseCommand {
         }
     }
 
-    doWithRPD(commandEncoder: GPUCommandEncoder) {
+    doWithRPD(commandEncoder: GPUCommandEncoder, passName?: string) {
         if (this.renderPassDescriptor !== undefined) {
-            let passEncoder: GPURenderPassEncoder;
-            if (typeof this.renderPassDescriptor === 'function')
-                passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor());
-            else passEncoder = commandEncoder.beginRenderPass(this.renderPassDescriptor);
+            let rpd: GPURenderPassDescriptor;
+            if (typeof this.renderPassDescriptor === 'function') rpd = this.renderPassDescriptor();
+            else rpd = this.renderPassDescriptor;
+            if (passName) {
+                rpd = getActivePerfHarness()?.stampRenderPass(rpd, passName) ?? rpd;
+            }
+            const passEncoder: GPURenderPassEncoder = commandEncoder.beginRenderPass(rpd);
             this.doWithPipeline({ passEncoder });
             passEncoder.end();
         }
