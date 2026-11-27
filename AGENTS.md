@@ -30,8 +30,8 @@
 ## 三、开发流程约定
 
 1. **提交前本地门禁（必须，未通过不得提交 / 推送）**：任何提交前必须先跑本地门禁，全绿后再提交。
-   - 常规改动：`npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + check:quality + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）。
-   - 涉及渲染 / e2e 用例 / 引擎渲染路径改动：先 `npm run test:baseline` 更新基线，再 `npm run ci`（= `ci:no-e2e` + `test:e2e`）确认 e2e 全绿后提交。
+   - **修改了源代码（`src/we/` 下任何文件）→ 必须跑完整 CI：`npm run ci`（= `ci:no-e2e` + `test:e2e`），e2e 全绿后方可提交**；其中涉及渲染结果变更（背景色 / 几何 / 材质 / 相机 / 着色等）还需先 `npm run test:baseline` 更新基线并与代码同一次提交。
+   - 仅改动非源代码（`examples/`、`design/`、`docs/`、`*.md`、`package*.json` 等不影响引擎渲染的文件）→ 跑 `npm run ci:no-e2e`（与云端 `ci.yml` 完全一致：lint + check:quality + typecheck + 单测 + check:exports + build:lib，不含 e2e/文档）即可。
    - 分步等价：`npm run lint` → `npm run check:quality` → `npm run typecheck` → `npm run test:run` → `npm run check:exports` → `npm run build:lib`（→ `npm run test:e2e`）。
 2. **错误修复顺序**：先让构建变绿 → 建回归基线 → 加单测 → 再修错误（不盲改）。
 3. **Playwright e2e 回归**：测试对象已迁移到 `e2e-cases/`（按子目录组织，用例从 `@we3d` 导入），不再来自 `examples/`。
