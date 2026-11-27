@@ -43,3 +43,6 @@ public/@loaders.gl/
 *.njsproj
 *.sln
 *.sw?
+
+# S1 glTF 官方资料本地库（下载产物，不提交；规划见 design/design/WE3D-开发路线图-20261118/s1/local-reference-library.md）
+design/.refs/gltf/
