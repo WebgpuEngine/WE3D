@@ -245,6 +245,16 @@ export type { I_FXAAValues } from './core/postprocess/FXAA';
 export { Blur3x3 } from './core/postprocess/blur3x3';
 export { PP_RedToOne } from './core/postprocess/RedToOne';
 
+// profile
+export { GpuProfiler } from './core/profile/gpuProfiler';
+export type {
+    I_GpuPassTiming,
+    I_GpuProfilerReport,
+    IV_GpuProfilerOptions,
+} from './core/profile/gpuProfiler';
+export { FrameStats, frameStats } from './core/profile/frameStats';
+export type { I_FrameStatsSnapshot, I_FrameStatsReport } from './core/profile/frameStats';
+
 // texture
 export { E_TextureChannel } from './core/texture/base';
 export type {

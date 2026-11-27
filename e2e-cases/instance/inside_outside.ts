@@ -1,24 +1,23 @@
 import { vec3 } from 'wgpu-matrix';
-import { E_renderForDC } from '../../src/we/core/base/coreDefine';
-import { OrthographicCamera } from '../../src/we/core/camera/orthographicCamera';
-import { PerspectiveCamera } from '../../src/we/core/camera/perspectiveCamera';
 import {
+    E_renderForDC,
+    OrthographicCamera,
+    PerspectiveCamera,
     DrawCommandGenerator,
     type IV_DrawCommandGenerator,
     type IV_DC,
-} from '../../src/we/core/command/DrawCommandGenerator';
-import {
     eventOfScene,
     type IV_Scene,
     type userDefineEventCall,
-} from '../../src/we/core/scene/base';
-import { initScene } from '../../src/we/core/scene/fn';
-import { E_renderPassName } from '../../src/we/core/scene/renderManager';
-import { Scene } from '../../src/we/core/scene/scene';
-import { ArcballCameraControl } from '../../src/we/core/control/arcballCameraControl';
-import { BoxGeometry } from '../../src/we/core/geometry/boxGeometry';
-import { ColorMaterial } from '../../src/we/core/material/standard/colorMaterial';
-import { IV_MeshEntity, Mesh } from '../../src/we/core/entity/mesh/mesh';
+    initScene,
+    E_renderPassName,
+    Scene,
+    ArcballCameraControl,
+    BoxGeometry,
+    ColorMaterial,
+    IV_MeshEntity,
+    Mesh,
+} from '@we3d';
 
 declare global {
     interface Window {

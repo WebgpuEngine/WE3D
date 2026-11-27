@@ -81,7 +81,8 @@
 | `npm run build` | tsc 类型检查（src）+ Vite examples 打包 |
 | `npm run build:lib` | Vite lib 打包到 `dist/`（`we3d.js` + `.d.ts`，读 `vite.lib.config.ts`） |
 | `npm run preview` | vite preview（预览 examples 构建产物） |
-| `npm run check:exports` | 校验 `src/we/index.ts` barrel 与 `src/we` 实际导出集合 |
+| `npm run check:exports` | 校验 `src/we/index.ts` barrel + 导出 ratchet 门禁（新增未入 barrel 的导出硬失败，与 `scripts/export-baseline.json` 比较） |
+| `npm run exports:baseline` | 显式登记当前存量游离导出基线（治理收紧后随本次改动一同提交） |
 | `npm run check:quality` | 代码层质量 ratchet 门禁（`any` / `@ts-ignore` / 巨型文件 / 空占位 / 备份命名 / 注释代码行），与 `scripts/code-quality-baseline.json` 比较，只许下降 |
 | `npm run quality:baseline` | 治理见效后显式收紧质量基线（须与治理同一次提交，基线不自动放宽） |
 | `npm run lint` / `lint:fix` | ESLint 检查 / 自动修复（仅 src/we） |
